@@ -87,8 +87,15 @@ function RuleField({
 }
 
 export default function SettingsPage() {
-  const { settings, staff, branches, updateSettings, updateStaff, resetData } =
-    useStore();
+  const {
+    settings,
+    staff,
+    branches,
+    updateSettings,
+    updateStaff,
+    resetData,
+    isManager,
+  } = useStore();
   const [staffModal, setStaffModal] = useState(false);
   const [newStaffName, setNewStaffName] = useState("");
   const [newStaffRole, setNewStaffRole] = useState<StaffRole>("staff");
@@ -101,7 +108,11 @@ export default function SettingsPage() {
     <div>
       <PageHeader
         title="설정"
-        description="화면, 매장, 직원, 고객관리 기준을 관리합니다. 기준값은 오늘의 실행 브리핑 우선순위 계산에 바로 반영됩니다."
+        description={
+          isManager
+            ? "화면, 매장, 직원, 관리 기준을 설정합니다. 기준값은 오늘의 실행 브리핑 우선순위 계산에 바로 반영됩니다."
+            : "화면 표시 방식을 설정합니다."
+        }
       />
 
       <div className="grid grid-cols-1 card-gap xl:grid-cols-2 xl:items-start">
@@ -146,17 +157,30 @@ export default function SettingsPage() {
                 options={[
                   { key: "light", label: "라이트" },
                   { key: "dark", label: "다크" },
+                  { key: "system", label: "시스템" },
                 ]}
                 onChange={(v) => updateSettings({ theme: v })}
               />
               <p className="mt-2 text-sm text-ink-sub">
-                다크 테마는 저녁 시간대나 어두운 환경에서 눈의 피로를
-                줄여줍니다.
+                시스템을 선택하면 기기의 다크모드 설정을 자동으로 따라갑니다.
               </p>
             </div>
           </div>
         </Card>
 
+        {/* 직원 계정: 화면 설정만 노출 */}
+        {!isManager && (
+          <Card className="border-l-4 border-gold">
+            <p className="font-bold text-ink">관리자 전용 설정 안내</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+              매장 정보, 직원 관리, 고객관리 기준은 대표/관리자 계정에서
+              설정합니다. 사이드바 하단 또는 더보기에서 사용자를 전환하세요.
+            </p>
+          </Card>
+        )}
+
+        {isManager && (
+          <>
         {/* 매장 */}
         <Card>
           <SectionTitle>매장</SectionTitle>
@@ -316,6 +340,8 @@ export default function SettingsPage() {
             샘플 데이터로 초기화
           </Button>
         </Card>
+          </>
+        )}
       </div>
 
       {/* 직원 추가 모달 */}

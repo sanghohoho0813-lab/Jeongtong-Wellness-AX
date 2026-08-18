@@ -94,6 +94,7 @@ export default function AnalyticsPage() {
     visits,
     memberships,
     taskOverrides,
+    isManager,
   } = useStore();
   const summary = calcAxSummary(
     [...factsById.values()],
@@ -184,11 +185,13 @@ export default function AnalyticsPage() {
             label="이용권 판매 (이번 달)"
             value={`${latest.membershipSold}건`}
           />
-          <MetricTile
-            label="월 매출 (이번 달)"
-            value={formatKrw(latest.revenue)}
-            caption="이용권 판매 + 현장 결제 합산"
-          />
+          {isManager && (
+            <MetricTile
+              label="월 매출 (이번 달)"
+              value={formatKrw(latest.revenue)}
+              caption="이용권 판매 + 현장 결제 합산"
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -228,11 +231,13 @@ export default function AnalyticsPage() {
             }))}
             format={(v) => `${v}`}
           />
-          <TrendBars
-            title="월별 매출"
-            data={monthly.map((m) => ({ month: m.month, value: m.revenue }))}
-            format={(v) => (v > 0 ? formatKrw(v) : "0")}
-          />
+          {isManager && (
+            <TrendBars
+              title="월별 매출"
+              data={monthly.map((m) => ({ month: m.month, value: m.revenue }))}
+              format={(v) => (v > 0 ? formatKrw(v) : "0")}
+            />
+          )}
         </div>
 
         {/* 관리과제 처리 추이 — 브리핑에서 처리한 이력이 날짜별로 축적된다 */}

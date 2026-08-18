@@ -172,7 +172,7 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
 
 export type FontScale = "small" | "default" | "large";
 export type Density = "default" | "relaxed";
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
 
 export interface CareRuleSettings {
   dormantDays: number; // 장기 미방문 판단 기준 (일)

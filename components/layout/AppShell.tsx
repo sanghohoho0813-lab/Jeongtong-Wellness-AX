@@ -6,6 +6,7 @@ import { ReactNode } from "react";
 import { useStore } from "@/lib/data/store";
 import { BellIcon } from "@/components/ui/icons";
 import { BOTTOM_NAV_ITEMS, SIDEBAR_ITEMS } from "./nav-items";
+import { ProfileButton } from "./UserSwitch";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -34,14 +35,17 @@ function Logo({ compact = false }: { compact?: boolean }) {
 
 function Sidebar() {
   const pathname = usePathname();
-  const { settings } = useStore();
+  const { isManager } = useStore();
+  const items = SIDEBAR_ITEMS.filter(
+    (item) => isManager || item.href !== "/branches",
+  );
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
       <div className="px-5 pb-5 pt-6">
         <Logo />
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-        {SIDEBAR_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
@@ -65,18 +69,8 @@ function Sidebar() {
           );
         })}
       </nav>
-      <div className="m-3 flex items-center gap-3 rounded-card border border-black/[0.04] bg-stone-bg p-3.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-700 text-sm font-extrabold text-white">
-          {settings.ownerName.slice(0, 1)}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate font-extrabold text-ink">
-            {settings.ownerName}
-          </span>
-          <span className="block truncate text-xs font-medium text-ink-sub">
-            {settings.branchName} · 관리자
-          </span>
-        </span>
+      <div className="m-3">
+        <ProfileButton />
       </div>
     </aside>
   );

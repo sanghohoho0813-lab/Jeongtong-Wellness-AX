@@ -9,7 +9,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
-import { Badge, Card, SectionTitle } from "@/components/ui";
+import { Badge, Card, EmptyState, SectionTitle } from "@/components/ui";
 import { BuildingIcon } from "@/components/ui/icons";
 
 const ROLE_LABELS = {
@@ -28,7 +28,17 @@ export default function BranchesPage() {
     factsById,
     briefingTasks,
     settings,
+    isManager,
   } = useStore();
+
+  if (!isManager) {
+    return (
+      <EmptyState
+        title="대표/관리자 전용 화면입니다"
+        description="지점 운영 정보는 관리자 계정에서 확인할 수 있습니다. 사이드바 하단 또는 더보기에서 사용자를 전환하세요."
+      />
+    );
+  }
 
   return (
     <div>

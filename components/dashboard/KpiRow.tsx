@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/icons";
 
 export default function KpiRow() {
-  const { customers, visits, memberships, settings } = useStore();
+  const { customers, visits, memberships, settings, isManager, briefingTasks } =
+    useStore();
   const kpis = calcDashboardKpis(
     customers,
     visits,
@@ -66,14 +67,30 @@ export default function KpiRow() {
         icon={<LeafIcon className="h-5 w-5" />}
         tint="emerald"
       />
-      <KpiCard
-        label="월 매출 (누적)"
-        value={formatKrw(kpis.monthRevenue)}
-        sub="최근 6개월 추이"
-        chart={<MiniBars values={monthly.map((m) => m.revenue)} />}
-        icon={<TrendUpIcon className="h-5 w-5" />}
-        tint="amber"
-      />
+      {isManager ? (
+        <KpiCard
+          label="월 매출 (누적)"
+          value={formatKrw(kpis.monthRevenue)}
+          sub="최근 6개월 추이"
+          chart={<MiniBars values={monthly.map((m) => m.revenue)} />}
+          icon={<TrendUpIcon className="h-5 w-5" />}
+          tint="amber"
+        />
+      ) : (
+        // 직원 계정: 매출 대신 오늘의 관리 대상 표시
+        <KpiCard
+          label="오늘 관리 대상"
+          value={
+            briefingTasks.filter(
+              (t) => t.status === "pending" || t.status === "confirmed",
+            ).length
+          }
+          unit="명"
+          sub={`처리완료 ${briefingTasks.filter((t) => t.status === "done").length}건`}
+          icon={<TrendUpIcon className="h-5 w-5" />}
+          tint="amber"
+        />
+      )}
     </div>
   );
 }

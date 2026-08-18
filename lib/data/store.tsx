@@ -52,6 +52,8 @@ interface PersistedState {
   /** 브리핑 과제 상태 오버라이드 (생성은 항상 규칙 엔진이 수행) */
   taskOverrides: BriefingTask[];
   settings: AppSettings;
+  /** 현재 사용자 (향후 Supabase Auth 연동 시 auth 유저와 매핑) */
+  currentStaffId?: string;
   seededAt?: string;
 }
 
@@ -83,6 +85,11 @@ interface StoreValue extends PersistedState {
   briefingTasks: BriefingTask[];
   factsById: Map<string, CustomerFacts>;
   derivedById: Map<string, ReturnType<typeof deriveCustomer>>;
+  /** 현재 사용자 (기본: 첫 owner) */
+  currentStaff: Staff;
+  /** 대표/관리자 여부 — 매출·운영 정보 노출 판단 */
+  isManager: boolean;
+  setCurrentStaff: (staffId: string) => void;
   addCustomer: (input: NewCustomerInput) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
   addVisit: (input: NewVisitInput) => Visit;
@@ -137,12 +144,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state, ready]);
 
-  // 폰트 크기 / 밀도 / 테마 → CSS 변수 반영
+  // 폰트 크기 / 밀도 / 테마 → CSS 변수 반영 ("system"은 OS 설정 추종)
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.fontScale = state.settings.fontScale;
     root.dataset.density = state.settings.density;
-    root.dataset.theme = state.settings.theme ?? "light";
+
+    const theme = state.settings.theme ?? "light";
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      root.dataset.theme =
+        theme === "system" ? (media.matches ? "dark" : "light") : theme;
+    };
+    apply();
+    if (theme === "system") {
+      media.addEventListener("change", apply);
+      return () => media.removeEventListener("change", apply);
+    }
   }, [state.settings.fontScale, state.settings.density, state.settings.theme]);
 
   const factsById = useMemo(() => {
@@ -174,6 +192,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ),
     [factsById, state.settings.careRules, state.taskOverrides],
   );
+
+  // 현재 사용자 — 지정되지 않았거나 비활성이면 첫 owner(없으면 첫 직원)
+  const currentStaff = useMemo(() => {
+    const found = state.staff.find(
+      (s) => s.id === state.currentStaffId && s.active,
+    );
+    return (
+      found ??
+      state.staff.find((s) => s.role === "owner" && s.active) ??
+      state.staff[0]
+    );
+  }, [state.staff, state.currentStaffId]);
+
+  const isManager =
+    currentStaff?.role === "owner" || currentStaff?.role === "manager";
+
+  const setCurrentStaff = useCallback((staffId: string) => {
+    setState((s) => ({ ...s, currentStaffId: staffId }));
+  }, []);
 
   const addCustomer = useCallback((input: NewCustomerInput): Customer => {
     const customer: Customer = {
@@ -282,6 +319,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     briefingTasks,
     factsById,
     derivedById,
+    currentStaff,
+    isManager,
+    setCurrentStaff,
     addCustomer,
     updateCustomer,
     addVisit,

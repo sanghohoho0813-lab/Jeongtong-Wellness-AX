@@ -10,7 +10,8 @@ import { Card, SectionTitle } from "@/components/ui";
 import { ChevronRightIcon } from "@/components/ui/icons";
 
 export default function BranchSummaryCard() {
-  const { branches, staff, factsById, briefingTasks, settings } = useStore();
+  const { branches, staff, factsById, briefingTasks, settings, isManager } =
+    useStore();
   const summary = calcAxSummary(
     [...factsById.values()],
     briefingTasks,
@@ -53,13 +54,15 @@ export default function BranchSummaryCard() {
     <Card>
       <SectionTitle
         action={
-          <Link
-            href="/branches"
-            className="inline-flex items-center gap-0.5 text-sm font-semibold text-aqua-700 hover:text-aqua-800 whitespace-nowrap"
-          >
-            지점 / 운영
-            <ChevronRightIcon className="h-4 w-4" />
-          </Link>
+          isManager ? (
+            <Link
+              href="/branches"
+              className="inline-flex items-center gap-0.5 text-sm font-semibold text-aqua-700 hover:text-aqua-800 whitespace-nowrap"
+            >
+              지점 / 운영
+              <ChevronRightIcon className="h-4 w-4" />
+            </Link>
+          ) : undefined
         }
       >
         운영 · 지점 현황
