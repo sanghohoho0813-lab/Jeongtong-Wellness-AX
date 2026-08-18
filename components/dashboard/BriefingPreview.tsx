@@ -65,7 +65,9 @@ export default function BriefingPreview() {
 
       {top3.length === 0 ? (
         <p className="mt-4 rounded-card bg-white/[0.07] py-9 text-center text-sm font-medium text-deep-sub ring-1 ring-white/10">
-          오늘 처리할 관리 과제를 모두 완료했습니다. 수고하셨습니다.
+          {total === 0
+            ? "오늘 우선관리 대상 고객이 없습니다."
+            : "오늘 처리할 관리 과제를 모두 완료했습니다. 수고하셨습니다."}
         </p>
       ) : (
         <div className="mt-4 space-y-3">

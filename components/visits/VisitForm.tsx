@@ -144,26 +144,47 @@ export default function VisitForm({
             </select>
           </div>
           <div>
-            <FieldLabel>이용권 차감</FieldLabel>
+            <FieldLabel>이용권 사용</FieldLabel>
             <select
               className={inputCls}
               value={membershipId}
               onChange={(e) => setMembershipId(e.target.value)}
               disabled={!customerId}
             >
-              <option value="">차감 안 함 (현장 결제 등)</option>
+              <option value="">사용 안 함 (현장 결제 등)</option>
               {activeMemberships.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.programName} · 잔여 {m.remainingCount}회
                 </option>
               ))}
             </select>
+            {/* 저장 전 차감 예상값 안내 */}
+            {(() => {
+              const m = activeMemberships.find((x) => x.id === membershipId);
+              if (!m) return null;
+              return (
+                <p className="mt-2 rounded-btn bg-aqua-50 px-3 py-2 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100">
+                  현재 <span className="nowrap-num">{m.remainingCount}회</span>{" "}
+                  남음 · 이번 방문 1회 사용 → 저장 후{" "}
+                  <span className="nowrap-num">
+                    {Math.max(0, m.remainingCount - 1)}회
+                  </span>{" "}
+                  남음
+                </p>
+              );
+            })()}
           </div>
         </div>
       )}
 
       <div>
-        <FieldLabel>집중 케어 부위</FieldLabel>
+        <FieldLabel>이번 회차 케어 부위</FieldLabel>
+        {fixedCustomerId && parts.length > 0 && (
+          <p className="mb-2 text-xs text-ink-sub">
+            고객의 주요 케어 부위가 기본으로 선택되어 있습니다. 이번 방문에서
+            실제 케어한 부위로 조정하세요.
+          </p>
+        )}
         <BodyMap value={parts} onChange={setParts} compactChips />
       </div>
 
@@ -214,7 +235,7 @@ export default function VisitForm({
           className={`${inputCls} min-h-20`}
           value={reaction}
           onChange={(e) => setReaction(e.target.value)}
-          placeholder="고객 반응, 상담 내용, 특이사항"
+          placeholder="이용 후 반응, 선호사항, 다음 방문 참고사항을 기록하세요"
         />
       </div>
 

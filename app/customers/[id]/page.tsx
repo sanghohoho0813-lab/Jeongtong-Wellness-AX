@@ -213,8 +213,12 @@ export default function CustomerDetailPage() {
                 )
               }
             >
-              집중 케어 희망 부위
+              주요 케어 부위
             </SectionTitle>
+            <p className="-mt-2 mb-3 text-xs text-ink-sub">
+              고객 프로필 기준 — 평소 집중 관리를 원하는 부위입니다. 방문별
+              실제 케어 부위는 아래 이용 이력에서 확인하세요.
+            </p>
             {editingParts ? (
               <BodyMap value={draftParts} onChange={setDraftParts} compactChips />
             ) : (

@@ -392,9 +392,11 @@ export function Em({ children }: { children: ReactNode }) {
 export function EmptyState({
   title,
   description,
+  action,
 }: {
   title: string;
   description?: string;
+  action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-card border border-dashed border-stone-line bg-card-soft px-4 py-12 text-center">
@@ -406,6 +408,7 @@ export function EmptyState({
       </span>
       <p className="font-bold text-ink-soft">{title}</p>
       {description && <p className="text-sm text-ink-sub">{description}</p>}
+      {action && <div className="mt-2">{action}</div>}
     </div>
   );
 }

@@ -49,7 +49,9 @@ export default function BodyMapCard() {
         고객 맞춤 케어 · 부위 선택
       </SectionTitle>
       <p className="mb-3 text-sm text-ink-sub">
-        고객이 집중 케어를 원하는 부위를 터치하여 기록하세요.
+        고객이 평소 집중 케어를 원하는 부위를 터치하여 기록하세요. 고객
+        프로필의 <strong className="font-bold">주요 케어 부위</strong>로
+        저장됩니다.
       </p>
 
       <select

@@ -47,7 +47,14 @@ export interface Customer {
   registeredAt: string; // ISO date
   assignedStaffId?: string;
   memo?: string; // 일반 특이사항
-  focusBodyParts: BodyPartRecord[]; // 집중 케어 희망 부위 (최신 상태)
+  /**
+   * preferredCareAreas — 고객 프로필 기준 "주요 케어 부위".
+   * 고객이 평소 집중 관리를 원하는 장기적인 선호 부위이며,
+   * 고객 프로필(고객 상세 / 등록)에서만 수정한다.
+   * 방문별 실제 케어 부위는 Visit.bodyParts(visitCareAreas)에 별도로 쌓인다.
+   * (Supabase: customers.focus_body_parts jsonb)
+   */
+  focusBodyParts: BodyPartRecord[];
   nextManageDate?: string; // 다음 관리 예정일 (ISO date)
   lastContactDate?: string; // 마지막 연락일
   tags?: string[];
@@ -120,7 +127,14 @@ export interface Visit {
   type: VisitType;
   programName?: string; // 이용한 프로그램
   membershipId?: string; // 차감된 이용권
-  bodyParts: BodyPartRecord[]; // 이번 방문의 집중 케어 부위
+  /**
+   * visitCareAreas — 이 방문 회차에서 실제 기록된 케어 부위.
+   * 방문/상담 기록 입력 시에만 저장되며, 과거 방문을 다시 열면
+   * 그 당시 선택한 부위가 그대로 표시된다 (방문별 스냅샷).
+   * 고객 프로필의 주요 케어 부위(focusBodyParts)와는 독립적이다.
+   * (Supabase: visits.body_parts jsonb)
+   */
+  bodyParts: BodyPartRecord[];
   reaction?: string; // 고객 반응/메모
   amount?: number; // 현장 결제 금액 (이용권 외)
   nextManageDate?: string; // 이 방문에서 잡은 다음 관리 예정일
@@ -136,6 +150,14 @@ export type TaskCategory =
   | "consult_no_booking" // 상담 후 미예약
   | "focus_care"; // 집중 관리 대상
 
+/**
+ * RevisitTask 상태 (재방문 관리 / 실행 브리핑 공용):
+ *   pending → PENDING  처리대기
+ *   done    → COMPLETED 처리완료
+ *   hold    → HOLD     보류
+ * "confirmed"는 의미가 모호하여 UI에서 제거됨 — 과거 저장 데이터 호환을
+ * 위해 타입에만 남겨두며(=pending과 동일하게 취급), 신규 저장에는 쓰지 않는다.
+ */
 export type TaskStatus = "pending" | "confirmed" | "done" | "hold";
 
 export interface BriefingTask {
@@ -148,7 +170,9 @@ export interface BriefingTask {
   reason: string; // 사람이 읽는 근거 설명
   suggestedAction: string; // 제안 실행 내용
   status: TaskStatus;
+  /** processedAt — 상태가 마지막으로 변경된 시각 (Supabase: status_changed_at) */
   statusChangedAt?: string;
+  /** processedBy — 상태를 변경한 직원 (Supabase: handled_by_staff_id) */
   handledByStaffId?: string;
 }
 

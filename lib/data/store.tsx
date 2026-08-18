@@ -266,14 +266,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           };
         });
       }
+      // 방문의 케어 부위(visitCareAreas)는 방문 기록에만 저장한다.
+      // 고객 프로필의 주요 케어 부위(preferredCareAreas)는 프로필에서만 수정.
       const customers = s.customers.map((c) => {
         if (c.id !== input.customerId) return c;
         return {
           ...c,
           nextManageDate: input.nextManageDate ?? c.nextManageDate,
-          focusBodyParts: input.bodyParts.length
-            ? input.bodyParts
-            : c.focusBodyParts,
         };
       });
       return { ...s, visits: [visit, ...s.visits], memberships, customers };
@@ -293,12 +292,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const updated: BriefingTask = {
         ...task,
         status,
-        statusChangedAt: new Date().toISOString(),
+        statusChangedAt: new Date().toISOString(), // processedAt
+        handledByStaffId: currentStaff?.id, // processedBy
       };
       const others = s.taskOverrides.filter((t) => t.id !== taskId);
       return { ...s, taskOverrides: [...others, updated] };
     });
-  }, [factsById]);
+  }, [factsById, currentStaff]);
 
   const updateSettings = useCallback((patch: Partial<AppSettings>) => {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));

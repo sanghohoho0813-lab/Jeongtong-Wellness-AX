@@ -23,8 +23,11 @@ const CATEGORY_TONES: Record<TaskCategory, BadgeTone> = {
   focus_care: "warn",
 };
 
+/**
+ * 업무 처리 액션 — 처리완료 / 보류 두 가지로 고정.
+ * ("확인"은 행동이 모호하여 제거 — 고객 확인은 '고객 상세' 링크가 담당)
+ */
 const NEXT_ACTIONS: Array<{ status: TaskStatus; label: string }> = [
-  { status: "confirmed", label: "확인" },
   { status: "done", label: "처리완료" },
   { status: "hold", label: "보류" },
 ];

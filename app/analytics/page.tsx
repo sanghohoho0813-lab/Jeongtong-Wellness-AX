@@ -48,6 +48,18 @@ function TrendBars({
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   const dense = data.length > 8; // 12개월 뷰: 라벨 간소화
+  const isEmpty = data.every((d) => d.value === 0);
+  if (isEmpty) {
+    // 데이터가 없으면 0으로 차트를 그리지 않는다
+    return (
+      <Card>
+        <SectionTitle>{title}</SectionTitle>
+        <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-10 text-center text-sm text-ink-sub">
+          데이터 축적 중 — 기록이 쌓이면 추이가 표시됩니다.
+        </p>
+      </Card>
+    );
+  }
   return (
     <Card>
       <SectionTitle>{title}</SectionTitle>
@@ -125,6 +137,14 @@ export default function AnalyticsPage() {
       />
 
       <div className="flex flex-col card-gap">
+        {/* 초기 데이터 부족: 억지 0% 대신 축적 안내 */}
+        {visits.filter((v) => v.type === "visit").length < 5 ? (
+          <InsightBanner title="기준 데이터 축적 중">
+            운영 데이터가 누적되면 이 화면에서 도입 전후 변화 추이를 확인할 수
+            있습니다. 방문·이용 기록이 쌓이는 대로 재방문율과 월별 지표가
+            자동으로 계산됩니다.
+          </InsightBanner>
+        ) : (
         <InsightBanner title="이번 달 핵심 요약">
           이번 달 방문은 <Em>{latest.visitCount}건</Em>
           {visitTrend && prev && (
@@ -145,6 +165,7 @@ export default function AnalyticsPage() {
           )}{" "}
           상태입니다.
         </InsightBanner>
+        )}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <MetricTile
             label="신규 고객 (최근 30일)"

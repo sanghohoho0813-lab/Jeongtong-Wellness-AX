@@ -119,10 +119,23 @@ export default function CustomersPage() {
       </Card>
 
       {rows.length === 0 ? (
-        <EmptyState
-          title="조건에 맞는 고객이 없습니다"
-          description="검색어나 필터를 변경해 보세요."
-        />
+        all.length === 0 ? (
+          <EmptyState
+            title="등록된 고객이 없습니다"
+            description="첫 고객을 등록하면 방문 기록과 재방문 관리가 시작됩니다."
+            action={
+              <Button onClick={() => setOpenForm(true)}>
+                <PlusIcon className="h-4 w-4" />
+                첫 고객 등록
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            title="조건에 맞는 고객이 없습니다"
+            description="검색어나 필터를 변경해 보세요."
+          />
+        )
       ) : (
         <div className="space-y-2.5">
           {rows.map((d) => (

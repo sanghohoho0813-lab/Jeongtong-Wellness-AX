@@ -75,6 +75,21 @@ export default function SegmentCard() {
   for (const d of derivedById.values()) counts[d.status]++;
   const total = derivedById.size;
 
+  if (total === 0) {
+    return (
+      <Card>
+        <SectionTitle>고객 세그먼트 · 재방문 분석</SectionTitle>
+        <p className="rounded-card border border-dashed border-stone-line bg-card-soft px-4 py-10 text-center text-sm leading-relaxed text-ink-sub">
+          <span className="block font-bold text-ink-soft">
+            재방문 분석 준비 중
+          </span>
+          방문 기록이 일정 수준 이상 축적되면 고객별 재방문 패턴을 확인할 수
+          있습니다.
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <SectionTitle>고객 세그먼트 · 재방문 분석</SectionTitle>
