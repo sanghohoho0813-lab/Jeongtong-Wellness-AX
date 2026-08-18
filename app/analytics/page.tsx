@@ -10,7 +10,7 @@ import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import { formatMonthKr } from "@/lib/utils/date";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
-import { Card, SectionTitle } from "@/components/ui";
+import { Card, Em, InsightBanner, SectionTitle } from "@/components/ui";
 
 function MetricTile({
   label,
@@ -87,6 +87,18 @@ export default function AnalyticsPage() {
   );
   const monthly = calcMonthlyMetrics(customers, visits, memberships, 6);
   const latest = monthly.at(-1)!;
+  const prev = monthly.at(-2);
+
+  // 데이터 기반 인사이트 문장 (허구 수치 없음 — 저장된 기록에서만 계산)
+  const visitDelta = prev ? latest.visitCount - prev.visitCount : 0;
+  const visitTrend =
+    !prev || prev.visitCount === 0
+      ? null
+      : visitDelta > 0
+        ? "증가"
+        : visitDelta < 0
+          ? "감소"
+          : "유지";
 
   return (
     <div>
@@ -96,6 +108,26 @@ export default function AnalyticsPage() {
       />
 
       <div className="flex flex-col card-gap">
+        <InsightBanner title="이번 달 핵심 요약">
+          이번 달 방문은 <Em>{latest.visitCount}건</Em>
+          {visitTrend && prev && (
+            <>
+              으로 지난달({prev.visitCount}건) 대비{" "}
+              <Em>
+                {visitDelta === 0 ? "동일" : `${Math.abs(visitDelta)}건 ${visitTrend}`}
+              </Em>
+            </>
+          )}
+          했습니다. 재방문율은 <Em>{formatPercent(summary.revisitRate)}</Em>
+          이며, 장기 미방문 고객 <Em>{summary.dormantCount}명</Em>
+          {summary.taskTotalCount > 0 && (
+            <>
+              , 오늘 관리과제 처리율{" "}
+              <Em>{formatPercent(summary.taskDoneRate)}</Em>
+            </>
+          )}{" "}
+          상태입니다.
+        </InsightBanner>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <MetricTile
             label="신규 고객 (최근 30일)"

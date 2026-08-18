@@ -131,7 +131,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <MobileHeader />
       <main className="px-4 pb-24 pt-4 sm:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-8">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <div className="mx-auto w-full max-w-7xl">{children}</div>
       </main>
       <BottomNav />
       <footer className="hidden pb-6 text-center text-xs text-ink-faint lg:ml-64 lg:block">

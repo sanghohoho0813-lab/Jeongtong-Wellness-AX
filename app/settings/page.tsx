@@ -103,7 +103,7 @@ export default function SettingsPage() {
         description="화면, 매장, 직원, 고객관리 기준을 관리합니다. 기준값은 오늘의 실행 브리핑 우선순위 계산에 바로 반영됩니다."
       />
 
-      <div className="flex flex-col card-gap">
+      <div className="grid grid-cols-1 card-gap xl:grid-cols-2 xl:items-start">
         {/* 화면 */}
         <Card>
           <SectionTitle>화면</SectionTitle>

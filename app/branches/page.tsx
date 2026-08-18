@@ -61,7 +61,15 @@ export default function BranchesPage() {
             (s) => s.branchId === branch.id && s.active,
           );
 
-          const stats = [
+          const openTaskCount = branchTasks.filter(
+            (t) => t.status === "pending" || t.status === "confirmed",
+          ).length;
+          // 운영 상태 판단 (기존 데이터 기반): 관리 대기 고객 비율로 표시
+          const attention =
+            summary.totalCustomers > 0 &&
+            openTaskCount / summary.totalCustomers > 0.3;
+
+          const stats: Array<{ label: string; value: string; warn?: boolean }> = [
             { label: "고객 수", value: `${summary.totalCustomers}명` },
             { label: "직원 수", value: `${branchStaff.length}명` },
             {
@@ -71,18 +79,32 @@ export default function BranchesPage() {
             { label: "재방문율", value: formatPercent(summary.revisitRate) },
             {
               label: "관리대상 고객",
-              value: `${branchTasks.filter((t) => t.status === "pending" || t.status === "confirmed").length}명`,
+              value: `${openTaskCount}명`,
+              warn: attention,
             },
             { label: "이번 달 매출", value: formatKrw(thisMonth.revenue) },
           ];
 
           return (
-            <Card key={branch.id}>
+            <Card key={branch.id} className="relative overflow-hidden">
+              <span
+                className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${attention ? "from-amber-300 to-warn" : "from-aqua-400 to-deep-700"}`}
+              />
               <SectionTitle
-                action={<Badge tone="aqua">운영 중</Badge>}
+                action={
+                  attention ? (
+                    <Badge tone="warn" dot>
+                      관리 집중 필요
+                    </Badge>
+                  ) : (
+                    <Badge tone="positive" dot>
+                      정상 운영
+                    </Badge>
+                  )
+                }
               >
-                <span className="inline-flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-aqua-50 text-aqua-700">
+                <span className="inline-flex items-center gap-2.5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 text-aqua-300 shadow-[0_2px_8px_rgba(10,46,44,0.3)]">
                     <BuildingIcon className="h-5 w-5" />
                   </span>
                   {settings.companyName} {branch.name}
@@ -91,16 +113,27 @@ export default function BranchesPage() {
               <p className="-mt-1 mb-4 text-sm text-ink-sub">
                 영업시간 {branch.openHours ?? settings.openHours} · 관리자{" "}
                 {settings.ownerName}
+                {attention && (
+                  <span className="ml-2 font-bold text-warn">
+                    관리 대기 고객 비율이 높습니다 — 실행 브리핑을 확인하세요.
+                  </span>
+                )}
               </p>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
                 {stats.map((s) => (
                   <div
                     key={s.label}
-                    className="rounded-card bg-card-soft p-3.5 text-center ring-1 ring-black/[0.04]"
+                    className={`rounded-card p-3.5 text-center ring-1 ${
+                      s.warn
+                        ? "bg-amber-50 ring-amber-200/60"
+                        : "bg-card-soft ring-black/[0.04]"
+                    }`}
                   >
                     <p className="text-xs font-bold text-ink-sub">{s.label}</p>
-                    <p className="mt-1 nowrap-num text-lg font-extrabold text-deep-800">
+                    <p
+                      className={`mt-1 nowrap-num text-lg font-extrabold ${s.warn ? "text-amber-700" : "text-deep-800"}`}
+                    >
                       {s.value}
                     </p>
                   </div>

@@ -259,6 +259,99 @@ export function MiniBars({
   );
 }
 
+// ---------- 페이지 상단 요약 / 인사이트 ----------
+
+/**
+ * 페이지 상단 요약 타일 — 카운트 + (선택) 필터 연동.
+ * 리스트형 화면 상단에서 "지금 상태"를 3초 안에 보여주는 용도.
+ */
+export function SummaryTile({
+  label,
+  value,
+  unit = "명",
+  tone = "aqua",
+  active,
+  onClick,
+}: {
+  label: string;
+  value: number | string;
+  unit?: string;
+  tone?: "aqua" | "warn" | "danger" | "gray" | "gold";
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  const tones: Record<string, { dot: string; activeRing: string }> = {
+    aqua: { dot: "bg-aqua-500", activeRing: "ring-aqua-500" },
+    warn: { dot: "bg-warn", activeRing: "ring-warn" },
+    danger: { dot: "bg-danger", activeRing: "ring-danger" },
+    gray: { dot: "bg-ink-faint", activeRing: "ring-ink-sub" },
+    gold: { dot: "bg-gold", activeRing: "ring-gold" },
+  };
+  const t = tones[tone];
+  const Tag = onClick ? "button" : "div";
+  return (
+    <Tag
+      onClick={onClick}
+      className={`min-w-0 rounded-card border bg-card px-3.5 py-3 text-left shadow-card transition-all sm:px-4 ${
+        active
+          ? `border-transparent ring-2 ${t.activeRing}`
+          : "border-black/[0.045]"
+      } ${onClick ? "cursor-pointer hover:shadow-card-hover" : ""}`}
+    >
+      <p className="flex items-center gap-1.5 truncate text-xs font-bold text-ink-sub">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
+        {label}
+      </p>
+      <p className="mt-1 nowrap-num text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
+        {value}
+        <span className="ml-0.5 text-sm font-bold text-ink-sub">{unit}</span>
+      </p>
+    </Tag>
+  );
+}
+
+/**
+ * 인사이트 배너 — Deep Teal 미니 히어로.
+ * "데이터 → 판단 → 실행"의 판단 결과를 문장으로 보여주는 영역.
+ */
+export function InsightBanner({
+  title,
+  children,
+  action,
+  className = "",
+}: {
+  title: string;
+  children: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`card-hero !p-5 sm:!p-6 ${className}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-aqua-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-aqua-300" />
+            {title}
+          </p>
+          <div className="mt-2 text-[0.9375rem] leading-relaxed text-white sm:text-base">
+            {children}
+          </div>
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
+      </div>
+    </div>
+  );
+}
+
+/** InsightBanner 안에서 수치를 강조할 때 */
+export function Em({ children }: { children: ReactNode }) {
+  return (
+    <strong className="nowrap-num font-extrabold text-aqua-300">
+      {children}
+    </strong>
+  );
+}
+
 // ---------- 기타 ----------
 
 export function EmptyState({

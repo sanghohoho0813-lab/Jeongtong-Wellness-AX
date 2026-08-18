@@ -8,7 +8,14 @@ import { useStore } from "@/lib/data/store";
 import { CustomerDerived } from "@/lib/types";
 import { daysAgo, formatRelative } from "@/lib/utils/date";
 import { formatPhone } from "@/lib/utils/format";
-import { Badge, Card, SectionTitle } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  Em,
+  InsightBanner,
+  SectionTitle,
+  SummaryTile,
+} from "@/components/ui";
 import { ChevronRightIcon } from "@/components/ui/icons";
 
 interface Group {
@@ -143,12 +150,77 @@ export default function RetentionPage() {
 
   const groups = [dueGroup, atRiskGroup, dormantGroup, lowGroup];
 
+  // 오늘 우선관리 — 우선도 상위 3명
+  const topPriority = all
+    .filter((d) => d.priorityScore > 0)
+    .sort((a, b) => b.priorityScore - a.priorityScore)
+    .slice(0, 3);
+
   return (
     <div>
       <PageHeader
         title="재방문 관리"
         description="관리 기준은 설정에서 조정할 수 있으며, 오늘의 실행 브리핑과 동일한 기준을 사용합니다."
       />
+
+      {/* 오늘 우선관리 인사이트 */}
+      {topPriority.length > 0 && (
+        <InsightBanner
+          title="오늘 우선관리"
+          className="mb-4 lg:mb-5"
+          action={
+            <Link
+              href="/briefing"
+              className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
+            >
+              실행 브리핑
+              <ChevronRightIcon className="h-4 w-4" />
+            </Link>
+          }
+        >
+          지금 가장 먼저 연락해야 할 고객은{" "}
+          {topPriority.map((d, i) => (
+            <span key={d.customer.id}>
+              <Link
+                href={`/customers/${d.customer.id}`}
+                className="font-extrabold text-white underline decoration-aqua-400/60 underline-offset-4 hover:text-aqua-200"
+              >
+                {d.customer.name}
+              </Link>
+              <Em> ({d.priorityScore})</Em>
+              {i < topPriority.length - 1 ? ", " : ""}
+            </span>
+          ))}
+          {" "}
+          입니다. 관리일 도래 <Em>{dueGroup.rows.length}명</Em> · 장기 미방문{" "}
+          <Em>{dormantGroup.rows.length}명</Em>이 관리 대기 중입니다.
+        </InsightBanner>
+      )}
+
+      {/* 그룹 요약 타일 */}
+      <div className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <SummaryTile
+          label="재방문 예정"
+          value={dueGroup.rows.length}
+          tone="aqua"
+        />
+        <SummaryTile
+          label="방문 주기 초과"
+          value={atRiskGroup.rows.length}
+          tone="warn"
+        />
+        <SummaryTile
+          label="장기 미방문"
+          value={dormantGroup.rows.length}
+          tone="danger"
+        />
+        <SummaryTile
+          label="이용권 임박·소진"
+          value={lowGroup.rows.length}
+          tone="gold"
+        />
+      </div>
+
       <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
         {groups.map((g) => (
           <Card key={g.key} className="relative overflow-hidden">

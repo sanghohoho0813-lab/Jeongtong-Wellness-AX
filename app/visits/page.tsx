@@ -6,7 +6,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import VisitForm from "@/components/visits/VisitForm";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
-import { formatDateKr, formatRelative } from "@/lib/utils/date";
+import { daysAgo, formatDateKr, formatRelative, todayISO } from "@/lib/utils/date";
 import { formatKrw } from "@/lib/utils/format";
 import {
   Badge,
@@ -15,6 +15,7 @@ import {
   EmptyState,
   FilterChip,
   Modal,
+  SummaryTile,
   inputCls,
 } from "@/components/ui";
 import { PlusIcon, SearchIcon } from "@/components/ui/icons";
@@ -58,7 +59,36 @@ export default function VisitsPage() {
         }
       />
 
-      <Card className="mb-4">
+      {(() => {
+        const today = todayISO();
+        const todayVisits = visits.filter(
+          (v) => v.type === "visit" && v.visitedAt.slice(0, 10) === today,
+        ).length;
+        const todayConsults = visits.filter(
+          (v) => v.type === "consult" && v.visitedAt.slice(0, 10) === today,
+        ).length;
+        const week = visits.filter(
+          (v) => v.type === "visit" && daysAgo(v.visitedAt) <= 7,
+        ).length;
+        const withParts = visits.filter(
+          (v) => daysAgo(v.visitedAt) <= 7 && v.bodyParts.length > 0,
+        ).length;
+        return (
+          <div className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+            <SummaryTile label="오늘 방문" value={todayVisits} unit="건" tone="aqua" />
+            <SummaryTile label="오늘 상담" value={todayConsults} unit="건" tone="gold" />
+            <SummaryTile label="최근 7일 방문" value={week} unit="건" tone="gray" />
+            <SummaryTile
+              label="7일 내 부위 기록"
+              value={withParts}
+              unit="건"
+              tone="aqua"
+            />
+          </div>
+        );
+      })()}
+
+      <Card className="mb-4 !py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
