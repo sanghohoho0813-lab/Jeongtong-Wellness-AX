@@ -243,6 +243,9 @@ export function generateDailyBriefing(
       status: existing?.status ?? "pending",
       statusChangedAt: existing?.statusChangedAt,
       handledByStaffId: existing?.handledByStaffId,
+      // 저장된 실행결과 / 보류 재확인일을 그대로 이어받는다 (점수 계산과 무관)
+      holdUntil: existing?.holdUntil,
+      outcome: existing?.outcome,
     });
   }
 

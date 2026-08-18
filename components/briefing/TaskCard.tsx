@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useStore } from "@/lib/data/store";
 import {
   BriefingTask,
@@ -10,9 +11,9 @@ import {
   TaskContactResult,
   TaskStatus,
 } from "@/lib/types";
-import { formatDateKr } from "@/lib/utils/date";
+import { daysFromToday, formatDateKr } from "@/lib/utils/date";
 import { formatPhone } from "@/lib/utils/format";
-import { Badge, BadgeTone, TaskStatusBadge } from "@/components/ui";
+import { Badge, BadgeTone, Button, TaskStatusBadge } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
 
@@ -90,6 +91,16 @@ export default function TaskCard({
 }) {
   const { customers, staff, setTaskStatus } = useStore();
   const toast = useToast();
+
+  /** 열려 있는 입력 패널 — 처리완료 결과 / 보류 재확인일 */
+  const [panel, setPanel] = useState<null | "done" | "hold">(null);
+  const [contactResult, setContactResult] =
+    useState<TaskContactResult>("contacted");
+  const [revisitPlanned, setRevisitPlanned] = useState(true);
+  const [nextDate, setNextDate] = useState("");
+  const [note, setNote] = useState("");
+  const [holdUntil, setHoldUntil] = useState(() => daysFromToday(3));
+
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
 
@@ -104,6 +115,64 @@ export default function TaskCard({
 
   const finished = task.status === "done";
   const hero = variant === "hero";
+
+  /** 처리완료 패널 열기 — 기존 결과 또는 고객의 현재 다음 관리일로 초기화 */
+  const openDonePanel = () => {
+    const o = task.outcome;
+    const d = o?.nextManageDate ?? customer.nextManageDate ?? "";
+    setContactResult(o?.contactResult ?? "contacted");
+    setRevisitPlanned(o?.revisitPlanned ?? !!d);
+    setNextDate(d);
+    setNote(o?.note ?? "");
+    setPanel("done");
+  };
+
+  const openHoldPanel = () => {
+    setHoldUntil(task.holdUntil ?? daysFromToday(3));
+    setPanel("hold");
+  };
+
+  const saveDone = () => {
+    setTaskStatus(task.id, "done", {
+      outcome: {
+        contactResult,
+        revisitPlanned,
+        nextManageDate: revisitPlanned ? nextDate || undefined : undefined,
+        note: note.trim() || undefined,
+      },
+    });
+    setPanel(null);
+    toast(`${customer.name} · 처리 결과가 저장되었습니다`);
+  };
+
+  const saveHold = () => {
+    setTaskStatus(task.id, "hold", { holdUntil });
+    setPanel(null);
+    toast(`${customer.name} · 보류 — ${formatDateKr(holdUntil)} 재확인 예정`, "info");
+  };
+
+  /** 이미 처리된 상태에서 버튼을 다시 누르면 대기로 되돌린다 */
+  const revertToPending = () => {
+    setTaskStatus(task.id, "pending");
+    setPanel(null);
+    toast(`${customer.name} · ${STATUS_TOAST.pending}`, "info");
+  };
+
+  const panelShell = hero
+    ? "rounded-card bg-white/10 ring-1 ring-white/15"
+    : "rounded-card bg-card ring-1 ring-black/[0.06] dark:ring-white/10";
+  const panelLabel = hero
+    ? "text-[0.7rem] font-extrabold uppercase tracking-wider text-aqua-200"
+    : "text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint";
+  const chipOn = hero
+    ? "bg-white text-deep-900"
+    : "bg-aqua-600 text-white";
+  const chipOff = hero
+    ? "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20"
+    : "bg-card-soft text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50";
+  const fieldCls = hero
+    ? "w-full rounded-btn border border-white/20 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/50 focus:border-aqua-300"
+    : "w-full rounded-btn border border-stone-line bg-card-soft px-3 py-2 text-sm text-ink outline-none focus:border-aqua-500";
 
   const shell = hero
     ? "rounded-card bg-white/[0.07] ring-1 ring-white/10 backdrop-blur-[2px]"
@@ -190,26 +259,22 @@ export default function TaskCard({
               const activeCls =
                 a.status === "done"
                   ? "bg-aqua-500 text-white shadow-sm"
-                  : a.status === "hold"
-                    ? "bg-warn text-white shadow-sm"
-                    : hero
-                      ? "bg-white text-deep-900 shadow-sm"
-                      : "bg-ink-soft text-white shadow-sm";
+                  : "bg-warn text-white shadow-sm";
               const idleCls = hero
                 ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
                 : "bg-card text-ink-soft ring-1 ring-black/[0.06] hover:bg-aqua-50 dark:ring-white/10";
+              const open = panel === a.status;
               return (
                 <button
                   key={a.status}
                   onClick={() => {
-                    const next: TaskStatus = active ? "pending" : a.status;
-                    setTaskStatus(task.id, next);
-                    toast(
-                      `${customer.name} · ${STATUS_TOAST[next]}`,
-                      next === "done" ? "success" : "info",
-                    );
+                    if (open) return setPanel(null);
+                    if (active) return revertToPending();
+                    // 상태를 바로 바꾸지 않고 입력 패널을 먼저 연다
+                    if (a.status === "done") openDonePanel();
+                    else openHoldPanel();
                   }}
-                  className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${active ? activeCls : idleCls}`}
+                  className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${active || open ? activeCls : idleCls}`}
                 >
                   {a.status === "done" && <CheckIcon className="h-4 w-4" />}
                   {a.status === "hold" && <PauseIcon className="h-4 w-4" />}
@@ -217,6 +282,15 @@ export default function TaskCard({
                 </button>
               );
             })}
+            {/* 처리완료 상태에서 결과를 다시 열어 수정 */}
+            {finished && panel !== "done" && (
+              <button
+                onClick={openDonePanel}
+                className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-aqua-200 hover:text-white" : "text-aqua-700 hover:text-aqua-800"}`}
+              >
+                결과 수정
+              </button>
+            )}
             <Link
               href={`/customers/${customer.id}`}
               className={`touch-target ml-auto inline-flex items-center gap-0.5 text-sm font-bold ${
@@ -230,54 +304,164 @@ export default function TaskCard({
             </Link>
           </div>
 
-          {/* 실행결과 축적 — 처리완료 시에만 노출되는 최소 입력 */}
-          {finished && !hero && (
-            <div className="mt-3 rounded-card bg-card px-3.5 py-3 ring-1 ring-black/[0.05] dark:ring-white/10">
-              <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-                실행 결과
+          {/* 처리완료 결과 입력 — [처리완료] 직후 이 자리에서 바로 기록 */}
+          {panel === "done" && (
+            <div className={`mt-3 px-3.5 py-3 ${panelShell}`}>
+              <p className={panelLabel}>실행 결과</p>
+
+              <p className={`mt-2 text-xs font-bold ${hero ? "text-deep-sub" : "text-ink-sub"}`}>
+                처리결과
               </p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <div className="mt-1 flex flex-wrap gap-1.5">
                 {(
                   Object.keys(TASK_CONTACT_RESULT_LABELS) as TaskContactResult[]
-                ).map((r) => {
-                  const on = (task.outcome?.contactResult ?? "contacted") === r;
+                ).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => {
+                      setContactResult(r);
+                      // 재방문 예약을 선택하면 재방문 여부도 함께 맞춰준다
+                      if (r === "reserved") setRevisitPlanned(true);
+                    }}
+                    className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${contactResult === r ? chipOn : chipOff}`}
+                  >
+                    {TASK_CONTACT_RESULT_LABELS[r]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-2.5 flex flex-wrap items-end gap-3">
+                <div>
+                  <p className={`text-xs font-bold ${hero ? "text-deep-sub" : "text-ink-sub"}`}>
+                    재방문
+                  </p>
+                  <div className="mt-1 flex gap-1.5">
+                    {[
+                      { v: true, label: "예약 예정" },
+                      { v: false, label: "미정" },
+                    ].map((o) => (
+                      <button
+                        key={o.label}
+                        onClick={() => setRevisitPlanned(o.v)}
+                        className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${revisitPlanned === o.v ? chipOn : chipOff}`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="min-w-40 flex-1">
+                  <p className={`text-xs font-bold ${hero ? "text-deep-sub" : "text-ink-sub"}`}>
+                    다음 관리일
+                  </p>
+                  <input
+                    type="date"
+                    value={nextDate}
+                    disabled={!revisitPlanned}
+                    onChange={(e) => setNextDate(e.target.value)}
+                    className={`mt-1 ${fieldCls} disabled:opacity-45`}
+                    aria-label="다음 관리일"
+                  />
+                </div>
+              </div>
+
+              <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="메모 (선택)"
+                className={`mt-2.5 ${fieldCls}`}
+              />
+
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={hero ? "on-dark" : "primary"}
+                  onClick={saveDone}
+                >
+                  <CheckIcon className="h-4 w-4" />
+                  완료 저장
+                </Button>
+                <button
+                  onClick={() => setPanel(null)}
+                  className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-deep-sub hover:text-white" : "text-ink-sub hover:text-ink"}`}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 보류 재확인일 선택 */}
+          {panel === "hold" && (
+            <div className={`mt-3 px-3.5 py-3 ${panelShell}`}>
+              <p className={panelLabel}>보류 — 재확인 예정일</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {[
+                  { d: 1, label: "내일" },
+                  { d: 3, label: "3일 뒤" },
+                  { d: 7, label: "1주 뒤" },
+                ].map((o) => {
+                  const v = daysFromToday(o.d);
                   return (
                     <button
-                      key={r}
-                      onClick={() =>
-                        setTaskStatus(task.id, "done", { contactResult: r })
-                      }
-                      className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${
-                        on
-                          ? "bg-aqua-600 text-white"
-                          : "bg-card-soft text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
-                      }`}
+                      key={o.label}
+                      onClick={() => setHoldUntil(v)}
+                      className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${holdUntil === v ? chipOn : chipOff}`}
                     >
-                      {TASK_CONTACT_RESULT_LABELS[r]}
+                      {o.label}
                     </button>
                   );
                 })}
               </div>
               <input
-                defaultValue={task.outcome?.note ?? ""}
-                onBlur={(e) => {
-                  const note = e.target.value.trim();
-                  if (note !== (task.outcome?.note ?? ""))
-                    setTaskStatus(task.id, "done", { note: note || undefined });
-                }}
-                placeholder="처리 메모 (선택)"
-                className="mt-2 w-full rounded-btn border border-stone-line bg-card-soft px-3 py-1.5 text-sm text-ink outline-none focus:border-aqua-500"
+                type="date"
+                value={holdUntil}
+                onChange={(e) => setHoldUntil(e.target.value)}
+                className={`mt-2 ${fieldCls}`}
+                aria-label="재확인 예정일"
               />
-              <p className="mt-1.5 nowrap-num text-[0.7rem] text-ink-faint">
-                {handlerName ? `${handlerName} 처리` : "처리"}
-                {task.statusChangedAt
-                  ? ` · ${formatDateKr(task.statusChangedAt)}`
-                  : ""}
-                {task.outcome?.revisitPlanned
-                  ? ` · 재방문 예정 ${formatDateKr(task.outcome.nextManageDate)}`
-                  : " · 재방문 예정일 미지정"}
-              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={hero ? "on-dark" : "primary"}
+                  onClick={saveHold}
+                >
+                  <PauseIcon className="h-4 w-4" />
+                  보류 저장
+                </Button>
+                <button
+                  onClick={() => setPanel(null)}
+                  className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-deep-sub hover:text-white" : "text-ink-sub hover:text-ink"}`}
+                >
+                  취소
+                </button>
+              </div>
             </div>
+          )}
+
+          {/* 저장된 실행결과 / 보류 상태 요약 */}
+          {panel === null && finished && task.outcome && (
+            <p
+              className={`mt-2.5 nowrap-num text-[0.7rem] ${hero ? "text-deep-faint" : "text-ink-faint"}`}
+            >
+              {TASK_CONTACT_RESULT_LABELS[task.outcome.contactResult]}
+              {handlerName ? ` · ${handlerName} 처리` : ""}
+              {task.statusChangedAt
+                ? ` · ${formatDateKr(task.statusChangedAt)}`
+                : ""}
+              {task.outcome.revisitPlanned && task.outcome.nextManageDate
+                ? ` · 재방문 ${formatDateKr(task.outcome.nextManageDate)}`
+                : " · 재방문 미정"}
+              {task.outcome.note ? ` · ${task.outcome.note}` : ""}
+            </p>
+          )}
+          {panel === null && task.status === "hold" && task.holdUntil && (
+            <p
+              className={`mt-2.5 text-[0.7rem] font-bold ${hero ? "text-deep-faint" : "text-warn"}`}
+            >
+              재확인 예정 {formatDateKr(task.holdUntil)}
+              {handlerName ? ` · ${handlerName} 보류` : ""}
+            </p>
           )}
         </div>
       </div>

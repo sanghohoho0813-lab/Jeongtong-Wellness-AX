@@ -97,7 +97,7 @@ interface StoreValue extends PersistedState {
   setTaskStatus: (
     taskId: string,
     status: TaskStatus,
-    outcome?: Partial<TaskOutcome>,
+    extra?: { outcome?: Partial<TaskOutcome>; holdUntil?: string },
   ) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   updateStaff: (staff: Staff[]) => void;
@@ -286,7 +286,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [state.branches]);
 
   const setTaskStatus = useCallback(
-    (taskId: string, status: TaskStatus, outcome?: Partial<TaskOutcome>) => {
+    (
+      taskId: string,
+      status: TaskStatus,
+      extra?: { outcome?: Partial<TaskOutcome>; holdUntil?: string },
+    ) => {
       setState((s) => {
         const generated = generateDailyBriefing(
           [...factsById.values()],
@@ -300,15 +304,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         // 실행결과 축적: 처리완료일 때만 결과를 남기고, 그 외 상태에서는 비운다
         let nextOutcome: TaskOutcome | undefined;
+        let customers = s.customers;
         if (status === "done") {
           const base = prev?.outcome ?? task.outcome;
+          const o = extra?.outcome;
+          const nextManageDate =
+            o?.nextManageDate ?? base?.nextManageDate ?? customer?.nextManageDate;
           nextOutcome = {
-            contactResult: outcome?.contactResult ?? base?.contactResult ?? "contacted",
-            // 재방문 예정 여부 — 처리 시점의 다음 관리 예정일 스냅샷으로 판단
-            revisitPlanned: !!customer?.nextManageDate,
-            nextManageDate: customer?.nextManageDate,
-            note: outcome?.note ?? base?.note,
+            contactResult: o?.contactResult ?? base?.contactResult ?? "contacted",
+            revisitPlanned: o?.revisitPlanned ?? !!nextManageDate,
+            nextManageDate,
+            note: o?.note ?? base?.note,
           };
+          // 결과에서 다음 관리일을 조정했으면 고객 데이터에도 반영 (기존 필드 갱신)
+          if (
+            o?.nextManageDate &&
+            customer &&
+            o.nextManageDate !== customer.nextManageDate
+          ) {
+            customers = s.customers.map((c) =>
+              c.id === customer.id
+                ? { ...c, nextManageDate: o.nextManageDate }
+                : c,
+            );
+          }
         }
 
         const updated: BriefingTask = {
@@ -316,10 +335,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           status,
           statusChangedAt: new Date().toISOString(), // processedAt
           handledByStaffId: currentStaff?.id, // processedBy
+          holdUntil: status === "hold" ? extra?.holdUntil : undefined,
           outcome: nextOutcome,
         };
         const others = s.taskOverrides.filter((t) => t.id !== taskId);
-        return { ...s, taskOverrides: [...others, updated] };
+        return { ...s, customers, taskOverrides: [...others, updated] };
       });
     },
     [factsById, currentStaff],

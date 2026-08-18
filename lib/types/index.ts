@@ -174,6 +174,12 @@ export interface BriefingTask {
   statusChangedAt?: string;
   /** processedBy — 상태를 변경한 직원 (Supabase: handled_by_staff_id) */
   handledByStaffId?: string;
+  /**
+   * holdUntil — 보류 과제의 재확인 예정일 (YYYY-MM-DD).
+   * status = "hold" 일 때만 유효하며, 자동 재노출 엔진은 아직 없다.
+   * (Supabase: briefing_task_logs.hold_until date)
+   */
+  holdUntil?: string;
   /** 실행결과 — 처리완료 시 기록되며, 향후 AX 분석/스코어 개선의 입력이 된다 */
   outcome?: TaskOutcome;
 }
@@ -190,13 +196,13 @@ export type TaskContactResult =
   | "not_needed"; // 연락 불필요
 
 export interface TaskOutcome {
-  /** 연락 여부 / 처리 결과 */
+  /** 연락 여부 / 처리 결과 (Supabase: contact_result) */
   contactResult: TaskContactResult;
-  /** 재방문 예정 여부 — 처리 시점의 고객 다음 관리일 스냅샷으로 판단 */
+  /** 재방문 예정 여부 (Supabase: revisit_expected) */
   revisitPlanned: boolean;
-  /** 처리 시점의 다음 관리 예정일 */
+  /** 처리 시점의 다음 관리 예정일 (Supabase: next_management_date) */
   nextManageDate?: string;
-  /** 간단 메모 */
+  /** 간단 메모 (Supabase: memo) */
   note?: string;
 }
 
