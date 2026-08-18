@@ -5,12 +5,13 @@
  * 저장된 운영 데이터에서 계산한 지표와 월별 추이를 축적해 보여준다.
  */
 
+import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import { formatMonthKr } from "@/lib/utils/date";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
-import { Card, Em, InsightBanner, SectionTitle } from "@/components/ui";
+import { Card, Em, FilterChip, InsightBanner, SectionTitle } from "@/components/ui";
 
 function MetricTile({
   label,
@@ -46,18 +47,23 @@ function TrendBars({
   format: (v: number) => string;
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
+  const dense = data.length > 8; // 12개월 뷰: 라벨 간소화
   return (
     <Card>
       <SectionTitle>{title}</SectionTitle>
-      <div className="flex items-end justify-between gap-2 sm:gap-3">
-        {data.map((d) => {
+      <div className="flex items-end justify-between gap-1.5 sm:gap-3">
+        {data.map((d, i) => {
           const h = Math.round((d.value / max) * 100);
+          const showValue = !dense || d.value === max || i === data.length - 1;
+          const showMonth = !dense || i % 2 === data.length % 2;
           return (
             <div
               key={d.month}
               className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
             >
-              <span className="nowrap-num text-xs font-semibold text-ink-soft">
+              <span
+                className={`nowrap-num text-xs font-semibold text-ink-soft ${showValue ? "" : "invisible"}`}
+              >
                 {format(d.value)}
               </span>
               <div className="flex h-28 w-full max-w-10 items-end rounded-lg bg-stone-bg-deep/50">
@@ -66,7 +72,9 @@ function TrendBars({
                   style={{ height: `${Math.max(h, d.value > 0 ? 8 : 0)}%` }}
                 />
               </div>
-              <span className="truncate text-[0.7rem] text-ink-sub">
+              <span
+                className={`truncate text-[0.7rem] text-ink-sub ${showMonth ? "" : "invisible"}`}
+              >
                 {d.month.slice(5)}월
               </span>
             </div>
@@ -78,14 +86,22 @@ function TrendBars({
 }
 
 export default function AnalyticsPage() {
-  const { factsById, briefingTasks, settings, customers, visits, memberships } =
-    useStore();
+  const {
+    factsById,
+    briefingTasks,
+    settings,
+    customers,
+    visits,
+    memberships,
+    taskOverrides,
+  } = useStore();
   const summary = calcAxSummary(
     [...factsById.values()],
     briefingTasks,
     settings.careRules,
   );
-  const monthly = calcMonthlyMetrics(customers, visits, memberships, 6);
+  const [months, setMonths] = useState<3 | 6 | 12>(6);
+  const monthly = calcMonthlyMetrics(customers, visits, memberships, months);
   const latest = monthly.at(-1)!;
   const prev = monthly.at(-2);
 
@@ -175,6 +191,21 @@ export default function AnalyticsPage() {
           />
         </div>
 
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-section-title text-ink">기간별 추이</h2>
+          <div className="flex gap-2">
+            {([3, 6, 12] as const).map((m) => (
+              <FilterChip
+                key={m}
+                active={months === m}
+                onClick={() => setMonths(m)}
+              >
+                {m}개월
+              </FilterChip>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
           <TrendBars
             title="월별 방문 건수"
@@ -203,6 +234,58 @@ export default function AnalyticsPage() {
             format={(v) => (v > 0 ? formatKrw(v) : "0")}
           />
         </div>
+
+        {/* 관리과제 처리 추이 — 브리핑에서 처리한 이력이 날짜별로 축적된다 */}
+        <Card>
+          <SectionTitle>관리과제 처리 추이 (최근 7일)</SectionTitle>
+          {(() => {
+            const days = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(Date.now() - (6 - i) * 86400000);
+              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+              const label = `${d.getMonth() + 1}/${d.getDate()}`;
+              const count = taskOverrides.filter(
+                (t) =>
+                  t.status === "done" &&
+                  t.statusChangedAt?.slice(0, 10) === key,
+              ).length;
+              return { key, label, count };
+            });
+            const total = days.reduce((s, d) => s + d.count, 0);
+            const max = Math.max(...days.map((d) => d.count), 1);
+            if (total === 0)
+              return (
+                <p className="rounded-card bg-card-soft py-8 text-center text-sm text-ink-sub">
+                  아직 처리 이력이 없습니다. 오늘의 실행 브리핑에서 과제를
+                  처리하면 날짜별로 축적됩니다.
+                </p>
+              );
+            return (
+              <div className="flex items-end justify-between gap-2 sm:gap-3">
+                {days.map((d) => (
+                  <div
+                    key={d.key}
+                    className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
+                  >
+                    <span className="nowrap-num text-xs font-semibold text-ink-soft">
+                      {d.count > 0 ? `${d.count}건` : ""}
+                    </span>
+                    <div className="flex h-20 w-full max-w-10 items-end rounded-lg bg-stone-bg-deep/50">
+                      <div
+                        className={`w-full rounded-lg ${d.count > 0 ? "bg-gradient-to-t from-deep-700 to-aqua-400" : "bg-transparent"}`}
+                        style={{
+                          height: `${Math.max(Math.round((d.count / max) * 100), d.count > 0 ? 10 : 0)}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="nowrap-num text-[0.7rem] text-ink-sub">
+                      {d.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </Card>
 
         <Card className="border-l-4 border-gold">
           <p className="font-bold text-ink">Before / After 비교 안내</p>

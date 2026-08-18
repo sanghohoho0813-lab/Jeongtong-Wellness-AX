@@ -7,6 +7,7 @@ import { useStore } from "@/lib/data/store";
 import { BodyPartRecord } from "@/lib/types";
 import { daysFromToday } from "@/lib/utils/date";
 import { Button, FieldLabel, inputCls } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
 export default function CustomerForm({
@@ -17,6 +18,7 @@ export default function CustomerForm({
   onCancel: () => void;
 }) {
   const { staff, settings, addCustomer } = useStore();
+  const toast = useToast();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState<"female" | "male" | "">("");
@@ -42,6 +44,7 @@ export default function CustomerForm({
       assignedStaffId: staffId || undefined,
       nextManageDate: nextManage || undefined,
     });
+    toast(`${c.name} 고객을 등록했습니다`);
     onSaved(c.id);
   };
 

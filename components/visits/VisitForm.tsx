@@ -7,6 +7,7 @@ import { useStore } from "@/lib/data/store";
 import { BodyPartRecord, VisitType } from "@/lib/types";
 import { daysFromToday } from "@/lib/utils/date";
 import { Button, FieldLabel, inputCls } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
 const PROGRAMS = [
@@ -26,6 +27,7 @@ export default function VisitForm({
   onCancel: () => void;
 }) {
   const { customers, staff, memberships, settings, addVisit } = useStore();
+  const toast = useToast();
   const [customerId, setCustomerId] = useState(fixedCustomerId ?? "");
   const [type, setType] = useState<VisitType>("visit");
   const [programName, setProgramName] = useState(PROGRAMS[0]);
@@ -73,6 +75,10 @@ export default function VisitForm({
       nextManageDate: nextManage || undefined,
       staffId: staffId || undefined,
     });
+    const name = customers.find((c) => c.id === customerId)?.name ?? "고객";
+    toast(
+      `${name} · ${type === "consult" ? "상담" : "방문"} 기록을 저장했습니다`,
+    );
     onSaved();
   };
 

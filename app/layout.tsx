@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppProvider } from "@/lib/data/store";
 import AppShell from "@/components/layout/AppShell";
+import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
   title: "정통대왕쑥뜸원 AX Platform",
@@ -21,7 +22,9 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <AppProvider>
-          <AppShell>{children}</AppShell>
+          <ToastProvider>
+            <AppShell>{children}</AppShell>
+          </ToastProvider>
         </AppProvider>
       </body>
     </html>

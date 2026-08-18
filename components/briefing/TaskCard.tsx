@@ -9,6 +9,7 @@ import {
 } from "@/lib/types";
 import { formatPhone } from "@/lib/utils/format";
 import { Badge, TaskStatusBadge } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
 
 const NEXT_ACTIONS: Array<{ status: TaskStatus; label: string }> = [
@@ -71,8 +72,16 @@ export default function TaskCard({
   variant?: "light" | "hero";
 }) {
   const { customers, setTaskStatus } = useStore();
+  const toast = useToast();
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
+
+  const STATUS_TOAST: Record<TaskStatus, string> = {
+    pending: "대기 상태로 되돌렸습니다",
+    confirmed: "확인 처리했습니다",
+    done: "처리완료했습니다",
+    hold: "보류 처리했습니다",
+  };
 
   const finished = task.status === "done";
   const hero = variant === "hero";
@@ -145,9 +154,14 @@ export default function TaskCard({
               return (
                 <button
                   key={a.status}
-                  onClick={() =>
-                    setTaskStatus(task.id, active ? "pending" : a.status)
-                  }
+                  onClick={() => {
+                    const next: TaskStatus = active ? "pending" : a.status;
+                    setTaskStatus(task.id, next);
+                    toast(
+                      `${customer.name} · ${STATUS_TOAST[next]}`,
+                      next === "done" ? "success" : "info",
+                    );
+                  }}
                   className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${active ? activeCls : idleCls}`}
                 >
                   {a.status === "done" && <CheckIcon className="h-4 w-4" />}

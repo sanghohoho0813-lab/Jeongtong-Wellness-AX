@@ -3,6 +3,7 @@
 /** 재방문 관리 — 관리 대상 고객을 그룹별로 보여주는 화면 */
 
 import Link from "next/link";
+import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import { CustomerDerived } from "@/lib/types";
@@ -65,6 +66,7 @@ const GROUP_ACCENT: Record<string, string> = {
 
 export default function RetentionPage() {
   const { derivedById, settings } = useStore();
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const rules = settings.careRules;
   const all = [...derivedById.values()];
 
@@ -243,17 +245,31 @@ export default function RetentionPage() {
               </p>
             ) : (
               <div className="space-y-2">
-                {g.rows.slice(0, 8).map((r) => (
-                  <CustomerRow
-                    key={r.derived.customer.id}
-                    derived={r.derived}
-                    note={r.note}
-                  />
-                ))}
+                {(expanded.has(g.key) ? g.rows : g.rows.slice(0, 8)).map(
+                  (r) => (
+                    <CustomerRow
+                      key={r.derived.customer.id}
+                      derived={r.derived}
+                      note={r.note}
+                    />
+                  ),
+                )}
                 {g.rows.length > 8 && (
-                  <p className="pt-1 text-center text-xs text-ink-sub">
-                    외 {g.rows.length - 8}명 — 고객 메뉴에서 전체를 확인하세요.
-                  </p>
+                  <button
+                    onClick={() =>
+                      setExpanded((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(g.key)) next.delete(g.key);
+                        else next.add(g.key);
+                        return next;
+                      })
+                    }
+                    className="touch-target w-full rounded-card bg-card-soft py-2.5 text-center text-sm font-bold text-aqua-700 ring-1 ring-black/[0.04] transition-colors hover:bg-aqua-50"
+                  >
+                    {expanded.has(g.key)
+                      ? "접기"
+                      : `전체 ${g.rows.length}명 보기`}
+                  </button>
                 )}
               </div>
             )}

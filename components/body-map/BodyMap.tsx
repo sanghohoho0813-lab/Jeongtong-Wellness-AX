@@ -8,9 +8,18 @@
  * - 데이터는 BodyPartRecord[] — side/subPart 필드로 향후 좌/우·세부 부위 확장
  */
 
-import { BODY_PART_LABELS, BodyPart, BodyPartRecord } from "@/lib/types";
+import { BODY_PART_LABELS, BodyPart, BodyPartRecord, BodySide } from "@/lib/types";
 
 type View = "front" | "back";
+
+/** 좌/우 구분이 의미 있는 부위 (양측 shape 보유) */
+const SIDED_PARTS: BodyPart[] = ["arm", "knee", "leg", "foot_ankle"];
+
+const SIDE_LABELS: Record<BodySide, string> = {
+  left: "좌",
+  right: "우",
+  both: "양쪽",
+};
 
 interface Zone {
   part: BodyPart;
@@ -105,29 +114,48 @@ function Silhouette() {
   );
 }
 
+/**
+ * shape index → 신체 기준 좌/우.
+ * 양측 shape은 [0]=화면 좌측, [1]=화면 우측이며,
+ * 앞면에서는 화면 좌측이 고객의 오른쪽, 뒷면에서는 고객의 왼쪽이다.
+ */
+function shapeBodySide(view: View, index: number): BodySide {
+  if (view === "front") return index === 0 ? "right" : "left";
+  return index === 0 ? "left" : "right";
+}
+
 function ZoneShapes({
   zone,
-  selected,
+  view,
+  record,
   onToggle,
   readOnly,
 }: {
   zone: Zone;
-  selected: boolean;
+  view: View;
+  record?: BodyPartRecord;
   onToggle: (part: BodyPart) => void;
   readOnly?: boolean;
 }) {
-  const common = {
-    className: readOnly ? "" : "cursor-pointer",
-    fill: selected ? "url(#zoneFill)" : "transparent",
-    stroke: selected ? "#0E7F7D" : "transparent",
-    strokeWidth: 1.4,
-    filter: selected ? "url(#zoneGlow)" : undefined,
-    onClick: readOnly ? undefined : () => onToggle(zone.part),
-  };
+  const side = record?.side ?? "both";
+  const twoSided = zone.shapes.length === 2;
+
   return (
     <g>
-      {zone.shapes.map((s, i) =>
-        s.kind === "rect" ? (
+      {zone.shapes.map((s, i) => {
+        const shapeSide = twoSided ? shapeBodySide(view, i) : "both";
+        const filled =
+          !!record && (side === "both" || !twoSided || shapeSide === side);
+        const common = {
+          className: readOnly ? "" : "cursor-pointer",
+          fill: filled ? "url(#zoneFill)" : "transparent",
+          stroke: filled ? "#0E7F7D" : "transparent",
+          strokeWidth: 1.4,
+          filter: filled ? "url(#zoneGlow)" : undefined,
+          onClick: readOnly ? undefined : () => onToggle(zone.part),
+        };
+        const title = `${BODY_PART_LABELS[zone.part]}${twoSided && record && side !== "both" ? ` (${SIDE_LABELS[side]})` : ""}`;
+        return s.kind === "rect" ? (
           <rect
             key={i}
             x={s.x}
@@ -137,26 +165,26 @@ function ZoneShapes({
             rx={s.r ?? 6}
             {...common}
           >
-            <title>{BODY_PART_LABELS[zone.part]}</title>
+            <title>{title}</title>
           </rect>
         ) : (
           <ellipse key={i} cx={s.cx} cy={s.cy} rx={s.rx} ry={s.ry} {...common}>
-            <title>{BODY_PART_LABELS[zone.part]}</title>
+            <title>{title}</title>
           </ellipse>
-        ),
-      )}
+        );
+      })}
     </g>
   );
 }
 
 function BodyFigure({
   view,
-  selectedParts,
+  records,
   onToggle,
   readOnly,
 }: {
   view: View;
-  selectedParts: Set<BodyPart>;
+  records: BodyPartRecord[];
   onToggle: (part: BodyPart) => void;
   readOnly?: boolean;
 }) {
@@ -194,7 +222,8 @@ function BodyFigure({
             <ZoneShapes
               key={z.part}
               zone={z}
-              selected={selectedParts.has(z.part)}
+              view={view}
+              record={records.find((r) => r.part === z.part)}
               onToggle={onToggle}
               readOnly={readOnly}
             />
@@ -232,15 +261,20 @@ export default function BodyMap({
   readOnly?: boolean;
   compactChips?: boolean;
 }) {
-  const selectedParts = new Set(value.map((r) => r.part));
+  const recordByPart = new Map(value.map((r) => [r.part, r]));
 
   const toggle = (part: BodyPart) => {
     if (readOnly || !onChange) return;
-    if (selectedParts.has(part)) {
+    if (recordByPart.has(part)) {
       onChange(value.filter((r) => r.part !== part));
     } else {
       onChange([...value, { part, side: "both" }]);
     }
+  };
+
+  const setSide = (part: BodyPart, side: BodySide) => {
+    if (readOnly || !onChange) return;
+    onChange(value.map((r) => (r.part === part ? { ...r, side } : r)));
   };
 
   return (
@@ -248,39 +282,66 @@ export default function BodyMap({
       <div className="flex flex-1 justify-center gap-4 sm:gap-6">
         <BodyFigure
           view="front"
-          selectedParts={selectedParts}
+          records={value}
           onToggle={toggle}
           readOnly={readOnly}
         />
         <BodyFigure
           view="back"
-          selectedParts={selectedParts}
+          records={value}
           onToggle={toggle}
           readOnly={readOnly}
         />
       </div>
       <div
-        className={`flex flex-wrap content-start gap-2 sm:w-44 sm:flex-col ${compactChips ? "sm:w-40" : ""}`}
+        className={`flex flex-wrap content-start gap-2 sm:w-48 sm:flex-col ${compactChips ? "sm:w-44" : ""}`}
       >
         {CHIP_ORDER.map((part) => {
-          const selected = selectedParts.has(part);
+          const record = recordByPart.get(part);
+          const selected = !!record;
+          const sided = SIDED_PARTS.includes(part);
           return (
-            <button
-              key={part}
-              type="button"
-              disabled={readOnly}
-              onClick={() => toggle(part)}
-              className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
-                selected
-                  ? "bg-gradient-to-r from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
-                  : "bg-white text-ink-soft ring-1 ring-stone-line"
-              } ${readOnly ? "" : "hover:ring-aqua-400"}`}
-            >
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${selected ? "bg-white" : "bg-aqua-100 ring-1 ring-aqua-400"}`}
-              />
-              <span className="whitespace-nowrap">{BODY_PART_LABELS[part]}</span>
-            </button>
+            <div key={part} className="flex flex-col gap-1">
+              <button
+                type="button"
+                disabled={readOnly}
+                onClick={() => toggle(part)}
+                className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                  selected
+                    ? "bg-gradient-to-r from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
+                    : "bg-white text-ink-soft ring-1 ring-stone-line"
+                } ${readOnly ? "" : "hover:ring-aqua-400"}`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${selected ? "bg-white" : "bg-aqua-100 ring-1 ring-aqua-400"}`}
+                />
+                <span className="whitespace-nowrap">
+                  {BODY_PART_LABELS[part]}
+                  {selected && sided && (record.side ?? "both") !== "both"
+                    ? ` · ${SIDE_LABELS[record.side!]}`
+                    : ""}
+                </span>
+              </button>
+              {/* 좌/우 구분 토글 — 양측 부위 선택 시에만 노출 */}
+              {selected && sided && !readOnly && (
+                <div className="ml-2 flex gap-1">
+                  {(["left", "both", "right"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSide(part, s)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
+                        (record.side ?? "both") === s
+                          ? "bg-deep-800 text-white"
+                          : "bg-white text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
+                      }`}
+                    >
+                      {SIDE_LABELS[s]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -301,6 +362,7 @@ export function BodyPartTags({ records }: { records: BodyPartRecord[] }) {
         >
           <span className="h-1.5 w-1.5 rounded-full bg-aqua-500" />
           {BODY_PART_LABELS[r.part]}
+          {r.side && r.side !== "both" ? ` · ${SIDE_LABELS[r.side]}` : ""}
           {r.subPart ? ` · ${r.subPart}` : ""}
         </span>
       ))}

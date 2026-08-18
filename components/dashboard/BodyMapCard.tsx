@@ -9,13 +9,14 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { BodyPartRecord } from "@/lib/types";
 import { Button, SectionTitle, inputCls } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
 export default function BodyMapCard() {
   const { customers, updateCustomer } = useStore();
+  const toast = useToast();
   const [customerId, setCustomerId] = useState("");
   const [parts, setParts] = useState<BodyPartRecord[]>([]);
-  const [savedMsg, setSavedMsg] = useState("");
 
   const sorted = useMemo(
     () => [...customers].sort((a, b) => a.name.localeCompare(b.name, "ko")),
@@ -24,7 +25,6 @@ export default function BodyMapCard() {
 
   const selectCustomer = (id: string) => {
     setCustomerId(id);
-    setSavedMsg("");
     const c = customers.find((x) => x.id === id);
     setParts(c?.focusBodyParts ?? []);
   };
@@ -33,7 +33,7 @@ export default function BodyMapCard() {
     if (!customerId) return;
     updateCustomer(customerId, { focusBodyParts: parts });
     const c = customers.find((x) => x.id === customerId);
-    setSavedMsg(`${c?.name} 고객의 집중 케어 부위를 저장했습니다.`);
+    toast(`${c?.name} 고객의 집중 케어 부위를 저장했습니다`);
   };
 
   return (
@@ -68,10 +68,7 @@ export default function BodyMapCard() {
 
       <BodyMap
         value={parts}
-        onChange={(next) => {
-          setParts(next);
-          setSavedMsg("");
-        }}
+        onChange={setParts}
         readOnly={!customerId}
         compactChips
       />
@@ -84,11 +81,6 @@ export default function BodyMapCard() {
       >
         부위 선택 기록하기
       </Button>
-      {savedMsg && (
-        <p className="mt-2 text-center text-sm font-bold text-aqua-700">
-          {savedMsg}
-        </p>
-      )}
     </div>
   );
 }

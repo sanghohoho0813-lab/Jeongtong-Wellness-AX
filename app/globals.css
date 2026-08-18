@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Pretendard Variable";
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
+}
+
 :root {
   --font-scale: 1;
   --density-gap: 1.125rem;
@@ -89,6 +97,18 @@ body {
 .nowrap-num {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+/* toast */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* scrollbar (desktop, subtle) */

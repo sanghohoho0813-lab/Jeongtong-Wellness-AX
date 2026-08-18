@@ -21,10 +21,12 @@ import {
   inputCls,
 } from "@/components/ui";
 import { BodyIcon, ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
+import { useToast } from "@/components/ui/toast";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
   const { derivedById, factsById, staff, updateCustomer } = useStore();
+  const toast = useToast();
   const [openVisit, setOpenVisit] = useState(false);
   const [editingParts, setEditingParts] = useState(false);
   const [draftParts, setDraftParts] = useState<BodyPartRecord[]>([]);
@@ -176,6 +178,7 @@ export default function CustomerDetailPage() {
                       onClick={() => {
                         updateCustomer(c.id, { focusBodyParts: draftParts });
                         setEditingParts(false);
+                        toast(`${c.name} 고객의 집중 케어 부위를 저장했습니다`);
                       }}
                     >
                       저장
