@@ -24,6 +24,7 @@ import {
   DEFAULT_SETTINGS,
   Membership,
   Staff,
+  TaskOutcome,
   TaskStatus,
   Visit,
 } from "@/lib/types";
@@ -93,7 +94,11 @@ interface StoreValue extends PersistedState {
   addCustomer: (input: NewCustomerInput) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
   addVisit: (input: NewVisitInput) => Visit;
-  setTaskStatus: (taskId: string, status: TaskStatus) => void;
+  setTaskStatus: (
+    taskId: string,
+    status: TaskStatus,
+    outcome?: Partial<TaskOutcome>,
+  ) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   updateStaff: (staff: Staff[]) => void;
   resetData: () => void;
@@ -280,25 +285,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return visit;
   }, [state.branches]);
 
-  const setTaskStatus = useCallback((taskId: string, status: TaskStatus) => {
-    setState((s) => {
-      const generated = generateDailyBriefing(
-        [...factsById.values()],
-        s.settings.careRules,
-        s.taskOverrides,
-      );
-      const task = generated.find((t) => t.id === taskId);
-      if (!task) return s;
-      const updated: BriefingTask = {
-        ...task,
-        status,
-        statusChangedAt: new Date().toISOString(), // processedAt
-        handledByStaffId: currentStaff?.id, // processedBy
-      };
-      const others = s.taskOverrides.filter((t) => t.id !== taskId);
-      return { ...s, taskOverrides: [...others, updated] };
-    });
-  }, [factsById, currentStaff]);
+  const setTaskStatus = useCallback(
+    (taskId: string, status: TaskStatus, outcome?: Partial<TaskOutcome>) => {
+      setState((s) => {
+        const generated = generateDailyBriefing(
+          [...factsById.values()],
+          s.settings.careRules,
+          s.taskOverrides,
+        );
+        const task = generated.find((t) => t.id === taskId);
+        if (!task) return s;
+        const prev = s.taskOverrides.find((t) => t.id === taskId);
+        const customer = s.customers.find((c) => c.id === task.customerId);
+
+        // 실행결과 축적: 처리완료일 때만 결과를 남기고, 그 외 상태에서는 비운다
+        let nextOutcome: TaskOutcome | undefined;
+        if (status === "done") {
+          const base = prev?.outcome ?? task.outcome;
+          nextOutcome = {
+            contactResult: outcome?.contactResult ?? base?.contactResult ?? "contacted",
+            // 재방문 예정 여부 — 처리 시점의 다음 관리 예정일 스냅샷으로 판단
+            revisitPlanned: !!customer?.nextManageDate,
+            nextManageDate: customer?.nextManageDate,
+            note: outcome?.note ?? base?.note,
+          };
+        }
+
+        const updated: BriefingTask = {
+          ...task,
+          status,
+          statusChangedAt: new Date().toISOString(), // processedAt
+          handledByStaffId: currentStaff?.id, // processedBy
+          outcome: nextOutcome,
+        };
+        const others = s.taskOverrides.filter((t) => t.id !== taskId);
+        return { ...s, taskOverrides: [...others, updated] };
+      });
+    },
+    [factsById, currentStaff],
+  );
 
   const updateSettings = useCallback((patch: Partial<AppSettings>) => {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));

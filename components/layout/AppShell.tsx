@@ -13,7 +13,7 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-function Logo({ compact = false }: { compact?: boolean }) {
+function Logo() {
   return (
     <Link href="/" className="flex min-w-0 items-center gap-2.5">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
@@ -23,11 +23,10 @@ function Logo({ compact = false }: { compact?: boolean }) {
         <span className="block truncate text-[1.05rem] font-extrabold leading-tight tracking-tight text-ink">
           정통대왕쑥뜸원
         </span>
-        {!compact && (
-          <span className="block text-[0.7rem] font-bold uppercase tracking-[0.14em] text-aqua-700">
-            AX Platform
-          </span>
-        )}
+        {/* AX 브랜드 시그니처 — 한글 브랜드보다 작게, PC/모바일 동일 문구 */}
+        <span className="block truncate text-[0.625rem] font-bold uppercase tracking-[0.1em] text-aqua-700">
+          Wellness Business AX
+        </span>
       </span>
     </Link>
   );
@@ -79,7 +78,7 @@ function Sidebar() {
 function MobileHeader() {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
-      <Logo compact />
+      <Logo />
       <button
         aria-label="알림"
         className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"

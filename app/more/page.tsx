@@ -5,21 +5,21 @@
 import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
-import { SIDEBAR_ITEMS } from "@/components/layout/nav-items";
+import { MORE_ITEMS } from "@/components/layout/nav-items";
 import { ProfileButton } from "@/components/layout/UserSwitch";
 import { Card } from "@/components/ui";
 import { ChevronRightIcon } from "@/components/ui/icons";
 
 export default function MorePage() {
   const { settings, isManager } = useStore();
-  const items = SIDEBAR_ITEMS.filter(
+  const items = MORE_ITEMS.filter(
     (item) => isManager || item.href !== "/branches",
   );
   return (
     <div>
       <PageHeader
         title="더보기"
-        description={`${settings.companyName} ${settings.branchName}`}
+        description={`${settings.companyName} ${settings.branchName} · 보조 · 관리 기능`}
       />
       <div className="mb-4">
         <ProfileButton />

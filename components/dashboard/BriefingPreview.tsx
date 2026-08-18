@@ -36,8 +36,12 @@ export default function BriefingPreview() {
         </Link>
       </div>
 
+      <p className="mt-2 text-[0.8125rem] leading-relaxed text-deep-sub">
+        고객·이용 데이터를 분석해 오늘 우선적으로 처리할 업무를 제안합니다.
+      </p>
+
       {/* 진행 요약 */}
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
         <p className="text-sm font-medium text-deep-sub">
           오늘 관리 대상{" "}
           <strong className="nowrap-num text-lg font-extrabold text-white">

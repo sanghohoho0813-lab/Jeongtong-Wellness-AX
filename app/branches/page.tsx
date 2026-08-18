@@ -180,6 +180,44 @@ export default function BranchesPage() {
             있습니다.
           </p>
         </Card>
+
+        {/* 확장 로드맵 — 미구현 기능임을 명확히 표시 */}
+        <Card>
+          <SectionTitle>운영 확장 로드맵</SectionTitle>
+          <p className="-mt-2 mb-4 text-sm text-ink-sub">
+            직영점 데이터 축적 → 운영 표준화 → 다점포 → 본사 통합관리 순으로
+            확장할 수 있는 구조입니다. 아래 항목은 아직 제공되지 않습니다.
+          </p>
+          <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            {[
+              {
+                title: "가맹점 통합관리",
+                desc: "지점별 운영지표 비교 및 통합 관리",
+              },
+              {
+                title: "본사 표준운영 관리",
+                desc: "표준 프로세스·교육 콘텐츠 배포",
+              },
+              {
+                title: "제조 · 공급관리",
+                desc: "원료 수급 및 지점 공급 현황 관리",
+              },
+            ].map((r) => (
+              <li
+                key={r.title}
+                className="rounded-card border border-dashed border-stone-line bg-card-soft p-3.5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-bold text-ink-soft">{r.title}</p>
+                  <Badge tone="gray">고도화 예정</Badge>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-ink-sub">
+                  {r.desc}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
     </div>
   );

@@ -40,4 +40,12 @@ export const BOTTOM_NAV_ITEMS: NavItem[] = [
   { href: "/more", label: "더보기", icon: MoreIcon },
 ];
 
+/**
+ * Mobile 더보기 — 하단 네비에 없는 보조/관리 기능만.
+ * 하단 네비와 동일한 경로(/, /customers, /visits, /analytics)는 중복 배치하지 않는다.
+ */
+export const MORE_ITEMS: NavItem[] = SIDEBAR_ITEMS.filter(
+  (item) => !BOTTOM_NAV_ITEMS.some((b) => b.href === item.href),
+);
+
 export { BodyIcon };

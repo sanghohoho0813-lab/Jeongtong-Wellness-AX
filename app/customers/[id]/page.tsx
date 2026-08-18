@@ -22,10 +22,12 @@ import {
 } from "@/components/ui";
 import { BodyIcon, ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
+import { buildCustomerInsight } from "@/lib/scoring/insight";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
-  const { derivedById, factsById, staff, updateCustomer } = useStore();
+  const { derivedById, factsById, staff, updateCustomer, briefingTasks, settings } =
+    useStore();
   const toast = useToast();
   const [openVisit, setOpenVisit] = useState(false);
   const [editingParts, setEditingParts] = useState(false);
@@ -51,6 +53,10 @@ export default function CustomerDetailPage() {
     staff.find((s) => s.id === id)?.name ?? "미지정";
 
   const consultNotes = visits.filter((v) => v.reaction).slice(0, 5);
+
+  // AX Insight — 실행 브리핑과 동일한 근거/권장행동을 재사용
+  const task = briefingTasks.find((t) => t.customerId === c.id);
+  const insight = buildCustomerInsight(derived, task, settings.careRules);
 
   return (
     <div>
@@ -158,20 +164,34 @@ export default function CustomerDetailPage() {
           </Card>
         </div>
 
-        {/* 우선순위 근거 */}
-        {derived.priorityReasons.length > 0 && (
-          <div className="card-accent">
-            <p className="flex items-center gap-2 text-sm font-extrabold text-deep-800 dark:text-aqua-700">
-              <span className="h-2 w-2 rounded-full bg-aqua-500" />
-              AI 관리 포인트
+        {/* AX INSIGHT — 브리핑과 동일한 판단근거·권장행동 체계를 재사용 */}
+        <div className="card-accent">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-deep-800 dark:text-aqua-700">
+              <span
+                className={`h-2 w-2 rounded-full ${insight.attention ? "bg-aqua-500" : "bg-positive"}`}
+              />
+              AX Insight
             </p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-ink-soft">
-              {derived.priorityReasons.map((r, i) => (
-                <li key={i}>{r}</li>
-              ))}
-            </ul>
+            <Badge tone={insight.attention ? "aqua" : "positive"} dot>
+              {insight.attention ? "AX 우선관리" : "정상 관리군"}
+            </Badge>
           </div>
-        )}
+          <ul className="mt-2.5 space-y-1">
+            {insight.reasons.map((r, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+              >
+                <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
+                {r}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-sm font-bold text-aqua-700">
+            → {insight.recommendation}
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
           {/* 집중 케어 부위 — 주요 기능 */}

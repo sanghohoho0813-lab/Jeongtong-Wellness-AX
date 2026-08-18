@@ -5,9 +5,12 @@ import { useStore } from "@/lib/data/store";
 import {
   BriefingTask,
   TASK_CATEGORY_LABELS,
+  TASK_CONTACT_RESULT_LABELS,
   TaskCategory,
+  TaskContactResult,
   TaskStatus,
 } from "@/lib/types";
+import { formatDateKr } from "@/lib/utils/date";
 import { formatPhone } from "@/lib/utils/format";
 import { Badge, BadgeTone, TaskStatusBadge } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
@@ -85,10 +88,12 @@ export default function TaskCard({
   compact?: boolean;
   variant?: "light" | "hero";
 }) {
-  const { customers, setTaskStatus } = useStore();
+  const { customers, staff, setTaskStatus } = useStore();
   const toast = useToast();
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
+
+  const handlerName = staff.find((s) => s.id === task.handledByStaffId)?.name;
 
   const STATUS_TOAST: Record<TaskStatus, string> = {
     pending: "대기 상태로 되돌렸습니다",
@@ -224,6 +229,56 @@ export default function TaskCard({
               <ChevronRightIcon className="h-4 w-4" />
             </Link>
           </div>
+
+          {/* 실행결과 축적 — 처리완료 시에만 노출되는 최소 입력 */}
+          {finished && !hero && (
+            <div className="mt-3 rounded-card bg-card px-3.5 py-3 ring-1 ring-black/[0.05] dark:ring-white/10">
+              <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                실행 결과
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {(
+                  Object.keys(TASK_CONTACT_RESULT_LABELS) as TaskContactResult[]
+                ).map((r) => {
+                  const on = (task.outcome?.contactResult ?? "contacted") === r;
+                  return (
+                    <button
+                      key={r}
+                      onClick={() =>
+                        setTaskStatus(task.id, "done", { contactResult: r })
+                      }
+                      className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                        on
+                          ? "bg-aqua-600 text-white"
+                          : "bg-card-soft text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
+                      }`}
+                    >
+                      {TASK_CONTACT_RESULT_LABELS[r]}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                defaultValue={task.outcome?.note ?? ""}
+                onBlur={(e) => {
+                  const note = e.target.value.trim();
+                  if (note !== (task.outcome?.note ?? ""))
+                    setTaskStatus(task.id, "done", { note: note || undefined });
+                }}
+                placeholder="처리 메모 (선택)"
+                className="mt-2 w-full rounded-btn border border-stone-line bg-card-soft px-3 py-1.5 text-sm text-ink outline-none focus:border-aqua-500"
+              />
+              <p className="mt-1.5 nowrap-num text-[0.7rem] text-ink-faint">
+                {handlerName ? `${handlerName} 처리` : "처리"}
+                {task.statusChangedAt
+                  ? ` · ${formatDateKr(task.statusChangedAt)}`
+                  : ""}
+                {task.outcome?.revisitPlanned
+                  ? ` · 재방문 예정 ${formatDateKr(task.outcome.nextManageDate)}`
+                  : " · 재방문 예정일 미지정"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

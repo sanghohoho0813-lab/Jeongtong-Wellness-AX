@@ -10,6 +10,7 @@ import { CustomerStatus } from "@/lib/types";
 import { formatRelative } from "@/lib/utils/date";
 import { formatPhone } from "@/lib/utils/format";
 import {
+  Badge,
   Button,
   Card,
   CustomerStatusBadge,
@@ -110,7 +111,7 @@ export default function CustomersPage() {
           </div>
           {priorityCount > 0 && (
             <p className="shrink-0 text-sm font-bold text-ink-sub">
-              관리 대상{" "}
+              AX 우선관리{" "}
               <span className="nowrap-num text-deep-800 dark:text-aqua-700">{priorityCount}명</span>{" "}
               포함
             </p>
@@ -152,12 +153,24 @@ export default function CustomersPage() {
                   <span className="truncate font-extrabold text-ink">
                     {d.customer.name}
                   </span>
-                  <CustomerStatusBadge status={d.status} />
+                  {d.priorityScore > 0 ? (
+                    <Badge tone="aqua" dot>
+                      AX 우선관리
+                    </Badge>
+                  ) : (
+                    <CustomerStatusBadge status={d.status} />
+                  )}
                 </div>
                 <p className="mt-0.5 truncate text-sm text-ink-sub">
                   {formatPhone(d.customer.phone)} · 방문 {d.visitCount}회 · 최근
                   방문 {formatRelative(d.lastVisitDate)}
                 </p>
+                {/* 시스템이 관리대상으로 판단한 첫 번째 근거 (브리핑과 동일 체계) */}
+                {d.priorityScore > 0 && d.priorityReasons[0] && (
+                  <p className="mt-0.5 truncate text-xs font-bold text-aqua-700">
+                    {d.priorityReasons[0]}
+                  </p>
+                )}
               </div>
               <div className="hidden shrink-0 text-right sm:block">
                 {d.activeMembership ? (
@@ -176,7 +189,7 @@ export default function CustomersPage() {
               {d.priorityScore > 0 && (
                 <span className="nowrap-num hidden shrink-0 items-center gap-1.5 rounded-full bg-deep-800 px-3 py-1 text-xs font-extrabold text-white md:inline-flex">
                   <span className="h-1.5 w-1.5 rounded-full bg-aqua-300" />
-                  우선도 {d.priorityScore}
+                  관리점수 {d.priorityScore}
                 </span>
               )}
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />

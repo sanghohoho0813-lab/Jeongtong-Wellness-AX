@@ -174,7 +174,38 @@ export interface BriefingTask {
   statusChangedAt?: string;
   /** processedBy — 상태를 변경한 직원 (Supabase: handled_by_staff_id) */
   handledByStaffId?: string;
+  /** 실행결과 — 처리완료 시 기록되며, 향후 AX 분석/스코어 개선의 입력이 된다 */
+  outcome?: TaskOutcome;
 }
+
+/**
+ * AX 실행결과 — "데이터 → 판단 → 실행 → 결과 축적" 흐름의 마지막 단계.
+ * 처리완료 시 현재 흐름 안에서 최소한으로 기록한다.
+ * (Supabase: briefing_task_logs 에 컬럼으로 확장 예정)
+ */
+export type TaskContactResult =
+  | "contacted" // 연락 완료
+  | "reserved" // 재방문 예약
+  | "no_answer" // 부재 / 미응답
+  | "not_needed"; // 연락 불필요
+
+export interface TaskOutcome {
+  /** 연락 여부 / 처리 결과 */
+  contactResult: TaskContactResult;
+  /** 재방문 예정 여부 — 처리 시점의 고객 다음 관리일 스냅샷으로 판단 */
+  revisitPlanned: boolean;
+  /** 처리 시점의 다음 관리 예정일 */
+  nextManageDate?: string;
+  /** 간단 메모 */
+  note?: string;
+}
+
+export const TASK_CONTACT_RESULT_LABELS: Record<TaskContactResult, string> = {
+  contacted: "연락 완료",
+  reserved: "재방문 예약",
+  no_answer: "부재 / 미응답",
+  not_needed: "연락 불필요",
+};
 
 export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
   revisit_due: "재방문 예정",

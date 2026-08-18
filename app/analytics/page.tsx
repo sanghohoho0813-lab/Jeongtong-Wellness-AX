@@ -12,6 +12,7 @@ import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import { formatMonthKr } from "@/lib/utils/date";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
 import { Card, Em, FilterChip, InsightBanner, SectionTitle } from "@/components/ui";
+import { buildOperationInsight } from "@/lib/scoring/insight";
 
 function MetricTile({
   label,
@@ -118,6 +119,23 @@ export default function AnalyticsPage() {
   const latest = monthly.at(-1)!;
   const prev = monthly.at(-2);
 
+  // AX 운영 인사이트 — 현재 지표에서만 도출되는 규칙 기반 문장
+  const openTaskCount = briefingTasks.filter(
+    (t) => t.status === "pending" || t.status === "confirmed",
+  ).length;
+  const membershipLowCount = memberships.filter(
+    (m) =>
+      m.status === "active" &&
+      m.remainingCount > 0 &&
+      m.remainingCount <= settings.careRules.membershipLowCount,
+  ).length;
+  const opInsight = buildOperationInsight(
+    summary,
+    monthly,
+    openTaskCount,
+    membershipLowCount,
+  );
+
   // 데이터 기반 인사이트 문장 (허구 수치 없음 — 저장된 기록에서만 계산)
   const visitDelta = prev ? latest.visitCount - prev.visitCount : 0;
   const visitTrend =
@@ -145,25 +163,33 @@ export default function AnalyticsPage() {
             자동으로 계산됩니다.
           </InsightBanner>
         ) : (
-        <InsightBanner title="이번 달 핵심 요약">
-          이번 달 방문은 <Em>{latest.visitCount}건</Em>
-          {visitTrend && prev && (
-            <>
-              으로 지난달({prev.visitCount}건) 대비{" "}
-              <Em>
-                {visitDelta === 0 ? "동일" : `${Math.abs(visitDelta)}건 ${visitTrend}`}
-              </Em>
-            </>
-          )}
-          했습니다. 재방문율은 <Em>{formatPercent(summary.revisitRate)}</Em>
-          이며, 장기 미방문 고객 <Em>{summary.dormantCount}명</Em>
-          {summary.taskTotalCount > 0 && (
-            <>
-              , 오늘 관리과제 처리율{" "}
-              <Em>{formatPercent(summary.taskDoneRate)}</Em>
-            </>
-          )}{" "}
-          상태입니다.
+        <InsightBanner title="AX 운영 인사이트">
+          <p>{opInsight.headline}</p>
+          <p className="mt-2 font-bold text-aqua-300">
+            → {opInsight.recommendation}
+          </p>
+          <p className="mt-2.5 border-t border-white/10 pt-2.5 text-[0.8125rem] text-deep-sub">
+            이번 달 방문 <Em>{latest.visitCount}건</Em>
+            {visitTrend && prev && (
+              <>
+                {" "}
+                (지난달 {prev.visitCount}건 대비{" "}
+                {visitDelta === 0
+                  ? "동일"
+                  : `${Math.abs(visitDelta)}건 ${visitTrend}`}
+                )
+              </>
+            )}{" "}
+            · 재방문율 <Em>{formatPercent(summary.revisitRate)}</Em> · 장기
+            미방문 <Em>{summary.dormantCount}명</Em>
+            {summary.taskTotalCount > 0 && (
+              <>
+                {" "}
+                · 관리과제 처리율{" "}
+                <Em>{formatPercent(summary.taskDoneRate)}</Em>
+              </>
+            )}
+          </p>
         </InsightBanner>
         )}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">

@@ -5,7 +5,8 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { BodyPartRecord, VisitType } from "@/lib/types";
-import { daysFromToday } from "@/lib/utils/date";
+import { daysFromToday, formatDateKr } from "@/lib/utils/date";
+import { recommendNextManageDate } from "@/lib/scoring/insight";
 import { Button, FieldLabel, inputCls } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
@@ -26,7 +27,8 @@ export default function VisitForm({
   onSaved: () => void;
   onCancel: () => void;
 }) {
-  const { customers, staff, memberships, settings, addVisit } = useStore();
+  const { customers, staff, memberships, settings, addVisit, factsById } =
+    useStore();
   const toast = useToast();
   const [customerId, setCustomerId] = useState(fixedCustomerId ?? "");
   const [type, setType] = useState<VisitType>("visit");
@@ -53,6 +55,12 @@ export default function VisitForm({
 
   const activeMemberships = memberships.filter(
     (m) => m.customerId === customerId && m.status === "active",
+  );
+
+  // AX 추천 다음 관리일 (선택된 고객의 기존 방문주기 기반)
+  const recommendation = recommendNextManageDate(
+    customerId ? factsById.get(customerId) : undefined,
+    settings.careRules,
   );
 
   const selectCustomer = (id: string) => {
@@ -214,6 +222,34 @@ export default function VisitForm({
             value={nextManage}
             onChange={(e) => setNextManage(e.target.value)}
           />
+          {/* AX 추천 다음 관리일 — 기존 방문주기 데이터 기반 (예측 모델 아님) */}
+          <div className="mt-2 rounded-btn bg-card-soft px-3 py-2 ring-1 ring-stone-line">
+            <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+              AX 추천 다음 관리일
+            </p>
+            {recommendation.date ? (
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="nowrap-num text-sm font-extrabold text-deep-800 dark:text-aqua-700">
+                  {formatDateKr(recommendation.date)}
+                </span>
+                <span className="text-xs text-ink-sub">
+                  {recommendation.basis}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setNextManage(recommendation.date!)}
+                  disabled={nextManage === recommendation.date}
+                  className="ml-auto rounded-full bg-aqua-50 px-3 py-1 text-xs font-bold text-aqua-800 ring-1 ring-aqua-200 transition-colors hover:bg-aqua-100 disabled:opacity-50"
+                >
+                  {nextManage === recommendation.date ? "적용됨" : "추천일 적용"}
+                </button>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-ink-sub">
+                {recommendation.basis}
+              </p>
+            )}
+          </div>
         </div>
         {type === "visit" && (
           <div className="sm:col-span-2">
