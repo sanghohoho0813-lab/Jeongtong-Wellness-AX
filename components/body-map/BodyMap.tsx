@@ -3,7 +3,7 @@
 /**
  * 신체 부위 선택 Body Map (앞면 / 뒷면)
  *
- * - 시안처럼 터쿼이즈 실루엣 + 선택 부위 하이라이트
+ * - 그라데이션 실루엣 + 선택 부위 aqua fill & glow 하이라이트
  * - 실루엣 터치와 부위 칩 양쪽 모두로 선택 가능 (모바일 손가락 조작 고려)
  * - 데이터는 BodyPartRecord[] — side/subPart 필드로 향후 좌/우·세부 부위 확장
  */
@@ -85,7 +85,7 @@ const BACK_ZONES: Zone[] = [
 /** 실루엣 (양쪽 뷰 공통 형태) */
 function Silhouette() {
   return (
-    <g fill="#BFE4E2" stroke="#8FCFCC" strokeWidth="1">
+    <g fill="url(#bodyFill)" stroke="#7FC5C1" strokeWidth="1">
       {/* 머리 */}
       <circle cx="60" cy="19" r="13" />
       {/* 목 */}
@@ -118,10 +118,10 @@ function ZoneShapes({
 }) {
   const common = {
     className: readOnly ? "" : "cursor-pointer",
-    fill: selected ? "#149D9A" : "transparent",
-    fillOpacity: selected ? 0.55 : 1,
+    fill: selected ? "url(#zoneFill)" : "transparent",
     stroke: selected ? "#0E7F7D" : "transparent",
-    strokeWidth: 1.2,
+    strokeWidth: 1.4,
+    filter: selected ? "url(#zoneGlow)" : undefined,
     onClick: readOnly ? undefined : () => onToggle(zone.part),
   };
   return (
@@ -163,26 +163,47 @@ function BodyFigure({
   const zones = view === "front" ? FRONT_ZONES : BACK_ZONES;
   return (
     <div className="flex flex-col items-center">
-      <svg
-        viewBox="0 0 120 252"
-        className="h-auto w-full max-w-[140px] sm:max-w-[150px]"
-        role="group"
-        aria-label={view === "front" ? "신체 앞면" : "신체 뒷면"}
-      >
-        <Silhouette />
-        {zones.map((z) => (
-          <ZoneShapes
-            key={z.part}
-            zone={z}
-            selected={selectedParts.has(z.part)}
-            onToggle={onToggle}
-            readOnly={readOnly}
-          />
-        ))}
-      </svg>
-      <p className="mt-1.5 text-sm font-semibold text-ink-sub">
-        {view === "front" ? "앞면" : "뒷면"}
-      </p>
+      <div className="rounded-card bg-gradient-to-b from-aqua-50/80 to-white px-2.5 pb-1 pt-3 ring-1 ring-aqua-100">
+        <svg
+          viewBox="0 0 120 252"
+          className="h-auto w-full max-w-[140px] sm:max-w-[150px]"
+          role="group"
+          aria-label={view === "front" ? "신체 앞면" : "신체 뒷면"}
+        >
+          <defs>
+            <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#C9E9E6" />
+              <stop offset="100%" stopColor="#A9DBD7" />
+            </linearGradient>
+            <linearGradient id="zoneFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#2AB3AF" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0E7F7D" stopOpacity="0.9" />
+            </linearGradient>
+            <filter id="zoneGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow
+                dx="0"
+                dy="0"
+                stdDeviation="3"
+                floodColor="#149D9A"
+                floodOpacity="0.55"
+              />
+            </filter>
+          </defs>
+          <Silhouette />
+          {zones.map((z) => (
+            <ZoneShapes
+              key={z.part}
+              zone={z}
+              selected={selectedParts.has(z.part)}
+              onToggle={onToggle}
+              readOnly={readOnly}
+            />
+          ))}
+        </svg>
+        <p className="pb-1 pt-1.5 text-center text-sm font-bold text-ink-sub">
+          {view === "front" ? "앞면" : "뒷면"}
+        </p>
+      </div>
     </div>
   );
 }
@@ -224,7 +245,7 @@ export default function BodyMap({
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-      <div className="flex flex-1 justify-center gap-5 sm:gap-8">
+      <div className="flex flex-1 justify-center gap-4 sm:gap-6">
         <BodyFigure
           view="front"
           selectedParts={selectedParts}
@@ -239,7 +260,7 @@ export default function BodyMap({
         />
       </div>
       <div
-        className={`flex flex-wrap gap-2 sm:w-44 sm:flex-col ${compactChips ? "sm:w-36" : ""}`}
+        className={`flex flex-wrap content-start gap-2 sm:w-44 sm:flex-col ${compactChips ? "sm:w-40" : ""}`}
       >
         {CHIP_ORDER.map((part) => {
           const selected = selectedParts.has(part);
@@ -249,11 +270,11 @@ export default function BodyMap({
               type="button"
               disabled={readOnly}
               onClick={() => toggle(part)}
-              className={`touch-target inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors ${
+              className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
                 selected
-                  ? "border-aqua-600 bg-aqua-600 text-white"
-                  : "border-stone-bg-deep bg-card text-ink-soft"
-              } ${readOnly ? "" : "hover:border-aqua-500"}`}
+                  ? "bg-gradient-to-r from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
+                  : "bg-white text-ink-soft ring-1 ring-stone-line"
+              } ${readOnly ? "" : "hover:ring-aqua-400"}`}
             >
               <span
                 className={`h-2.5 w-2.5 rounded-full ${selected ? "bg-white" : "bg-aqua-100 ring-1 ring-aqua-400"}`}
@@ -276,8 +297,9 @@ export function BodyPartTags({ records }: { records: BodyPartRecord[] }) {
       {records.map((r, i) => (
         <span
           key={`${r.part}-${i}`}
-          className="inline-flex items-center rounded-full bg-aqua-100 px-2.5 py-0.5 text-xs font-semibold text-aqua-800 whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 rounded-full bg-aqua-100 px-2.5 py-0.5 text-xs font-bold text-aqua-800 whitespace-nowrap"
         >
+          <span className="h-1.5 w-1.5 rounded-full bg-aqua-500" />
           {BODY_PART_LABELS[r.part]}
           {r.subPart ? ` · ${r.subPart}` : ""}
         </span>

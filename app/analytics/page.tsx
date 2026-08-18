@@ -16,15 +16,21 @@ function MetricTile({
   label,
   value,
   caption,
+  highlight = false,
 }: {
   label: string;
   value: string;
   caption?: string;
+  highlight?: boolean;
 }) {
   return (
-    <Card className="min-w-0">
-      <p className="truncate text-sm font-medium text-ink-sub">{label}</p>
-      <p className="mt-1.5 nowrap-num text-2xl font-bold text-ink">{value}</p>
+    <Card className={`min-w-0 !p-4 sm:!p-5 ${highlight ? "!bg-gradient-to-br !from-aqua-50 !to-white ring-1 ring-aqua-200/50" : ""}`}>
+      <p className="truncate text-[0.8125rem] font-bold text-ink-sub">{label}</p>
+      <p
+        className={`mt-1.5 nowrap-num text-2xl font-extrabold tracking-tight ${highlight ? "text-deep-800" : "text-ink"}`}
+      >
+        {value}
+      </p>
       {caption && <p className="mt-1 text-xs text-ink-sub">{caption}</p>}
     </Card>
   );
@@ -54,10 +60,10 @@ function TrendBars({
               <span className="nowrap-num text-xs font-semibold text-ink-soft">
                 {format(d.value)}
               </span>
-              <div className="flex h-28 w-full max-w-10 items-end rounded-t-md bg-stone-bg-deep/60">
+              <div className="flex h-28 w-full max-w-10 items-end rounded-lg bg-stone-bg-deep/50">
                 <div
-                  className={`w-full rounded-t-md ${d.value > 0 ? "bg-aqua-500" : "bg-transparent"}`}
-                  style={{ height: `${Math.max(h, d.value > 0 ? 6 : 0)}%` }}
+                  className={`w-full rounded-lg ${d.value > 0 ? "bg-gradient-to-t from-deep-700 to-aqua-400 shadow-[0_2px_6px_rgba(14,127,125,0.25)]" : "bg-transparent"}`}
+                  style={{ height: `${Math.max(h, d.value > 0 ? 8 : 0)}%` }}
                 />
               </div>
               <span className="truncate text-[0.7rem] text-ink-sub">
@@ -99,6 +105,7 @@ export default function AnalyticsPage() {
             label="재방문율"
             value={formatPercent(summary.revisitRate)}
             caption="방문 고객 중 2회 이상 방문 비율"
+            highlight
           />
           <MetricTile
             label="방문 건수 (최근 30일)"
@@ -123,6 +130,7 @@ export default function AnalyticsPage() {
                 : "-"
             }
             caption={`처리 ${summary.taskDoneCount} / 대상 ${summary.taskTotalCount}건`}
+            highlight
           />
           <MetricTile
             label="이용권 판매 (이번 달)"

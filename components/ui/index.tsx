@@ -25,26 +25,46 @@ export function Card({
   );
 }
 
+/** Deep Teal Hero Card — 화면의 대표 강조 영역에만 사용 */
+export function HeroCard({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={`card-hero ${className}`}>{children}</div>;
+}
+
 export function SectionTitle({
   children,
   action,
+  icon,
   className = "",
 }: {
   children: ReactNode;
   action?: ReactNode;
+  icon?: ReactNode;
   className?: string;
 }) {
   return (
-    <div className={`mb-4 flex items-center justify-between gap-2 ${className}`}>
-      <h2 className="text-section-title min-w-0 text-ink">{children}</h2>
-      {action}
+    <div className={`mb-4 flex items-center justify-between gap-3 ${className}`}>
+      <h2 className="text-section-title flex min-w-0 items-center gap-2.5 text-ink">
+        {icon && (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100">
+            {icon}
+          </span>
+        )}
+        <span className="min-w-0">{children}</span>
+      </h2>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
 
 // ---------- Button ----------
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger-ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger-ghost" | "on-dark";
 
 export function Button({
   children,
@@ -65,14 +85,16 @@ export function Button({
 }) {
   const variants: Record<ButtonVariant, string> = {
     primary:
-      "bg-aqua-600 text-white hover:bg-aqua-700 disabled:bg-ink-faint shadow-sm",
+      "bg-gradient-to-b from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] hover:from-aqua-600 hover:to-aqua-800 disabled:from-ink-faint disabled:to-ink-faint disabled:shadow-none",
     secondary:
-      "bg-aqua-50 text-aqua-700 hover:bg-aqua-100 border border-aqua-100",
+      "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100",
     ghost: "bg-transparent text-ink-sub hover:bg-stone-bg-deep",
     "danger-ghost": "bg-transparent text-danger hover:bg-red-50",
+    "on-dark":
+      "bg-white/10 text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/20",
   };
   const sizes = {
-    sm: "px-3 py-1.5 text-sm",
+    sm: "px-3.5 py-1.5 text-sm",
     md: "px-4 py-2.5 text-[0.9375rem]",
     lg: "px-5 py-3 text-base",
   };
@@ -81,74 +103,90 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-btn font-semibold whitespace-nowrap transition-colors touch-target ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-btn font-bold whitespace-nowrap transition-all touch-target ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </button>
   );
 }
 
-// ---------- Badge / Chip ----------
+// ---------- Badge / Status system ----------
+
+export type BadgeTone =
+  | "aqua"
+  | "gray"
+  | "gold"
+  | "warn"
+  | "danger"
+  | "positive"
+  | "outline"
+  | "on-dark";
+
+const BADGE_TONES: Record<BadgeTone, { bg: string; dot: string }> = {
+  aqua: { bg: "bg-aqua-100 text-aqua-800", dot: "bg-aqua-500" },
+  gray: { bg: "bg-stone-bg-deep text-ink-sub", dot: "bg-ink-faint" },
+  gold: { bg: "bg-gold-soft text-gold-deep", dot: "bg-gold" },
+  warn: { bg: "bg-amber-50 text-amber-700 ring-1 ring-amber-100", dot: "bg-warn" },
+  danger: { bg: "bg-red-50 text-red-700 ring-1 ring-red-100", dot: "bg-danger" },
+  positive: {
+    bg: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
+    dot: "bg-positive",
+  },
+  outline: { bg: "ring-1 ring-aqua-200 text-aqua-800", dot: "bg-aqua-500" },
+  "on-dark": { bg: "bg-white/15 text-white ring-1 ring-white/20", dot: "bg-aqua-300" },
+};
 
 export function Badge({
   children,
   tone = "aqua",
+  dot = false,
   className = "",
 }: {
   children: ReactNode;
-  tone?: "aqua" | "gray" | "gold" | "warn" | "danger" | "outline";
+  tone?: BadgeTone;
+  dot?: boolean;
   className?: string;
 }) {
-  const tones = {
-    aqua: "bg-aqua-100 text-aqua-800",
-    gray: "bg-stone-bg-deep text-ink-sub",
-    gold: "bg-gold-soft text-[#8a6f3a]",
-    warn: "bg-amber-50 text-amber-700",
-    danger: "bg-red-50 text-red-600",
-    outline: "border border-aqua-100 text-aqua-700",
-  };
+  const t = BADGE_TONES[tone];
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${tones[tone]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap ${t.bg} ${className}`}
     >
+      {dot && <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} />}
       {children}
     </span>
   );
 }
 
-const STATUS_TONE: Record<CustomerStatus, { label: string; cls: string }> = {
-  new: { label: "신규", cls: "bg-aqua-100 text-aqua-800" },
-  active: { label: "활성", cls: "bg-emerald-50 text-emerald-700" },
-  at_risk: { label: "관리 필요", cls: "bg-amber-50 text-amber-700" },
-  dormant: { label: "장기 미방문", cls: "bg-red-50 text-red-600" },
+const STATUS_TONE: Record<CustomerStatus, { label: string; tone: BadgeTone }> = {
+  new: { label: "신규", tone: "aqua" },
+  active: { label: "활성", tone: "positive" },
+  at_risk: { label: "관리 필요", tone: "warn" },
+  dormant: { label: "장기 미방문", tone: "danger" },
 };
 
 export function CustomerStatusBadge({ status }: { status: CustomerStatus }) {
   const t = STATUS_TONE[status];
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${t.cls}`}
-    >
+    <Badge tone={t.tone} dot>
       {t.label}
-    </span>
+    </Badge>
   );
 }
 
-const TASK_STATUS_TONE: Record<TaskStatus, { label: string; cls: string }> = {
-  pending: { label: "대기", cls: "bg-stone-bg-deep text-ink-sub" },
-  confirmed: { label: "확인", cls: "bg-aqua-100 text-aqua-800" },
-  done: { label: "처리완료", cls: "bg-emerald-50 text-emerald-700" },
-  hold: { label: "보류", cls: "bg-amber-50 text-amber-700" },
+const TASK_STATUS_TONE: Record<TaskStatus, { label: string; tone: BadgeTone }> = {
+  pending: { label: "대기", tone: "gray" },
+  confirmed: { label: "확인", tone: "aqua" },
+  done: { label: "처리완료", tone: "positive" },
+  hold: { label: "보류", tone: "warn" },
 };
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   const t = TASK_STATUS_TONE[status];
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${t.cls}`}
-    >
+    <Badge tone={t.tone} dot>
       {t.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -160,33 +198,64 @@ export function KpiCard({
   unit,
   sub,
   icon,
+  chart,
 }: {
   label: string;
   value: string | number;
   unit?: string;
   sub?: ReactNode;
   icon?: ReactNode;
+  chart?: ReactNode;
 }) {
   return (
-    <Card className="flex items-center justify-between gap-3 min-w-0">
-      <div className="min-w-0">
-        <p className="text-sm text-ink-sub font-medium truncate">{label}</p>
-        <p className="mt-1.5 nowrap-num">
-          <span className="text-kpi-lg text-ink">{value}</span>
-          {unit && (
-            <span className="ml-0.5 text-base font-semibold text-ink-soft">
-              {unit}
-            </span>
-          )}
+    <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 truncate text-[0.8125rem] font-bold tracking-wide text-ink-sub sm:text-sm">
+          {label}
         </p>
-        {sub && <div className="mt-1 text-xs text-ink-sub">{sub}</div>}
+        {icon && (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100 sm:h-10 sm:w-10">
+            {icon}
+          </div>
+        )}
       </div>
-      {icon && (
-        <div className="hidden sm:flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-aqua-50 text-aqua-600">
-          {icon}
-        </div>
-      )}
+      <p className="mt-2 nowrap-num">
+        <span className="text-kpi-lg text-ink">{value}</span>
+        {unit && (
+          <span className="ml-1 text-base font-bold text-ink-sub">{unit}</span>
+        )}
+      </p>
+      <div className="mt-1.5 flex items-end justify-between gap-2">
+        <div className="min-w-0 text-xs font-medium text-ink-sub">{sub}</div>
+        {chart && <div className="shrink-0">{chart}</div>}
+      </div>
     </Card>
+  );
+}
+
+/** KPI 카드용 미니 추이 바 (실데이터 전달) */
+export function MiniBars({
+  values,
+  className = "",
+}: {
+  values: number[];
+  className?: string;
+}) {
+  const max = Math.max(...values, 1);
+  return (
+    <div className={`flex h-8 items-end gap-[3px] ${className}`}>
+      {values.map((v, i) => {
+        const last = i === values.length - 1;
+        const h = Math.max(Math.round((v / max) * 100), v > 0 ? 12 : 5);
+        return (
+          <div
+            key={i}
+            className={`w-[5px] rounded-full ${last ? "bg-aqua-500" : "bg-aqua-200"}`}
+            style={{ height: `${h}%` }}
+          />
+        );
+      })}
+    </div>
   );
 }
 
@@ -200,8 +269,14 @@ export function EmptyState({
   description?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1.5 rounded-card bg-card-soft py-10 px-4 text-center">
-      <p className="font-semibold text-ink-soft">{title}</p>
+    <div className="flex flex-col items-center justify-center gap-2 rounded-card border border-dashed border-stone-line bg-card-soft px-4 py-12 text-center">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-aqua-50 text-aqua-600 ring-1 ring-aqua-100">
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15Z" />
+          <path d="M5 19c3-5 7-9 11-11" />
+        </svg>
+      </span>
+      <p className="font-bold text-ink-soft">{title}</p>
       {description && <p className="text-sm text-ink-sub">{description}</p>}
     </div>
   );
@@ -210,15 +285,17 @@ export function EmptyState({
 export function ProgressBar({
   ratio,
   className = "",
+  tone = "aqua",
 }: {
   ratio: number; // 0~1
   className?: string;
+  tone?: "aqua" | "warn";
 }) {
   const pct = Math.max(0, Math.min(100, Math.round(ratio * 100)));
   return (
     <div className={`h-2 w-full rounded-full bg-stone-bg-deep ${className}`}>
       <div
-        className="h-2 rounded-full bg-aqua-500 transition-all"
+        className={`h-2 rounded-full transition-all ${tone === "warn" ? "bg-gradient-to-r from-amber-400 to-warn" : "bg-gradient-to-r from-aqua-400 to-aqua-600"}`}
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -227,16 +304,46 @@ export function ProgressBar({
 
 export function FieldLabel({ children }: { children: ReactNode }) {
   return (
-    <label className="mb-1.5 block text-sm font-semibold text-ink-soft">
+    <label className="mb-1.5 block text-sm font-bold text-ink-soft">
       {children}
     </label>
   );
 }
 
 export const inputCls =
-  "w-full rounded-btn border border-stone-bg-deep bg-card-soft px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
+  "w-full rounded-btn border border-stone-line bg-white px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none transition-shadow focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
 
-// ---------- Modal (모바일: 하단 시트 느낌) ----------
+/** 필터 칩 (페이지 공통) */
+export function FilterChip({
+  active,
+  onClick,
+  children,
+  tone = "aqua",
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  tone?: "aqua" | "ink";
+}) {
+  const activeCls =
+    tone === "aqua"
+      ? "bg-deep-800 text-white shadow-sm"
+      : "bg-ink-soft text-white shadow-sm";
+  return (
+    <button
+      onClick={onClick}
+      className={`touch-target rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+        active
+          ? activeCls
+          : "bg-white text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ---------- Modal (모바일: 하단 시트) ----------
 
 export function Modal({
   open,
@@ -255,18 +362,18 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={onClose}
       />
       <div
-        className={`relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card sm:rounded-card bg-card shadow-card-hover ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
+        className={`relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-stone-bg-deep px-5 py-4">
-          <h3 className="text-lg font-bold text-ink truncate">{title}</h3>
+        <div className="flex items-center justify-between gap-3 border-b border-stone-line px-5 py-4">
+          <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
           <button
             onClick={onClose}
             aria-label="닫기"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-sub hover:bg-stone-bg-deep"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub hover:bg-stone-bg-deep"
           >
             <XIcon className="h-5 w-5" />
           </button>

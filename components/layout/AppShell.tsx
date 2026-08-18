@@ -14,16 +14,16 @@ function isActive(pathname: string, href: string): boolean {
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5 min-w-0">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold/50 bg-gold-soft text-gold font-serif text-lg font-bold">
+    <Link href="/" className="flex min-w-0 items-center gap-2.5">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
         鼎
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[1.05rem] font-bold leading-tight text-ink">
+        <span className="block truncate text-[1.05rem] font-extrabold leading-tight tracking-tight text-ink">
           정통대왕쑥뜸원
         </span>
         {!compact && (
-          <span className="block text-xs font-semibold tracking-wide text-aqua-700">
+          <span className="block text-[0.7rem] font-bold uppercase tracking-[0.14em] text-aqua-700">
             AX Platform
           </span>
         )}
@@ -36,8 +36,8 @@ function Sidebar() {
   const pathname = usePathname();
   const { settings } = useStore();
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-card shadow-card lg:flex">
-      <div className="px-5 pb-4 pt-6">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-white/85 backdrop-blur-md lg:flex">
+      <div className="px-5 pb-5 pt-6">
         <Logo />
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
@@ -48,23 +48,35 @@ function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-btn px-3.5 py-2.5 text-[0.9375rem] font-semibold transition-colors ${
+              className={`group relative flex items-center gap-3 rounded-btn px-3.5 py-2.5 text-[0.9375rem] font-bold transition-colors ${
                 active
-                  ? "bg-aqua-600 text-white shadow-sm"
-                  : "text-ink-soft hover:bg-aqua-50 hover:text-aqua-800"
+                  ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
+                  : "text-ink-sub hover:bg-aqua-50 hover:text-aqua-800"
               }`}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              {active && (
+                <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-aqua-400" />
+              )}
+              <Icon
+                className={`h-5 w-5 shrink-0 ${active ? "text-aqua-300" : "text-ink-faint group-hover:text-aqua-700"}`}
+              />
               <span className="truncate">{item.label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="m-3 rounded-card bg-card-soft p-4">
-        <p className="truncate font-bold text-ink">{settings.ownerName}</p>
-        <p className="truncate text-sm text-ink-sub">
-          {settings.branchName} · 관리자
-        </p>
+      <div className="m-3 flex items-center gap-3 rounded-card border border-black/[0.04] bg-stone-bg p-3.5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-700 text-sm font-extrabold text-white">
+          {settings.ownerName.slice(0, 1)}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate font-extrabold text-ink">
+            {settings.ownerName}
+          </span>
+          <span className="block truncate text-xs font-medium text-ink-sub">
+            {settings.branchName} · 관리자
+          </span>
+        </span>
       </div>
     </aside>
   );
@@ -72,11 +84,11 @@ function Sidebar() {
 
 function MobileHeader() {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-stone-bg/90 px-4 py-3 backdrop-blur lg:hidden">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
       <Logo compact />
       <button
         aria-label="알림"
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink-sub shadow-card"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.05] bg-white text-ink-sub shadow-card"
       >
         <BellIcon className="h-5 w-5" />
       </button>
@@ -87,7 +99,7 @@ function MobileHeader() {
 function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-bg-deep bg-card pb-[env(safe-area-inset-bottom)] shadow-nav lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-nav backdrop-blur-md lg:hidden">
       <div className="mx-auto flex max-w-lg items-stretch justify-between">
         {BOTTOM_NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
@@ -96,11 +108,14 @@ function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2.5 text-[0.7rem] font-semibold ${
-                active ? "text-aqua-700" : "text-ink-sub"
+              className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold ${
+                active ? "text-deep-800" : "text-ink-faint"
               }`}
             >
-              <Icon className={`h-6 w-6 ${active ? "" : "opacity-80"}`} />
+              {active && (
+                <span className="absolute top-0 h-[3px] w-9 rounded-b-full bg-aqua-500" />
+              )}
+              <Icon className={`h-6 w-6 ${active ? "" : "opacity-85"}`} />
               <span className="truncate">{item.label}</span>
             </Link>
           );

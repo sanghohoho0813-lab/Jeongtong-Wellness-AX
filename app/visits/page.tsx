@@ -13,6 +13,7 @@ import {
   Button,
   Card,
   EmptyState,
+  FilterChip,
   Modal,
   inputCls,
 } from "@/components/ui";
@@ -76,17 +77,13 @@ export default function VisitsPage() {
                 { key: "consult", label: "상담" },
               ] as const
             ).map((f) => (
-              <button
+              <FilterChip
                 key={f.key}
+                active={type === f.key}
                 onClick={() => setType(f.key)}
-                className={`touch-target rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                  type === f.key
-                    ? "bg-aqua-600 text-white"
-                    : "bg-card-soft text-ink-soft hover:bg-aqua-50"
-                }`}
               >
                 {f.label}
-              </button>
+              </FilterChip>
             ))}
           </div>
         </div>

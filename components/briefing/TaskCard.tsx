@@ -17,28 +17,81 @@ const NEXT_ACTIONS: Array<{ status: TaskStatus; label: string }> = [
   { status: "hold", label: "보류" },
 ];
 
+/** 우선도 링 (0~100) */
+function PriorityRing({
+  score,
+  onDark = false,
+}: {
+  score: number;
+  onDark?: boolean;
+}) {
+  const R = 15;
+  const C = 2 * Math.PI * R;
+  const ratio = Math.min(score, 100) / 100;
+  return (
+    <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center">
+      <svg viewBox="0 0 36 36" className="h-10 w-10 -rotate-90">
+        <circle
+          cx="18"
+          cy="18"
+          r={R}
+          fill="none"
+          stroke={onDark ? "rgba(255,255,255,0.18)" : "#EAE9E3"}
+          strokeWidth="3.5"
+        />
+        <circle
+          cx="18"
+          cy="18"
+          r={R}
+          fill="none"
+          stroke={onDark ? "#2AB3AF" : "#149D9A"}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeDasharray={`${ratio * C} ${C}`}
+        />
+      </svg>
+      <span
+        className={`absolute nowrap-num text-[0.7rem] font-extrabold ${onDark ? "text-white" : "text-deep-800"}`}
+      >
+        {score}
+      </span>
+    </span>
+  );
+}
+
 export default function TaskCard({
   task,
   rank,
   compact = false,
+  variant = "light",
 }: {
   task: BriefingTask;
   rank?: number;
   compact?: boolean;
+  variant?: "light" | "hero";
 }) {
   const { customers, setTaskStatus } = useStore();
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
 
   const finished = task.status === "done";
+  const hero = variant === "hero";
+
+  const shell = hero
+    ? "rounded-card bg-white/[0.07] ring-1 ring-white/10 backdrop-blur-[2px]"
+    : "rounded-card bg-card-soft ring-1 ring-black/[0.04]";
 
   return (
-    <div
-      className={`rounded-card bg-card-soft p-4 transition-opacity ${finished ? "opacity-60" : ""}`}
-    >
+    <div className={`${shell} p-4 transition-opacity ${finished ? "opacity-55" : ""}`}>
       <div className="flex items-start gap-3">
         {rank !== undefined && (
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-aqua-600 text-sm font-bold text-white">
+          <span
+            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+              hero
+                ? "bg-aqua-400 text-deep-900 shadow-[0_0_0_4px_rgba(42,179,175,0.18)]"
+                : "bg-deep-800 text-white"
+            }`}
+          >
             {rank}
           </span>
         )}
@@ -46,45 +99,56 @@ export default function TaskCard({
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/customers/${customer.id}`}
-              className="truncate font-bold text-ink hover:text-aqua-700"
+              className={`truncate text-[1.0625rem] font-extrabold ${
+                hero ? "text-white hover:text-aqua-200" : "text-ink hover:text-aqua-700"
+              }`}
             >
               {customer.name}
             </Link>
-            <Badge tone="aqua">{TASK_CATEGORY_LABELS[task.category]}</Badge>
-            <TaskStatusBadge status={task.status} />
-            <span className="ml-auto nowrap-num text-xs font-semibold text-ink-sub">
-              우선도 {task.priorityScore}
+            <Badge tone={hero ? "on-dark" : "aqua"} dot>
+              {TASK_CATEGORY_LABELS[task.category]}
+            </Badge>
+            {!hero && <TaskStatusBadge status={task.status} />}
+            <span className="ml-auto">
+              <PriorityRing score={task.priorityScore} onDark={hero} />
             </span>
           </div>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+          <p
+            className={`mt-1.5 text-sm leading-relaxed ${hero ? "text-deep-sub" : "text-ink-soft"}`}
+          >
             {task.reason}
           </p>
-          <p className="mt-1 text-sm font-semibold text-aqua-700">
+          <p
+            className={`mt-1 text-sm font-bold ${hero ? "text-aqua-300" : "text-aqua-700"}`}
+          >
             → {task.suggestedAction}
           </p>
           {!compact && (
-            <p className="mt-1 text-xs text-ink-sub">
+            <p className={`mt-1 text-xs ${hero ? "text-deep-faint" : "text-ink-sub"}`}>
               {formatPhone(customer.phone)}
             </p>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {NEXT_ACTIONS.map((a) => {
               const active = task.status === a.status;
+              const activeCls =
+                a.status === "done"
+                  ? "bg-aqua-500 text-white shadow-sm"
+                  : a.status === "hold"
+                    ? "bg-warn text-white shadow-sm"
+                    : hero
+                      ? "bg-white text-deep-900 shadow-sm"
+                      : "bg-ink-soft text-white shadow-sm";
+              const idleCls = hero
+                ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
+                : "bg-white text-ink-soft ring-1 ring-black/[0.06] hover:bg-aqua-50";
               return (
                 <button
                   key={a.status}
                   onClick={() =>
                     setTaskStatus(task.id, active ? "pending" : a.status)
                   }
-                  className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                    active
-                      ? a.status === "done"
-                        ? "bg-aqua-600 text-white"
-                        : a.status === "hold"
-                          ? "bg-amber-500 text-white"
-                          : "bg-ink-soft text-white"
-                      : "bg-card text-ink-soft shadow-sm hover:bg-aqua-50"
-                  }`}
+                  className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${active ? activeCls : idleCls}`}
                 >
                   {a.status === "done" && <CheckIcon className="h-4 w-4" />}
                   {a.status === "hold" && <PauseIcon className="h-4 w-4" />}
@@ -94,7 +158,11 @@ export default function TaskCard({
             })}
             <Link
               href={`/customers/${customer.id}`}
-              className="touch-target ml-auto inline-flex items-center gap-0.5 text-sm font-semibold text-ink-sub hover:text-aqua-700"
+              className={`touch-target ml-auto inline-flex items-center gap-0.5 text-sm font-bold ${
+                hero
+                  ? "text-aqua-200 hover:text-white"
+                  : "text-ink-sub hover:text-aqua-700"
+              }`}
             >
               고객 상세
               <ChevronRightIcon className="h-4 w-4" />

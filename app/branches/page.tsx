@@ -97,12 +97,10 @@ export default function BranchesPage() {
                 {stats.map((s) => (
                   <div
                     key={s.label}
-                    className="rounded-card bg-card-soft p-3.5 text-center"
+                    className="rounded-card bg-card-soft p-3.5 text-center ring-1 ring-black/[0.04]"
                   >
-                    <p className="text-xs font-medium text-ink-sub">
-                      {s.label}
-                    </p>
-                    <p className="mt-1 nowrap-num text-lg font-bold text-ink">
+                    <p className="text-xs font-bold text-ink-sub">{s.label}</p>
+                    <p className="mt-1 nowrap-num text-lg font-extrabold text-deep-800">
                       {s.value}
                     </p>
                   </div>

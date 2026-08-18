@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import PageHeader from "@/components/layout/PageHeader";
 import VisitForm from "@/components/visits/VisitForm";
 import BodyMap, { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
@@ -21,16 +20,11 @@ import {
   SectionTitle,
   inputCls,
 } from "@/components/ui";
-import { ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
+import { BodyIcon, ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
-  const {
-    derivedById,
-    factsById,
-    staff,
-    updateCustomer,
-  } = useStore();
+  const { derivedById, factsById, staff, updateCustomer } = useStore();
   const [openVisit, setOpenVisit] = useState(false);
   const [editingParts, setEditingParts] = useState(false);
   const [draftParts, setDraftParts] = useState<BodyPartRecord[]>([]);
@@ -60,99 +54,113 @@ export default function CustomerDetailPage() {
     <div>
       <Link
         href="/customers"
-        className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-ink-sub hover:text-aqua-700"
+        className="mb-3 inline-flex items-center gap-1 text-sm font-bold text-ink-sub hover:text-aqua-700"
       >
         <ChevronLeftIcon className="h-4 w-4" />
         고객 목록
       </Link>
 
-      <PageHeader
-        title={c.name}
-        description={`${formatPhone(c.phone)} · 등록일 ${formatDateKr(c.registeredAt)} · 담당 ${staffName(c.assignedStaffId)}`}
-        action={
-          <Button onClick={() => setOpenVisit(true)}>
-            <PlusIcon className="h-4 w-4" />
-            방문 · 상담 기록
-          </Button>
-        }
-      />
-
-      <div className="flex flex-col card-gap">
-        {/* 상태 요약 */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <Card className="min-w-0">
-            <p className="text-sm font-medium text-ink-sub">상태</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+      {/* 프로필 헤더 */}
+      <Card className="mb-4 lg:mb-5">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-aqua-500 to-deep-800 text-xl font-extrabold text-white shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16 sm:text-2xl">
+            {c.name.slice(0, 1)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-page-title text-ink">{c.name}</h1>
               <CustomerStatusBadge status={derived.status} />
               {c.tags?.map((t) => (
-                <Badge key={t} tone="gold">
+                <Badge key={t} tone="gold" dot>
                   {t}
                 </Badge>
               ))}
             </div>
-            {derived.priorityScore > 0 && (
-              <p className="mt-2 nowrap-num text-xs font-semibold text-aqua-700">
-                관리 우선도 {derived.priorityScore}
-              </p>
-            )}
+            <p className="mt-1 text-sm text-ink-sub">
+              {formatPhone(c.phone)} · 등록일 {formatDateKr(c.registeredAt)} ·
+              담당 {staffName(c.assignedStaffId)}
+            </p>
+          </div>
+          <Button onClick={() => setOpenVisit(true)} size="lg" className="w-full sm:w-auto">
+            <PlusIcon className="h-4 w-4" />
+            방문 · 상담 기록
+          </Button>
+        </div>
+      </Card>
+
+      <div className="flex flex-col card-gap">
+        {/* 상태 요약 */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <Card className="min-w-0 !p-4 sm:!p-5">
+            <p className="text-[0.8125rem] font-bold text-ink-sub">관리 우선도</p>
+            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800">
+              {derived.priorityScore > 0 ? derived.priorityScore : "—"}
+            </p>
+            <p className="mt-1 text-xs text-ink-sub">
+              {derived.priorityScore > 0 ? "관리 대상" : "정상 관리 중"}
+            </p>
           </Card>
-          <Card className="min-w-0">
-            <p className="text-sm font-medium text-ink-sub">최근 방문</p>
-            <p className="mt-1.5 text-xl font-bold text-ink">
+          <Card className="min-w-0 !p-4 sm:!p-5">
+            <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
+            <p className="mt-1.5 text-2xl font-extrabold text-ink">
               {formatRelative(derived.lastVisitDate)}
             </p>
-            <p className="mt-0.5 text-xs text-ink-sub">
+            <p className="mt-1 text-xs text-ink-sub">
               {formatDateKr(derived.lastVisitDate)}
             </p>
           </Card>
-          <Card className="min-w-0">
-            <p className="text-sm font-medium text-ink-sub">누적 방문</p>
-            <p className="mt-1.5 nowrap-num text-xl font-bold text-ink">
+          <Card className="min-w-0 !p-4 sm:!p-5">
+            <p className="text-[0.8125rem] font-bold text-ink-sub">누적 방문</p>
+            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-ink">
               {derived.visitCount}회
             </p>
             {derived.avgCycleDays && (
-              <p className="mt-0.5 nowrap-num text-xs text-ink-sub">
+              <p className="mt-1 nowrap-num text-xs text-ink-sub">
                 평균 주기 {derived.avgCycleDays}일
               </p>
             )}
           </Card>
-          <Card className="min-w-0">
-            <p className="text-sm font-medium text-ink-sub">다음 관리 예정일</p>
-            <p className="mt-1.5 text-xl font-bold text-ink">
+          <Card className="min-w-0 !p-4 sm:!p-5">
+            <p className="text-[0.8125rem] font-bold text-ink-sub">
+              다음 관리 예정일
+            </p>
+            <p className="mt-1.5 text-2xl font-extrabold text-ink">
               {formatRelative(c.nextManageDate)}
             </p>
-            <div className="mt-1.5 flex items-center gap-2">
-              <input
-                type="date"
-                className={`${inputCls} !py-1.5 text-sm`}
-                value={c.nextManageDate ?? ""}
-                onChange={(e) =>
-                  updateCustomer(c.id, {
-                    nextManageDate: e.target.value || undefined,
-                  })
-                }
-                aria-label="다음 관리 예정일 변경"
-              />
-            </div>
+            <input
+              type="date"
+              className={`${inputCls} mt-1.5 !py-1.5 text-sm`}
+              value={c.nextManageDate ?? ""}
+              onChange={(e) =>
+                updateCustomer(c.id, {
+                  nextManageDate: e.target.value || undefined,
+                })
+              }
+              aria-label="다음 관리 예정일 변경"
+            />
           </Card>
         </div>
 
         {/* 우선순위 근거 */}
         {derived.priorityReasons.length > 0 && (
-          <Card className="border-l-4 border-aqua-500">
-            <p className="text-sm font-bold text-aqua-800">관리 포인트</p>
-            <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-sm text-ink-soft">
+          <div className="card-accent">
+            <p className="flex items-center gap-2 text-sm font-extrabold text-deep-800">
+              <span className="h-2 w-2 rounded-full bg-aqua-500" />
+              AI 관리 포인트
+            </p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-ink-soft">
               {derived.priorityReasons.map((r, i) => (
                 <li key={i}>{r}</li>
               ))}
             </ul>
-          </Card>
+          </div>
         )}
 
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
-          {/* 집중 케어 부위 */}
-          <Card>
+          {/* 집중 케어 부위 — 주요 기능 */}
+          <div className="card-accent">
             <SectionTitle
+              icon={<BodyIcon className="h-4 w-4" />}
               action={
                 editingParts ? (
                   <div className="flex gap-2">
@@ -199,7 +207,7 @@ export default function CustomerDetailPage() {
                 </div>
               </>
             )}
-          </Card>
+          </div>
 
           {/* 이용권 현황 */}
           <Card>
@@ -210,35 +218,45 @@ export default function CustomerDetailPage() {
               </p>
             ) : (
               <ul className="space-y-4">
-                {facts.memberships.map((m) => (
-                  <li key={m.id} className="rounded-card bg-card-soft p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-bold text-ink">{m.programName}</p>
-                      <Badge
-                        tone={
-                          m.status === "active"
-                            ? m.remainingCount <= 2
-                              ? "warn"
-                              : "aqua"
-                            : "gray"
-                        }
-                      >
-                        {m.status === "active"
-                          ? `잔여 ${m.remainingCount}회`
-                          : "소진"}
-                      </Badge>
-                    </div>
-                    <ProgressBar
-                      ratio={m.remainingCount / m.totalCount}
-                      className="mt-2.5"
-                    />
-                    <p className="mt-2 nowrap-num text-xs text-ink-sub">
-                      {m.remainingCount}/{m.totalCount}회 ·{" "}
-                      {formatKrw(m.price)} · 구매{" "}
-                      {formatDateKr(m.purchasedAt)}
-                    </p>
-                  </li>
-                ))}
+                {facts.memberships.map((m) => {
+                  const low =
+                    m.status === "active" && m.remainingCount <= 2;
+                  return (
+                    <li
+                      key={m.id}
+                      className="rounded-card bg-card-soft p-4 ring-1 ring-black/[0.04]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-extrabold text-ink">
+                          {m.programName}
+                        </p>
+                        <Badge
+                          tone={
+                            m.status === "active"
+                              ? low
+                                ? "warn"
+                                : "aqua"
+                              : "gray"
+                          }
+                          dot
+                        >
+                          {m.status === "active"
+                            ? `잔여 ${m.remainingCount}회`
+                            : "소진"}
+                        </Badge>
+                      </div>
+                      <ProgressBar
+                        ratio={m.remainingCount / m.totalCount}
+                        tone={low ? "warn" : "aqua"}
+                        className="mt-2.5"
+                      />
+                      <p className="mt-2 nowrap-num text-xs text-ink-sub">
+                        {m.remainingCount}/{m.totalCount}회 · {formatKrw(m.price)}{" "}
+                        · 구매 {formatDateKr(m.purchasedAt)}
+                      </p>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Card>
@@ -250,13 +268,18 @@ export default function CustomerDetailPage() {
             <SectionTitle>최근 상담 · 고객 반응</SectionTitle>
             <ul className="space-y-3">
               {c.memo && (
-                <li className="rounded-card bg-gold-soft/60 p-3.5 text-sm text-ink-soft">
-                  <span className="mr-2 font-bold text-[#8a6f3a]">기본 메모</span>
+                <li className="rounded-card border border-gold/25 bg-gold-soft/60 p-3.5 text-sm text-ink-soft">
+                  <span className="mr-2 font-extrabold text-gold-deep">
+                    기본 메모
+                  </span>
                   {c.memo}
                 </li>
               )}
               {consultNotes.map((v) => (
-                <li key={v.id} className="rounded-card bg-card-soft p-3.5">
+                <li
+                  key={v.id}
+                  className="rounded-card bg-card-soft p-3.5 ring-1 ring-black/[0.04]"
+                >
                   <p className="text-sm text-ink-soft">{v.reaction}</p>
                   <p className="mt-1 text-xs text-ink-sub">
                     {formatDateKr(v.visitedAt)} ·{" "}
@@ -279,14 +302,12 @@ export default function CustomerDetailPage() {
             <ol className="relative space-y-4 border-l-2 border-aqua-100 pl-5">
               {visits.map((v) => (
                 <li key={v.id} className="relative">
-                  <span className="absolute -left-[1.65rem] top-1.5 h-3 w-3 rounded-full bg-aqua-500 ring-4 ring-aqua-50" />
+                  <span className="absolute -left-[1.65rem] top-1.5 h-3 w-3 rounded-full bg-gradient-to-br from-aqua-400 to-aqua-600 ring-4 ring-aqua-50" />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-ink">
-                      {v.type === "consult"
-                        ? "상담"
-                        : (v.programName ?? "방문")}
+                    <span className="font-extrabold text-ink">
+                      {v.type === "consult" ? "상담" : (v.programName ?? "방문")}
                     </span>
-                    <Badge tone={v.type === "consult" ? "gold" : "aqua"}>
+                    <Badge tone={v.type === "consult" ? "gold" : "aqua"} dot>
                       {v.type === "consult" ? "상담" : "이용"}
                     </Badge>
                     <span className="nowrap-num text-xs text-ink-sub">

@@ -8,7 +8,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { BodyPartRecord } from "@/lib/types";
-import { Button, Card, SectionTitle, inputCls } from "@/components/ui";
+import { Button, SectionTitle, inputCls } from "@/components/ui";
 import BodyMap from "@/components/body-map/BodyMap";
 
 export default function BodyMapCard() {
@@ -37,8 +37,17 @@ export default function BodyMapCard() {
   };
 
   return (
-    <Card>
-      <SectionTitle>고객 맞춤 케어 · 부위 선택</SectionTitle>
+    <div className="card-accent flex flex-col">
+      <SectionTitle
+        icon={
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="12" cy="4.6" r="2.1" />
+            <path d="M12 7.5v6M8 9.2h8M12 13.5l-2.6 6.8M12 13.5l2.6 6.8" />
+          </svg>
+        }
+      >
+        고객 맞춤 케어 · 부위 선택
+      </SectionTitle>
       <p className="mb-3 text-sm text-ink-sub">
         고객이 집중 케어를 원하는 부위를 터치하여 기록하세요.
       </p>
@@ -76,10 +85,10 @@ export default function BodyMapCard() {
         부위 선택 기록하기
       </Button>
       {savedMsg && (
-        <p className="mt-2 text-center text-sm font-semibold text-aqua-700">
+        <p className="mt-2 text-center text-sm font-bold text-aqua-700">
           {savedMsg}
         </p>
       )}
-    </Card>
+    </div>
   );
 }

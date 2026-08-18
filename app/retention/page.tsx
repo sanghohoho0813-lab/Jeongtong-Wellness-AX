@@ -30,24 +30,31 @@ function CustomerRow({
   return (
     <Link
       href={`/customers/${c.id}`}
-      className="flex items-center gap-3 rounded-card bg-card-soft px-3.5 py-3 transition-colors hover:bg-aqua-50"
+      className="flex items-center gap-3 rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04] transition-all hover:bg-aqua-50 hover:ring-aqua-200"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card font-bold text-aqua-700 shadow-sm">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-50 to-aqua-100 font-extrabold text-aqua-800 ring-1 ring-aqua-200/60">
         {c.name.slice(0, 1)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-ink">{c.name}</p>
+        <p className="truncate font-extrabold text-ink">{c.name}</p>
         <p className="truncate text-xs text-ink-sub">
           {formatPhone(c.phone)} · 방문 {derived.visitCount}회
         </p>
       </div>
-      <span className="max-w-[45%] truncate text-right text-sm font-semibold text-ink-soft">
+      <span className="max-w-[45%] truncate text-right text-sm font-bold text-ink-soft">
         {note}
       </span>
       <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
     </Link>
   );
 }
+
+const GROUP_ACCENT: Record<string, string> = {
+  due: "from-aqua-400 to-aqua-600",
+  at_risk: "from-amber-300 to-warn",
+  dormant: "from-red-300 to-danger",
+  low: "from-gold to-gold-deep",
+};
 
 export default function RetentionPage() {
   const { derivedById, settings } = useStore();
@@ -144,9 +151,16 @@ export default function RetentionPage() {
       />
       <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
         {groups.map((g) => (
-          <Card key={g.key}>
+          <Card key={g.key} className="relative overflow-hidden">
+            <span
+              className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${GROUP_ACCENT[g.key]}`}
+            />
             <SectionTitle
-              action={<Badge tone={g.tone}>{g.rows.length}명</Badge>}
+              action={
+                <Badge tone={g.tone} dot>
+                  {g.rows.length}명
+                </Badge>
+              }
             >
               {g.title}
             </SectionTitle>

@@ -10,7 +10,7 @@ import {
   TaskCategory,
   TaskStatus,
 } from "@/lib/types";
-import { Card, EmptyState } from "@/components/ui";
+import { Card, EmptyState, FilterChip } from "@/components/ui";
 
 const CATEGORY_FILTERS: Array<TaskCategory | "all"> = [
   "all",
@@ -57,36 +57,29 @@ export default function BriefingPage() {
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             {CATEGORY_FILTERS.map((c) => (
-              <button
+              <FilterChip
                 key={c}
+                active={category === c}
                 onClick={() => setCategory(c)}
-                className={`touch-target rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                  category === c
-                    ? "bg-aqua-600 text-white"
-                    : "bg-card-soft text-ink-soft hover:bg-aqua-50"
-                }`}
               >
                 {c === "all" ? "전체 유형" : TASK_CATEGORY_LABELS[c]}
-              </button>
+              </FilterChip>
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
             {STATUS_FILTERS.map((s) => (
-              <button
+              <FilterChip
                 key={s}
+                tone="ink"
+                active={status === s}
                 onClick={() => setStatus(s)}
-                className={`touch-target rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                  status === s
-                    ? "bg-ink-soft text-white"
-                    : "bg-card-soft text-ink-sub hover:bg-stone-bg-deep"
-                }`}
               >
                 {s === "open"
                   ? "미처리"
                   : s === "all"
                     ? "전체 상태"
                     : TASK_STATUS_LABELS[s]}
-              </button>
+              </FilterChip>
             ))}
           </div>
         </div>

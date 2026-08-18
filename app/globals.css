@@ -4,8 +4,8 @@
 
 :root {
   --font-scale: 1;
-  --density-gap: 1rem;
-  --density-card-pad: 1.25rem;
+  --density-gap: 1.125rem;
+  --density-card-pad: 1.375rem;
 }
 
 :root[data-font-scale="small"] {
@@ -16,8 +16,8 @@
 }
 
 :root[data-density="relaxed"] {
-  --density-gap: 1.375rem;
-  --density-card-pad: 1.625rem;
+  --density-gap: 1.5rem;
+  --density-card-pad: 1.75rem;
 }
 
 html {
@@ -25,8 +25,13 @@ html {
 }
 
 body {
-  background-color: #f3f4f2;
-  color: #182126;
+  /* Warm Ivory 바탕 + 좌상단 아주 은은한 aqua tint */
+  background-color: #f4f3ef;
+  background-image:
+    radial-gradient(1100px 520px at 8% -4%, rgba(20, 157, 154, 0.055), transparent 62%),
+    radial-gradient(900px 480px at 100% 0%, rgba(201, 168, 106, 0.045), transparent 58%);
+  background-attachment: fixed;
+  color: #1a2226;
   font-family:
     "Pretendard Variable",
     Pretendard,
@@ -44,10 +49,31 @@ body {
 }
 
 @layer components {
+  /* Standard Card */
   .card {
-    @apply bg-card rounded-card shadow-card;
+    @apply bg-card rounded-card shadow-card border border-black/[0.045];
     padding: var(--density-card-pad);
   }
+
+  /* Hero Card — Deep Teal, 대표 강조 영역 */
+  .card-hero {
+    @apply rounded-card-lg shadow-hero text-white;
+    padding: calc(var(--density-card-pad) + 0.25rem);
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(42, 179, 175, 0.28), transparent 52%),
+      radial-gradient(90% 120% at 0% 100%, rgba(201, 168, 106, 0.10), transparent 55%),
+      linear-gradient(140deg, #10504d 0%, #0c3937 48%, #0a2e2c 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Soft accent card — 연한 aqua 배경의 보조 강조 */
+  .card-accent {
+    @apply rounded-card shadow-card;
+    padding: var(--density-card-pad);
+    background: linear-gradient(160deg, #eaf6f5 0%, #ffffff 70%);
+    border: 1px solid rgba(20, 157, 154, 0.16);
+  }
+
   .card-gap {
     gap: var(--density-gap);
   }
@@ -71,7 +97,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d3d9d8;
+  background: #d6d4cc;
   border-radius: 8px;
 }
 ::-webkit-scrollbar-track {
