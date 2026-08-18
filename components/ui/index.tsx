@@ -89,7 +89,7 @@ export function Button({
     secondary:
       "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100",
     ghost: "bg-transparent text-ink-sub hover:bg-stone-bg-deep",
-    "danger-ghost": "bg-transparent text-danger hover:bg-red-50",
+    "danger-ghost": "bg-transparent text-danger hover:bg-red-50 dark:hover:bg-red-400/10",
     "on-dark":
       "bg-white/10 text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/20",
   };
@@ -119,6 +119,8 @@ export type BadgeTone =
   | "warn"
   | "danger"
   | "positive"
+  | "sky"
+  | "violet"
   | "outline"
   | "on-dark";
 
@@ -126,11 +128,25 @@ const BADGE_TONES: Record<BadgeTone, { bg: string; dot: string }> = {
   aqua: { bg: "bg-aqua-100 text-aqua-800", dot: "bg-aqua-500" },
   gray: { bg: "bg-stone-bg-deep text-ink-sub", dot: "bg-ink-faint" },
   gold: { bg: "bg-gold-soft text-gold-deep", dot: "bg-gold" },
-  warn: { bg: "bg-amber-50 text-amber-700 ring-1 ring-amber-100", dot: "bg-warn" },
-  danger: { bg: "bg-red-50 text-red-700 ring-1 ring-red-100", dot: "bg-danger" },
+  warn: {
+    bg: "bg-amber-50 text-amber-700 ring-1 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20",
+    dot: "bg-warn",
+  },
+  danger: {
+    bg: "bg-red-50 text-red-700 ring-1 ring-red-100 dark:bg-red-400/10 dark:text-red-300 dark:ring-red-400/20",
+    dot: "bg-danger",
+  },
   positive: {
-    bg: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
+    bg: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20",
     dot: "bg-positive",
+  },
+  sky: {
+    bg: "bg-sky-50 text-sky-700 ring-1 ring-sky-100 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20",
+    dot: "bg-sky-500",
+  },
+  violet: {
+    bg: "bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-400/10 dark:text-violet-300 dark:ring-violet-400/20",
+    dot: "bg-violet-500",
   },
   outline: { bg: "ring-1 ring-aqua-200 text-aqua-800", dot: "bg-aqua-500" },
   "on-dark": { bg: "bg-white/15 text-white ring-1 ring-white/20", dot: "bg-aqua-300" },
@@ -192,6 +208,18 @@ export function TaskStatusBadge({ status }: { status: TaskStatus }) {
 
 // ---------- KPI ----------
 
+export type KpiTint = "aqua" | "sky" | "emerald" | "amber" | "violet";
+
+const KPI_TINTS: Record<KpiTint, string> = {
+  aqua: "bg-aqua-50 text-aqua-700 ring-aqua-100",
+  sky: "bg-sky-500/10 text-sky-600 ring-sky-500/20 dark:text-sky-300",
+  emerald:
+    "bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 dark:text-emerald-300",
+  amber: "bg-amber-400/15 text-amber-600 ring-amber-400/25 dark:text-amber-300",
+  violet:
+    "bg-violet-500/10 text-violet-600 ring-violet-500/20 dark:text-violet-300",
+};
+
 export function KpiCard({
   label,
   value,
@@ -199,6 +227,7 @@ export function KpiCard({
   sub,
   icon,
   chart,
+  tint = "aqua",
 }: {
   label: string;
   value: string | number;
@@ -206,6 +235,7 @@ export function KpiCard({
   sub?: ReactNode;
   icon?: ReactNode;
   chart?: ReactNode;
+  tint?: KpiTint;
 }) {
   return (
     <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
@@ -214,7 +244,9 @@ export function KpiCard({
           {label}
         </p>
         {icon && (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100 sm:h-10 sm:w-10">
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 sm:h-10 sm:w-10 ${KPI_TINTS[tint]}`}
+          >
             {icon}
           </div>
         )}
@@ -276,7 +308,7 @@ export function SummaryTile({
   label: string;
   value: number | string;
   unit?: string;
-  tone?: "aqua" | "warn" | "danger" | "gray" | "gold";
+  tone?: "aqua" | "warn" | "danger" | "gray" | "gold" | "sky" | "violet" | "green";
   active?: boolean;
   onClick?: () => void;
 }) {
@@ -286,6 +318,9 @@ export function SummaryTile({
     danger: { dot: "bg-danger", activeRing: "ring-danger" },
     gray: { dot: "bg-ink-faint", activeRing: "ring-ink-sub" },
     gold: { dot: "bg-gold", activeRing: "ring-gold" },
+    sky: { dot: "bg-sky-500", activeRing: "ring-sky-500" },
+    violet: { dot: "bg-violet-500", activeRing: "ring-violet-500" },
+    green: { dot: "bg-positive", activeRing: "ring-positive" },
   };
   const t = tones[tone];
   const Tag = onClick ? "button" : "div";
@@ -404,7 +439,7 @@ export function FieldLabel({ children }: { children: ReactNode }) {
 }
 
 export const inputCls =
-  "w-full rounded-btn border border-stone-line bg-white px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none transition-shadow focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
+  "w-full rounded-btn border border-stone-line bg-card px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none transition-shadow focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
 
 /** 필터 칩 (페이지 공통) */
 export function FilterChip({
@@ -420,7 +455,7 @@ export function FilterChip({
 }) {
   const activeCls =
     tone === "aqua"
-      ? "bg-deep-800 text-white shadow-sm"
+      ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
       : "bg-ink-soft text-white shadow-sm";
   return (
     <button
@@ -428,7 +463,7 @@ export function FilterChip({
       className={`touch-target rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
         active
           ? activeCls
-          : "bg-white text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+          : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
       }`}
     >
       {children}

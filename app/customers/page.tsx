@@ -111,7 +111,7 @@ export default function CustomersPage() {
           {priorityCount > 0 && (
             <p className="shrink-0 text-sm font-bold text-ink-sub">
               관리 대상{" "}
-              <span className="nowrap-num text-deep-800">{priorityCount}명</span>{" "}
+              <span className="nowrap-num text-deep-800 dark:text-aqua-700">{priorityCount}명</span>{" "}
               포함
             </p>
           )}

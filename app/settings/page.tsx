@@ -8,6 +8,7 @@ import {
   Density,
   FontScale,
   StaffRole,
+  Theme,
 } from "@/lib/types";
 import {
   Button,
@@ -44,7 +45,7 @@ function SegmentedControl<T extends string>({
           onClick={() => onChange(o.key)}
           className={`touch-target flex-1 rounded-btn px-4 py-2.5 text-sm font-bold transition-colors ${
             value === o.key
-              ? "bg-deep-800 text-white shadow-sm"
+              ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
               : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
           }`}
         >
@@ -136,6 +137,22 @@ export default function SettingsPage() {
                 ]}
                 onChange={(v) => updateSettings({ density: v })}
               />
+            </div>
+            <div>
+              <FieldLabel>테마</FieldLabel>
+              <SegmentedControl<Theme>
+                label="테마"
+                value={settings.theme ?? "light"}
+                options={[
+                  { key: "light", label: "라이트" },
+                  { key: "dark", label: "다크" },
+                ]}
+                onChange={(v) => updateSettings({ theme: v })}
+              />
+              <p className="mt-2 text-sm text-ink-sub">
+                다크 테마는 저녁 시간대나 어두운 환경에서 눈의 피로를
+                줄여줍니다.
+              </p>
             </div>
           </div>
         </Card>

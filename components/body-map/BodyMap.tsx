@@ -191,7 +191,7 @@ function BodyFigure({
   const zones = view === "front" ? FRONT_ZONES : BACK_ZONES;
   return (
     <div className="flex flex-col items-center">
-      <div className="rounded-card bg-gradient-to-b from-aqua-50/80 to-white px-2.5 pb-1 pt-3 ring-1 ring-aqua-100">
+      <div className="rounded-card bg-gradient-to-b from-aqua-50/80 to-card px-2.5 pb-1 pt-3 ring-1 ring-aqua-100">
         <svg
           viewBox="0 0 120 252"
           className="h-auto w-full max-w-[140px] sm:max-w-[150px]"
@@ -309,7 +309,7 @@ export default function BodyMap({
                 className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
                   selected
                     ? "bg-gradient-to-r from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
-                    : "bg-white text-ink-soft ring-1 ring-stone-line"
+                    : "bg-card text-ink-soft ring-1 ring-stone-line"
                 } ${readOnly ? "" : "hover:ring-aqua-400"}`}
               >
                 <span
@@ -333,7 +333,7 @@ export default function BodyMap({
                       className={`rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
                         (record.side ?? "both") === s
                           ? "bg-deep-800 text-white"
-                          : "bg-white text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
+                          : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
                       }`}
                     >
                       {SIDE_LABELS[s]}

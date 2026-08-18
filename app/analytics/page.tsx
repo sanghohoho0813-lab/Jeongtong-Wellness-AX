@@ -25,10 +25,10 @@ function MetricTile({
   highlight?: boolean;
 }) {
   return (
-    <Card className={`min-w-0 !p-4 sm:!p-5 ${highlight ? "!bg-gradient-to-br !from-aqua-50 !to-white ring-1 ring-aqua-200/50" : ""}`}>
+    <Card className={`min-w-0 !p-4 sm:!p-5 ${highlight ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}>
       <p className="truncate text-[0.8125rem] font-bold text-ink-sub">{label}</p>
       <p
-        className={`mt-1.5 nowrap-num text-2xl font-extrabold tracking-tight ${highlight ? "text-deep-800" : "text-ink"}`}
+        className={`mt-1.5 nowrap-num text-2xl font-extrabold tracking-tight ${highlight ? "text-deep-800 dark:text-aqua-700" : "text-ink"}`}
       >
         {value}
       </p>

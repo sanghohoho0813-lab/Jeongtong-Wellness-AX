@@ -117,7 +117,7 @@ export default function VisitForm({
               onClick={() => setType(t.key)}
               className={`touch-target flex-1 rounded-btn px-4 py-2.5 text-sm font-bold transition-colors ${
                 type === t.key
-                  ? "bg-deep-800 text-white shadow-sm"
+                  ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
                   : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
               }`}
             >

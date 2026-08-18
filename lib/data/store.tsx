@@ -137,12 +137,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state, ready]);
 
-  // 폰트 크기 / 밀도 → CSS 변수 반영
+  // 폰트 크기 / 밀도 / 테마 → CSS 변수 반영
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.fontScale = state.settings.fontScale;
     root.dataset.density = state.settings.density;
-  }, [state.settings.fontScale, state.settings.density]);
+    root.dataset.theme = state.settings.theme ?? "light";
+  }, [state.settings.fontScale, state.settings.density, state.settings.theme]);
 
   const factsById = useMemo(() => {
     const map = new Map<string, CustomerFacts>();

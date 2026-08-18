@@ -36,7 +36,7 @@ function Sidebar() {
   const pathname = usePathname();
   const { settings } = useStore();
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-white/85 backdrop-blur-md lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
       <div className="px-5 pb-5 pt-6">
         <Logo />
       </div>
@@ -88,7 +88,7 @@ function MobileHeader() {
       <Logo compact />
       <button
         aria-label="알림"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.05] bg-white text-ink-sub shadow-card"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
       >
         <BellIcon className="h-5 w-5" />
       </button>
@@ -99,7 +99,7 @@ function MobileHeader() {
 function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-nav backdrop-blur-md lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-card/90 pb-[env(safe-area-inset-bottom)] shadow-nav backdrop-blur-md lg:hidden">
       <div className="mx-auto flex max-w-lg items-stretch justify-between">
         {BOTTOM_NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
@@ -109,7 +109,7 @@ function BottomNav() {
               key={item.href}
               href={item.href}
               className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold ${
-                active ? "text-deep-800" : "text-ink-faint"
+                active ? "text-deep-800 dark:text-aqua-700" : "text-ink-faint"
               }`}
             >
               {active && (

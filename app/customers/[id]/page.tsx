@@ -95,7 +95,7 @@ export default function CustomerDetailPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Card className="min-w-0 !p-4 sm:!p-5">
             <p className="text-[0.8125rem] font-bold text-ink-sub">관리 우선도</p>
-            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800">
+            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
               {derived.priorityScore > 0 ? derived.priorityScore : "—"}
             </p>
             <p className="mt-1 text-xs text-ink-sub">
@@ -146,7 +146,7 @@ export default function CustomerDetailPage() {
         {/* 우선순위 근거 */}
         {derived.priorityReasons.length > 0 && (
           <div className="card-accent">
-            <p className="flex items-center gap-2 text-sm font-extrabold text-deep-800">
+            <p className="flex items-center gap-2 text-sm font-extrabold text-deep-800 dark:text-aqua-700">
               <span className="h-2 w-2 rounded-full bg-aqua-500" />
               AI 관리 포인트
             </p>

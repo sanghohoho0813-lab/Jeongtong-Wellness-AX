@@ -77,12 +77,12 @@ export default function VisitsPage() {
           <div className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             <SummaryTile label="오늘 방문" value={todayVisits} unit="건" tone="aqua" />
             <SummaryTile label="오늘 상담" value={todayConsults} unit="건" tone="gold" />
-            <SummaryTile label="최근 7일 방문" value={week} unit="건" tone="gray" />
+            <SummaryTile label="최근 7일 방문" value={week} unit="건" tone="sky" />
             <SummaryTile
               label="7일 내 부위 기록"
               value={withParts}
               unit="건"
-              tone="aqua"
+              tone="violet"
             />
           </div>
         );

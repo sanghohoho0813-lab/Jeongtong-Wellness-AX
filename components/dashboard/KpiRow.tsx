@@ -41,6 +41,7 @@ export default function KpiRow() {
         unit="명"
         sub={`최근 7일 상담 ${consults7d}건`}
         icon={<UsersIcon className="h-5 w-5" />}
+        tint="sky"
       />
       <KpiCard
         label="재방문 예정 고객"
@@ -63,6 +64,7 @@ export default function KpiRow() {
         unit="건"
         sub={`최근 7일 방문 ${visits7d}건`}
         icon={<LeafIcon className="h-5 w-5" />}
+        tint="emerald"
       />
       <KpiCard
         label="월 매출 (누적)"
@@ -70,6 +72,7 @@ export default function KpiRow() {
         sub="최근 6개월 추이"
         chart={<MiniBars values={monthly.map((m) => m.revenue)} />}
         icon={<TrendUpIcon className="h-5 w-5" />}
+        tint="amber"
       />
     </div>
   );

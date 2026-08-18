@@ -18,20 +18,34 @@ export default function BranchSummaryCard() {
   );
   const branch = branches[0];
 
-  const rows: Array<{ label: string; value: string }> = [
-    { label: "지점", value: `${branches.length}개 (${branch?.name ?? "-"})` },
+  const rows: Array<{ label: string; value: string; dot: string }> = [
+    {
+      label: "지점",
+      value: `${branches.length}개 (${branch?.name ?? "-"})`,
+      dot: "bg-aqua-500",
+    },
     {
       label: "직원",
       value: `${staff.filter((s) => s.active).length}명`,
+      dot: "bg-sky-500",
     },
-    { label: "전체 고객", value: `${summary.totalCustomers}명` },
-    { label: "재방문율", value: formatPercent(summary.revisitRate) },
+    {
+      label: "전체 고객",
+      value: `${summary.totalCustomers}명`,
+      dot: "bg-violet-500",
+    },
+    {
+      label: "재방문율",
+      value: formatPercent(summary.revisitRate),
+      dot: "bg-positive",
+    },
     {
       label: "오늘 관리과제 처리율",
       value:
         summary.taskTotalCount > 0
           ? `${summary.taskDoneCount}/${summary.taskTotalCount}건 (${formatPercent(summary.taskDoneRate)})`
           : "과제 없음",
+      dot: "bg-gold",
     },
   ];
 
@@ -56,7 +70,10 @@ export default function BranchSummaryCard() {
             key={r.label}
             className="flex items-center justify-between gap-3 py-2.5 text-sm"
           >
-            <span className="text-ink-sub">{r.label}</span>
+            <span className="flex items-center gap-2 text-ink-sub">
+              <span className={`h-1.5 w-1.5 rounded-full ${r.dot}`} />
+              {r.label}
+            </span>
             <span className="nowrap-num font-semibold text-ink">{r.value}</span>
           </li>
         ))}

@@ -126,13 +126,13 @@ export default function BranchesPage() {
                     key={s.label}
                     className={`rounded-card p-3.5 text-center ring-1 ${
                       s.warn
-                        ? "bg-amber-50 ring-amber-200/60"
+                        ? "bg-amber-50 ring-amber-200/60 dark:bg-amber-400/10 dark:ring-amber-400/20"
                         : "bg-card-soft ring-black/[0.04]"
                     }`}
                   >
                     <p className="text-xs font-bold text-ink-sub">{s.label}</p>
                     <p
-                      className={`mt-1 nowrap-num text-lg font-extrabold ${s.warn ? "text-amber-700" : "text-deep-800"}`}
+                      className={`mt-1 nowrap-num text-lg font-extrabold ${s.warn ? "text-amber-700 dark:text-amber-300" : "text-deep-800 dark:text-aqua-700"}`}
                     >
                       {s.value}
                     </p>

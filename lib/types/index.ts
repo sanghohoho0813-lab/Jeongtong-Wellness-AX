@@ -172,6 +172,7 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
 
 export type FontScale = "small" | "default" | "large";
 export type Density = "default" | "relaxed";
+export type Theme = "light" | "dark";
 
 export interface CareRuleSettings {
   dormantDays: number; // 장기 미방문 판단 기준 (일)
@@ -184,6 +185,7 @@ export interface CareRuleSettings {
 export interface AppSettings {
   fontScale: FontScale;
   density: Density;
+  theme: Theme;
   companyName: string;
   branchName: string;
   ownerName: string;
@@ -202,6 +204,7 @@ export const DEFAULT_CARE_RULES: CareRuleSettings = {
 export const DEFAULT_SETTINGS: AppSettings = {
   fontScale: "default",
   density: "default",
+  theme: "light",
   companyName: "정통대왕쑥뜸원",
   branchName: "본점",
   ownerName: "대표 관리자",

@@ -5,12 +5,23 @@ import { useStore } from "@/lib/data/store";
 import {
   BriefingTask,
   TASK_CATEGORY_LABELS,
+  TaskCategory,
   TaskStatus,
 } from "@/lib/types";
 import { formatPhone } from "@/lib/utils/format";
-import { Badge, TaskStatusBadge } from "@/components/ui";
+import { Badge, BadgeTone, TaskStatusBadge } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
+
+/** 관리 유형별 배지 색 — 유형이 한눈에 구분되도록 */
+const CATEGORY_TONES: Record<TaskCategory, BadgeTone> = {
+  revisit_due: "aqua",
+  dormant: "danger",
+  membership_low: "gold",
+  new_followup: "sky",
+  consult_no_booking: "violet",
+  focus_care: "warn",
+};
 
 const NEXT_ACTIONS: Array<{ status: TaskStatus; label: string }> = [
   { status: "confirmed", label: "확인" },
@@ -37,7 +48,7 @@ function PriorityRing({
           cy="18"
           r={R}
           fill="none"
-          stroke={onDark ? "rgba(255,255,255,0.18)" : "#EAE9E3"}
+          stroke={onDark ? "rgba(255,255,255,0.18)" : "var(--chart-track)"}
           strokeWidth="3.5"
         />
         <circle
@@ -52,7 +63,7 @@ function PriorityRing({
         />
       </svg>
       <span
-        className={`absolute nowrap-num text-[0.7rem] font-extrabold ${onDark ? "text-white" : "text-deep-800"}`}
+        className={`absolute nowrap-num text-[0.7rem] font-extrabold ${onDark ? "text-white" : "text-deep-800 dark:text-aqua-700"}`}
       >
         {score}
       </span>
@@ -114,7 +125,7 @@ export default function TaskCard({
             >
               {customer.name}
             </Link>
-            <Badge tone={hero ? "on-dark" : "aqua"} dot>
+            <Badge tone={hero ? "on-dark" : CATEGORY_TONES[task.category]} dot>
               {TASK_CATEGORY_LABELS[task.category]}
             </Badge>
             {!hero && <TaskStatusBadge status={task.status} />}
@@ -150,7 +161,7 @@ export default function TaskCard({
                       : "bg-ink-soft text-white shadow-sm";
               const idleCls = hero
                 ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
-                : "bg-white text-ink-soft ring-1 ring-black/[0.06] hover:bg-aqua-50";
+                : "bg-card text-ink-soft ring-1 ring-black/[0.06] hover:bg-aqua-50 dark:ring-white/10";
               return (
                 <button
                   key={a.status}

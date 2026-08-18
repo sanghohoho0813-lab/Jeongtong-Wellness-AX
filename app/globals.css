@@ -14,6 +14,46 @@
   --font-scale: 1;
   --density-gap: 1.125rem;
   --density-card-pad: 1.375rem;
+
+  /* ---- Light theme (Warm Ivory) — RGB triplets ---- */
+  --c-bg: 244 243 239; /* #F4F3EF */
+  --c-bg-deep: 234 233 227; /* #EAE9E3 */
+  --c-line: 228 227 220; /* #E4E3DC */
+  --c-card: 255 255 255;
+  --c-card-soft: 250 249 246; /* #FAF9F6 */
+  --c-ink: 26 34 38; /* #1A2226 */
+  --c-ink-soft: 46 55 60;
+  --c-ink-sub: 102 114 122;
+  --c-ink-faint: 152 162 168;
+  --c-aqua-50: 234 246 245; /* #EAF6F5 */
+  --c-aqua-100: 220 240 238;
+  --c-aqua-200: 191 227 224;
+  --c-aqua-700: 14 127 125; /* #0E7F7D */
+  --c-aqua-800: 11 100 98;
+  --c-gold-soft: 245 238 223; /* #F5EEDF */
+  --c-gold-deep: 138 111 58; /* #8A6F3A */
+  --c-card-border: rgba(0, 0, 0, 0.045);
+}
+
+:root[data-theme="dark"] {
+  /* ---- Dark theme (Deep Teal Charcoal) ---- */
+  --c-bg: 16 24 23; /* #101817 */
+  --c-bg-deep: 28 39 38;
+  --c-line: 38 52 50;
+  --c-card: 23 33 31; /* #17211F */
+  --c-card-soft: 28 40 37;
+  --c-ink: 233 239 237;
+  --c-ink-soft: 210 220 217;
+  --c-ink-sub: 150 166 162;
+  --c-ink-faint: 100 118 114;
+  --c-aqua-50: 22 48 45; /* 어두운 teal 표면 */
+  --c-aqua-100: 27 58 55;
+  --c-aqua-200: 36 80 76;
+  --c-aqua-700: 79 192 187; /* 밝은 aqua 텍스트 */
+  --c-aqua-800: 125 210 206;
+  --c-gold-soft: 50 43 28;
+  --c-gold-deep: 216 188 133;
+  --c-card-border: rgba(255, 255, 255, 0.06);
 }
 
 :root[data-font-scale="small"] {
@@ -33,13 +73,12 @@ html {
 }
 
 body {
-  /* Warm Ivory 바탕 + 좌상단 아주 은은한 aqua tint */
-  background-color: #f4f3ef;
+  background-color: rgb(var(--c-bg));
   background-image:
     radial-gradient(1100px 520px at 8% -4%, rgba(20, 157, 154, 0.055), transparent 62%),
     radial-gradient(900px 480px at 100% 0%, rgba(201, 168, 106, 0.045), transparent 58%);
   background-attachment: fixed;
-  color: #1a2226;
+  color: rgb(var(--c-ink));
   font-family:
     "Pretendard Variable",
     Pretendard,
@@ -56,14 +95,21 @@ body {
   overflow-wrap: break-word;
 }
 
+:root[data-theme="dark"] body {
+  background-image:
+    radial-gradient(1100px 520px at 8% -4%, rgba(42, 179, 175, 0.07), transparent 62%),
+    radial-gradient(900px 480px at 100% 0%, rgba(201, 168, 106, 0.04), transparent 58%);
+}
+
 @layer components {
   /* Standard Card */
   .card {
-    @apply bg-card rounded-card shadow-card border border-black/[0.045];
+    @apply bg-card rounded-card shadow-card;
+    border: 1px solid var(--c-card-border);
     padding: var(--density-card-pad);
   }
 
-  /* Hero Card — Deep Teal, 대표 강조 영역 */
+  /* Hero Card — Deep Teal, 대표 강조 영역 (테마 무관) */
   .card-hero {
     @apply rounded-card-lg shadow-hero text-white;
     padding: calc(var(--density-card-pad) + 0.25rem);
@@ -78,7 +124,11 @@ body {
   .card-accent {
     @apply rounded-card shadow-card;
     padding: var(--density-card-pad);
-    background: linear-gradient(160deg, #eaf6f5 0%, #ffffff 70%);
+    background: linear-gradient(
+      160deg,
+      rgb(var(--c-aqua-50)) 0%,
+      rgb(var(--c-card)) 70%
+    );
     border: 1px solid rgba(20, 157, 154, 0.16);
   }
 
@@ -99,6 +149,11 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* chart neutral track (SVG inline용) */
+:root {
+  --chart-track: rgb(var(--c-bg-deep));
+}
+
 /* toast */
 @keyframes toast-in {
   from {
@@ -117,7 +172,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d6d4cc;
+  background: rgb(var(--c-bg-deep));
   border-radius: 8px;
 }
 ::-webkit-scrollbar-track {

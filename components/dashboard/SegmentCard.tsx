@@ -26,7 +26,7 @@ function Donut({
   let offset = 0;
   return (
     <svg viewBox="0 0 120 120" className="h-32 w-32 shrink-0">
-      <circle cx="60" cy="60" r={R} fill="none" stroke="#EAE9E3" strokeWidth="14" />
+      <circle cx="60" cy="60" r={R} fill="none" stroke="var(--chart-track)" strokeWidth="14" />
       {SEGMENTS.map((s) => {
         const ratio = total > 0 ? counts[s.status] / total : 0;
         const dash = ratio * CIRC;
@@ -57,7 +57,7 @@ function Donut({
       >
         {total}
       </text>
-      <text x="60" y="74" textAnchor="middle" fill="#68757B" fontSize="11">
+      <text x="60" y="74" textAnchor="middle" className="fill-ink-sub" fontSize="11">
         전체 고객
       </text>
     </svg>
