@@ -1,0 +1,27 @@
+"use client";
+
+import { ReactNode } from "react";
+
+export default function PageHeader({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3 lg:mb-7">
+      <div className="min-w-0">
+        <h1 className="text-page-title text-ink">{title}</h1>
+        {description && (
+          <p className="mt-1 text-sm text-ink-sub sm:text-[0.9375rem]">
+            {description}
+          </p>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}

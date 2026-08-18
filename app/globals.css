@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-scale: 1;
+  --density-gap: 1rem;
+  --density-card-pad: 1.25rem;
+}
+
+:root[data-font-scale="small"] {
+  --font-scale: 0.92;
+}
+:root[data-font-scale="large"] {
+  --font-scale: 1.14;
+}
+
+:root[data-density="relaxed"] {
+  --density-gap: 1.375rem;
+  --density-card-pad: 1.625rem;
+}
+
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+body {
+  background-color: #f3f4f2;
+  color: #182126;
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+@layer components {
+  .card {
+    @apply bg-card rounded-card shadow-card;
+    padding: var(--density-card-pad);
+  }
+  .card-gap {
+    gap: var(--density-gap);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .touch-target {
+    min-height: 44px;
+  }
+}
+
+/* number + unit never break apart */
+.nowrap-num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* scrollbar (desktop, subtle) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d3d9d8;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

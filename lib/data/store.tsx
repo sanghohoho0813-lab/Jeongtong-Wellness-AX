@@ -1,0 +1,300 @@
+"use client";
+
+/**
+ * 앱 데이터 스토어 (Context + localStorage)
+ *
+ * 현재는 mock seed 기반이지만, 액션 인터페이스(addCustomer, addVisit 등)를
+ * 그대로 유지한 채 내부 구현만 Supabase 호출로 교체할 수 있도록 분리했다.
+ */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  AppSettings,
+  BodyPartRecord,
+  Branch,
+  BriefingTask,
+  Customer,
+  DEFAULT_SETTINGS,
+  Membership,
+  Staff,
+  TaskStatus,
+  Visit,
+} from "@/lib/types";
+import {
+  seedBranches,
+  seedCustomers,
+  seedMemberships,
+  seedStaff,
+  seedVisits,
+} from "@/lib/data/mock/seed";
+import {
+  CustomerFacts,
+  deriveCustomer,
+  generateDailyBriefing,
+} from "@/lib/scoring/priority";
+import { todayISO } from "@/lib/utils/date";
+
+const STORAGE_KEY = "jeongtong-ax-v1";
+
+interface PersistedState {
+  customers: Customer[];
+  visits: Visit[];
+  memberships: Membership[];
+  branches: Branch[];
+  staff: Staff[];
+  /** 브리핑 과제 상태 오버라이드 (생성은 항상 규칙 엔진이 수행) */
+  taskOverrides: BriefingTask[];
+  settings: AppSettings;
+  seededAt?: string;
+}
+
+export interface NewCustomerInput {
+  name: string;
+  phone: string;
+  gender?: "female" | "male";
+  birthYear?: number;
+  memo?: string;
+  focusBodyParts: BodyPartRecord[];
+  assignedStaffId?: string;
+  nextManageDate?: string;
+}
+
+export interface NewVisitInput {
+  customerId: string;
+  type: "visit" | "consult";
+  programName?: string;
+  membershipId?: string;
+  bodyParts: BodyPartRecord[];
+  reaction?: string;
+  amount?: number;
+  nextManageDate?: string;
+  staffId?: string;
+}
+
+interface StoreValue extends PersistedState {
+  ready: boolean;
+  briefingTasks: BriefingTask[];
+  factsById: Map<string, CustomerFacts>;
+  derivedById: Map<string, ReturnType<typeof deriveCustomer>>;
+  addCustomer: (input: NewCustomerInput) => Customer;
+  updateCustomer: (id: string, patch: Partial<Customer>) => void;
+  addVisit: (input: NewVisitInput) => Visit;
+  setTaskStatus: (taskId: string, status: TaskStatus) => void;
+  updateSettings: (patch: Partial<AppSettings>) => void;
+  updateStaff: (staff: Staff[]) => void;
+  resetData: () => void;
+}
+
+const StoreContext = createContext<StoreValue | null>(null);
+
+function seedState(): PersistedState {
+  return {
+    customers: seedCustomers,
+    visits: seedVisits,
+    memberships: seedMemberships,
+    branches: seedBranches,
+    staff: seedStaff,
+    taskOverrides: [],
+    settings: DEFAULT_SETTINGS,
+    seededAt: todayISO(),
+  };
+}
+
+export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<PersistedState>(seedState);
+  const [ready, setReady] = useState(false);
+
+  // 최초 로드: localStorage 복원 (seed 날짜가 오래되면 데이터 유지, 설정만 유지해도 됨)
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as PersistedState;
+        if (parsed.customers?.length) {
+          setState({ ...seedState(), ...parsed });
+        }
+      }
+    } catch {
+      // 복원 실패 시 seed 유지
+    }
+    setReady(true);
+  }, []);
+
+  // 변경 시 저장
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // 저장 실패는 무시 (용량 등)
+    }
+  }, [state, ready]);
+
+  // 폰트 크기 / 밀도 → CSS 변수 반영
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.fontScale = state.settings.fontScale;
+    root.dataset.density = state.settings.density;
+  }, [state.settings.fontScale, state.settings.density]);
+
+  const factsById = useMemo(() => {
+    const map = new Map<string, CustomerFacts>();
+    for (const c of state.customers) {
+      map.set(c.id, {
+        customer: c,
+        visits: state.visits.filter((v) => v.customerId === c.id),
+        memberships: state.memberships.filter((m) => m.customerId === c.id),
+      });
+    }
+    return map;
+  }, [state.customers, state.visits, state.memberships]);
+
+  const derivedById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof deriveCustomer>>();
+    for (const [id, facts] of factsById) {
+      map.set(id, deriveCustomer(facts, state.settings.careRules));
+    }
+    return map;
+  }, [factsById, state.settings.careRules]);
+
+  const briefingTasks = useMemo(
+    () =>
+      generateDailyBriefing(
+        [...factsById.values()],
+        state.settings.careRules,
+        state.taskOverrides,
+      ),
+    [factsById, state.settings.careRules, state.taskOverrides],
+  );
+
+  const addCustomer = useCallback((input: NewCustomerInput): Customer => {
+    const customer: Customer = {
+      id: `c-${Date.now().toString(36)}`,
+      branchId: state.branches[0]?.id ?? "branch-main",
+      name: input.name.trim(),
+      phone: input.phone.trim(),
+      gender: input.gender,
+      birthYear: input.birthYear,
+      registeredAt: todayISO(),
+      assignedStaffId: input.assignedStaffId,
+      memo: input.memo,
+      focusBodyParts: input.focusBodyParts,
+      nextManageDate: input.nextManageDate,
+    };
+    setState((s) => ({ ...s, customers: [customer, ...s.customers] }));
+    return customer;
+  }, [state.branches]);
+
+  const updateCustomer = useCallback((id: string, patch: Partial<Customer>) => {
+    setState((s) => ({
+      ...s,
+      customers: s.customers.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  }, []);
+
+  const addVisit = useCallback((input: NewVisitInput): Visit => {
+    const now = new Date();
+    const visit: Visit = {
+      id: `v-${Date.now().toString(36)}`,
+      branchId: state.branches[0]?.id ?? "branch-main",
+      customerId: input.customerId,
+      staffId: input.staffId,
+      visitedAt: now.toISOString(),
+      type: input.type,
+      programName: input.programName,
+      membershipId: input.membershipId,
+      bodyParts: input.bodyParts,
+      reaction: input.reaction,
+      amount: input.amount,
+      nextManageDate: input.nextManageDate,
+    };
+    setState((s) => {
+      let memberships = s.memberships;
+      if (input.membershipId) {
+        memberships = s.memberships.map((m) => {
+          if (m.id !== input.membershipId) return m;
+          const remaining = Math.max(0, m.remainingCount - 1);
+          return {
+            ...m,
+            remainingCount: remaining,
+            status: remaining === 0 ? "exhausted" : m.status,
+          };
+        });
+      }
+      const customers = s.customers.map((c) => {
+        if (c.id !== input.customerId) return c;
+        return {
+          ...c,
+          nextManageDate: input.nextManageDate ?? c.nextManageDate,
+          focusBodyParts: input.bodyParts.length
+            ? input.bodyParts
+            : c.focusBodyParts,
+        };
+      });
+      return { ...s, visits: [visit, ...s.visits], memberships, customers };
+    });
+    return visit;
+  }, [state.branches]);
+
+  const setTaskStatus = useCallback((taskId: string, status: TaskStatus) => {
+    setState((s) => {
+      const generated = generateDailyBriefing(
+        [...factsById.values()],
+        s.settings.careRules,
+        s.taskOverrides,
+      );
+      const task = generated.find((t) => t.id === taskId);
+      if (!task) return s;
+      const updated: BriefingTask = {
+        ...task,
+        status,
+        statusChangedAt: new Date().toISOString(),
+      };
+      const others = s.taskOverrides.filter((t) => t.id !== taskId);
+      return { ...s, taskOverrides: [...others, updated] };
+    });
+  }, [factsById]);
+
+  const updateSettings = useCallback((patch: Partial<AppSettings>) => {
+    setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
+  }, []);
+
+  const updateStaff = useCallback((staff: Staff[]) => {
+    setState((s) => ({ ...s, staff }));
+  }, []);
+
+  const resetData = useCallback(() => {
+    window.localStorage.removeItem(STORAGE_KEY);
+    setState(seedState());
+  }, []);
+
+  const value: StoreValue = {
+    ...state,
+    ready,
+    briefingTasks,
+    factsById,
+    derivedById,
+    addCustomer,
+    updateCustomer,
+    addVisit,
+    setTaskStatus,
+    updateSettings,
+    updateStaff,
+    resetData,
+  };
+
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
+}
+
+export function useStore(): StoreValue {
+  const ctx = useContext(StoreContext);
+  if (!ctx) throw new Error("useStore must be used within AppProvider");
+  return ctx;
+}

@@ -1,0 +1,66 @@
+"use client";
+
+/** 운영 · 지점 현황 카드 */
+
+import Link from "next/link";
+import { useStore } from "@/lib/data/store";
+import { calcAxSummary } from "@/lib/scoring/metrics";
+import { formatPercent } from "@/lib/utils/format";
+import { Card, SectionTitle } from "@/components/ui";
+import { ChevronRightIcon } from "@/components/ui/icons";
+
+export default function BranchSummaryCard() {
+  const { branches, staff, factsById, briefingTasks, settings } = useStore();
+  const summary = calcAxSummary(
+    [...factsById.values()],
+    briefingTasks,
+    settings.careRules,
+  );
+  const branch = branches[0];
+
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "지점", value: `${branches.length}개 (${branch?.name ?? "-"})` },
+    {
+      label: "직원",
+      value: `${staff.filter((s) => s.active).length}명`,
+    },
+    { label: "전체 고객", value: `${summary.totalCustomers}명` },
+    { label: "재방문율", value: formatPercent(summary.revisitRate) },
+    {
+      label: "오늘 관리과제 처리율",
+      value:
+        summary.taskTotalCount > 0
+          ? `${summary.taskDoneCount}/${summary.taskTotalCount}건 (${formatPercent(summary.taskDoneRate)})`
+          : "과제 없음",
+    },
+  ];
+
+  return (
+    <Card>
+      <SectionTitle
+        action={
+          <Link
+            href="/branches"
+            className="inline-flex items-center gap-0.5 text-sm font-semibold text-aqua-700 hover:text-aqua-800 whitespace-nowrap"
+          >
+            지점 / 운영
+            <ChevronRightIcon className="h-4 w-4" />
+          </Link>
+        }
+      >
+        운영 · 지점 현황
+      </SectionTitle>
+      <ul className="divide-y divide-stone-bg-deep">
+        {rows.map((r) => (
+          <li
+            key={r.label}
+            className="flex items-center justify-between gap-3 py-2.5 text-sm"
+          >
+            <span className="text-ink-sub">{r.label}</span>
+            <span className="nowrap-num font-semibold text-ink">{r.value}</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
