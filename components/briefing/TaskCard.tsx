@@ -133,16 +133,44 @@ export default function TaskCard({
               <PriorityRing score={task.priorityScore} onDark={hero} />
             </span>
           </div>
-          <p
-            className={`mt-1.5 text-sm leading-relaxed ${hero ? "text-deep-sub" : "text-ink-soft"}`}
-          >
-            {task.reason}
-          </p>
-          <p
-            className={`mt-1 text-sm font-bold ${hero ? "text-aqua-300" : "text-aqua-700"}`}
-          >
-            → {task.suggestedAction}
-          </p>
+          {hero ? (
+            <>
+              <p className="mt-1.5 text-sm leading-relaxed text-deep-sub">
+                {task.reason}
+              </p>
+              <p className="mt-1 text-sm font-bold text-aqua-300">
+                → {task.suggestedAction}
+              </p>
+            </>
+          ) : (
+            // 데이터 → 판단 → 실행 흐름을 명시적으로 표현
+            <div className="mt-2 space-y-2">
+              <div>
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                  판단 이유
+                </p>
+                <ul className="mt-0.5 space-y-0.5">
+                  {task.reason.split(" · ").map((r, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                    >
+                      <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                  권장 행동
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-aqua-700">
+                  → {task.suggestedAction}
+                </p>
+              </div>
+            </div>
+          )}
           {!compact && (
             <p className={`mt-1 text-xs ${hero ? "text-deep-faint" : "text-ink-sub"}`}>
               {formatPhone(customer.phone)}

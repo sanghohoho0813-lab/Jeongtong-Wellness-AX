@@ -91,42 +91,25 @@ export default function CustomerDetailPage() {
       </Card>
 
       <div className="flex flex-col card-gap">
-        {/* 상태 요약 */}
+        {/* 상태 요약 — 최근 방문 → 다음 관리일 → 이용권 잔여 → 우선도 순 */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <Card className="min-w-0 !p-4 sm:!p-5">
-            <p className="text-[0.8125rem] font-bold text-ink-sub">관리 우선도</p>
-            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
-              {derived.priorityScore > 0 ? derived.priorityScore : "—"}
-            </p>
-            <p className="mt-1 text-xs text-ink-sub">
-              {derived.priorityScore > 0 ? "관리 대상" : "정상 관리 중"}
-            </p>
-          </Card>
           <Card className="min-w-0 !p-4 sm:!p-5">
             <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
             <p className="mt-1.5 text-2xl font-extrabold text-ink">
               {formatRelative(derived.lastVisitDate)}
             </p>
-            <p className="mt-1 text-xs text-ink-sub">
-              {formatDateKr(derived.lastVisitDate)}
+            <p className="mt-1 nowrap-num text-xs text-ink-sub">
+              누적 {derived.visitCount}회
+              {derived.avgCycleDays ? ` · 평균 주기 ${derived.avgCycleDays}일` : ""}
             </p>
           </Card>
-          <Card className="min-w-0 !p-4 sm:!p-5">
-            <p className="text-[0.8125rem] font-bold text-ink-sub">누적 방문</p>
-            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-ink">
-              {derived.visitCount}회
-            </p>
-            {derived.avgCycleDays && (
-              <p className="mt-1 nowrap-num text-xs text-ink-sub">
-                평균 주기 {derived.avgCycleDays}일
-              </p>
-            )}
-          </Card>
-          <Card className="min-w-0 !p-4 sm:!p-5">
+          <Card
+            className={`min-w-0 !p-4 sm:!p-5 ${derived.priorityScore > 0 ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}
+          >
             <p className="text-[0.8125rem] font-bold text-ink-sub">
               다음 관리 예정일
             </p>
-            <p className="mt-1.5 text-2xl font-extrabold text-ink">
+            <p className="mt-1.5 text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
               {formatRelative(c.nextManageDate)}
             </p>
             <input
@@ -140,6 +123,38 @@ export default function CustomerDetailPage() {
               }
               aria-label="다음 관리 예정일 변경"
             />
+          </Card>
+          <Card className="min-w-0 !p-4 sm:!p-5">
+            <p className="text-[0.8125rem] font-bold text-ink-sub">이용권 잔여</p>
+            {derived.activeMembership ? (
+              <>
+                <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-ink">
+                  {derived.activeMembership.remainingCount}
+                  <span className="text-base font-bold text-ink-sub">
+                    /{derived.activeMembership.totalCount}회
+                  </span>
+                </p>
+                <p className="mt-1 truncate text-xs text-ink-sub">
+                  {derived.activeMembership.programName}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-1.5 text-2xl font-extrabold text-ink-faint">
+                  없음
+                </p>
+                <p className="mt-1 text-xs text-ink-sub">보유 이용권 없음</p>
+              </>
+            )}
+          </Card>
+          <Card className="min-w-0 !p-4 sm:!p-5">
+            <p className="text-[0.8125rem] font-bold text-ink-sub">관리 우선도</p>
+            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
+              {derived.priorityScore > 0 ? derived.priorityScore : "—"}
+            </p>
+            <p className="mt-1 text-xs text-ink-sub">
+              {derived.priorityScore > 0 ? "관리 대상" : "정상 관리 중"}
+            </p>
           </Card>
         </div>
 

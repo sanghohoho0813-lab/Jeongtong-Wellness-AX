@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
+import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
 import { CustomerDerived } from "@/lib/types";
 import { daysAgo, formatRelative } from "@/lib/utils/date";
@@ -65,7 +66,7 @@ const GROUP_ACCENT: Record<string, string> = {
 };
 
 export default function RetentionPage() {
-  const { derivedById, settings } = useStore();
+  const { derivedById, settings, briefingTasks } = useStore();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const rules = settings.careRules;
   const all = [...derivedById.values()];
@@ -198,6 +199,21 @@ export default function RetentionPage() {
           <Em>{dormantGroup.rows.length}명</Em>이 관리 대기 중입니다.
         </InsightBanner>
       )}
+
+      {/* 오늘 우선관리 실행 카드 — 데이터 → 판단 → 실행 (브리핑 엔진 재사용) */}
+      {(() => {
+        const topTasks = briefingTasks
+          .filter((t) => t.status === "pending" || t.status === "confirmed")
+          .slice(0, 3);
+        if (topTasks.length === 0) return null;
+        return (
+          <div className="mb-4 space-y-3 lg:mb-5">
+            {topTasks.map((task, i) => (
+              <TaskCard key={task.id} task={task} rank={i + 1} compact />
+            ))}
+          </div>
+        );
+      })()}
 
       {/* 그룹 요약 타일 */}
       <div className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
