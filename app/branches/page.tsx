@@ -79,20 +79,43 @@ export default function BranchesPage() {
             summary.totalCustomers > 0 &&
             openTaskCount / summary.totalCustomers > 0.3;
 
-          const stats: Array<{ label: string; value: string; warn?: boolean }> = [
-            { label: "고객 수", value: `${summary.totalCustomers}명` },
-            { label: "직원 수", value: `${branchStaff.length}명` },
+          const stats: Array<{
+            label: string;
+            value: string;
+            warn?: boolean;
+            dot: string;
+          }> = [
+            {
+              label: "고객 수",
+              value: `${summary.totalCustomers}명`,
+              dot: "bg-sky-500",
+            },
+            {
+              label: "직원 수",
+              value: `${branchStaff.length}명`,
+              dot: "bg-violet-500",
+            },
             {
               label: "이번 달 방문",
               value: `${thisMonth.visitCount}건`,
+              dot: "bg-aqua-500",
             },
-            { label: "재방문율", value: formatPercent(summary.revisitRate) },
+            {
+              label: "재방문율",
+              value: formatPercent(summary.revisitRate),
+              dot: "bg-positive",
+            },
             {
               label: "관리대상 고객",
               value: `${openTaskCount}명`,
               warn: attention,
+              dot: "bg-warn",
             },
-            { label: "이번 달 매출", value: formatKrw(thisMonth.revenue) },
+            {
+              label: "이번 달 매출",
+              value: formatKrw(thisMonth.revenue),
+              dot: "bg-gold",
+            },
           ];
 
           return (
@@ -140,7 +163,10 @@ export default function BranchesPage() {
                         : "bg-card-soft ring-black/[0.04]"
                     }`}
                   >
-                    <p className="text-xs font-bold text-ink-sub">{s.label}</p>
+                    <p className="flex items-center justify-center gap-1.5 text-xs font-bold text-ink-sub">
+                      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`} />
+                      {s.label}
+                    </p>
                     <p
                       className={`mt-1 nowrap-num text-lg font-extrabold ${s.warn ? "text-amber-700 dark:text-amber-300" : "text-deep-800 dark:text-aqua-700"}`}
                     >

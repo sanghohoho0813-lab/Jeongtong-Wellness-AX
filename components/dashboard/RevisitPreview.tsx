@@ -7,7 +7,7 @@ import { useStore } from "@/lib/data/store";
 import { daysAgo } from "@/lib/utils/date";
 import { formatRelative } from "@/lib/utils/date";
 import { Badge, Card, SectionTitle } from "@/components/ui";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { ChevronRightIcon, RefreshIcon } from "@/components/ui/icons";
 
 export default function RevisitPreview() {
   const { customers, settings } = useStore();
@@ -33,7 +33,12 @@ export default function RevisitPreview() {
           </Link>
         }
       >
-        재방문 예정 고객
+        <span className="inline-flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400/15 text-amber-600 ring-1 ring-amber-400/20 dark:text-amber-300">
+            <RefreshIcon className="h-4 w-4" />
+          </span>
+          재방문 예정 고객
+        </span>
       </SectionTitle>
       {due.length === 0 ? (
         <p className="rounded-card bg-card-soft py-8 text-center text-sm text-ink-sub">

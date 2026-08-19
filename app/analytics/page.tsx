@@ -14,20 +14,36 @@ import { formatKrw, formatPercent } from "@/lib/utils/format";
 import { Card, Em, FilterChip, InsightBanner, SectionTitle } from "@/components/ui";
 import { buildOperationInsight } from "@/lib/scoring/insight";
 
+const METRIC_DOTS: Record<string, string> = {
+  sky: "bg-sky-500",
+  aqua: "bg-aqua-500",
+  violet: "bg-violet-500",
+  emerald: "bg-positive",
+  amber: "bg-warn",
+  danger: "bg-danger",
+  gold: "bg-gold",
+  gray: "bg-ink-faint",
+};
+
 function MetricTile({
   label,
   value,
   caption,
   highlight = false,
+  dot = "gray",
 }: {
   label: string;
   value: string;
   caption?: string;
   highlight?: boolean;
+  dot?: keyof typeof METRIC_DOTS;
 }) {
   return (
     <Card className={`min-w-0 !p-4 sm:!p-5 ${highlight ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}>
-      <p className="truncate text-[0.8125rem] font-bold text-ink-sub">{label}</p>
+      <p className="flex items-center gap-1.5 truncate text-[0.8125rem] font-bold text-ink-sub">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${METRIC_DOTS[dot]}`} />
+        {label}
+      </p>
       <p
         className={`mt-1.5 nowrap-num text-2xl font-extrabold tracking-tight ${highlight ? "text-deep-800 dark:text-aqua-700" : "text-ink"}`}
       >
@@ -38,14 +54,23 @@ function MetricTile({
   );
 }
 
+const TREND_BARS: Record<string, string> = {
+  violet: "bg-gradient-to-t from-violet-600 to-violet-400",
+  aqua: "bg-gradient-to-t from-deep-700 to-aqua-400",
+  sky: "bg-gradient-to-t from-sky-600 to-sky-400",
+  amber: "bg-gradient-to-t from-amber-600 to-amber-400",
+};
+
 function TrendBars({
   title,
   data,
   format,
+  tone = "aqua",
 }: {
   title: string;
   data: Array<{ month: string; value: number }>;
   format: (v: number) => string;
+  tone?: keyof typeof TREND_BARS;
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   const dense = data.length > 8; // 12개월 뷰: 라벨 간소화
@@ -81,7 +106,7 @@ function TrendBars({
               </span>
               <div className="flex h-28 w-full max-w-10 items-end rounded-lg bg-stone-bg-deep/50">
                 <div
-                  className={`w-full rounded-lg ${d.value > 0 ? "bg-gradient-to-t from-deep-700 to-aqua-400 shadow-[0_2px_6px_rgba(14,127,125,0.25)]" : "bg-transparent"}`}
+                  className={`w-full rounded-lg ${d.value > 0 ? `${TREND_BARS[tone]} shadow-sm` : "bg-transparent"}`}
                   style={{ height: `${Math.max(h, d.value > 0 ? 8 : 0)}%` }}
                 />
               </div>
@@ -195,31 +220,37 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <MetricTile
             label="신규 고객 (최근 30일)"
+            dot="sky"
             value={`${summary.newCustomers30d}명`}
           />
           <MetricTile
             label="재방문율"
+            dot="aqua"
             value={formatPercent(summary.revisitRate)}
             caption="방문 고객 중 2회 이상 방문 비율"
             highlight
           />
           <MetricTile
             label="방문 건수 (최근 30일)"
+            dot="violet"
             value={`${summary.visitCount30d}건`}
           />
           <MetricTile
             label="평균 방문 간격"
+            dot="gray"
             value={
               summary.avgVisitGapDays ? `${summary.avgVisitGapDays}일` : "-"
             }
           />
           <MetricTile
             label="장기 미방문 고객"
+            dot="danger"
             value={`${summary.dormantCount}명`}
             caption={`기준 ${settings.careRules.dormantDays}일 이상`}
           />
           <MetricTile
             label="오늘 관리과제 처리율"
+            dot="emerald"
             value={
               summary.taskTotalCount > 0
                 ? formatPercent(summary.taskDoneRate)
@@ -230,11 +261,13 @@ export default function AnalyticsPage() {
           />
           <MetricTile
             label="이용권 판매 (이번 달)"
+            dot="gold"
             value={`${latest.membershipSold}건`}
           />
           {isManager && (
             <MetricTile
               label="월 매출 (이번 달)"
+            dot="amber"
               value={formatKrw(latest.revenue)}
               caption="이용권 판매 + 현장 결제 합산"
             />
@@ -259,11 +292,13 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
           <TrendBars
             title="월별 방문 건수"
+            tone="violet"
             data={monthly.map((m) => ({ month: m.month, value: m.visitCount }))}
             format={(v) => `${v}`}
           />
           <TrendBars
             title="월별 재방문 고객 수"
+            tone="aqua"
             data={monthly.map((m) => ({
               month: m.month,
               value: m.revisitCustomers,
@@ -272,6 +307,7 @@ export default function AnalyticsPage() {
           />
           <TrendBars
             title="월별 신규 고객"
+            tone="sky"
             data={monthly.map((m) => ({
               month: m.month,
               value: m.newCustomers,
@@ -281,6 +317,7 @@ export default function AnalyticsPage() {
           {isManager && (
             <TrendBars
               title="월별 매출"
+              tone="amber"
               data={monthly.map((m) => ({ month: m.month, value: m.revenue }))}
               format={(v) => (v > 0 ? formatKrw(v) : "0")}
             />

@@ -36,22 +36,50 @@ export function HeroCard({
   return <div className={`card-hero ${className}`}>{children}</div>;
 }
 
+/** 섹션 아이콘 타일 색상 */
+export type IconTone =
+  | "aqua"
+  | "teal"
+  | "sky"
+  | "violet"
+  | "amber"
+  | "emerald"
+  | "gold"
+  | "gray";
+
+export const ICON_TONE_CLASS: Record<IconTone, string> = {
+  aqua: "bg-aqua-50 text-aqua-700 ring-aqua-100",
+  teal: "bg-deep-700/10 text-deep-700 ring-deep-700/15 dark:text-aqua-400",
+  sky: "bg-sky-500/10 text-sky-600 ring-sky-500/15 dark:text-sky-300",
+  violet:
+    "bg-violet-500/10 text-violet-600 ring-violet-500/15 dark:text-violet-300",
+  amber: "bg-amber-400/15 text-amber-600 ring-amber-400/20 dark:text-amber-300",
+  emerald:
+    "bg-emerald-500/10 text-emerald-600 ring-emerald-500/15 dark:text-emerald-300",
+  gold: "bg-gold-soft text-gold-deep ring-gold/20",
+  gray: "bg-stone-bg-deep text-ink-sub ring-black/[0.04]",
+};
+
 export function SectionTitle({
   children,
   action,
   icon,
+  tone = "aqua",
   className = "",
 }: {
   children: ReactNode;
   action?: ReactNode;
   icon?: ReactNode;
+  tone?: IconTone;
   className?: string;
 }) {
   return (
     <div className={`mb-4 flex items-center justify-between gap-3 ${className}`}>
       <h2 className="text-section-title flex min-w-0 items-center gap-2.5 text-ink">
         {icon && (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100">
+          <span
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 ${ICON_TONE_CLASS[tone]}`}
+          >
             {icon}
           </span>
         )}

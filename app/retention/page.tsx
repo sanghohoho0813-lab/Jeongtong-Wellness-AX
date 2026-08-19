@@ -18,7 +18,7 @@ import {
   SectionTitle,
   SummaryTile,
 } from "@/components/ui";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { ChevronRightIcon, RefreshIcon } from "@/components/ui/icons";
 
 interface Group {
   key: string;
@@ -57,6 +57,13 @@ function CustomerRow({
     </Link>
   );
 }
+
+const GROUP_ICON_TONE: Record<string, "aqua" | "amber" | "gray" | "gold"> = {
+  due: "aqua",
+  at_risk: "amber",
+  dormant: "gray",
+  low: "gold",
+};
 
 const GROUP_ACCENT: Record<string, string> = {
   due: "from-aqua-400 to-aqua-600",
@@ -246,6 +253,8 @@ export default function RetentionPage() {
               className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${GROUP_ACCENT[g.key]}`}
             />
             <SectionTitle
+              tone={GROUP_ICON_TONE[g.key]}
+              icon={<RefreshIcon className="h-4 w-4" />}
               action={
                 <Badge tone={g.tone} dot>
                   {g.rows.length}명

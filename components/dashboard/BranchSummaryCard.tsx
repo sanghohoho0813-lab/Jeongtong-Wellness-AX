@@ -7,7 +7,7 @@ import { useStore } from "@/lib/data/store";
 import { calcAxSummary } from "@/lib/scoring/metrics";
 import { formatPercent } from "@/lib/utils/format";
 import { Card, SectionTitle } from "@/components/ui";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { BuildingIcon, ChevronRightIcon } from "@/components/ui/icons";
 
 export default function BranchSummaryCard() {
   const { branches, staff, factsById, briefingTasks, settings, isManager } =
@@ -65,7 +65,12 @@ export default function BranchSummaryCard() {
           ) : undefined
         }
       >
-        운영 · 지점 현황
+        <span className="inline-flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold-soft text-gold-deep ring-1 ring-gold/20">
+            <BuildingIcon className="h-4 w-4" />
+          </span>
+          운영 · 지점 현황
+        </span>
       </SectionTitle>
       <ul className="divide-y divide-stone-bg-deep">
         {rows.map((r) => (

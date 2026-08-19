@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 import { useStore } from "@/lib/data/store";
 import { BellIcon } from "@/components/ui/icons";
-import { BOTTOM_NAV_ITEMS, SIDEBAR_ITEMS } from "./nav-items";
+import { BOTTOM_NAV_ITEMS, NAV_TONE_CLASS, SIDEBAR_ITEMS } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
 
 function isActive(pathname: string, href: string): boolean {
@@ -51,18 +51,25 @@ function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`group relative flex items-center gap-3 rounded-btn px-3.5 py-2.5 text-[0.9375rem] font-bold transition-colors ${
+              className={`group relative flex items-center gap-2.5 rounded-btn px-2.5 py-2 text-[0.9375rem] font-bold transition-colors ${
                 active
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
-                  : "text-ink-sub hover:bg-aqua-50 hover:text-aqua-800"
+                  : "text-ink-sub hover:bg-stone-bg"
               }`}
             >
               {active && (
                 <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-aqua-400" />
               )}
-              <Icon
-                className={`h-5 w-5 shrink-0 ${active ? "text-aqua-300" : "text-ink-faint group-hover:text-aqua-700"}`}
-              />
+              {/* 메뉴별 컬러 아이콘 타일 */}
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-colors ${
+                  active
+                    ? "bg-white/15 text-aqua-300 ring-white/20"
+                    : NAV_TONE_CLASS[item.tone]
+                }`}
+              >
+                <Icon className="h-[1.15rem] w-[1.15rem]" />
+              </span>
               <span className="truncate">{item.label}</span>
             </Link>
           );

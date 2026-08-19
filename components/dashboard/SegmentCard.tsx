@@ -5,6 +5,7 @@
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
 import { Card, SectionTitle } from "@/components/ui";
+import { UsersIcon } from "@/components/ui/icons";
 
 const SEGMENTS: Array<{ status: CustomerStatus; label: string; color: string }> =
   [
@@ -78,7 +79,9 @@ export default function SegmentCard() {
   if (total === 0) {
     return (
       <Card>
-        <SectionTitle>고객 세그먼트 · 재방문 분석</SectionTitle>
+        <SectionTitle tone="violet" icon={<UsersIcon className="h-4 w-4" />}>
+          고객 세그먼트 · 재방문 분석
+        </SectionTitle>
         <p className="rounded-card border border-dashed border-stone-line bg-card-soft px-4 py-10 text-center text-sm leading-relaxed text-ink-sub">
           <span className="block font-bold text-ink-soft">
             재방문 분석 준비 중
@@ -92,7 +95,9 @@ export default function SegmentCard() {
 
   return (
     <Card>
-      <SectionTitle>고객 세그먼트 · 재방문 분석</SectionTitle>
+      <SectionTitle tone="violet" icon={<UsersIcon className="h-4 w-4" />}>
+        고객 세그먼트 · 재방문 분석
+      </SectionTitle>
       <div className="flex flex-wrap items-center gap-4">
         <Donut counts={counts} total={total} />
         <ul className="min-w-[9.5rem] flex-1 space-y-2.5">

@@ -99,7 +99,8 @@ export default function CustomerDetailPage() {
       <div className="flex flex-col card-gap">
         {/* 상태 요약 — 최근 방문 → 다음 관리일 → 이용권 잔여 → 우선도 순 */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <Card className="min-w-0 !p-4 sm:!p-5">
+          <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
             <p className="mt-1.5 text-2xl font-extrabold text-ink">
               {formatRelative(derived.lastVisitDate)}
@@ -110,8 +111,9 @@ export default function CustomerDetailPage() {
             </p>
           </Card>
           <Card
-            className={`min-w-0 !p-4 sm:!p-5 ${derived.priorityScore > 0 ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}
+            className={`relative min-w-0 overflow-hidden !p-4 sm:!p-5 ${derived.priorityScore > 0 ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}
           >
+            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-aqua-400 to-deep-700" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">
               다음 관리 예정일
             </p>
@@ -130,7 +132,8 @@ export default function CustomerDetailPage() {
               aria-label="다음 관리 예정일 변경"
             />
           </Card>
-          <Card className="min-w-0 !p-4 sm:!p-5">
+          <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold to-gold-deep" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">이용권 잔여</p>
             {derived.activeMembership ? (
               <>
@@ -153,7 +156,10 @@ export default function CustomerDetailPage() {
               </>
             )}
           </Card>
-          <Card className="min-w-0 !p-4 sm:!p-5">
+          <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+            <span
+              className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${derived.priorityScore > 0 ? "from-amber-300 to-warn" : "from-emerald-300 to-positive"}`}
+            />
             <p className="text-[0.8125rem] font-bold text-ink-sub">관리 우선도</p>
             <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
               {derived.priorityScore > 0 ? derived.priorityScore : "—"}
