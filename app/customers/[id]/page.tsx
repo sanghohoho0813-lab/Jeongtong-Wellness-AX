@@ -6,7 +6,7 @@ import { useState } from "react";
 import VisitForm from "@/components/visits/VisitForm";
 import BodyMap, { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
-import { BodyPartRecord } from "@/lib/types";
+import { BodyPartRecord, Membership, Visit } from "@/lib/types";
 import {
   formatDateKr,
   formatDateTimeKr,
@@ -37,6 +37,8 @@ import {
   recommendNextManageDate,
 } from "@/lib/scoring/insight";
 import CarePreferenceCard from "@/components/customers/CarePreferenceCard";
+import CustomerForm from "@/components/customers/CustomerForm";
+import MembershipForm from "@/components/customers/MembershipForm";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
 export default function CustomerDetailPage() {
@@ -46,13 +48,24 @@ export default function CustomerDetailPage() {
     factsById,
     staff,
     updateCustomer,
+    updateMembership,
+    removeMembership,
+    removeVisit,
     briefingTasks,
     settings,
     canSeePhone,
   } = useStore();
   const toast = useToast();
   const [openVisit, setOpenVisit] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Visit | undefined>();
+  const [confirmDeleteV, setConfirmDeleteV] = useState<Visit | undefined>();
   const [openSchedule, setOpenSchedule] = useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
+  const [openMembership, setOpenMembership] = useState(false);
+  const [editingMembership, setEditingMembership] = useState<
+    Membership | undefined
+  >();
+  const [confirmDeleteM, setConfirmDeleteM] = useState<string | undefined>();
   const [editingParts, setEditingParts] = useState(false);
   const [draftParts, setDraftParts] = useState<BodyPartRecord[]>([]);
 
@@ -114,15 +127,26 @@ export default function CustomerDetailPage() {
               담당 {staffName(c.assignedStaffId)}
             </p>
           </div>
-          <Button
-            dataTour="visit-record"
-            onClick={() => setOpenVisit(true)}
-            size="lg"
-            className="w-full sm:w-auto"
-          >
-            <PlusIcon className="h-4 w-4" />
-            방문 · 상담 기록
-          </Button>
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setOpenProfile(true)}
+            >
+              정보 수정
+            </Button>
+            <Button
+              dataTour="visit-record"
+              onClick={() => {
+                setEditingVisit(undefined);
+                setOpenVisit(true);
+              }}
+              size="lg"
+            >
+              <PlusIcon className="h-4 w-4" />
+              방문 · 상담 기록
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -165,7 +189,14 @@ export default function CustomerDetailPage() {
               날짜 · 시간 선택
             </button>
           </Card>
-          <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+          <Card
+            className="relative min-w-0 overflow-hidden !p-4 sm:!p-5"
+            onClick={() =>
+              document
+                .querySelector('[data-tour="memberships"]')
+                ?.scrollIntoView({ behavior: "smooth", block: "center" })
+            }
+          >
             <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold to-gold-deep" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">이용권 잔여</p>
             {derived.activeMembership ? (
@@ -185,7 +216,9 @@ export default function CustomerDetailPage() {
                 <p className="mt-1.5 text-2xl font-extrabold text-ink-faint">
                   없음
                 </p>
-                <p className="mt-1 text-xs text-ink-sub">보유 이용권 없음</p>
+                <p className="mt-1 text-xs font-bold text-gold-deep">
+                  눌러서 이용권 등록
+                </p>
               </>
             )}
           </Card>
@@ -221,7 +254,7 @@ export default function CustomerDetailPage() {
               AX Insight
             </p>
             <Badge tone={insight.attention ? "aqua" : "positive"} dot>
-              {insight.attention ? "AX 우선관리" : "정상 관리군"}
+              {insight.attention ? "AI 추천 · 관리 대상" : "정상 관리군"}
             </Badge>
           </div>
           <ul className="mt-2.5 space-y-1">
@@ -299,53 +332,154 @@ export default function CustomerDetailPage() {
           </div>
 
           {/* 이용권 현황 */}
-          <Card>
-            <SectionTitle>이용권 현황</SectionTitle>
+          <Card dataTour="memberships">
+            <SectionTitle
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setEditingMembership(undefined);
+                    setOpenMembership(true);
+                  }}
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  이용권 등록
+                </Button>
+              }
+            >
+              이용권 현황
+            </SectionTitle>
             {facts.memberships.length === 0 ? (
-              <p className="rounded-card bg-card-soft py-8 text-center text-sm text-ink-sub">
-                등록된 이용권이 없습니다.
-              </p>
+              <div className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center">
+                <p className="text-sm text-ink-sub">
+                  등록된 이용권이 없습니다.
+                </p>
+                <button
+                  onClick={() => {
+                    setEditingMembership(undefined);
+                    setOpenMembership(true);
+                  }}
+                  className="touch-target mt-2 rounded-full bg-aqua-50 px-4 py-1.5 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100 hover:bg-aqua-100"
+                >
+                  첫 이용권 등록
+                </button>
+              </div>
             ) : (
               <ul className="space-y-4">
-                {facts.memberships.map((m) => {
-                  const low =
-                    m.status === "active" && m.remainingCount <= 2;
-                  return (
-                    <li
-                      key={m.id}
-                      className="rounded-card bg-card-soft p-4 ring-1 ring-black/[0.04]"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-extrabold text-ink">
-                          {m.programName}
+                {[...facts.memberships]
+                  .sort((a, b) => {
+                    // 사용 중인 이용권을 위로, 그 다음 최근 구매순
+                    const rank = (m: typeof a) => (m.status === "active" ? 0 : 1);
+                    return (
+                      rank(a) - rank(b) ||
+                      b.purchasedAt.localeCompare(a.purchasedAt)
+                    );
+                  })
+                  .map((m) => {
+                    const low = m.status === "active" && m.remainingCount <= 2;
+                    return (
+                      <li
+                        key={m.id}
+                        className="rounded-card bg-card-soft p-4 ring-1 ring-black/[0.04]"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="min-w-0 font-extrabold text-ink">
+                            {m.programName}
+                          </p>
+                          <Badge
+                            tone={
+                              m.status === "active"
+                                ? low
+                                  ? "warn"
+                                  : "aqua"
+                                : m.status === "expired"
+                                  ? "danger"
+                                  : "gray"
+                            }
+                            dot
+                          >
+                            {m.status === "active"
+                              ? `잔여 ${m.remainingCount}회`
+                              : m.status === "expired"
+                                ? "기한 만료"
+                                : "소진"}
+                          </Badge>
+                        </div>
+                        <ProgressBar
+                          ratio={m.remainingCount / m.totalCount}
+                          tone={low ? "warn" : "aqua"}
+                          className="mt-2.5"
+                        />
+                        <p className="mt-2 nowrap-num text-xs text-ink-sub">
+                          {m.remainingCount}/{m.totalCount}회 ·{" "}
+                          {formatKrw(m.price)} · 구매{" "}
+                          {formatDateKr(m.purchasedAt)}
+                          {m.expiresAt
+                            ? ` · 기한 ${formatDateKr(m.expiresAt)}`
+                            : ""}
                         </p>
-                        <Badge
-                          tone={
-                            m.status === "active"
-                              ? low
-                                ? "warn"
-                                : "aqua"
-                              : "gray"
-                          }
-                          dot
-                        >
-                          {m.status === "active"
-                            ? `잔여 ${m.remainingCount}회`
-                            : "소진"}
-                        </Badge>
-                      </div>
-                      <ProgressBar
-                        ratio={m.remainingCount / m.totalCount}
-                        tone={low ? "warn" : "aqua"}
-                        className="mt-2.5"
-                      />
-                      <p className="mt-2 nowrap-num text-xs text-ink-sub">
-                        {m.remainingCount}/{m.totalCount}회 · {formatKrw(m.price)}{" "}
-                        · 구매 {formatDateKr(m.purchasedAt)}
-                      </p>
-                    </li>
-                  );
-                })}
+
+                        {/* 소진 임박·완료 시 재구매 상담을 바로 잇는다 */}
+                        {(m.status !== "active" || low) && (
+                          <p className="mt-2 rounded-btn bg-gold-soft px-3 py-2 text-[0.8125rem] font-bold text-gold-deep">
+                            {m.status === "active"
+                              ? "소진이 임박했습니다. 재구매 상담 시점입니다."
+                              : "이용권을 모두 사용했습니다. 재구매 상담 대상입니다."}
+                          </p>
+                        )}
+
+                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setEditingMembership(m);
+                              setOpenMembership(true);
+                            }}
+                            className="touch-target rounded-full bg-card px-3 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                          >
+                            수정
+                          </button>
+                          {m.status !== "expired" ? (
+                            <button
+                              onClick={() => {
+                                updateMembership(m.id, { status: "expired" });
+                                toast(`${m.programName}을(를) 기한 만료 처리했습니다`, "info");
+                              }}
+                              className="touch-target rounded-full bg-card px-3 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                            >
+                              기한 만료 처리
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                updateMembership(m.id, {
+                                  status:
+                                    m.remainingCount > 0 ? "active" : "exhausted",
+                                });
+                                toast(`${m.programName}을(를) 다시 사용 상태로 되돌렸습니다`, "info");
+                              }}
+                              className="touch-target rounded-full bg-card px-3 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                            >
+                              만료 취소
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setConfirmDeleteM(m.id)}
+                            className="touch-target ml-auto rounded-full px-3 py-1 text-xs font-bold text-ink-faint hover:text-danger"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                <li className="nowrap-num rounded-card bg-gradient-to-r from-aqua-50 to-card px-4 py-3 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100">
+                  누적 구매{" "}
+                  {formatKrw(
+                    facts.memberships.reduce((sum, m) => sum + m.price, 0),
+                  )}{" "}
+                  · 이용권 {facts.memberships.length}건
+                </li>
               </ul>
             )}
           </Card>
@@ -444,11 +578,28 @@ export default function CustomerDetailPage() {
                       })}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-ink-sub">
-                    담당 {staffName(v.staffId)}
-                    {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
-                    {v.membershipId ? " · 이용권 차감" : ""}
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="min-w-0 text-xs text-ink-sub">
+                      담당 {staffName(v.staffId)}
+                      {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
+                      {v.membershipId ? " · 이용권 차감" : ""}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setEditingVisit(v);
+                        setOpenVisit(true);
+                      }}
+                      className="ml-auto shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteV(v)}
+                      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-faint transition-colors hover:text-danger"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -459,14 +610,115 @@ export default function CustomerDetailPage() {
       <Modal
         open={openVisit}
         onClose={() => setOpenVisit(false)}
-        title={`${c.name} — 방문 · 상담 기록`}
+        title={`${c.name} — 방문 · 상담 ${editingVisit ? "기록 수정" : "기록"}`}
         wide
       >
         <VisitForm
           customerId={c.id}
+          visit={editingVisit}
           onCancel={() => setOpenVisit(false)}
-          onSaved={() => setOpenVisit(false)}
+          onSaved={() => {
+            setOpenVisit(false);
+            setEditingVisit(undefined);
+          }}
         />
+      </Modal>
+
+      {/* 고객 정보 수정 */}
+      <Modal
+        open={openProfile}
+        onClose={() => setOpenProfile(false)}
+        title={`${c.name} — 고객 정보 수정`}
+        wide
+      >
+        <CustomerForm
+          customer={c}
+          onCancel={() => setOpenProfile(false)}
+          onSaved={() => setOpenProfile(false)}
+        />
+      </Modal>
+
+      {/* 이용권 등록 · 수정 */}
+      <Modal
+        open={openMembership}
+        onClose={() => setOpenMembership(false)}
+        title={`${c.name} — 이용권 ${editingMembership ? "수정" : "등록"}`}
+        wide
+      >
+        <MembershipForm
+          customerId={c.id}
+          membership={editingMembership}
+          onCancel={() => setOpenMembership(false)}
+          onSaved={() => {
+            setOpenMembership(false);
+            setEditingMembership(undefined);
+          }}
+        />
+      </Modal>
+
+      {/* 방문 기록 삭제 확인 */}
+      <Modal
+        open={!!confirmDeleteV}
+        onClose={() => setConfirmDeleteV(undefined)}
+        title="방문 기록 삭제"
+      >
+        <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
+          {confirmDeleteV && formatDateKr(confirmDeleteV.visitedAt)} 기록을
+          삭제합니다.
+          {confirmDeleteV?.membershipId
+            ? " 이 기록에서 차감된 이용권 1회는 다시 되돌아갑니다."
+            : ""}{" "}
+          삭제한 기록은 되돌릴 수 없습니다.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirmDeleteV(undefined)}>
+            취소
+          </Button>
+          <Button
+            variant="danger-ghost"
+            onClick={() => {
+              if (!confirmDeleteV) return;
+              removeVisit(confirmDeleteV.id);
+              toast(
+                `${formatDateKr(confirmDeleteV.visitedAt)} 방문 기록을 삭제했습니다`,
+                "info",
+              );
+              setConfirmDeleteV(undefined);
+            }}
+          >
+            삭제
+          </Button>
+        </div>
+      </Modal>
+
+      {/* 이용권 삭제 확인 */}
+      <Modal
+        open={!!confirmDeleteM}
+        onClose={() => setConfirmDeleteM(undefined)}
+        title="이용권 삭제"
+      >
+        <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
+          이용권을 삭제합니다. 이 이용권을 사용한 방문 기록은 그대로 남고 연결만
+          해제됩니다. 잘못 등록한 경우가 아니라면 <b>기한 만료 처리</b>를
+          권장합니다.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirmDeleteM(undefined)}>
+            취소
+          </Button>
+          <Button
+            variant="danger-ghost"
+            onClick={() => {
+              if (!confirmDeleteM) return;
+              removeMembership(confirmDeleteM);
+              toast("이용권을 삭제했습니다", "info");
+              setConfirmDeleteM(undefined);
+              setEditingMembership(undefined);
+            }}
+          >
+            삭제
+          </Button>
+        </div>
       </Modal>
 
       {/* 다음 관리 예정일 — 날짜·시간 클릭 선택 */}

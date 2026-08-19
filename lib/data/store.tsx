@@ -72,6 +72,17 @@ export interface NewCustomerInput {
   nextManageTime?: string;
 }
 
+export interface NewMembershipInput {
+  customerId: string;
+  programName: string;
+  totalCount: number;
+  price: number;
+  purchasedAt: string;
+  expiresAt?: string;
+  /** 중간부터 등록할 때 남은 횟수 지정 (기본: 총 횟수) */
+  remainingCount?: number;
+}
+
 export interface NewVisitInput {
   customerId: string;
   type: "visit" | "consult";
@@ -108,6 +119,14 @@ interface StoreValue extends PersistedState {
   addCustomer: (input: NewCustomerInput) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
   addVisit: (input: NewVisitInput) => Visit;
+  /** 방문/상담 기록 수정 — 이용권 차감도 함께 정정한다 */
+  updateVisit: (id: string, input: NewVisitInput) => void;
+  /** 방문/상담 기록 삭제 — 차감했던 이용권을 되돌린다 */
+  removeVisit: (id: string) => void;
+  /** 이용권 등록 (신규 구매 · 재구매) */
+  addMembership: (input: NewMembershipInput) => Membership;
+  updateMembership: (id: string, patch: Partial<Membership>) => void;
+  removeMembership: (id: string) => void;
   setTaskStatus: (
     taskId: string,
     status: TaskStatus,
@@ -396,6 +415,163 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return visit;
   }, [state.branches]);
 
+  /**
+   * 이용권 차감 되돌리기/적용 — 방문 기록 수정·삭제 시 잔여 횟수를 정확히 맞춘다.
+   * delta: +1 = 되돌림(사용 취소), -1 = 차감
+   */
+  const applyMembershipDelta = (
+    list: Membership[],
+    membershipId: string | undefined,
+    delta: number,
+  ): Membership[] => {
+    if (!membershipId) return list;
+    return list.map((m) => {
+      if (m.id !== membershipId) return m;
+      const remaining = Math.max(0, Math.min(m.totalCount, m.remainingCount + delta));
+      return {
+        ...m,
+        remainingCount: remaining,
+        // 만료(expired)는 사용자가 지정한 상태이므로 유지한다
+        status:
+          m.status === "expired"
+            ? "expired"
+            : remaining === 0
+              ? "exhausted"
+              : "active",
+      };
+    });
+  };
+
+  const updateVisit = useCallback((id: string, input: NewVisitInput) => {
+    setState((s) => {
+      const old = s.visits.find((v) => v.id === id);
+      if (!old) return s;
+
+      // 이용권이 바뀌었으면 이전 것은 되돌리고 새 것을 차감한다
+      let memberships = s.memberships;
+      if (old.membershipId !== input.membershipId) {
+        memberships = applyMembershipDelta(memberships, old.membershipId, +1);
+        memberships = applyMembershipDelta(memberships, input.membershipId, -1);
+      }
+
+      const updated: Visit = {
+        ...old,
+        customerId: input.customerId,
+        staffId: input.staffId,
+        type: input.type,
+        programName: input.programName,
+        membershipId: input.membershipId,
+        bodyParts: input.bodyParts,
+        reaction: input.reaction,
+        amount: input.amount,
+        nextManageDate: input.nextManageDate,
+        nextManageTime: input.nextManageDate ? input.nextManageTime : undefined,
+        appliedPreferenceIds: input.appliedPreferenceIds?.length
+          ? input.appliedPreferenceIds
+          : undefined,
+      };
+
+      // 이 고객의 가장 최근 방문을 수정한 경우에만 고객의 다음 관리일을 함께 갱신
+      const latestForCustomer = s.visits
+        .filter((v) => v.customerId === input.customerId)
+        .reduce<Visit | undefined>(
+          (acc, v) => (!acc || v.visitedAt > acc.visitedAt ? v : acc),
+          undefined,
+        );
+      const customers =
+        latestForCustomer?.id === id && input.nextManageDate
+          ? s.customers.map((c) =>
+              c.id === input.customerId
+                ? {
+                    ...c,
+                    nextManageDate: input.nextManageDate,
+                    nextManageTime: input.nextManageTime,
+                  }
+                : c,
+            )
+          : s.customers;
+
+      return {
+        ...s,
+        memberships,
+        customers,
+        visits: s.visits.map((v) => (v.id === id ? updated : v)),
+      };
+    });
+  }, []);
+
+  const removeVisit = useCallback((id: string) => {
+    setState((s) => {
+      const old = s.visits.find((v) => v.id === id);
+      if (!old) return s;
+      return {
+        ...s,
+        memberships: applyMembershipDelta(s.memberships, old.membershipId, +1),
+        visits: s.visits.filter((v) => v.id !== id),
+      };
+    });
+  }, []);
+
+  // ---------- 이용권 ----------
+
+  const addMembership = useCallback(
+    (input: NewMembershipInput): Membership => {
+      const remaining = Math.min(
+        input.totalCount,
+        input.remainingCount ?? input.totalCount,
+      );
+      const membership: Membership = {
+        id: `m-${Date.now().toString(36)}`,
+        branchId: state.branches[0]?.id ?? "branch-main",
+        customerId: input.customerId,
+        programName: input.programName.trim(),
+        totalCount: input.totalCount,
+        remainingCount: remaining,
+        purchasedAt: input.purchasedAt,
+        expiresAt: input.expiresAt,
+        price: input.price,
+        status: remaining === 0 ? "exhausted" : "active",
+      };
+      setState((s) => ({ ...s, memberships: [membership, ...s.memberships] }));
+      return membership;
+    },
+    [state.branches],
+  );
+
+  const updateMembership = useCallback(
+    (id: string, patch: Partial<Membership>) => {
+      setState((s) => ({
+        ...s,
+        memberships: s.memberships.map((m) => {
+          if (m.id !== id) return m;
+          const next = { ...m, ...patch };
+          // 잔여 횟수가 바뀌면 상태를 다시 계산 (만료는 명시 지정 시에만 유지)
+          if (patch.remainingCount !== undefined && patch.status === undefined) {
+            next.status =
+              next.remainingCount === 0
+                ? "exhausted"
+                : next.status === "expired"
+                  ? "expired"
+                  : "active";
+          }
+          return next;
+        }),
+      }));
+    },
+    [],
+  );
+
+  const removeMembership = useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      memberships: s.memberships.filter((m) => m.id !== id),
+      // 이 이용권을 쓴 방문 기록은 남기되 연결만 끊는다 (기록 자체는 보존)
+      visits: s.visits.map((v) =>
+        v.membershipId === id ? { ...v, membershipId: undefined } : v,
+      ),
+    }));
+  }, []);
+
   const setTaskStatus = useCallback(
     (
       taskId: string,
@@ -495,6 +671,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addCustomer,
     updateCustomer,
     addVisit,
+    updateVisit,
+    removeVisit,
+    addMembership,
+    updateMembership,
+    removeMembership,
     setTaskStatus,
     updateSettings,
     updateStaff,

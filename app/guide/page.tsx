@@ -32,15 +32,16 @@ const TOC = [
   { no: "3", label: "화면 구조", href: "#g3" },
   { no: "4", label: "고객 등록", href: "#g4" },
   { no: "5", label: "방문 · 상담 기록", href: "#g5" },
-  { no: "6", label: "고객 상세 읽는 법", href: "#g6" },
-  { no: "7", label: "케어 선호 기록", href: "#g7" },
-  { no: "8", label: "다음 관리 예정일", href: "#g8" },
-  { no: "9", label: "오늘의 실행 브리핑", href: "#g9" },
-  { no: "10", label: "재방문 관리", href: "#g10" },
-  { no: "11", label: "AX 도입성과", href: "#g11" },
-  { no: "12", label: "지점 / 운영 · 설정", href: "#g12" },
-  { no: "13", label: "폰에서 쓰기", href: "#g13" },
-  { no: "14", label: "자주 묻는 질문", href: "#g14" },
+  { no: "6", label: "이용권 등록 · 관리", href: "#g6" },
+  { no: "7", label: "고객 상세 읽는 법", href: "#g7" },
+  { no: "8", label: "케어 선호 기록", href: "#g8" },
+  { no: "9", label: "다음 관리 예정일", href: "#g9" },
+  { no: "10", label: "오늘의 실행 브리핑", href: "#g10" },
+  { no: "11", label: "재방문 관리", href: "#g11" },
+  { no: "12", label: "AX 도입성과", href: "#g12" },
+  { no: "13", label: "지점 / 운영 · 설정", href: "#g13" },
+  { no: "14", label: "폰에서 쓰기", href: "#g14" },
+  { no: "15", label: "자주 묻는 질문", href: "#g15" },
 ];
 
 const GUIDE_LINKS: Array<{
@@ -52,12 +53,12 @@ const GUIDE_LINKS: Array<{
   {
     href: "/briefing",
     label: "오늘의 실행 브리핑",
-    desc: "9번 항목",
+    desc: "10번 항목",
     tone: "teal",
   },
-  { href: "/customers", label: "고객", desc: "4 · 5 · 6 · 7번 항목", tone: "sky" },
-  { href: "/retention", label: "재방문 관리", desc: "10번 항목", tone: "amber" },
-  { href: "/settings", label: "설정", desc: "12번 항목", tone: "gold" },
+  { href: "/customers", label: "고객", desc: "4 · 5 · 6 · 7 · 8번 항목", tone: "sky" },
+  { href: "/retention", label: "재방문 관리", desc: "11번 항목", tone: "amber" },
+  { href: "/settings", label: "설정", desc: "13번 항목", tone: "gold" },
 ];
 
 export default function GuidePage() {
@@ -224,7 +225,13 @@ export default function GuidePage() {
               },
               {
                 title: "이름과 연락처를 입력합니다",
-                body: <>이 둘만 필수입니다. 성별 · 출생연도 · 담당 직원은 선택입니다.</>,
+                body: (
+                  <>
+                    이 둘만 필수입니다. 연락처는 숫자만 눌러도 하이픈이 자동으로
+                    들어갑니다. 같은 번호의 고객이 이미 있으면 바로 알려 주므로
+                    중복 등록을 피할 수 있습니다.
+                  </>
+                ),
               },
               {
                 title: "집중 케어 희망 부위를 고릅니다",
@@ -241,7 +248,7 @@ export default function GuidePage() {
                 body: (
                   <>
                     날짜 칸을 누르면 달력이 열립니다. 타자로 칠 필요 없이 눌러서
-                    고르시면 됩니다. 자세한 방법은 8번 항목에 있습니다.
+                    고르시면 됩니다. 자세한 방법은 9번 항목에 있습니다.
                   </>
                 ),
               },
@@ -324,10 +331,104 @@ export default function GuidePage() {
             방문 기록은 <Ui>방문 / 이용 기록</Ui> 화면에서도 만들 수 있습니다. 이때는
             고객을 먼저 고르는 칸이 하나 더 나옵니다.
           </DocNote>
+          <p className="font-bold text-ink">잘못 기록했을 때</p>
+          <DocSteps
+            steps={[
+              {
+                title: "수정",
+                body: (
+                  <>
+                    고객 상세의 <Ui>방문 · 이용 이력</Ui> 또는{" "}
+                    <Ui>방문 / 이용 기록</Ui> 목록에서 <Ui>수정</Ui>을 누르면
+                    그때 입력한 내용이 그대로 열립니다. 이용권을 바꾸면 이전
+                    이용권은 1회 돌려주고 새 이용권에서 1회 차감합니다.
+                  </>
+                ),
+              },
+              {
+                title: "삭제",
+                body: (
+                  <>
+                    <Ui>삭제</Ui>를 누르면 확인 후 지워집니다. 이 기록에서 차감했던
+                    이용권 1회는 자동으로 되돌아갑니다.
+                  </>
+                ),
+              },
+            ]}
+          />
+        </DocSection>
+
+        {/* 6 — 이용권 */}
+        <DocSection
+          id="g6"
+          no="6"
+          kicker="매출 관리"
+          title="이용권 등록 · 관리하기"
+          tone="gold"
+        >
+          <p>
+            이용권은 고객 상세의 <Ui>이용권 현황</Ui> 카드에서 관리합니다. 방문
+            기록을 저장할 때 여기서 등록한 이용권이 자동으로 차감됩니다.
+          </p>
+          <DocSteps
+            steps={[
+              {
+                title: "[이용권 등록]을 누릅니다",
+                body: (
+                  <>
+                    이용권이 하나도 없으면 카드 안의 <Ui>첫 이용권 등록</Ui> 버튼을
+                    눌러도 됩니다.
+                  </>
+                ),
+              },
+              {
+                title: "자주 판매하는 구성에서 고릅니다",
+                body: (
+                  <>
+                    <Ui>쑥뜸 베이직 케어 10회권</Ui> 처럼 자주 파는 구성을 누르면
+                    이름 · 총 횟수 · 금액이 한 번에 채워집니다. 1회당 금액도 바로
+                    계산되어 표시됩니다.
+                  </>
+                ),
+              },
+              {
+                title: "필요하면 세부 내용을 조정합니다",
+                body: (
+                  <>
+                    총 횟수는 칩으로 고르고, 금액은 숫자만 입력하면 자릿수가 자동으로
+                    맞춰집니다. 구매일 · 사용 기한은 달력에서 누르면 됩니다.
+                  </>
+                ),
+              },
+              {
+                title: "이미 쓰던 이용권을 옮겨 적을 때",
+                body: (
+                  <>
+                    <Ui>남은 횟수</Ui>의 − / + 로 실제 잔여를 맞춰 주세요. 새로 파는
+                    이용권이면 건드리지 않아도 됩니다.
+                  </>
+                ),
+              },
+              {
+                title: "다 쓴 이용권 · 기한이 지난 이용권",
+                body: (
+                  <>
+                    잔여가 0이 되면 자동으로 <Ui>소진</Ui>으로 바뀝니다. 기한이 지난
+                    경우에는 <Ui>기한 만료 처리</Ui>를 누르세요. 잘못 등록한 경우에만{" "}
+                    <Ui>삭제</Ui>를 사용합니다.
+                  </>
+                ),
+              },
+            ]}
+          />
+          <DocQuote tone="gold">
+            잔여가 얼마 남지 않았거나 다 쓴 이용권에는 재구매 상담 안내가 카드에
+            함께 표시됩니다. 이 표시가 곧 매출 기회입니다.
+          </DocQuote>
         </DocSection>
 
         {/* 6 */}
-        <DocSection id="g6" no="6" kicker="읽는 법" title="고객 상세 화면 읽는 법" tone="sky">
+        <DocSection id="g7" no="7" kicker="읽는 법" title="고객 상세 화면 읽는 법" tone="sky">
           <p>
             고객 이름을 누르면 열리는 화면입니다. 위에서부터 아래로 읽으면 이 고객의
             현재 상태를 3초 안에 파악할 수 있게 배치했습니다.
@@ -384,7 +485,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 7 */}
-        <DocSection id="g7" no="7" kicker="핵심 기능" title="케어 선호 · 특이사항 기록하기" tone="gold">
+        <DocSection id="g8" no="8" kicker="핵심 기능" title="케어 선호 · 특이사항 기록하기" tone="gold">
           <p>
             고객이 좋아하시는 방식과 기억해야 할 점을 남겨 두는 곳입니다. 담당 직원이
             바뀌어도 같은 응대를 할 수 있게 해 주는, 이 시스템에서 가장 중요한
@@ -454,7 +555,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 8 */}
-        <DocSection id="g8" no="8" kicker="핵심 기능" title="다음 관리 예정일 지정하기" tone="aqua">
+        <DocSection id="g9" no="9" kicker="핵심 기능" title="다음 관리 예정일 지정하기" tone="aqua">
           <p>
             날짜와 시간을 모두 눌러서 고릅니다. 키보드로 칠 일이 없습니다. 고객 상세의{" "}
             <Ui>날짜 · 시간 선택</Ui>, 방문 기록 폼, 재방문 처리 결과에서 모두 같은
@@ -510,7 +611,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 9 */}
-        <DocSection id="g9" no="9" kicker="관리 업무" title="오늘의 실행 브리핑" tone="teal">
+        <DocSection id="g10" no="10" kicker="관리 업무" title="오늘의 실행 브리핑" tone="teal">
           <p>
             오늘 누구에게 무엇을 해야 하는지를 우선순위대로 보여 주는 화면입니다.
             사람이 기억해서 챙기던 일을 시스템이 먼저 꺼내 놓는 자리입니다.
@@ -566,7 +667,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 10 */}
-        <DocSection id="g10" no="10" kicker="관리 업무" title="재방문 관리" tone="amber">
+        <DocSection id="g11" no="11" kicker="관리 업무" title="재방문 관리" tone="amber">
           <p>
             브리핑이 &lsquo;오늘 할 일&rsquo;이라면, 재방문 관리는 &lsquo;고객을 상태별로 나눠
             보는 화면&rsquo;입니다. 마감 전에 한 번 정리하는 용도로 쓰시면 됩니다.
@@ -588,7 +689,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 11 */}
-        <DocSection id="g11" no="11" kicker="확인 업무" title="AX 도입성과" tone="emerald">
+        <DocSection id="g12" no="12" kicker="확인 업무" title="AX 도입성과" tone="emerald">
           <p>
             도입 전후로 무엇이 달라졌는지 보는 화면입니다. 모든 숫자는 저장된 실제
             기록에서만 계산되며, 임의로 만든 수치는 없습니다.
@@ -609,7 +710,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 12 */}
-        <DocSection id="g12" no="12" kicker="관리자용" title="지점 / 운영 · 설정" tone="gold">
+        <DocSection id="g13" no="13" kicker="관리자용" title="지점 / 운영 · 설정" tone="gold">
           <DocSteps
             steps={[
               {
@@ -656,7 +757,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 13 */}
-        <DocSection id="g13" no="13" kicker="현장" title="폰에서 쓰기" tone="violet">
+        <DocSection id="g14" no="14" kicker="현장" title="폰에서 쓰기" tone="violet">
           <p>
             현장에서는 폰으로 쓰는 경우가 많습니다. PC와 같은 기능이고 배치만
             다릅니다.
@@ -679,17 +780,29 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 14 */}
-        <DocSection id="g14" no="14" kicker="도움말" title="자주 묻는 질문" tone="sky">
+        <DocSection id="g15" no="15" kicker="도움말" title="자주 묻는 질문" tone="sky">
           <DocFaq
             items={[
               {
                 q: "잘못 저장했습니다. 되돌릴 수 있나요?",
                 a: (
                   <>
-                    케어 선호 기록은 오른쪽 <Ui>X</Ui>로 지울 수 있습니다. 브리핑에서
-                    처리완료한 과제는 <Ui>결과 수정</Ui>으로 고치거나, 버튼을 다시
-                    눌러 대기 상태로 되돌릴 수 있습니다. 방문 기록 수정은 아직
-                    지원하지 않으며 고도화 예정입니다.
+                    방문 기록은 <Ui>수정</Ui> · <Ui>삭제</Ui>가 모두 됩니다(이용권
+                    차감도 함께 정정됩니다). 고객 정보는 상세 화면의{" "}
+                    <Ui>정보 수정</Ui>, 케어 선호 기록은 오른쪽 <Ui>X</Ui>로 지울 수
+                    있습니다. 브리핑에서 처리완료한 과제는 <Ui>결과 수정</Ui>으로
+                    고치거나 버튼을 다시 눌러 대기 상태로 되돌릴 수 있습니다.
+                  </>
+                ),
+              },
+              {
+                q: "기록을 엑셀로 뽑을 수 있나요?",
+                a: (
+                  <>
+                    <Ui>설정 → 데이터</Ui>에서 고객 목록 · 방문 기록 · 이용권 내역 ·
+                    케어 선호를 각각 CSV 파일로 내려받을 수 있습니다. 엑셀에서 바로
+                    열립니다. <Ui>전체 백업 (JSON)</Ui>은 모든 기록을 한 파일로
+                    보관할 때 쓰세요.
                   </>
                 ),
               },

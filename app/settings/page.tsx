@@ -19,7 +19,17 @@ import {
   SegmentedControl,
   inputCls,
 } from "@/components/ui";
-import { PlusIcon } from "@/components/ui/icons";
+import { DownloadIcon, PlusIcon } from "@/components/ui/icons";
+import { useToast } from "@/components/ui/toast";
+import { todayISO } from "@/lib/utils/date";
+import {
+  customersCsv,
+  downloadFile,
+  membershipsCsv,
+  preferencesCsv,
+  stamp,
+  visitsCsv,
+} from "@/lib/utils/export";
 
 const ROLE_LABELS: Record<StaffRole, string> = {
   owner: "대표/관리자",
@@ -62,11 +72,15 @@ export default function SettingsPage() {
     settings,
     staff,
     branches,
+    customers,
+    visits,
+    memberships,
     updateSettings,
     updateStaff,
     resetData,
     isManager,
   } = useStore();
+  const toast = useToast();
   const [staffModal, setStaffModal] = useState(false);
   const [newStaffName, setNewStaffName] = useState("");
   const [newStaffRole, setNewStaffRole] = useState<StaffRole>("staff");
@@ -74,6 +88,57 @@ export default function SettingsPage() {
 
   const setRule = (patch: Partial<CareRuleSettings>) =>
     updateSettings({ careRules: { ...settings.careRules, ...patch } });
+
+  // ---------- 데이터 내보내기 ----------
+  const prefCount = customers.reduce(
+    (n, c) => n + (c.preferences?.length ?? 0),
+    0,
+  );
+  const EXPORTS = [
+    { key: "customers", label: "고객 목록", count: () => customers.length },
+    { key: "visits", label: "방문 · 이용 기록", count: () => visits.length },
+    { key: "memberships", label: "이용권 내역", count: () => memberships.length },
+    { key: "preferences", label: "케어 선호 · 특이사항", count: () => prefCount },
+  ] as const;
+
+  const runExport = (key: (typeof EXPORTS)[number]["key"]) => {
+    const d = stamp(todayISO());
+    const map = {
+      customers: {
+        name: `고객목록_${d}.csv`,
+        csv: () => customersCsv(customers, visits, memberships, staff),
+      },
+      visits: {
+        name: `방문이용기록_${d}.csv`,
+        csv: () => visitsCsv(visits, customers, staff),
+      },
+      memberships: {
+        name: `이용권내역_${d}.csv`,
+        csv: () => membershipsCsv(memberships, customers),
+      },
+      preferences: {
+        name: `케어선호_${d}.csv`,
+        csv: () => preferencesCsv(customers, staff),
+      },
+    };
+    const item = map[key];
+    downloadFile(item.name, item.csv());
+    toast(`${item.name} 파일을 내려받았습니다`);
+  };
+
+  const exportBackup = () => {
+    const payload = JSON.stringify(
+      { exportedAt: new Date().toISOString(), customers, visits, memberships, staff, branches, settings },
+      null,
+      2,
+    );
+    downloadFile(
+      `정통대왕쑥뜸원_전체백업_${stamp(todayISO())}.json`,
+      payload,
+      "application/json;charset=utf-8",
+    );
+    toast("전체 백업 파일을 내려받았습니다");
+  };
 
   return (
     <div>
@@ -304,12 +369,50 @@ export default function SettingsPage() {
         {/* 데이터 */}
         <Card>
           <SectionTitle>데이터</SectionTitle>
-          <p className="mb-3 text-sm text-ink-sub">
-            현재 브라우저에 저장된 데모 데이터를 초기 샘플 상태로 되돌립니다.
+          <p className="-mt-2 mb-3 text-sm leading-relaxed text-ink-sub">
+            지금까지 쌓인 기록을 파일로 내려받습니다. 운영 성과 보고 자료로 쓰거나,
+            실제 데이터베이스로 옮길 때 그대로 사용할 수 있습니다.
           </p>
-          <Button variant="danger-ghost" onClick={() => setConfirmReset(true)}>
-            샘플 데이터로 초기화
-          </Button>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {EXPORTS.map((e) => (
+              <button
+                key={e.key}
+                onClick={() => runExport(e.key)}
+                className="row-accent flex items-center gap-3 rounded-card bg-card-soft px-3.5 py-3 text-left ring-1 ring-black/[0.04] transition-colors hover:bg-aqua-50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100">
+                  <DownloadIcon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-bold text-ink">
+                    {e.label}
+                  </span>
+                  <span className="nowrap-num block truncate text-xs text-ink-sub">
+                    {e.count()}건 · CSV
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-line pt-3">
+            <Button variant="secondary" size="sm" onClick={exportBackup}>
+              <DownloadIcon className="h-4 w-4" />
+              전체 백업 (JSON)
+            </Button>
+            <p className="text-xs text-ink-sub">
+              모든 기록을 한 파일로 보관합니다.
+            </p>
+          </div>
+
+          <div className="mt-4 border-t border-stone-line pt-4">
+            <p className="mb-2 text-sm text-ink-sub">
+              현재 브라우저에 저장된 데모 데이터를 초기 샘플 상태로 되돌립니다.
+            </p>
+            <Button variant="danger-ghost" onClick={() => setConfirmReset(true)}>
+              샘플 데이터로 초기화
+            </Button>
+          </div>
         </Card>
           </>
         )}

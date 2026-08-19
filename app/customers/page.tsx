@@ -14,6 +14,7 @@ import {
   Card,
   CustomerStatusBadge,
   EmptyState,
+  FilterChip,
   Modal,
   RecommendBadge,
   SummaryTile,
@@ -34,6 +35,15 @@ const STATUS_TILES: Array<{
   { key: "dormant", label: "장기 미방문", tone: "danger" },
 ];
 
+type SortKey = "priority" | "recent" | "name" | "visits";
+
+const SORTS: Array<{ key: SortKey; label: string }> = [
+  { key: "priority", label: "관리 우선" },
+  { key: "recent", label: "최근 방문순" },
+  { key: "visits", label: "방문 많은순" },
+  { key: "name", label: "이름순" },
+];
+
 /** 상태별 아바타 그라데이션 — 목록에서 고객 상태를 색으로 인지 */
 const AVATAR_BY_STATUS: Record<CustomerStatus, string> = {
   new: "from-sky-400 to-sky-600",
@@ -47,6 +57,7 @@ export default function CustomersPage() {
   const { derivedById, canSeePhone } = useStore();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<CustomerStatus | "all">("all");
+  const [sort, setSort] = useState<SortKey>("priority");
   const [openForm, setOpenForm] = useState(false);
 
   const all = useMemo(() => [...derivedById.values()], [derivedById]);
@@ -75,8 +86,20 @@ export default function CustomersPage() {
             .includes(q.replace(/\D/g, "") || " ")
         );
       })
-      .sort((a, b) => b.priorityScore - a.priorityScore);
-  }, [all, query, status]);
+      .sort((a, b) => {
+        switch (sort) {
+          case "name":
+            return a.customer.name.localeCompare(b.customer.name, "ko");
+          case "visits":
+            return b.visitCount - a.visitCount;
+          case "recent":
+            // 방문 이력이 없는 고객은 뒤로
+            return (b.lastVisitDate ?? "").localeCompare(a.lastVisitDate ?? "");
+          default:
+            return b.priorityScore - a.priorityScore;
+        }
+      });
+  }, [all, query, status, sort]);
 
   const priorityCount = rows.filter((d) => d.priorityScore > 0).length;
 
@@ -129,6 +152,25 @@ export default function CustomersPage() {
               </span>
             </p>
           )}
+        </div>
+
+        {/* 정렬 */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-line pt-3">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-ink-faint">
+            정렬
+          </span>
+          {SORTS.map((sopt) => (
+            <FilterChip
+              key={sopt.key}
+              active={sort === sopt.key}
+              onClick={() => setSort(sopt.key)}
+            >
+              {sopt.label}
+            </FilterChip>
+          ))}
+          <span className="nowrap-num ml-auto text-sm font-bold text-ink-sub">
+            {rows.length}명
+          </span>
         </div>
       </Card>
 

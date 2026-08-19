@@ -19,8 +19,18 @@ import {
   inputCls,
 } from "@/components/ui";
 import { PlusIcon, SearchIcon } from "@/components/ui/icons";
+import { useToast } from "@/components/ui/toast";
+import { Visit } from "@/lib/types";
 
 type TypeFilter = "all" | "visit" | "consult";
+type PeriodFilter = "all" | "7" | "30" | "90";
+
+const PERIODS: Array<{ key: PeriodFilter; label: string }> = [
+  { key: "7", label: "최근 7일" },
+  { key: "30", label: "최근 30일" },
+  { key: "90", label: "최근 90일" },
+  { key: "all", label: "전체 기간" },
+];
 
 /**
  * 프로그램별 색 — 기록 목록에서 어떤 케어였는지 색으로 구분.
@@ -39,10 +49,15 @@ function programStyle(programName?: string, isConsult?: boolean) {
 }
 
 export default function VisitsPage() {
-  const { visits, customers, staff } = useStore();
+  const { visits, customers, staff, removeVisit } = useStore();
+  const toast = useToast();
   const [openForm, setOpenForm] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Visit | undefined>();
+  const [confirmDelete, setConfirmDelete] = useState<Visit | undefined>();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>("all");
+  const [period, setPeriod] = useState<PeriodFilter>("30");
+  const [staffFilter, setStaffFilter] = useState<string>("all");
 
   const customerName = (id: string) =>
     customers.find((c) => c.id === id)?.name ?? "삭제된 고객";
@@ -54,13 +69,17 @@ export default function VisitsPage() {
     return [...visits]
       .filter((v) => {
         if (type !== "all" && v.type !== type) return false;
+        if (period !== "all" && daysAgo(v.visitedAt) > Number(period))
+          return false;
+        if (staffFilter !== "all" && (v.staffId ?? "") !== staffFilter)
+          return false;
         if (!q) return true;
         return customerName(v.customerId).includes(q);
       })
       .sort((a, b) => b.visitedAt.localeCompare(a.visitedAt))
-      .slice(0, 60);
+      .slice(0, 80);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visits, customers, query, type]);
+  }, [visits, customers, query, type, period, staffFilter]);
 
   return (
     <div>
@@ -68,7 +87,12 @@ export default function VisitsPage() {
         title="방문 / 이용 기록"
         description="방문·상담 기록이 시간순으로 쌓입니다. 기록 시 이용권 차감과 다음 관리일이 함께 처리됩니다."
         action={
-          <Button onClick={() => setOpenForm(true)}>
+          <Button
+            onClick={() => {
+              setEditingVisit(undefined);
+              setOpenForm(true);
+            }}
+          >
             <PlusIcon className="h-4 w-4" />
             방문 기록
           </Button>
@@ -133,13 +157,72 @@ export default function VisitsPage() {
             ))}
           </div>
         </div>
+
+        {/* 기간 · 담당 직원 */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-line pt-3">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-ink-faint">
+            기간
+          </span>
+          {PERIODS.map((f) => (
+            <FilterChip
+              key={f.key}
+              active={period === f.key}
+              onClick={() => setPeriod(f.key)}
+            >
+              {f.label}
+            </FilterChip>
+          ))}
+          <span className="ml-2 text-xs font-extrabold uppercase tracking-wider text-ink-faint">
+            담당
+          </span>
+          <FilterChip
+            active={staffFilter === "all"}
+            onClick={() => setStaffFilter("all")}
+          >
+            전체
+          </FilterChip>
+          {staff
+            .filter((st) => st.active)
+            .map((st) => (
+              <FilterChip
+                key={st.id}
+                active={staffFilter === st.id}
+                onClick={() => setStaffFilter(st.id)}
+              >
+                {st.name}
+              </FilterChip>
+            ))}
+          <span className="nowrap-num ml-auto text-sm font-bold text-ink-sub">
+            {rows.length}건
+          </span>
+        </div>
       </Card>
 
       {rows.length === 0 ? (
-        <EmptyState
-          title="기록이 없습니다"
-          description="우측 상단의 방문 기록 버튼으로 첫 기록을 남겨보세요."
-        />
+        visits.length === 0 ? (
+          <EmptyState
+            title="기록이 없습니다"
+            description="우측 상단의 방문 기록 버튼으로 첫 기록을 남겨보세요."
+          />
+        ) : (
+          <EmptyState
+            title="조건에 맞는 기록이 없습니다"
+            description="기간이나 담당 직원 필터를 넓혀 보세요."
+            action={
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setPeriod("all");
+                  setStaffFilter("all");
+                  setType("all");
+                  setQuery("");
+                }}
+              >
+                필터 초기화
+              </Button>
+            }
+          />
+        )
       ) : (
         <div className="rise-stagger space-y-2.5">
           {rows.map((v) => {
@@ -171,14 +254,31 @@ export default function VisitsPage() {
               {v.reaction && (
                 <p className="mt-2 text-sm text-ink-soft">{v.reaction}</p>
               )}
-              <p className="mt-1.5 text-xs text-ink-sub">
-                담당 {staffName(v.staffId)}
-                {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
-                {v.membershipId ? " · 이용권 차감" : ""}
-                {v.nextManageDate
-                  ? ` · 다음 관리일 ${formatDateKr(v.nextManageDate)}`
-                  : ""}
-              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="min-w-0 text-xs text-ink-sub">
+                  담당 {staffName(v.staffId)}
+                  {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
+                  {v.membershipId ? " · 이용권 차감" : ""}
+                  {v.nextManageDate
+                    ? ` · 다음 관리일 ${formatDateKr(v.nextManageDate)}`
+                    : ""}
+                </p>
+                <button
+                  onClick={() => {
+                    setEditingVisit(v);
+                    setOpenForm(true);
+                  }}
+                  className="ml-auto shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+                >
+                  수정
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(v)}
+                  className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-faint transition-colors hover:text-danger"
+                >
+                  삭제
+                </button>
+              </div>
             </Card>
             );
           })}
@@ -188,13 +288,53 @@ export default function VisitsPage() {
       <Modal
         open={openForm}
         onClose={() => setOpenForm(false)}
-        title="방문 · 상담 기록"
+        title={editingVisit ? "방문 · 상담 기록 수정" : "방문 · 상담 기록"}
         wide
       >
         <VisitForm
+          visit={editingVisit}
           onCancel={() => setOpenForm(false)}
-          onSaved={() => setOpenForm(false)}
+          onSaved={() => {
+            setOpenForm(false);
+            setEditingVisit(undefined);
+          }}
         />
+      </Modal>
+
+      {/* 삭제 확인 */}
+      <Modal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(undefined)}
+        title="방문 기록 삭제"
+      >
+        <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
+          {confirmDelete && customerName(confirmDelete.customerId)} 고객의{" "}
+          {confirmDelete && formatDateKr(confirmDelete.visitedAt)} 기록을
+          삭제합니다.
+          {confirmDelete?.membershipId
+            ? " 이 기록에서 차감된 이용권 1회는 다시 되돌아갑니다."
+            : ""}{" "}
+          삭제한 기록은 되돌릴 수 없습니다.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirmDelete(undefined)}>
+            취소
+          </Button>
+          <Button
+            variant="danger-ghost"
+            onClick={() => {
+              if (!confirmDelete) return;
+              removeVisit(confirmDelete.id);
+              toast(
+                `${customerName(confirmDelete.customerId)} 고객의 방문 기록을 삭제했습니다`,
+                "info",
+              );
+              setConfirmDelete(undefined);
+            }}
+          >
+            삭제
+          </Button>
+        </div>
       </Modal>
     </div>
   );

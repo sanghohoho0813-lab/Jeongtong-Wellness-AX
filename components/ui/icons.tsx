@@ -63,6 +63,14 @@ export const BookIcon = (p: IconProps) => (
   </svg>
 );
 
+export const DownloadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 3.5v11" />
+    <path d="M7.5 10.5 12 15l4.5-4.5" />
+    <path d="M4.5 17.5v1a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-1" />
+  </svg>
+);
+
 export const RefreshIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M20 12a8 8 0 1 1-2.3-5.6" />

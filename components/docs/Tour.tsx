@@ -28,7 +28,7 @@ export interface TourStep {
   route: string;
   /** 강조할 요소의 data-tour 값 (없으면 화면 전체 안내) */
   target?: string;
-  /** 화면 위에 표시할 분류 라벨 */
+  /** 화면 위에 표시할 분류 라벨 (번호는 순서대로 자동 부여) */
   kicker: string;
   title: string;
   body: string;
@@ -47,28 +47,28 @@ export function buildTourSteps(
     {
       route: "/",
       target: "dash-kpi",
-      kicker: "1 · 대시보드",
+      kicker: "대시보드",
       title: "오늘의 운영 상태를 먼저 봅니다",
       body: "오늘 방문, 관리 대상, 신규 고객, 이용권 현황이 한 줄로 요약됩니다. 모두 저장된 기록에서 계산된 값입니다.",
     },
     {
       route: "/",
       target: "dash-briefing",
-      kicker: "2 · 대시보드",
+      kicker: "대시보드",
       title: "오늘 챙길 고객이 여기 나옵니다",
       body: "시스템이 관리 기준에 따라 오늘 연락하거나 안내할 고객을 골라 둡니다. [전체 보기]를 누르면 실행 브리핑으로 넘어갑니다.",
     },
     {
       route: "/briefing",
       target: "briefing-hero",
-      kicker: "3 · 실행 브리핑",
+      kicker: "실행 브리핑",
       title: "처리 현황을 한눈에",
       body: "오늘 과제가 몇 건이고 얼마나 처리했는지 보여 줍니다. 아래 칩으로 처리대기 · 처리완료 · 보류를 나눠 볼 수 있습니다.",
     },
     {
       route: "/briefing",
       target: "task-card",
-      kicker: "4 · 실행 브리핑",
+      kicker: "실행 브리핑",
       title: "왜 · 무엇을 해야 하는지 함께 나옵니다",
       body: "고객 이름 아래에 판단 이유와 권장 행동이 같이 표시됩니다. 처리했으면 [처리완료], 나중에 다시 볼 일이면 [보류]를 누르세요.",
       tip: "처리완료를 누르면 바로 사라지지 않고 결과 입력창이 먼저 열립니다.",
@@ -79,28 +79,28 @@ export function buildTourSteps(
     {
       route: "/customers",
       target: "customer-tiles",
-      kicker: `${isManager ? "5" : "1"} · 고객`,
+      kicker: "고객",
       title: "상태 타일을 눌러 바로 걸러 봅니다",
       body: "전체 · 신규 · 활성 · 관리 필요 · 장기 미방문으로 나뉘어 있고, 타일을 누르면 그 상태의 고객만 보입니다.",
     },
     {
       route: "/customers",
       target: "customer-row",
-      kicker: `${isManager ? "6" : "2"} · 고객`,
+      kicker: "고객",
       title: "관리가 필요한 고객이 위로 옵니다",
       body: "이름 옆에 고객 상태와 AI 추천 등급이 함께 표시되고, 그 아래에 그렇게 판단한 첫 번째 이유가 나옵니다.",
     },
     {
       route: detail,
       target: "ax-insight",
-      kicker: `${isManager ? "7" : "3"} · 고객 상세`,
+      kicker: "고객 상세",
       title: "이 고객의 현재 상태 요약",
       body: "왜 관리 대상인지(또는 왜 정상인지)를 문장으로 보여 줍니다. → 로 시작하는 줄이 권장 행동입니다.",
     },
     {
       route: detail,
       target: "next-manage",
-      kicker: `${isManager ? "8" : "4"} · 고객 상세`,
+      kicker: "고객 상세",
       title: "다음 관리 예정일은 눌러서 정합니다",
       body: "[날짜 · 시간 선택]을 누르면 빠른 선택 · 달력 · 오전/오후 · 시 · 분이 차례로 나옵니다. 타자로 칠 일이 없습니다.",
       tip: "AI 추천일은 그 고객의 평균 이용주기로 계산한 날짜입니다.",
@@ -108,22 +108,30 @@ export function buildTourSteps(
     {
       route: detail,
       target: "body-map",
-      kicker: `${isManager ? "9" : "5"} · 고객 상세`,
+      kicker: "고객 상세",
       title: "집중 케어 부위는 그림에서 고릅니다",
       body: "여기 표시된 부위는 고객이 평소 원하시는 부위입니다. 방문마다 실제 관리한 부위는 아래 이력에 회차별로 따로 쌓입니다.",
     },
     {
       route: detail,
       target: "care-pref",
-      kicker: `${isManager ? "10" : "6"} · 고객 상세`,
+      kicker: "고객 상세",
       title: "케어 선호는 클릭만으로 기록합니다",
       body: "[기록 추가] → 분류(온도 · 강도 · 자세 …)를 고르면 자주 쓰는 문구가 아래에 펼쳐집니다. 여러 개를 골라 한 번에 저장할 수 있습니다.",
       tip: "중요한 항목은 [고정]해 두면 다음 방문 기록 때 먼저 확인됩니다.",
     },
     {
       route: detail,
+      target: "memberships",
+      kicker: "고객 상세",
+      title: "이용권은 여기서 팔고 관리합니다",
+      body: "[이용권 등록]을 누르면 자주 판매하는 구성이 먼저 나옵니다. 하나만 고르면 프로그램 · 횟수 · 금액이 한 번에 채워집니다.",
+      tip: "잔여가 적거나 다 쓴 이용권에는 재구매 상담 안내가 함께 표시됩니다.",
+    },
+    {
+      route: detail,
       target: "visit-record",
-      kicker: `${isManager ? "11" : "7"} · 고객 상세`,
+      kicker: "고객 상세",
       title: "방문은 이 버튼 하나로 기록합니다",
       body: "프로그램 · 이용권 차감 · 케어 부위 · 반응 · 다음 관리일을 한 화면에서 입력합니다. 저장하면 이력과 브리핑까지 함께 갱신됩니다.",
     },
@@ -133,7 +141,7 @@ export function buildTourSteps(
     {
       route: "/analytics",
       target: "analytics-kpi",
-      kicker: "12 · AX 도입성과",
+      kicker: "AX 도입성과",
       title: "쌓인 기록이 성과로 보입니다",
       body: "방문 · 신규 고객 · 재방문율 · 과제 처리 현황이 기간별로 계산됩니다. 여기 숫자는 모두 실제 저장된 기록에서 나옵니다.",
     },
@@ -456,7 +464,7 @@ function TourOverlay({
         <div className="rise-in overflow-hidden rounded-card-lg bg-card shadow-float ring-1 ring-black/[0.06] dark:ring-white/10">
           <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-deep-800 to-deep-700 px-4 py-2.5">
             <p className="nowrap-num min-w-0 truncate text-[0.8125rem] font-extrabold uppercase tracking-wider text-aqua-300">
-              {step.kicker}
+              {index + 1} · {step.kicker}
             </p>
             <div className="flex shrink-0 items-center gap-2">
               <span className="nowrap-num rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white">

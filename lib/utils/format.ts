@@ -26,6 +26,28 @@ export function formatPhone(phone: string): string {
 }
 
 /**
+ * 입력 중 연락처 자동 하이픈 — 타자 중에도 010-1234-5678 형태로 유지한다.
+ * 숫자만 남기고 11자리를 넘기지 않는다.
+ */
+export function formatPhoneInput(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+}
+
+/** 휴대전화 형식 여부 (010/011 등 3-3~4-4 자리) */
+export function isValidPhone(value: string): boolean {
+  const d = value.replace(/\D/g, "");
+  return d.length === 10 || d.length === 11;
+}
+
+/** 비교용 숫자만 남긴 연락처 (중복 확인) */
+export function phoneDigits(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+/**
  * 연락처 마스킹 — 직원 계정에는 전화번호를 노출하지 않는다.
  * 010-****-1234 형태로 뒷자리만 남겨 고객 식별은 가능하게 한다.
  */

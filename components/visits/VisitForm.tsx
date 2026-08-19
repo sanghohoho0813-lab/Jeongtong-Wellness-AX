@@ -7,6 +7,7 @@ import { useStore } from "@/lib/data/store";
 import {
   BodyPartRecord,
   PREFERENCE_CATEGORY_LABELS,
+  Visit,
   VisitType,
 } from "@/lib/types";
 import { daysFromToday, formatDateKr } from "@/lib/utils/date";
@@ -27,34 +28,58 @@ const PROGRAMS = [
 
 export default function VisitForm({
   customerId: fixedCustomerId,
+  visit,
   onSaved,
   onCancel,
 }: {
   customerId?: string;
+  /** 있으면 수정 모드 — 이용권 차감도 함께 정정된다 */
+  visit?: Visit;
   onSaved: () => void;
   onCancel: () => void;
 }) {
-  const { customers, staff, memberships, settings, addVisit, factsById } =
-    useStore();
+  const {
+    customers,
+    staff,
+    memberships,
+    settings,
+    addVisit,
+    updateVisit,
+    factsById,
+  } = useStore();
   const toast = useToast();
-  const [customerId, setCustomerId] = useState(fixedCustomerId ?? "");
-  const [type, setType] = useState<VisitType>("visit");
-  const [programName, setProgramName] = useState(PROGRAMS[0]);
-  const [membershipId, setMembershipId] = useState("");
+  const editing = !!visit;
+  const [customerId, setCustomerId] = useState(
+    visit?.customerId ?? fixedCustomerId ?? "",
+  );
+  const [type, setType] = useState<VisitType>(visit?.type ?? "visit");
+  const [programName, setProgramName] = useState(
+    visit?.programName ?? PROGRAMS[0],
+  );
+  const [membershipId, setMembershipId] = useState(visit?.membershipId ?? "");
   const [parts, setParts] = useState<BodyPartRecord[]>(() => {
+    if (visit) return visit.bodyParts;
     if (!fixedCustomerId) return [];
     return (
       customers.find((c) => c.id === fixedCustomerId)?.focusBodyParts ?? []
     );
   });
-  const [reaction, setReaction] = useState("");
-  const [amount, setAmount] = useState("");
-  const [nextManage, setNextManage] = useState(
-    daysFromToday(settings.careRules.defaultCycleDays),
+  const [reaction, setReaction] = useState(visit?.reaction ?? "");
+  const [amount, setAmount] = useState(
+    visit?.amount ? String(visit.amount) : "",
   );
-  const [nextManageTime, setNextManageTime] = useState<string | undefined>();
-  const [staffId, setStaffId] = useState("");
-  const [appliedPrefs, setAppliedPrefs] = useState<string[]>([]);
+  const [nextManage, setNextManage] = useState(
+    visit
+      ? (visit.nextManageDate ?? "")
+      : daysFromToday(settings.careRules.defaultCycleDays),
+  );
+  const [nextManageTime, setNextManageTime] = useState<string | undefined>(
+    visit?.nextManageTime,
+  );
+  const [staffId, setStaffId] = useState(visit?.staffId ?? "");
+  const [appliedPrefs, setAppliedPrefs] = useState<string[]>(
+    visit?.appliedPreferenceIds ?? [],
+  );
   const [error, setError] = useState("");
 
   const sortedCustomers = useMemo(
@@ -64,8 +89,14 @@ export default function VisitForm({
 
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
+  /**
+   * 선택 가능한 이용권 — 사용 중인 것 + (수정 모드에서) 이미 이 기록에 연결된 것.
+   * 소진된 이용권이라도 원래 기록에 걸려 있으면 선택지에서 사라지면 안 된다.
+   */
   const activeMemberships = memberships.filter(
-    (m) => m.customerId === customerId && m.status === "active",
+    (m) =>
+      m.customerId === customerId &&
+      (m.status === "active" || (editing && m.id === visit?.membershipId)),
   );
 
   // AX 추천 다음 관리일 (선택된 고객의 기존 방문주기 기반)
@@ -84,7 +115,7 @@ export default function VisitForm({
 
   const submit = () => {
     if (!customerId) return setError("고객을 선택하세요.");
-    addVisit({
+    const payload = {
       customerId,
       type,
       programName: type === "visit" ? programName : undefined,
@@ -96,17 +127,22 @@ export default function VisitForm({
       nextManageTime: nextManage ? nextManageTime : undefined,
       staffId: staffId || undefined,
       appliedPreferenceIds: appliedPrefs,
-    });
+    };
     const name = customers.find((c) => c.id === customerId)?.name ?? "고객";
-    toast(
-      `${name} · ${type === "consult" ? "상담" : "방문"} 기록을 저장했습니다`,
-    );
+    const kind = type === "consult" ? "상담" : "방문";
+    if (visit) {
+      updateVisit(visit.id, payload);
+      toast(`${name} · ${kind} 기록을 수정했습니다`);
+    } else {
+      addVisit(payload);
+      toast(`${name} · ${kind} 기록을 저장했습니다`);
+    }
     onSaved();
   };
 
   return (
     <div className="space-y-4">
-      {!fixedCustomerId && (
+      {!fixedCustomerId && !editing && (
         <div>
           <FieldLabel>고객 *</FieldLabel>
           <select
@@ -184,6 +220,14 @@ export default function VisitForm({
             {(() => {
               const m = activeMemberships.find((x) => x.id === membershipId);
               if (!m) return null;
+              // 수정 모드에서 이미 차감된 이용권은 다시 차감되지 않는다
+              if (editing && m.id === visit?.membershipId) {
+                return (
+                  <p className="mt-2 rounded-btn bg-card-soft px-3 py-2 text-sm font-bold text-ink-sub ring-1 ring-stone-line">
+                    이미 차감된 기록입니다 · 현재 잔여 {m.remainingCount}회
+                  </p>
+                );
+              }
               return (
                 <p className="mt-2 rounded-btn bg-aqua-50 px-3 py-2 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100">
                   현재 <span className="nowrap-num">{m.remainingCount}회</span>{" "}
@@ -369,7 +413,7 @@ export default function VisitForm({
         <Button variant="ghost" onClick={onCancel}>
           취소
         </Button>
-        <Button onClick={submit}>기록 저장</Button>
+        <Button onClick={submit}>{editing ? "수정 저장" : "기록 저장"}</Button>
       </div>
     </div>
   );
