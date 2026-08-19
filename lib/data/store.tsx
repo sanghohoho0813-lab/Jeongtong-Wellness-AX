@@ -262,11 +262,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         )[0]?.outcome;
       map.set(
         id,
-        detectSalesOpportunity(facts, state.settings.careRules, lastOutcome),
+        detectSalesOpportunity(
+          facts,
+          state.settings.careRules,
+          lastOutcome,
+          state.settings.opportunityRules,
+        ),
       );
     }
     return map;
-  }, [factsById, state.settings.careRules, state.taskOverrides]);
+  }, [
+    factsById,
+    state.settings.careRules,
+    state.settings.opportunityRules,
+    state.taskOverrides,
+  ]);
 
   const briefingTasks = useMemo(
     () =>
@@ -634,6 +644,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             note: o?.note ?? base?.note,
             // 매출기회(재등록) 과제에서만 기록되는 결과값
             membershipRenewed: o?.membershipRenewed ?? base?.membershipRenewed,
+            // 처리 당시 매출기회 유형 스냅샷 — 이후 판정이 바뀌어도 성과가 남는다
+            opportunityType:
+              o?.opportunityType ??
+              base?.opportunityType ??
+              task.opportunity?.type,
           };
           // 결과에서 다음 관리일을 조정했으면 고객 데이터에도 반영 (기존 필드 갱신)
           if (

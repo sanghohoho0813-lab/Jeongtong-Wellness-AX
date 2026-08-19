@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { useStore } from "@/lib/data/store";
 import { canAccessRoute, STAFF_HOME } from "@/lib/auth/permissions";
-import { BellIcon } from "@/components/ui/icons";
+import { BellIcon, BookIcon, SparkIcon } from "@/components/ui/icons";
 import {
   BOTTOM_NAV_ITEMS,
   NAV_TONE_CLASS,
@@ -48,9 +48,36 @@ function Sidebar() {
   const items = navItemsFor(SIDEBAR_ITEMS, isManager);
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
-      <div className="px-5 pb-5 pt-6">
+      <div className="px-5 pb-3 pt-6">
         <Logo />
       </div>
+
+      {/* 문서 — 메뉴 위에 배치해 처음 쓰는 사람이 먼저 보게 한다 */}
+      <div className="mx-3 mb-2 grid grid-cols-2 gap-2">
+        <Link
+          href="/intro"
+          className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
+            isActive(pathname, "/intro")
+              ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+              : "bg-gold-soft text-gold-deep ring-1 ring-gold/30 hover:bg-gold/20"
+          }`}
+        >
+          <BookIcon className="h-4 w-4 shrink-0" />
+          <span className="truncate">기획의도</span>
+        </Link>
+        <Link
+          href="/guide"
+          className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
+            isActive(pathname, "/guide")
+              ? "bg-gradient-to-r from-aqua-500 to-deep-700 text-white shadow-sm"
+              : "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100"
+          }`}
+        >
+          <SparkIcon className="h-4 w-4 shrink-0" />
+          <span className="truncate">사용 가이드</span>
+        </Link>
+      </div>
+
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
@@ -83,22 +110,6 @@ function Sidebar() {
           );
         })}
       </nav>
-      {/* 문서 — 메뉴가 아니라 참고 자료라 작은 링크로 둔다 (직원 계정도 열람 가능) */}
-      <div className="mx-3 mt-2 flex items-center gap-2 border-t border-stone-line pt-2.5 text-xs font-bold">
-        <Link
-          href="/intro"
-          className="truncate text-ink-faint transition-colors hover:text-aqua-700"
-        >
-          기획의도
-        </Link>
-        <span className="text-ink-faint/50">·</span>
-        <Link
-          href="/guide"
-          className="truncate text-ink-faint transition-colors hover:text-aqua-700"
-        >
-          사용 가이드
-        </Link>
-      </div>
       <div className="m-3">
         <ProfileButton />
       </div>

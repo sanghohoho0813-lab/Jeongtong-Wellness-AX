@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useStore } from "@/lib/data/store";
 import {
   BriefingTask,
+  SalesOpportunityType,
   TASK_CATEGORY_LABELS,
   TASK_CONTACT_RESULT_LABELS,
   TaskCategory,
@@ -17,9 +18,11 @@ import {
   Badge,
   BadgeTone,
   Button,
+  Modal,
   OpportunityBadge,
   TaskStatusBadge,
 } from "@/components/ui";
+import MembershipForm from "@/components/customers/MembershipForm";
 import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
 import { DateTimeField } from "@/components/ui/DateTimeField";
@@ -124,6 +127,10 @@ export default function TaskCard({
   const [nextDate, setNextDate] = useState("");
   const [nextTime, setNextTime] = useState<string | undefined>();
   const [renewed, setRenewed] = useState(false);
+  const [openMembership, setOpenMembership] = useState(false);
+  const [panelOppType, setPanelOppType] = useState<
+    SalesOpportunityType | undefined
+  >();
   const [note, setNote] = useState("");
   const [holdUntil, setHoldUntil] = useState(() => daysFromToday(3));
 
@@ -142,7 +149,12 @@ export default function TaskCard({
   const finished = task.status === "done";
   /** AX 매출기회 — 있으면 실행 카드에 함께 노출한다 (Priority Score 와 무관) */
   const opp = task.opportunity;
-  const isRenewal = opp?.type === "renewal";
+  /**
+   * 결과 패널을 연 시점의 매출기회 유형을 붙잡아 둔다.
+   * 패널에서 이용권을 등록하면 그 고객의 매출기회는 즉시 사라지는데,
+   * 그때 재등록 체크까지 함께 사라지면 성과를 저장할 수 없기 때문이다.
+   */
+  const panelIsRenewal = panelOppType === "renewal";
   const hero = variant === "hero";
 
   /** 처리완료 패널 열기 — 기존 결과 또는 고객의 현재 다음 관리일로 초기화 */
@@ -154,6 +166,7 @@ export default function TaskCard({
     setNextDate(d);
     setNextTime(o?.nextManageTime ?? customer.nextManageTime);
     setRenewed(!!o?.membershipRenewed);
+    setPanelOppType(o?.opportunityType ?? task.opportunity?.type);
     setNote(o?.note ?? "");
     setPanel("done");
   };
@@ -171,7 +184,8 @@ export default function TaskCard({
         nextManageDate: revisitPlanned ? nextDate || undefined : undefined,
         nextManageTime: revisitPlanned && nextDate ? nextTime : undefined,
         note: note.trim() || undefined,
-        membershipRenewed: isRenewal ? renewed : undefined,
+        membershipRenewed: panelIsRenewal ? renewed : undefined,
+        opportunityType: panelOppType,
       },
     });
     setPanel(null);
@@ -443,10 +457,11 @@ export default function TaskCard({
               </div>
 
               {/* 재등록 기회 과제에서만 — 매출 성과로 이어졌는지 남긴다 */}
-              {isRenewal && (
+              {panelIsRenewal && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setRenewed((v) => !v)}
-                  className={`mt-2.5 flex w-full items-center gap-2 rounded-btn px-3 py-2.5 text-left text-sm font-bold transition-colors ${
+                  className={`flex min-w-0 flex-1 items-center gap-2 rounded-btn px-3 py-2.5 text-left text-sm font-bold transition-colors ${
                     renewed
                       ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
                       : hero
@@ -463,6 +478,18 @@ export default function TaskCard({
                   </span>
                   이용권 재등록으로 이어짐
                 </button>
+                {/* 체크만 하고 끝나지 않게 — 여기서 바로 이용권을 등록한다 */}
+                <button
+                  onClick={() => setOpenMembership(true)}
+                  className={`touch-target shrink-0 rounded-btn px-3.5 py-2.5 text-sm font-bold transition-colors ${
+                    hero
+                      ? "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20"
+                      : "bg-card text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-50"
+                  }`}
+                >
+                  이용권 등록
+                </button>
+                </div>
               )}
 
               <input
@@ -561,6 +588,23 @@ export default function TaskCard({
               {task.outcome.note ? ` · ${task.outcome.note}` : ""}
             </p>
           )}
+          {/* 재등록 기회 — 결과 기록과 같은 자리에서 이용권을 바로 등록한다 */}
+          <Modal
+            open={openMembership}
+            onClose={() => setOpenMembership(false)}
+            title={`${customer.name} — 이용권 등록`}
+            wide
+          >
+            <MembershipForm
+              customerId={customer.id}
+              onCancel={() => setOpenMembership(false)}
+              onSaved={() => {
+                setOpenMembership(false);
+                setRenewed(true);
+              }}
+            />
+          </Modal>
+
           {panel === null && task.status === "hold" && task.holdUntil && (
             <p
               className={`mt-2.5 text-[0.7rem] font-bold ${hero ? "text-deep-faint" : "text-warn"}`}

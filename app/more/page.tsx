@@ -13,7 +13,11 @@ import { MORE_ITEMS, navItemsFor } from "@/components/layout/nav-items";
 import { ProfileButton } from "@/components/layout/UserSwitch";
 import { FontScale, Theme } from "@/lib/types";
 import { Card, FieldLabel, SectionTitle, SegmentedControl } from "@/components/ui";
-import { BookIcon, ChevronRightIcon } from "@/components/ui/icons";
+import {
+  BookIcon,
+  ChevronRightIcon,
+  SparkIcon,
+} from "@/components/ui/icons";
 
 export default function MorePage() {
   const { settings, isManager, updateSettings } = useStore();
@@ -30,6 +34,44 @@ export default function MorePage() {
       />
       <div className="mb-4">
         <ProfileButton />
+      </div>
+
+      {/* 문서 — 메뉴 목록보다 위에 두고 색으로 구분한다 */}
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <Link
+          href="/intro"
+          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-gold-soft to-card px-4 py-4 shadow-card ring-1 ring-gold/25 transition-colors active:bg-gold/10"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gold to-gold-deep text-white shadow-sm">
+            <BookIcon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
+              기획의도
+            </span>
+            <span className="block truncate text-[0.875rem] text-gold-deep">
+              이 시스템을 만든 이유
+            </span>
+          </span>
+          <ChevronRightIcon className="h-5 w-5 shrink-0 text-gold-deep" />
+        </Link>
+        <Link
+          href="/guide"
+          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-aqua-50 to-card px-4 py-4 shadow-card ring-1 ring-aqua-200 transition-colors active:bg-aqua-100"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-500 to-deep-700 text-white shadow-sm">
+            <SparkIcon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
+              사용 가이드
+            </span>
+            <span className="block truncate text-[0.875rem] text-aqua-800">
+              화면별 사용법 · 단계별 안내
+            </span>
+          </span>
+          <ChevronRightIcon className="h-5 w-5 shrink-0 text-aqua-800" />
+        </Link>
       </div>
 
       {items.length > 0 && (
@@ -57,40 +99,6 @@ export default function MorePage() {
           </ul>
         </Card>
       )}
-
-      {/* 문서 — 기획의도 / 사용 가이드 (역할 무관) */}
-      <Card className="mt-4 !p-2">
-        <ul className="divide-y divide-stone-bg-deep">
-          {[
-            { href: "/guide", label: "사용 가이드", desc: "화면별 사용법" },
-            {
-              href: "/intro",
-              label: "기획의도",
-              desc: "이 시스템을 만든 이유",
-            },
-          ].map((d) => (
-            <li key={d.href}>
-              <Link
-                href={d.href}
-                className="flex items-center gap-3.5 px-3.5 py-3.5"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
-                  <BookIcon className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold text-ink">
-                    {d.label}
-                  </span>
-                  <span className="block truncate text-xs text-ink-sub">
-                    {d.desc}
-                  </span>
-                </span>
-                <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </Card>
 
       {/* 직원 계정: 설정 화면 대신 여기서 화면 표시만 조정 */}
       {!isManager && (

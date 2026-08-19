@@ -19,7 +19,9 @@
 
 import {
   CareRuleSettings,
+  DEFAULT_OPPORTUNITY_RULES,
   OpportunityLevel,
+  OpportunityRuleSettings,
   SalesOpportunity,
   SalesOpportunityType,
   TaskOutcome,
@@ -41,13 +43,6 @@ const LABEL: Record<SalesOpportunityType, string> = {
   none: "해당 없음",
 };
 
-/** 소진된 이용권을 매출기회로 볼 수 있는 최대 경과 기간 */
-const EXHAUSTED_WINDOW_DAYS = 180;
-/** 재등록 기회로 보기 위한 최소 누적 방문 (이용권을 다 쓴 경우) */
-const RENEWAL_MIN_VISITS = 3;
-/** 반복 이용 고객 판단 기준 — 재방문 기회 강도 판정에 사용 */
-const LOYAL_VISITS = 5;
-
 function make(
   type: Exclude<SalesOpportunityType, "none">,
   level: OpportunityLevel,
@@ -65,8 +60,14 @@ export function detectSalesOpportunity(
   facts: CustomerFacts,
   rules: CareRuleSettings,
   lastOutcome?: TaskOutcome,
+  oppRules: OpportunityRuleSettings = DEFAULT_OPPORTUNITY_RULES,
 ): SalesOpportunity {
   const { customer, visits, memberships } = facts;
+  const {
+    exhaustedWindowDays: EXHAUSTED_WINDOW_DAYS,
+    minVisitsForRenewal: RENEWAL_MIN_VISITS,
+    loyalVisitCount: LOYAL_VISITS,
+  } = oppRules;
 
   const realVisits = visits.filter((v) => v.type === "visit");
   const visitCount = realVisits.length;
@@ -262,15 +263,24 @@ export function summarizeOpportunities(
     outcome?: TaskOutcome;
   }>,
 ): OpportunitySummary {
-  const withOpp = tasks.filter(
-    (t) => t.opportunity && t.opportunity.type !== "none",
-  );
+  /**
+   * 처리 당시 유형(스냅샷)을 우선 사용한다.
+   * 재등록이 실제로 일어나면 그 고객의 매출기회는 사라지는데,
+   * 현재 판정만 보면 방금 만든 성과가 집계에서 빠져 버리기 때문이다.
+   */
+  const typeOf = (t: {
+    opportunity?: SalesOpportunity;
+    outcome?: TaskOutcome;
+  }): SalesOpportunityType =>
+    t.outcome?.opportunityType ?? t.opportunity?.type ?? "none";
+
+  const withOpp = tasks.filter((t) => typeOf(t) !== "none");
   const done = withOpp.filter((t) => t.status === "done");
   return {
     total: withOpp.length,
-    renewal: withOpp.filter((t) => t.opportunity!.type === "renewal").length,
-    revisit: withOpp.filter((t) => t.opportunity!.type === "revisit").length,
-    high: withOpp.filter((t) => t.opportunity!.level === "high").length,
+    renewal: withOpp.filter((t) => typeOf(t) === "renewal").length,
+    revisit: withOpp.filter((t) => typeOf(t) === "revisit").length,
+    high: withOpp.filter((t) => t.opportunity?.level === "high").length,
     handled: done.length,
     revisitPlanned: done.filter((t) => t.outcome?.revisitPlanned).length,
     renewed: done.filter((t) => t.outcome?.membershipRenewed).length,

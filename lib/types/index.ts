@@ -296,6 +296,12 @@ export interface TaskOutcome {
   /** 간단 메모 (Supabase: memo) */
   note?: string;
   /**
+   * 처리 당시의 매출기회 유형 (Supabase: sales_opportunity_type).
+   * 재등록 이후에는 그 고객의 매출기회가 사라지므로,
+   * 성과 집계가 유실되지 않도록 처리 시점의 판정을 함께 남긴다.
+   */
+  opportunityType?: SalesOpportunityType;
+  /**
    * 이용권 재등록 여부 (Supabase: membership_renewed)
    * 재등록 기회 고객을 실제로 관리했을 때만 기록한다.
    * 매출기회 → 실행 → 재등록 성과를 잇는 유일한 결과값이다.
@@ -340,6 +346,25 @@ export interface CareRuleSettings {
   defaultCycleDays: number; // 기본 관리주기 (방문이력 부족 시)
 }
 
+/**
+ * AX 매출기회 판정 기준 — 매장마다 재등록 상담 시점 감각이 달라 설정으로 뺀다.
+ * Priority Score(careRules)와는 별개의 값이며 서로 영향을 주지 않는다.
+ */
+export interface OpportunityRuleSettings {
+  /** 이용권 소진 후 재등록 기회로 볼 최대 경과일 */
+  exhaustedWindowDays: number;
+  /** 소진 고객을 재등록 기회로 볼 최소 누적 방문 횟수 */
+  minVisitsForRenewal: number;
+  /** 반복 이용 고객 기준 — 재방문 기회의 강도 판정에 사용 */
+  loyalVisitCount: number;
+}
+
+export const DEFAULT_OPPORTUNITY_RULES: OpportunityRuleSettings = {
+  exhaustedWindowDays: 180,
+  minVisitsForRenewal: 3,
+  loyalVisitCount: 5,
+};
+
 export interface AppSettings {
   fontScale: FontScale;
   density: Density;
@@ -349,6 +374,8 @@ export interface AppSettings {
   ownerName: string;
   openHours: string;
   careRules: CareRuleSettings;
+  /** 매출기회 판정 기준 (없으면 기본값 사용 — 기존 저장 데이터 호환) */
+  opportunityRules?: OpportunityRuleSettings;
 }
 
 export const DEFAULT_CARE_RULES: CareRuleSettings = {
@@ -368,6 +395,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ownerName: "최정철",
   openHours: "10:00 - 20:00",
   careRules: DEFAULT_CARE_RULES,
+  opportunityRules: DEFAULT_OPPORTUNITY_RULES,
 };
 
 // ---------- 파생 지표 ----------

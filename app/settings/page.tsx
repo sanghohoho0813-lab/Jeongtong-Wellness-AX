@@ -5,8 +5,10 @@ import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import {
   CareRuleSettings,
+  DEFAULT_OPPORTUNITY_RULES,
   Density,
   FontScale,
+  OpportunityRuleSettings,
   StaffRole,
   Theme,
 } from "@/lib/types";
@@ -88,6 +90,11 @@ export default function SettingsPage() {
 
   const setRule = (patch: Partial<CareRuleSettings>) =>
     updateSettings({ careRules: { ...settings.careRules, ...patch } });
+
+  // 매출기회 기준 — 저장된 값이 없으면 기본값을 쓴다 (기존 데이터 호환)
+  const oppRules = settings.opportunityRules ?? DEFAULT_OPPORTUNITY_RULES;
+  const setOppRule = (patch: Partial<OpportunityRuleSettings>) =>
+    updateSettings({ opportunityRules: { ...oppRules, ...patch } });
 
   // ---------- 데이터 내보내기 ----------
   const prefCount = customers.reduce(
@@ -362,6 +369,36 @@ export default function SettingsPage() {
               value={settings.careRules.newFollowupDays}
               unit="일"
               onChange={(n) => setRule({ newFollowupDays: n })}
+            />
+          </div>
+        </Card>
+
+        {/* 매출기회 기준 — Priority 기준과 분리된 별도 카드 */}
+        <Card>
+          <SectionTitle>AX 매출기회 기준</SectionTitle>
+          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
+            재방문 · 이용권 재등록 기회를 판단하는 기준입니다. 위의 고객관리
+            기준(우선순위 계산)과는 별개이며, 이 값만 바꿔도 우선순위 점수는
+            달라지지 않습니다.
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <RuleField
+              label="이용권 소진 후 재등록 기회 기간"
+              value={oppRules.exhaustedWindowDays}
+              unit="일 이내 소진 고객"
+              onChange={(n) => setOppRule({ exhaustedWindowDays: n })}
+            />
+            <RuleField
+              label="재등록 기회 최소 누적 방문"
+              value={oppRules.minVisitsForRenewal}
+              unit="회 이상 방문한 고객"
+              onChange={(n) => setOppRule({ minVisitsForRenewal: n })}
+            />
+            <RuleField
+              label="반복 이용 고객 기준"
+              value={oppRules.loyalVisitCount}
+              unit="회 이상 (기회 강도 판단)"
+              onChange={(n) => setOppRule({ loyalVisitCount: n })}
             />
           </div>
         </Card>
