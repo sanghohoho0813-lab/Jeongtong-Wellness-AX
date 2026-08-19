@@ -159,6 +159,14 @@ body {
   .touch-target {
     min-height: 44px;
   }
+  /* 가로 스크롤 선택줄(시/분 칩) — 스크롤은 되지만 막대는 숨긴다 */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* number + unit never break apart */

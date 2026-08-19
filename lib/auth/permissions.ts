@@ -13,15 +13,19 @@
  *
  * ── 페이지 접근 ──────────────────────────────────────
  *  경로            ADMIN  STAFF   비고
- *  /               ✅      ✅      STAFF는 매출 KPI 대신 '오늘 관리 대상' 표시
- *  /briefing       ✅      ✅      본인이 처리하는 업무 상태 변경 가능
- *  /customers      ✅      ✅      고객 검색/조회/등록/수정
- *  /customers/[id] ✅      ✅      주요 케어 부위·다음 관리일 수정 포함
- *  /visits         ✅      ✅      방문/이용 기록 입력, 이용권 사용
- *  /retention      ✅      ✅      재방문 업무 확인·처리
- *  /analytics      ✅      ✅*     *STAFF는 매출 타일·매출 추이 숨김
- *  /branches       ✅      ❌      경영지표 — ADMIN 전용 (직접 접근 시 안내)
- *  /settings       ✅      ✅*     *STAFF는 화면 설정만, 매장/직원/관리기준은 ADMIN
+ *  /               ✅      ❌      대시보드(운영 현황) — ADMIN 전용
+ *  /briefing       ✅      ❌      실행 브리핑 — ADMIN 전용
+ *  /customers      ✅      ✅      STAFF의 유일한 업무 화면 (검색/조회/등록/수정)
+ *  /customers/[id] ✅      ✅      케어 부위·다음 관리일·케어 선호 기록 포함
+ *  /visits         ✅      ❌      방문/이용 기록은 고객 상세에서 입력
+ *  /retention      ✅      ❌      재방문 업무 배분 — ADMIN 전용
+ *  /analytics      ✅      ❌      성과 지표 — ADMIN 전용
+ *  /branches       ✅      ❌      경영지표 — ADMIN 전용
+ *  /settings       ✅      ❌      STAFF는 /more(계정)에서 화면 표시만 조정
+ *  /more           ✅      ✅      모바일 보조 메뉴 / STAFF는 계정·화면 표시 전용
+ *
+ *  STAFF는 네비게이션에 '고객' 하나만 노출되며, 그 외 경로로 직접 접근하면
+ *  /customers 로 되돌린다 (AppShell 의 RouteGuard).
  *
  * ── 데이터 접근 (RLS 설계 방향) ─────────────────────
  *  테이블               ADMIN            STAFF
@@ -53,8 +57,34 @@ export function toAppRole(role: StaffRole): AppRole {
   return role === "staff" ? "STAFF" : "ADMIN";
 }
 
+/**
+ * STAFF 에게 허용되는 경로 — 네비게이션 노출과 화면 가드의 단일 기준.
+ * 고객 업무(조회·기록)만 남기고 운영·경영 화면은 모두 ADMIN 전용으로 둔다.
+ * /more 는 메뉴가 아니라 계정 전환·화면 표시 설정 컨테이너라 함께 허용한다.
+ */
+export const STAFF_ROUTES = ["/customers", "/more"] as const;
+
+/** STAFF 의 기본 진입 경로 (허용되지 않은 경로 접근 시 이동) */
+export const STAFF_HOME = "/customers";
+
+/** 해당 역할이 경로에 접근 가능한지 — 하위 경로(/customers/c-01)까지 포함 */
+export function canAccessRoute(role: AppRole, pathname: string): boolean {
+  if (role === "ADMIN") return true;
+  return STAFF_ROUTES.some(
+    (r) => pathname === r || pathname.startsWith(r + "/"),
+  );
+}
+
 /** ADMIN 전용 페이지 경로 — 화면 가드·RLS 설계의 단일 기준 */
-export const ADMIN_ONLY_ROUTES = ["/branches"] as const;
+export const ADMIN_ONLY_ROUTES = [
+  "/",
+  "/briefing",
+  "/visits",
+  "/retention",
+  "/analytics",
+  "/branches",
+  "/settings",
+] as const;
 
 /** STAFF에게 숨기는 화면 요소 (구현은 각 컴포넌트의 isManager 분기) */
 export const ADMIN_ONLY_UI = [

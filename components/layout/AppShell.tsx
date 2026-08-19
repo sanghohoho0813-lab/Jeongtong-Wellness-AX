@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect } from "react";
 import { useStore } from "@/lib/data/store";
+import { canAccessRoute, STAFF_HOME } from "@/lib/auth/permissions";
 import { BellIcon } from "@/components/ui/icons";
-import { BOTTOM_NAV_ITEMS, NAV_TONE_CLASS, SIDEBAR_ITEMS } from "./nav-items";
+import {
+  BOTTOM_NAV_ITEMS,
+  NAV_TONE_CLASS,
+  SIDEBAR_ITEMS,
+  navItemsFor,
+} from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
 
 function isActive(pathname: string, href: string): boolean {
@@ -14,8 +20,12 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 function Logo() {
+  const { isManager } = useStore();
   return (
-    <Link href="/" className="flex min-w-0 items-center gap-2.5">
+    <Link
+      href={isManager ? "/" : STAFF_HOME}
+      className="flex min-w-0 items-center gap-2.5"
+    >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
         鼎
       </span>
@@ -35,9 +45,7 @@ function Logo() {
 function Sidebar() {
   const pathname = usePathname();
   const { isManager } = useStore();
-  const items = SIDEBAR_ITEMS.filter(
-    (item) => isManager || item.href !== "/branches",
-  );
+  const items = navItemsFor(SIDEBAR_ITEMS, isManager);
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
       <div className="px-5 pb-5 pt-6">
@@ -98,10 +106,17 @@ function MobileHeader() {
 
 function BottomNav() {
   const pathname = usePathname();
+  const { isManager } = useStore();
+  const items = navItemsFor(BOTTOM_NAV_ITEMS, isManager);
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-card/90 pb-[env(safe-area-inset-bottom)] shadow-nav backdrop-blur-md lg:hidden">
-      <div className="mx-auto flex max-w-lg items-stretch justify-between">
-        {BOTTOM_NAV_ITEMS.map((item) => {
+      {/* 직원 계정은 메뉴가 '고객' 하나뿐이라 탭이 과하게 벌어지지 않게 폭을 좁힌다 */}
+      <div
+        className={`mx-auto flex items-stretch justify-between ${
+          items.length > 2 ? "max-w-lg" : "max-w-[16rem]"
+        }`}
+      >
+        {items.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
           return (
@@ -125,13 +140,34 @@ function BottomNav() {
   );
 }
 
+/**
+ * 역할 기반 화면 가드 — 직원 계정이 허용되지 않은 경로에 직접 접근하면
+ * 고객 화면으로 되돌린다. (Supabase 연동 시 서버 세션 기준으로 동일 규칙 적용)
+ */
+function RouteGuard({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isManager, ready } = useStore();
+  // 저장된 사용자 복원 전에는 판단하지 않는다 (깜빡임/오이동 방지)
+  const allowed = !ready || isManager || canAccessRoute("STAFF", pathname);
+
+  useEffect(() => {
+    if (!allowed) router.replace(STAFF_HOME);
+  }, [allowed, router]);
+
+  if (!allowed) return null;
+  return <>{children}</>;
+}
+
 export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh">
       <Sidebar />
       <MobileHeader />
       <main className="px-4 pb-24 pt-4 sm:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-8">
-        <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <div className="mx-auto w-full max-w-7xl">
+          <RouteGuard>{children}</RouteGuard>
+        </div>
       </main>
       <BottomNav />
       <footer className="hidden pb-6 text-center text-xs text-ink-faint lg:ml-64 lg:block">

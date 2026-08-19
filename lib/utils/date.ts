@@ -53,6 +53,59 @@ export function formatRelative(iso?: string): string {
   return `${-n}일 후`;
 }
 
+const WEEKDAY_KR = ["일", "월", "화", "수", "목", "금", "토"];
+
+/** 요일 한 글자 (일~토) */
+export function weekdayKr(iso: string): string {
+  return WEEKDAY_KR[new Date(iso.slice(0, 10) + "T00:00:00").getDay()];
+}
+
+/** "2026. 09. 02 (수)" */
+export function formatDateWithDay(iso?: string): string {
+  if (!iso) return "-";
+  return `${formatDateKr(iso)} (${weekdayKr(iso)})`;
+}
+
+/** "HH:mm"(24h) → "오후 2:30" */
+export function formatTimeKr(time?: string): string {
+  if (!time) return "";
+  const [hRaw, mRaw] = time.split(":");
+  const h = Number(hRaw);
+  const m = Number(mRaw ?? 0);
+  if (Number.isNaN(h)) return "";
+  const meridiem = h < 12 ? "오전" : "오후";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${meridiem} ${h12}:${String(m).padStart(2, "0")}`;
+}
+
+/** 날짜 + 시간 표기 — 시간이 없으면 날짜만 */
+export function formatDateTimeKr(iso?: string, time?: string): string {
+  if (!iso) return "-";
+  const t = formatTimeKr(time);
+  return t ? `${formatDateWithDay(iso)} ${t}` : formatDateWithDay(iso);
+}
+
+/** 해당 월(YYYY-MM)의 달력 셀 — 앞뒤 빈칸 포함 (일요일 시작) */
+export function monthMatrix(key: string): Array<string | null> {
+  const [y, m] = key.split("-").map(Number);
+  const first = new Date(y, m - 1, 1);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const cells: Array<string | null> = [];
+  for (let i = 0; i < first.getDay(); i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push(`${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+/** YYYY-MM 기준 n개월 이동 */
+export function shiftMonth(key: string, offset: number): string {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(y, m - 1 + offset, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export function monthKey(iso: string): string {
   return iso.slice(0, 7); // YYYY-MM
 }

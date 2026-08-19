@@ -527,6 +527,37 @@ export function FieldLabel({ children }: { children: ReactNode }) {
 export const inputCls =
   "w-full rounded-btn border border-stone-line bg-card px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none transition-shadow focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
 
+/** 선택형 세그먼트 (설정 · 화면 표시 공통) */
+export function SegmentedControl<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
+  value: T;
+  options: Array<{ key: T; label: string }>;
+  onChange: (v: T) => void;
+  label: string;
+}) {
+  return (
+    <div className="flex gap-2" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.key}
+          onClick={() => onChange(o.key)}
+          className={`touch-target flex-1 rounded-btn px-4 py-2.5 text-sm font-bold transition-colors ${
+            value === o.key
+              ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+              : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** 필터 칩 (페이지 공통) */
 export function FilterChip({
   active,

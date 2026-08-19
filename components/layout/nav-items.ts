@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { canAccessRoute } from "@/lib/auth/permissions";
 import {
   BodyIcon,
   BuildingIcon,
@@ -63,5 +64,19 @@ export const BOTTOM_NAV_ITEMS: NavItem[] = [
 export const MORE_ITEMS: NavItem[] = SIDEBAR_ITEMS.filter(
   (item) => !BOTTOM_NAV_ITEMS.some((b) => b.href === item.href),
 );
+
+/**
+ * 역할별 메뉴 필터 — 직원(STAFF)에게는 '고객'만 노출한다.
+ * 모바일 하단 네비의 /more 는 메뉴가 아니라 계정 전환·화면 표시 컨테이너이므로
+ * 라벨을 '계정'으로 바꿔 유지한다 (직원도 계정 전환은 가능해야 한다).
+ */
+export function navItemsFor(items: NavItem[], isManager: boolean): NavItem[] {
+  if (isManager) return items;
+  return items
+    .filter((item) => canAccessRoute("STAFF", item.href))
+    .map((item) =>
+      item.href === "/more" ? { ...item, label: "계정" } : item,
+    );
+}
 
 export { BodyIcon };

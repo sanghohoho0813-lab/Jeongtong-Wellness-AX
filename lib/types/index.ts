@@ -56,6 +56,12 @@ export interface Customer {
    */
   focusBodyParts: BodyPartRecord[];
   nextManageDate?: string; // 다음 관리 예정일 (ISO date)
+  /**
+   * 다음 관리 예정 시간 ("HH:mm", 24시간 표기).
+   * 화면에서는 오전/오후로 변환해 표시하며, 날짜 없이 시간만 저장하지 않는다.
+   * (Supabase: customers.next_management_time time)
+   */
+  nextManageTime?: string;
   lastContactDate?: string; // 마지막 연락일
   tags?: string[];
   /**
@@ -178,6 +184,7 @@ export interface Visit {
   reaction?: string; // 고객 반응/메모
   amount?: number; // 현장 결제 금액 (이용권 외)
   nextManageDate?: string; // 이 방문에서 잡은 다음 관리 예정일
+  nextManageTime?: string; // 다음 관리 예정 시간 ("HH:mm")
   /** 이번 방문에서 확인·반영한 케어 선호 항목 (CarePreference.id) */
   appliedPreferenceIds?: string[];
 }
@@ -244,6 +251,8 @@ export interface TaskOutcome {
   revisitPlanned: boolean;
   /** 처리 시점의 다음 관리 예정일 (Supabase: next_management_date) */
   nextManageDate?: string;
+  /** 다음 관리 예정 시간 "HH:mm" (Supabase: next_management_time) */
+  nextManageTime?: string;
   /** 간단 메모 (Supabase: memo) */
   note?: string;
 }

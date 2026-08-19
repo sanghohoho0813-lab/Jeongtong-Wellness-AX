@@ -48,6 +48,7 @@ create table if not exists customers (
   -- 집중 케어 희망 부위: [{part, side, sub_part, note}]
   focus_body_parts jsonb not null default '[]',
   next_manage_date date,
+  next_manage_time time, -- 다음 관리 예정 시간 (화면에서는 오전/오후로 표시)
   last_contact_date date,
   tags text[] default '{}',
   created_at timestamptz not null default now()
@@ -85,6 +86,7 @@ create table if not exists visits (
   reaction text,
   amount int,
   next_manage_date date,
+  next_manage_time time,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_visits_customer on visits(customer_id);
@@ -103,6 +105,14 @@ create table if not exists briefing_task_logs (
   status text not null check (status in ('pending','confirmed','done','hold')),
   status_changed_at timestamptz not null default now(),
   handled_by_staff_id uuid references staff(id),
+  -- 실행 결과 (TaskOutcome)
+  contact_result text check (contact_result in
+    ('contacted','reserved','no_answer','not_needed')),
+  revisit_expected boolean,
+  next_management_date date,
+  next_management_time time,
+  memo text,
+  hold_until date,
   unique (task_date, customer_id)
 );
 create index if not exists idx_task_logs_date on briefing_task_logs(task_date);
@@ -136,6 +146,12 @@ create table if not exists visit_applied_preferences (
 --   STAFF = staff.role = 'staff'               → 고객·케어 데이터만 R/W,
 --                                                연락처(phone)는 열람 불가
 -- 모든 접근은 branch_id 로 스코프된다.
+--
+-- 화면 접근도 동일한 기준으로 좁힌다:
+--   STAFF 에게 노출되는 메뉴는 '고객' 하나뿐이며(lib/auth/permissions.ts 의
+--   STAFF_ROUTES), 그 외 화면은 직접 접근해도 고객 화면으로 되돌린다.
+--   따라서 STAFF 세션은 아래 정책상 customers / visits / memberships /
+--   customer_preferences 만 실제로 조회하게 된다.
 -- =========================================================
 
 -- 현재 사용자의 지점 / 역할 헬퍼
@@ -218,7 +234,8 @@ select
   end as phone,
   (not is_admin()) as phone_masked,
   c.gender, c.birth_year, c.registered_at, c.assigned_staff_id,
-  c.memo, c.focus_body_parts, c.next_manage_date, c.last_contact_date,
+  c.memo, c.focus_body_parts, c.next_manage_date, c.next_manage_time,
+  c.last_contact_date,
   c.tags, c.created_at
 from customers c;
 

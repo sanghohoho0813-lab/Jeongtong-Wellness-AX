@@ -12,6 +12,7 @@ import {
 import { daysFromToday, formatDateKr } from "@/lib/utils/date";
 import { recommendNextManageDate } from "@/lib/scoring/insight";
 import { Badge, Button, FieldLabel, inputCls } from "@/components/ui";
+import { DateTimeField } from "@/components/ui/DateTimeField";
 import { CheckIcon } from "@/components/ui/icons";
 import { PREF_TONES } from "@/components/customers/CarePreferenceCard";
 import { useToast } from "@/components/ui/toast";
@@ -51,6 +52,7 @@ export default function VisitForm({
   const [nextManage, setNextManage] = useState(
     daysFromToday(settings.careRules.defaultCycleDays),
   );
+  const [nextManageTime, setNextManageTime] = useState<string | undefined>();
   const [staffId, setStaffId] = useState("");
   const [appliedPrefs, setAppliedPrefs] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -91,6 +93,7 @@ export default function VisitForm({
       reaction: reaction || undefined,
       amount: amount ? Number(amount.replace(/\D/g, "")) : undefined,
       nextManageDate: nextManage || undefined,
+      nextManageTime: nextManage ? nextManageTime : undefined,
       staffId: staffId || undefined,
       appliedPreferenceIds: appliedPrefs,
     });
@@ -293,11 +296,19 @@ export default function VisitForm({
         </div>
         <div>
           <FieldLabel>다음 관리 예정일</FieldLabel>
-          <input
-            type="date"
-            className={inputCls}
-            value={nextManage}
-            onChange={(e) => setNextManage(e.target.value)}
+          {/* 타자 없이 날짜·시간(오전/오후)까지 클릭으로 지정 */}
+          <DateTimeField
+            date={nextManage}
+            time={nextManageTime}
+            recommended={
+              recommendation.date
+                ? { date: recommendation.date, label: "AI 추천일" }
+                : undefined
+            }
+            onChange={(d, t) => {
+              setNextManage(d);
+              setNextManageTime(t);
+            }}
           />
           {/* AX 추천 다음 관리일 — 기존 방문주기 데이터 기반 (예측 모델 아님) */}
           <div className="mt-2 rounded-btn bg-card-soft px-3 py-2 ring-1 ring-stone-line">

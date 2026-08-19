@@ -7,7 +7,11 @@ import VisitForm from "@/components/visits/VisitForm";
 import BodyMap, { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
 import { BodyPartRecord } from "@/lib/types";
-import { formatDateKr, formatRelative } from "@/lib/utils/date";
+import {
+  formatDateKr,
+  formatDateTimeKr,
+  formatRelative,
+} from "@/lib/utils/date";
 import { displayPhone, formatKrw } from "@/lib/utils/format";
 import {
   Badge,
@@ -18,12 +22,20 @@ import {
   Modal,
   ProgressBar,
   SectionTitle,
-  inputCls,
   recommendLevel,
 } from "@/components/ui";
-import { BodyIcon, ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
+import {
+  BodyIcon,
+  CalendarIcon,
+  ChevronLeftIcon,
+  PlusIcon,
+} from "@/components/ui/icons";
+import { DateTimePanel } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
-import { buildCustomerInsight } from "@/lib/scoring/insight";
+import {
+  buildCustomerInsight,
+  recommendNextManageDate,
+} from "@/lib/scoring/insight";
 import CarePreferenceCard from "@/components/customers/CarePreferenceCard";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
@@ -40,6 +52,7 @@ export default function CustomerDetailPage() {
   } = useStore();
   const toast = useToast();
   const [openVisit, setOpenVisit] = useState(false);
+  const [openSchedule, setOpenSchedule] = useState(false);
   const [editingParts, setEditingParts] = useState(false);
   const [draftParts, setDraftParts] = useState<BodyPartRecord[]>([]);
 
@@ -67,6 +80,8 @@ export default function CustomerDetailPage() {
   // AX Insight — 실행 브리핑과 동일한 근거/권장행동을 재사용
   const task = briefingTasks.find((t) => t.customerId === c.id);
   const insight = buildCustomerInsight(derived, task, settings.careRules);
+  // 다음 관리 예정일 선택 시 함께 제시하는 추천일 (방문 폼과 동일 기준)
+  const recommendation = recommendNextManageDate(facts, settings.careRules);
 
   return (
     <div>
@@ -130,17 +145,19 @@ export default function CustomerDetailPage() {
             <p className="mt-1.5 text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
               {formatRelative(c.nextManageDate)}
             </p>
-            <input
-              type="date"
-              className={`${inputCls} mt-1.5 !py-1.5 text-sm`}
-              value={c.nextManageDate ?? ""}
-              onChange={(e) =>
-                updateCustomer(c.id, {
-                  nextManageDate: e.target.value || undefined,
-                })
-              }
-              aria-label="다음 관리 예정일 변경"
-            />
+            <p className="mt-1 nowrap-num truncate text-xs text-ink-sub">
+              {c.nextManageDate
+                ? formatDateTimeKr(c.nextManageDate, c.nextManageTime)
+                : "예정일 미정"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setOpenSchedule(true)}
+              className="touch-target mt-2 flex w-full items-center justify-center gap-1.5 rounded-btn bg-card px-3 py-2 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-50"
+            >
+              <CalendarIcon className="h-4 w-4" />
+              날짜 · 시간 선택
+            </button>
           </Card>
           <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
             <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold to-gold-deep" />
@@ -443,6 +460,37 @@ export default function CustomerDetailPage() {
           customerId={c.id}
           onCancel={() => setOpenVisit(false)}
           onSaved={() => setOpenVisit(false)}
+        />
+      </Modal>
+
+      {/* 다음 관리 예정일 — 날짜·시간 클릭 선택 */}
+      <Modal
+        open={openSchedule}
+        onClose={() => setOpenSchedule(false)}
+        title="다음 관리 예정일"
+      >
+        <DateTimePanel
+          date={c.nextManageDate ?? ""}
+          time={c.nextManageTime}
+          recommended={
+            recommendation.date
+              ? { date: recommendation.date, label: "AI 추천일" }
+              : undefined
+          }
+          onChange={(date, time) =>
+            updateCustomer(c.id, {
+              nextManageDate: date || undefined,
+              nextManageTime: date ? time : undefined,
+            })
+          }
+          onDone={() => {
+            setOpenSchedule(false);
+            toast(
+              c.nextManageDate
+                ? `다음 관리 예정일을 ${formatDateTimeKr(c.nextManageDate, c.nextManageTime)}로 저장했습니다`
+                : "다음 관리 예정일을 비웠습니다",
+            );
+          }}
         />
       </Modal>
     </div>

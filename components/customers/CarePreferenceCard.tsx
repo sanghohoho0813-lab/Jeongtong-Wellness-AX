@@ -14,6 +14,7 @@ import {
   PREFERENCE_CATEGORY_LABELS,
   PreferenceCategory,
 } from "@/lib/types";
+import { PREFERENCE_PRESETS } from "@/lib/data/preference-presets";
 import { formatDateKr } from "@/lib/utils/date";
 import { Badge, Button, SectionTitle, inputCls } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
@@ -45,6 +46,7 @@ const CATEGORY_ORDER: PreferenceCategory[] = [
   "etc",
 ];
 
+/** 자유 입력 보조 문구 — 프리셋에 없는 내용을 적을 때만 사용 */
 const PLACEHOLDERS: Record<PreferenceCategory, string> = {
   temperature: "예: 쑥뜸 온도는 살짝 낮게 선호",
   pressure: "예: 어깨는 강하게, 허리는 부드럽게",
@@ -126,6 +128,7 @@ export default function CarePreferenceCard({
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<PreferenceCategory>("temperature");
+  const [picked, setPicked] = useState<string[]>([]);
   const [note, setNote] = useState("");
 
   const sorted = [...preferences].sort((a, b) => {
@@ -133,12 +136,35 @@ export default function CarePreferenceCard({
     return b.createdAt.localeCompare(a.createdAt);
   });
 
+  /** 이미 기록된 문구는 다시 담지 않도록 표시 */
+  const already = new Set(preferences.map((p) => p.note));
+  const presets = PREFERENCE_PRESETS[category];
+  const canSave = picked.length > 0 || note.trim().length > 0;
+
+  const togglePick = (text: string) =>
+    setPicked((prev) =>
+      prev.includes(text) ? prev.filter((t) => t !== text) : [...prev, text],
+    );
+
   const save = () => {
-    if (!note.trim()) return;
-    addPreference(customerId, { category, note, pinned: false });
+    if (!canSave) return;
+    // 선택한 문구는 각각 하나의 기록으로 저장한다
+    for (const text of picked) {
+      addPreference(customerId, { category, note: text, pinned: false });
+    }
+    if (note.trim()) {
+      addPreference(customerId, { category, note: note.trim(), pinned: false });
+    }
+    const count = picked.length + (note.trim() ? 1 : 0);
+    setPicked([]);
     setNote("");
     setOpen(false);
-    toast("케어 선호 · 특이사항을 기록했습니다");
+    toast(`케어 선호 · 특이사항 ${count}건을 기록했습니다`);
+  };
+
+  const changeCategory = (c: PreferenceCategory) => {
+    setCategory(c);
+    setPicked([]);
   };
 
   return (
@@ -176,7 +202,7 @@ export default function CarePreferenceCard({
             {CATEGORY_ORDER.map((c) => (
               <button
                 key={c}
-                onClick={() => setCategory(c)}
+                onClick={() => changeCategory(c)}
                 className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${
                   category === c
                     ? "bg-aqua-600 text-white"
@@ -187,14 +213,55 @@ export default function CarePreferenceCard({
               </button>
             ))}
           </div>
+
+          {/* 분류별 자주 쓰는 문구 — 클릭만으로 기록 (여러 개 선택 가능) */}
+          <div className="mt-2.5 rounded-card bg-card-soft px-3 py-2.5 ring-1 ring-stone-line">
+            <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+              {PREFERENCE_CATEGORY_LABELS[category]} — 자주 쓰는 문구
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {presets.map((text) => {
+                const done = already.has(text);
+                const on = picked.includes(text);
+                return (
+                  <button
+                    key={text}
+                    onClick={() => !done && togglePick(text)}
+                    disabled={done}
+                    title={done ? "이미 기록된 문구입니다" : undefined}
+                    className={`touch-target max-w-full rounded-full px-3 py-1.5 text-left text-xs font-bold transition-colors ${
+                      done
+                        ? "cursor-not-allowed bg-stone-bg text-ink-faint line-through"
+                        : on
+                          ? "bg-gradient-to-r from-aqua-500 to-deep-700 text-white shadow-sm"
+                          : "bg-card text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                    }`}
+                  >
+                    {on && <span className="mr-1">✓</span>}
+                    {text}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[0.7rem] text-ink-sub">
+              여러 개를 선택하면 각각 하나의 기록으로 저장됩니다.
+            </p>
+          </div>
+
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={PLACEHOLDERS[category]}
-            className={`${inputCls} mt-2.5 min-h-16 text-sm`}
+            className={`${inputCls} mt-2.5 min-h-14 text-sm`}
+            aria-label="직접 입력 (선택)"
           />
-          <div className="mt-2.5 flex justify-end">
-            <Button size="sm" onClick={save} disabled={!note.trim()}>
+          <div className="mt-2.5 flex items-center justify-end gap-2">
+            {picked.length > 0 && (
+              <span className="nowrap-num mr-auto text-xs font-bold text-aqua-800">
+                {picked.length}개 선택됨
+              </span>
+            )}
+            <Button size="sm" onClick={save} disabled={!canSave}>
               기록 저장
             </Button>
           </div>

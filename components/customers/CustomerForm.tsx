@@ -7,6 +7,7 @@ import { useStore } from "@/lib/data/store";
 import { BodyPartRecord } from "@/lib/types";
 import { daysFromToday } from "@/lib/utils/date";
 import { Button, FieldLabel, inputCls } from "@/components/ui";
+import { DateTimeField } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
@@ -29,6 +30,7 @@ export default function CustomerForm({
   const [nextManage, setNextManage] = useState(
     daysFromToday(settings.careRules.defaultCycleDays),
   );
+  const [nextManageTime, setNextManageTime] = useState<string | undefined>();
   const [error, setError] = useState("");
 
   const submit = () => {
@@ -43,6 +45,7 @@ export default function CustomerForm({
       focusBodyParts: parts,
       assignedStaffId: staffId || undefined,
       nextManageDate: nextManage || undefined,
+      nextManageTime: nextManage ? nextManageTime : undefined,
     });
     toast(`${c.name} 고객을 등록했습니다`);
     onSaved(c.id);
@@ -112,11 +115,13 @@ export default function CustomerForm({
         </div>
         <div>
           <FieldLabel>다음 관리 예정일</FieldLabel>
-          <input
-            type="date"
-            className={inputCls}
-            value={nextManage}
-            onChange={(e) => setNextManage(e.target.value)}
+          <DateTimeField
+            date={nextManage}
+            time={nextManageTime}
+            onChange={(d, t) => {
+              setNextManage(d);
+              setNextManageTime(t);
+            }}
           />
         </div>
       </div>

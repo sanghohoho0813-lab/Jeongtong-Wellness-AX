@@ -16,6 +16,7 @@ import {
   FieldLabel,
   Modal,
   SectionTitle,
+  SegmentedControl,
   inputCls,
 } from "@/components/ui";
 import { PlusIcon } from "@/components/ui/icons";
@@ -25,36 +26,6 @@ const ROLE_LABELS: Record<StaffRole, string> = {
   manager: "관리자",
   staff: "직원",
 };
-
-function SegmentedControl<T extends string>({
-  value,
-  options,
-  onChange,
-  label,
-}: {
-  value: T;
-  options: Array<{ key: T; label: string }>;
-  onChange: (v: T) => void;
-  label: string;
-}) {
-  return (
-    <div className="flex gap-2" role="group" aria-label={label}>
-      {options.map((o) => (
-        <button
-          key={o.key}
-          onClick={() => onChange(o.key)}
-          className={`touch-target flex-1 rounded-btn px-4 py-2.5 text-sm font-bold transition-colors ${
-            value === o.key
-              ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
-              : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function RuleField({
   label,

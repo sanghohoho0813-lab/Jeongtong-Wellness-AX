@@ -69,6 +69,7 @@ export interface NewCustomerInput {
   focusBodyParts: BodyPartRecord[];
   assignedStaffId?: string;
   nextManageDate?: string;
+  nextManageTime?: string;
 }
 
 export interface NewVisitInput {
@@ -80,6 +81,7 @@ export interface NewVisitInput {
   reaction?: string;
   amount?: number;
   nextManageDate?: string;
+  nextManageTime?: string;
   staffId?: string;
   appliedPreferenceIds?: string[];
 }
@@ -309,6 +311,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memo: input.memo,
       focusBodyParts: input.focusBodyParts,
       nextManageDate: input.nextManageDate,
+      nextManageTime: input.nextManageDate ? input.nextManageTime : undefined,
     };
     setState((s) => ({ ...s, customers: [customer, ...s.customers] }));
     return customer;
@@ -336,6 +339,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       reaction: input.reaction,
       amount: input.amount,
       nextManageDate: input.nextManageDate,
+      nextManageTime: input.nextManageDate ? input.nextManageTime : undefined,
       appliedPreferenceIds: input.appliedPreferenceIds?.length
         ? input.appliedPreferenceIds
         : undefined,
@@ -360,6 +364,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return {
           ...c,
           nextManageDate: input.nextManageDate ?? c.nextManageDate,
+          nextManageTime: input.nextManageDate
+            ? input.nextManageTime
+            : c.nextManageTime,
         };
       });
       return { ...s, visits: [visit, ...s.visits], memberships, customers };
@@ -392,21 +399,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const o = extra?.outcome;
           const nextManageDate =
             o?.nextManageDate ?? base?.nextManageDate ?? customer?.nextManageDate;
+          const nextManageTime =
+            o?.nextManageDate !== undefined
+              ? o.nextManageTime
+              : (base?.nextManageTime ?? customer?.nextManageTime);
           nextOutcome = {
             contactResult: o?.contactResult ?? base?.contactResult ?? "contacted",
             revisitPlanned: o?.revisitPlanned ?? !!nextManageDate,
             nextManageDate,
+            nextManageTime: nextManageDate ? nextManageTime : undefined,
             note: o?.note ?? base?.note,
           };
           // 결과에서 다음 관리일을 조정했으면 고객 데이터에도 반영 (기존 필드 갱신)
           if (
             o?.nextManageDate &&
             customer &&
-            o.nextManageDate !== customer.nextManageDate
+            (o.nextManageDate !== customer.nextManageDate ||
+              nextManageTime !== customer.nextManageTime)
           ) {
             customers = s.customers.map((c) =>
               c.id === customer.id
-                ? { ...c, nextManageDate: o.nextManageDate }
+                ? {
+                    ...c,
+                    nextManageDate: o.nextManageDate,
+                    nextManageTime,
+                  }
                 : c,
             );
           }

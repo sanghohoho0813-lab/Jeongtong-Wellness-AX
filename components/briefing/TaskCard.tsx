@@ -11,11 +11,12 @@ import {
   TaskContactResult,
   TaskStatus,
 } from "@/lib/types";
-import { daysFromToday, formatDateKr } from "@/lib/utils/date";
+import { daysFromToday, formatDateKr, formatTimeKr } from "@/lib/utils/date";
 import { displayPhone } from "@/lib/utils/format";
 import { Badge, BadgeTone, Button, TaskStatusBadge } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
+import { DateTimeField } from "@/components/ui/DateTimeField";
 
 /** 관리 유형별 배지 색 — 유형이 한눈에 구분되도록 */
 const CATEGORY_TONES: Record<TaskCategory, BadgeTone> = {
@@ -115,6 +116,7 @@ export default function TaskCard({
     useState<TaskContactResult>("contacted");
   const [revisitPlanned, setRevisitPlanned] = useState(true);
   const [nextDate, setNextDate] = useState("");
+  const [nextTime, setNextTime] = useState<string | undefined>();
   const [note, setNote] = useState("");
   const [holdUntil, setHoldUntil] = useState(() => daysFromToday(3));
 
@@ -140,6 +142,7 @@ export default function TaskCard({
     setContactResult(o?.contactResult ?? "contacted");
     setRevisitPlanned(o?.revisitPlanned ?? !!d);
     setNextDate(d);
+    setNextTime(o?.nextManageTime ?? customer.nextManageTime);
     setNote(o?.note ?? "");
     setPanel("done");
   };
@@ -155,6 +158,7 @@ export default function TaskCard({
         contactResult,
         revisitPlanned,
         nextManageDate: revisitPlanned ? nextDate || undefined : undefined,
+        nextManageTime: revisitPlanned && nextDate ? nextTime : undefined,
         note: note.trim() || undefined,
       },
     });
@@ -378,14 +382,18 @@ export default function TaskCard({
                   <p className={`text-xs font-bold ${hero ? "text-deep-sub" : "text-ink-sub"}`}>
                     다음 관리일
                   </p>
-                  <input
-                    type="date"
-                    value={nextDate}
-                    disabled={!revisitPlanned}
-                    onChange={(e) => setNextDate(e.target.value)}
-                    className={`mt-1 ${fieldCls} disabled:opacity-45`}
-                    aria-label="다음 관리일"
-                  />
+                  {/* 날짜 · 시간 모두 클릭으로 지정 (타자 입력 불필요) */}
+                  <div className="mt-1">
+                    <DateTimeField
+                      date={nextDate}
+                      time={nextTime}
+                      disabled={!revisitPlanned}
+                      onChange={(d, t) => {
+                        setNextDate(d);
+                        setNextTime(t);
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -437,13 +445,14 @@ export default function TaskCard({
                   );
                 })}
               </div>
-              <input
-                type="date"
-                value={holdUntil}
-                onChange={(e) => setHoldUntil(e.target.value)}
-                className={`mt-2 ${fieldCls}`}
-                aria-label="재확인 예정일"
-              />
+              <div className="mt-2">
+                <DateTimeField
+                  date={holdUntil}
+                  withTime={false}
+                  ariaLabel="재확인 예정일"
+                  onChange={(d) => setHoldUntil(d)}
+                />
+              </div>
               <div className="mt-3 flex items-center gap-2">
                 <Button
                   size="sm"
@@ -474,7 +483,11 @@ export default function TaskCard({
                 ? ` · ${formatDateKr(task.statusChangedAt)}`
                 : ""}
               {task.outcome.revisitPlanned && task.outcome.nextManageDate
-                ? ` · 재방문 ${formatDateKr(task.outcome.nextManageDate)}`
+                ? ` · 재방문 ${formatDateKr(task.outcome.nextManageDate)}${
+                    task.outcome.nextManageTime
+                      ? ` ${formatTimeKr(task.outcome.nextManageTime)}`
+                      : ""
+                  }`
                 : " · 재방문 미정"}
               {task.outcome.note ? ` · ${task.outcome.note}` : ""}
             </p>
