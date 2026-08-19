@@ -83,6 +83,22 @@ function Sidebar() {
           );
         })}
       </nav>
+      {/* 문서 — 메뉴가 아니라 참고 자료라 작은 링크로 둔다 (직원 계정도 열람 가능) */}
+      <div className="mx-3 mt-2 flex items-center gap-2 border-t border-stone-line pt-2.5 text-xs font-bold">
+        <Link
+          href="/intro"
+          className="truncate text-ink-faint transition-colors hover:text-aqua-700"
+        >
+          기획의도
+        </Link>
+        <span className="text-ink-faint/50">·</span>
+        <Link
+          href="/guide"
+          className="truncate text-ink-faint transition-colors hover:text-aqua-700"
+        >
+          사용 가이드
+        </Link>
+      </div>
       <div className="m-3">
         <ProfileButton />
       </div>

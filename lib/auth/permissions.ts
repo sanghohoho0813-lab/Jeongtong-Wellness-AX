@@ -23,6 +23,8 @@
  *  /branches       ✅      ❌      경영지표 — ADMIN 전용
  *  /settings       ✅      ❌      STAFF는 /more(계정)에서 화면 표시만 조정
  *  /more           ✅      ✅      모바일 보조 메뉴 / STAFF는 계정·화면 표시 전용
+ *  /guide          ✅      ✅      사용 가이드 (문서)
+ *  /intro          ✅      ✅      기획의도 (문서)
  *
  *  STAFF는 네비게이션에 '고객' 하나만 노출되며, 그 외 경로로 직접 접근하면
  *  /customers 로 되돌린다 (AppShell 의 RouteGuard).
@@ -62,7 +64,12 @@ export function toAppRole(role: StaffRole): AppRole {
  * 고객 업무(조회·기록)만 남기고 운영·경영 화면은 모두 ADMIN 전용으로 둔다.
  * /more 는 메뉴가 아니라 계정 전환·화면 표시 설정 컨테이너라 함께 허용한다.
  */
-export const STAFF_ROUTES = ["/customers", "/more"] as const;
+export const STAFF_ROUTES = [
+  "/customers",
+  "/more",
+  "/guide", // 사용 가이드 — 직원이 업무를 익히는 문서
+  "/intro", // 기획의도 — 왜 이 시스템을 쓰는지
+] as const;
 
 /** STAFF 의 기본 진입 경로 (허용되지 않은 경로 접근 시 이동) */
 export const STAFF_HOME = "/customers";

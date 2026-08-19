@@ -13,7 +13,7 @@ import { MORE_ITEMS, navItemsFor } from "@/components/layout/nav-items";
 import { ProfileButton } from "@/components/layout/UserSwitch";
 import { FontScale, Theme } from "@/lib/types";
 import { Card, FieldLabel, SectionTitle, SegmentedControl } from "@/components/ui";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { BookIcon, ChevronRightIcon } from "@/components/ui/icons";
 
 export default function MorePage() {
   const { settings, isManager, updateSettings } = useStore();
@@ -57,6 +57,40 @@ export default function MorePage() {
           </ul>
         </Card>
       )}
+
+      {/* 문서 — 기획의도 / 사용 가이드 (역할 무관) */}
+      <Card className="mt-4 !p-2">
+        <ul className="divide-y divide-stone-bg-deep">
+          {[
+            { href: "/guide", label: "사용 가이드", desc: "화면별 사용법" },
+            {
+              href: "/intro",
+              label: "기획의도",
+              desc: "이 시스템을 만든 이유",
+            },
+          ].map((d) => (
+            <li key={d.href}>
+              <Link
+                href={d.href}
+                className="flex items-center gap-3.5 px-3.5 py-3.5"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-deep">
+                  <BookIcon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-ink">
+                    {d.label}
+                  </span>
+                  <span className="block truncate text-xs text-ink-sub">
+                    {d.desc}
+                  </span>
+                </span>
+                <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Card>
 
       {/* 직원 계정: 설정 화면 대신 여기서 화면 표시만 조정 */}
       {!isManager && (

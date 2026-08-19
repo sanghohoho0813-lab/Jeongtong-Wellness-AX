@@ -56,6 +56,13 @@ export const ClipboardIcon = (p: IconProps) => (
   </svg>
 );
 
+export const BookIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 5.5A2 2 0 0 1 6 3.5h5v17H6a2 2 0 0 0-2 2z" />
+    <path d="M20 5.5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
 export const RefreshIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M20 12a8 8 0 1 1-2.3-5.6" />
