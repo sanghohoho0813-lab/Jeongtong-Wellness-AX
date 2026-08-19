@@ -264,6 +264,11 @@ export interface BriefingTask {
    * (Supabase: briefing_task_logs.hold_until date)
    */
   holdUntil?: string;
+  /**
+   * 이 고객이 미처리 상태로 브리핑에 계속 올라온 최초 날짜 (YYYY-MM-DD).
+   * 처리(완료·보류)하면 초기화되며, "며칠째 미처리"를 세는 데만 쓴다.
+   */
+  openSince?: string;
   /** 실행결과 — 처리완료 시 기록되며, 향후 AX 분석/스코어 개선의 입력이 된다 */
   outcome?: TaskOutcome;
   /**
@@ -376,6 +381,8 @@ export interface AppSettings {
   careRules: CareRuleSettings;
   /** 매출기회 판정 기준 (없으면 기본값 사용 — 기존 저장 데이터 호환) */
   opportunityRules?: OpportunityRuleSettings;
+  /** 마지막으로 전체 백업 파일을 내려받은 시각 (ISO datetime) */
+  lastBackupAt?: string;
 }
 
 export const DEFAULT_CARE_RULES: CareRuleSettings = {

@@ -106,6 +106,23 @@ export function shiftMonth(key: string, offset: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/** "YYYY-MM-DD" + "HH:mm" → ISO datetime (시간이 없으면 정오로 저장) */
+export function toIsoDateTime(date: string, time?: string): string {
+  const t = time && /^\d{1,2}:\d{2}$/.test(time) ? time : "12:00";
+  return `${date}T${t.padStart(5, "0")}:00`;
+}
+
+/** ISO datetime → { date, time } 분해 */
+export function splitIsoDateTime(iso: string): { date: string; time: string } {
+  return { date: iso.slice(0, 10), time: iso.slice(11, 16) || "12:00" };
+}
+
+/** 지금 시각의 "HH:mm" */
+export function nowTime(): string {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 export function monthKey(iso: string): string {
   return iso.slice(0, 7); // YYYY-MM
 }

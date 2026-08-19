@@ -118,15 +118,30 @@ function Sidebar() {
 }
 
 function MobileHeader() {
+  const { briefingTasks, isManager } = useStore();
+  // 오늘 아직 처리하지 않은 관리 대상 — 장식이 아니라 실제 건수를 보여준다
+  const openCount = briefingTasks.filter(
+    (t) => t.status === "pending" || t.status === "confirmed",
+  ).length;
+
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
       <Logo />
-      <button
-        aria-label="알림"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
-      >
-        <BellIcon className="h-5 w-5" />
-      </button>
+      {/* 직원 계정은 실행 브리핑에 접근하지 않으므로 표시하지 않는다 */}
+      {isManager && (
+        <Link
+          href="/briefing"
+          aria-label={`오늘 관리 대상 ${openCount}명 — 실행 브리핑으로 이동`}
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
+        >
+          <BellIcon className="h-5 w-5" />
+          {openCount > 0 && (
+            <span className="nowrap-num absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-danger px-1 text-[0.65rem] font-extrabold text-white shadow-sm">
+              {openCount > 99 ? "99+" : openCount}
+            </span>
+          )}
+        </Link>
+      )}
     </header>
   );
 }

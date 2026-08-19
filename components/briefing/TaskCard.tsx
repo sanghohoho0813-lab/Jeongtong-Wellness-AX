@@ -12,7 +12,12 @@ import {
   TaskContactResult,
   TaskStatus,
 } from "@/lib/types";
-import { daysFromToday, formatDateKr, formatTimeKr } from "@/lib/utils/date";
+import {
+  daysAgo,
+  daysFromToday,
+  formatDateKr,
+  formatTimeKr,
+} from "@/lib/utils/date";
 import { displayPhone } from "@/lib/utils/format";
 import {
   Badge,
@@ -155,6 +160,8 @@ export default function TaskCard({
    * 그때 재등록 체크까지 함께 사라지면 성과를 저장할 수 없기 때문이다.
    */
   const panelIsRenewal = panelOppType === "renewal";
+  /** 미처리로 넘어온 일수 (0 = 오늘 새로 올라옴) */
+  const openDays = task.openSince ? daysAgo(task.openSince) : 0;
   const hero = variant === "hero";
 
   /** 처리완료 패널 열기 — 기존 결과 또는 고객의 현재 다음 관리일로 초기화 */
@@ -263,6 +270,20 @@ export default function TaskCard({
             {!hero && <TaskStatusBadge status={task.status} />}
             {opp && opp.type !== "none" && (
               <OpportunityBadge opportunity={opp} size="sm" />
+            )}
+            {/* 며칠째 미처리인지 — 오래 방치된 과제를 눈에 띄게 한다 */}
+            {openDays > 0 && (
+              <span
+                className={`nowrap-num inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.7rem] font-extrabold ${
+                  hero
+                    ? "bg-white/15 text-white ring-1 ring-white/25"
+                    : openDays >= 3
+                      ? "bg-red-50 text-danger ring-1 ring-red-100 dark:bg-red-400/10 dark:ring-red-400/20"
+                      : "bg-amber-50 text-amber-700 ring-1 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20"
+                }`}
+              >
+                {openDays + 1}일째 미처리
+              </span>
             )}
             <span className="ml-auto">
               <PriorityRing score={task.priorityScore} onDark={hero} />

@@ -10,8 +10,8 @@ import {
   TaskCategory,
   TaskStatus,
 } from "@/lib/types";
-import { Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
-import { SparkIcon } from "@/components/ui/icons";
+import { Button, Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
+import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
 
 /** 유형별 도트 색 — TaskCard 스트립 색과 동일 체계 */
 const CATEGORY_DOTS: Record<TaskCategory, string> = {
@@ -82,6 +82,16 @@ export default function BriefingPage() {
       <PageHeader
         title="오늘의 실행 브리핑"
         description="고객 데이터에서 계산된 우선순위에 따라 오늘 실행할 관리 과제를 보여줍니다."
+        action={
+          <Button
+            variant="secondary"
+            className="no-print"
+            onClick={() => window.print()}
+          >
+            <PrinterIcon className="h-4 w-4" />
+            오늘 할 일 인쇄
+          </Button>
+        }
       />
 
       {/* Hero 요약 밴드 */}

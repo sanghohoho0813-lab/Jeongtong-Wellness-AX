@@ -250,6 +250,11 @@ export interface OpportunitySummary {
   revisitPlanned: number;
   /** 실행 결과 이용권 재등록으로 이어진 수 */
   renewed: number;
+  /**
+   * 관리한 뒤 실제로 방문한 고객 수.
+   * 추정이 아니라 처리 시각 이후의 방문 기록이 실제로 존재하는 경우만 센다.
+   */
+  actualRevisit: number;
 }
 
 /**
@@ -258,10 +263,14 @@ export interface OpportunitySummary {
  */
 export function summarizeOpportunities(
   tasks: Array<{
+    customerId?: string;
     opportunity?: SalesOpportunity;
     status: string;
+    statusChangedAt?: string;
     outcome?: TaskOutcome;
   }>,
+  /** 처리 시각 이후 실제 방문이 있었는지 확인하는 함수 (없으면 실제 재방문은 0) */
+  hasVisitAfter?: (customerId: string, sinceIso: string) => boolean,
 ): OpportunitySummary {
   /**
    * 처리 당시 유형(스냅샷)을 우선 사용한다.
@@ -284,5 +293,52 @@ export function summarizeOpportunities(
     handled: done.length,
     revisitPlanned: done.filter((t) => t.outcome?.revisitPlanned).length,
     renewed: done.filter((t) => t.outcome?.membershipRenewed).length,
+    actualRevisit:
+      hasVisitAfter === undefined
+        ? 0
+        : done.filter(
+            (t) =>
+              t.customerId &&
+              t.statusChangedAt &&
+              hasVisitAfter(t.customerId, t.statusChangedAt),
+          ).length,
   };
+}
+
+// ---------- 월별 실행 추이 ----------
+
+export interface OpportunityMonthly {
+  month: string; // YYYY-MM
+  handled: number;
+  revisitPlanned: number;
+  renewed: number;
+}
+
+/**
+ * 저장된 처리 이력(taskOverrides)에서 월별 매출기회 실행 결과를 센다.
+ * 과제 날짜(task.date) 기준이며, 없는 달은 0으로 채운다.
+ */
+export function monthlyOpportunityResults(
+  history: Array<{
+    date: string;
+    status: string;
+    outcome?: TaskOutcome;
+    opportunity?: SalesOpportunity;
+  }>,
+  monthKeys: string[],
+): OpportunityMonthly[] {
+  return monthKeys.map((month) => {
+    const rows = history.filter(
+      (t) =>
+        t.status === "done" &&
+        t.date.startsWith(month) &&
+        (t.outcome?.opportunityType ?? t.opportunity?.type ?? "none") !== "none",
+    );
+    return {
+      month,
+      handled: rows.length,
+      revisitPlanned: rows.filter((t) => t.outcome?.revisitPlanned).length,
+      renewed: rows.filter((t) => t.outcome?.membershipRenewed).length,
+    };
+  });
 }

@@ -20,7 +20,10 @@ import {
   SummaryTile,
 } from "@/components/ui";
 import { TrendUpIcon } from "@/components/ui/icons";
-import { summarizeOpportunities } from "@/lib/scoring/opportunity";
+import {
+  monthlyOpportunityResults,
+  summarizeOpportunities,
+} from "@/lib/scoring/opportunity";
 import { buildOperationInsight } from "@/lib/scoring/insight";
 
 const METRIC_DOTS: Record<string, string> = {
@@ -154,8 +157,22 @@ export default function AnalyticsPage() {
   const prev = monthly.at(-2);
 
   // AX 운영 인사이트 — 현재 지표에서만 도출되는 규칙 기반 문장
-  // AX 매출기회 집계 — Priority 지표와 별도로 계산한다
-  const opp = summarizeOpportunities(briefingTasks);
+  // AX 매출기회 집계 — Priority 지표와 별도로 계산한다.
+  // 실제 재방문은 처리 시각 이후의 방문 기록이 존재하는 경우만 센다 (추정 없음)
+  const opp = summarizeOpportunities(briefingTasks, (customerId, sinceIso) =>
+    visits.some(
+      (v) =>
+        v.customerId === customerId &&
+        v.type === "visit" &&
+        v.visitedAt > sinceIso,
+    ),
+  );
+  // 월별 실행 추이 — 저장된 처리 이력에서만 계산
+  const oppMonthly = monthlyOpportunityResults(
+    taskOverrides,
+    monthly.map((m) => m.month),
+  );
+  const oppMonthlyTotal = oppMonthly.reduce((n, m) => n + m.handled, 0);
 
   const openTaskCount = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
@@ -459,6 +476,12 @@ export default function AnalyticsPage() {
                     desc: "처리 결과에 재등록으로 기록된 건",
                     bar: "from-emerald-400 to-positive",
                   },
+                  {
+                    label: "실제 재방문 확인",
+                    value: opp.actualRevisit,
+                    desc: "관리한 뒤 실제 방문 기록이 남은 고객",
+                    bar: "from-violet-400 to-violet-600",
+                  },
                 ].map((row) => (
                   <li
                     key={row.label}
@@ -484,6 +507,42 @@ export default function AnalyticsPage() {
                   </li>
                 ))}
               </ol>
+
+              {/* 월별 실행 추이 — 처리 이력이 있을 때만 */}
+              {oppMonthlyTotal > 0 && (
+                <div className="mt-4 rounded-card bg-card-soft p-4 ring-1 ring-black/[0.04]">
+                  <p className="text-[0.8125rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                    월별 매출기회 실행
+                  </p>
+                  <ul className="mt-2.5 space-y-1.5">
+                    {oppMonthly.map((m) => {
+                      const max = Math.max(
+                        ...oppMonthly.map((x) => x.handled),
+                        1,
+                      );
+                      return (
+                        <li key={m.month} className="flex items-center gap-3">
+                          <span className="nowrap-num w-20 shrink-0 text-xs font-bold text-ink-sub">
+                            {formatMonthKr(m.month)}
+                          </span>
+                          <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-stone-bg-deep">
+                            <span
+                              className="block h-full rounded-full bg-gradient-to-r from-gold to-gold-deep"
+                              style={{
+                                width: `${Math.round((m.handled / max) * 100)}%`,
+                              }}
+                            />
+                          </span>
+                          <span className="nowrap-num w-32 shrink-0 text-right text-xs font-bold text-ink-soft">
+                            실행 {m.handled} · 재방문 {m.revisitPlanned} · 재등록{" "}
+                            {m.renewed}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
 
               {opp.handled === 0 && (
                 <p className="mt-3 rounded-btn border-l-4 border-gold bg-gold-soft/60 px-4 py-3 text-sm leading-relaxed text-ink-soft">

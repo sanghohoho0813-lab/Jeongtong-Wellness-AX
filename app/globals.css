@@ -264,6 +264,43 @@ a:active {
   transform: translateY(0.5px);
 }
 
+/* ---------- 인쇄 ----------
+   현장에서 오늘 할 일을 종이로 뽑아 쓰는 경우를 위해
+   화면 요소(사이드바·하단네비·버튼)를 빼고 본문만 남긴다. */
+@media print {
+  aside,
+  header,
+  nav.fixed,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .card,
+  .card-hero,
+  .card-accent {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .card-hero *,
+  .card-hero {
+    color: #111 !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* 모션 최소화 설정 존중 */
 @media (prefers-reduced-motion: reduce) {
   *,

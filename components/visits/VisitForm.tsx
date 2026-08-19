@@ -10,7 +10,14 @@ import {
   Visit,
   VisitType,
 } from "@/lib/types";
-import { daysFromToday, formatDateKr } from "@/lib/utils/date";
+import {
+  daysFromToday,
+  formatDateKr,
+  nowTime,
+  splitIsoDateTime,
+  toIsoDateTime,
+  todayISO,
+} from "@/lib/utils/date";
 import { recommendNextManageDate } from "@/lib/scoring/insight";
 import { Badge, Button, FieldLabel, inputCls } from "@/components/ui";
 import { DateTimeField } from "@/components/ui/DateTimeField";
@@ -51,6 +58,13 @@ export default function VisitForm({
   const editing = !!visit;
   const [customerId, setCustomerId] = useState(
     visit?.customerId ?? fixedCustomerId ?? "",
+  );
+  // 방문 일시 — 지난 방문을 나중에 입력하는 경우가 많아 직접 지정할 수 있다
+  const [visitDate, setVisitDate] = useState(
+    visit ? splitIsoDateTime(visit.visitedAt).date : todayISO(),
+  );
+  const [visitTime, setVisitTime] = useState<string | undefined>(
+    visit ? splitIsoDateTime(visit.visitedAt).time : nowTime(),
   );
   const [type, setType] = useState<VisitType>(visit?.type ?? "visit");
   const [programName, setProgramName] = useState(
@@ -115,8 +129,12 @@ export default function VisitForm({
 
   const submit = () => {
     if (!customerId) return setError("고객을 선택하세요.");
+    if (!visitDate) return setError("방문 일시를 선택하세요.");
+    if (visitDate > todayISO())
+      return setError("앞으로의 날짜는 방문 기록으로 저장할 수 없습니다.");
     const payload = {
       customerId,
+      visitedAt: toIsoDateTime(visitDate, visitTime),
       type,
       programName: type === "visit" ? programName : undefined,
       membershipId: type === "visit" && membershipId ? membershipId : undefined,
@@ -159,6 +177,25 @@ export default function VisitForm({
           </select>
         </div>
       )}
+
+      {/* 방문 일시 — 지난 방문도 정확한 날짜로 남길 수 있어야 주기 계산이 맞는다 */}
+      <div>
+        <FieldLabel>방문 일시</FieldLabel>
+        <DateTimeField
+          date={visitDate}
+          time={visitTime}
+          ariaLabel="방문 일시"
+          onChange={(d, t) => {
+            setVisitDate(d);
+            setVisitTime(t);
+          }}
+        />
+        {visitDate && visitDate < todayISO() && (
+          <p className="mt-1.5 text-[0.8125rem] font-bold text-warn">
+            {formatDateKr(visitDate)} 방문으로 기록됩니다 (지난 날짜)
+          </p>
+        )}
+      </div>
 
       <div>
         <FieldLabel>기록 유형</FieldLabel>

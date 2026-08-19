@@ -71,6 +71,14 @@ export const DownloadIcon = (p: IconProps) => (
   </svg>
 );
 
+export const PrinterIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M7 9V3.5h10V9" />
+    <rect x="4" y="9" width="16" height="7.5" rx="2" />
+    <path d="M7 14.5h10v6H7z" />
+  </svg>
+);
+
 export const RefreshIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M20 12a8 8 0 1 1-2.3-5.6" />

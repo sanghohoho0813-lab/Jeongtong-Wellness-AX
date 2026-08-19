@@ -57,6 +57,8 @@ interface PersistedState {
   /** 브리핑 과제 상태 오버라이드 (생성은 항상 규칙 엔진이 수행) */
   taskOverrides: BriefingTask[];
   settings: AppSettings;
+  /** 고객별 최초 미처리 발생일 — "며칠째 미처리" 계산용 (customerId → YYYY-MM-DD) */
+  taskFirstSeen?: Record<string, string>;
   /** 현재 사용자 (향후 Supabase Auth 연동 시 auth 유저와 매핑) */
   currentStaffId?: string;
   seededAt?: string;
@@ -87,6 +89,8 @@ export interface NewMembershipInput {
 
 export interface NewVisitInput {
   customerId: string;
+  /** 방문 일시 (ISO datetime). 지정하지 않으면 지금 시각 */
+  visitedAt?: string;
   type: "visit" | "consult";
   programName?: string;
   membershipId?: string;
@@ -208,6 +212,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state, ready]);
 
+  /**
+   * 이용권 사용 기한 자동 만료.
+   * 기한이 지난 이용권이 '사용 중'으로 남아 있으면 잔여 횟수·재등록 기회
+   * 판정이 모두 어긋나므로, 데이터를 열 때 한 번 정리한다.
+   */
+  useEffect(() => {
+    if (!ready) return;
+    const today = todayISO();
+    setState((s) => {
+      const next = s.memberships.map((m) =>
+        m.status !== "expired" && m.expiresAt && m.expiresAt < today
+          ? { ...m, status: "expired" as const }
+          : m,
+      );
+      return next.some((m, i) => m !== s.memberships[i])
+        ? { ...s, memberships: next }
+        : s;
+    });
+  }, [ready]);
+
   // 폰트 크기 / 밀도 / 테마 → CSS 변수 반영 ("system"은 OS 설정 추종)
   useEffect(() => {
     const root = document.documentElement;
@@ -284,9 +308,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         [...factsById.values()],
         state.settings.careRules,
         state.taskOverrides,
-      ).map((t) => ({ ...t, opportunity: opportunityById.get(t.customerId) })),
-    [factsById, state.settings.careRules, state.taskOverrides, opportunityById],
+      ).map((t) => ({
+        ...t,
+        opportunity: opportunityById.get(t.customerId),
+        // 며칠째 미처리인지 — 처리되면 초기화된다
+        openSince:
+          t.status === "pending" || t.status === "confirmed"
+            ? (state.taskFirstSeen?.[t.customerId] ?? t.date)
+            : undefined,
+      })),
+    [
+      factsById,
+      state.settings.careRules,
+      state.taskOverrides,
+      state.taskFirstSeen,
+      opportunityById,
+    ],
   );
+
+  /**
+   * 미처리 경과 추적 — 오늘 처음 미처리로 올라온 고객은 오늘 날짜로 기록하고,
+   * 처리(완료·보류)되거나 대상에서 빠지면 지운다.
+   * 과제 자체는 매일 새로 생성되므로 이 맵이 유일한 연속성 기준이다.
+   */
+  useEffect(() => {
+    if (!ready) return;
+    const today = todayISO();
+    const open = briefingTasks.filter(
+      (t) => t.status === "pending" || t.status === "confirmed",
+    );
+    setState((s) => {
+      const prev = s.taskFirstSeen ?? {};
+      const next: Record<string, string> = {};
+      for (const t of open) next[t.customerId] = prev[t.customerId] ?? today;
+      const same =
+        Object.keys(next).length === Object.keys(prev).length &&
+        Object.entries(next).every(([k, v]) => prev[k] === v);
+      return same ? s : { ...s, taskFirstSeen: next };
+    });
+  }, [ready, briefingTasks]);
 
   // 현재 사용자 — 지정되지 않았거나 비활성이면 첫 owner(없으면 첫 직원)
   const currentStaff = useMemo(() => {
@@ -407,7 +467,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       branchId: state.branches[0]?.id ?? "branch-main",
       customerId: input.customerId,
       staffId: input.staffId,
-      visitedAt: now.toISOString(),
+      // 지난 방문을 나중에 입력하는 경우가 많아 일시를 직접 지정할 수 있다
+      visitedAt: input.visitedAt ?? now.toISOString(),
       type: input.type,
       programName: input.programName,
       membershipId: input.membershipId,
@@ -491,6 +552,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       const updated: Visit = {
         ...old,
+        visitedAt: input.visitedAt ?? old.visitedAt,
         customerId: input.customerId,
         staffId: input.staffId,
         type: input.type,
@@ -509,6 +571,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // 이 고객의 가장 최근 방문을 수정한 경우에만 고객의 다음 관리일을 함께 갱신
       const latestForCustomer = s.visits
         .filter((v) => v.customerId === input.customerId)
+        .map((v) => (v.id === id ? updated : v))
         .reduce<Visit | undefined>(
           (acc, v) => (!acc || v.visitedAt > acc.visitedAt ? v : acc),
           undefined,

@@ -23,7 +23,12 @@ import {
 } from "@/components/ui";
 import { DownloadIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
-import { todayISO } from "@/lib/utils/date";
+import {
+  daysAgo,
+  formatDateKr,
+  formatRelative,
+  todayISO,
+} from "@/lib/utils/date";
 import {
   customersCsv,
   downloadFile,
@@ -133,6 +138,10 @@ export default function SettingsPage() {
     toast(`${item.name} 파일을 내려받았습니다`);
   };
 
+  /** 백업한 지 7일이 지났거나 한 번도 안 했으면 안내한다 */
+  const backupStale =
+    !settings.lastBackupAt || daysAgo(settings.lastBackupAt) >= 7;
+
   const exportBackup = () => {
     const payload = JSON.stringify(
       { exportedAt: new Date().toISOString(), customers, visits, memberships, staff, branches, settings },
@@ -144,6 +153,7 @@ export default function SettingsPage() {
       payload,
       "application/json;charset=utf-8",
     );
+    updateSettings({ lastBackupAt: new Date().toISOString() });
     toast("전체 백업 파일을 내려받았습니다");
   };
 
@@ -432,14 +442,28 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-line pt-3">
-            <Button variant="secondary" size="sm" onClick={exportBackup}>
-              <DownloadIcon className="h-4 w-4" />
-              전체 백업 (JSON)
-            </Button>
-            <p className="text-xs text-ink-sub">
-              모든 기록을 한 파일로 보관합니다.
-            </p>
+          <div className="mt-3 border-t border-stone-line pt-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={exportBackup}>
+                <DownloadIcon className="h-4 w-4" />
+                전체 백업 (JSON)
+              </Button>
+              <p className="text-xs text-ink-sub">
+                {settings.lastBackupAt
+                  ? `마지막 백업 ${formatDateKr(settings.lastBackupAt)} (${formatRelative(settings.lastBackupAt)})`
+                  : "아직 백업한 적이 없습니다"}
+              </p>
+            </div>
+            {/* 지금은 브라우저에만 저장되므로 주기적인 백업이 유일한 안전장치다 */}
+            {backupStale && (
+              <p className="mt-2 rounded-btn border-l-4 border-warn bg-amber-50 px-3.5 py-2.5 text-sm leading-relaxed text-ink-soft dark:bg-amber-400/10">
+                기록이 <b>이 브라우저에만</b> 저장되어 있습니다. 캐시를 지우면
+                모두 사라지므로 <b>주 1회 백업</b>을 권장합니다.
+                {settings.lastBackupAt
+                  ? ` 마지막 백업 후 ${daysAgo(settings.lastBackupAt)}일 지났습니다.`
+                  : ""}
+              </p>
+            )}
           </div>
 
           <div className="mt-4 border-t border-stone-line pt-4">
