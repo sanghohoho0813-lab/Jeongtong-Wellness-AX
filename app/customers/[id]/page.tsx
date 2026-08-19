@@ -8,7 +8,7 @@ import BodyMap, { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
 import { BodyPartRecord } from "@/lib/types";
 import { formatDateKr, formatRelative } from "@/lib/utils/date";
-import { formatKrw, formatPhone } from "@/lib/utils/format";
+import { displayPhone, formatKrw } from "@/lib/utils/format";
 import {
   Badge,
   Button,
@@ -23,11 +23,20 @@ import {
 import { BodyIcon, ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import { buildCustomerInsight } from "@/lib/scoring/insight";
+import CarePreferenceCard from "@/components/customers/CarePreferenceCard";
+import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
-  const { derivedById, factsById, staff, updateCustomer, briefingTasks, settings } =
-    useStore();
+  const {
+    derivedById,
+    factsById,
+    staff,
+    updateCustomer,
+    briefingTasks,
+    settings,
+    canSeePhone,
+  } = useStore();
   const toast = useToast();
   const [openVisit, setOpenVisit] = useState(false);
   const [editingParts, setEditingParts] = useState(false);
@@ -85,7 +94,7 @@ export default function CustomerDetailPage() {
               ))}
             </div>
             <p className="mt-1 text-sm text-ink-sub">
-              {formatPhone(c.phone)} · 등록일 {formatDateKr(c.registeredAt)} ·
+              {displayPhone(c.phone, canSeePhone)} · 등록일 {formatDateKr(c.registeredAt)} ·
               담당 {staffName(c.assignedStaffId)}
             </p>
           </div>
@@ -310,6 +319,12 @@ export default function CustomerDetailPage() {
           </Card>
         </div>
 
+        {/* 케어 선호 · 특이사항 (고객 감동 포인트) */}
+        <CarePreferenceCard
+          customerId={c.id}
+          preferences={c.preferences ?? []}
+        />
+
         {/* 최근 상담/메모 */}
         {(consultNotes.length > 0 || c.memo) && (
           <Card>
@@ -379,6 +394,23 @@ export default function CustomerDetailPage() {
                   )}
                   {v.reaction && (
                     <p className="mt-1.5 text-sm text-ink-soft">{v.reaction}</p>
+                  )}
+                  {(v.appliedPreferenceIds?.length ?? 0) > 0 && (
+                    <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="font-bold text-gold-deep">반영한 케어 포인트</span>
+                      {v.appliedPreferenceIds!.map((pid) => {
+                        const pref = c.preferences?.find((x) => x.id === pid);
+                        if (!pref) return null;
+                        return (
+                          <span
+                            key={pid}
+                            className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 font-bold text-gold-deep"
+                          >
+                            {PREFERENCE_CATEGORY_LABELS[pref.category]} · {pref.note}
+                          </span>
+                        );
+                      })}
+                    </p>
                   )}
                   <p className="mt-1 text-xs text-ink-sub">
                     담당 {staffName(v.staffId)}

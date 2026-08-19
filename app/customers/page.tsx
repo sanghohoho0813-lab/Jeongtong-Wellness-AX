@@ -8,7 +8,7 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
 import { formatRelative } from "@/lib/utils/date";
-import { formatPhone } from "@/lib/utils/format";
+import { displayPhone } from "@/lib/utils/format";
 import {
   Badge,
   Button,
@@ -67,7 +67,7 @@ function priorityLevel(score: number) {
 
 export default function CustomersPage() {
   const router = useRouter();
-  const { derivedById } = useStore();
+  const { derivedById, canSeePhone } = useStore();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<CustomerStatus | "all">("all");
   const [openForm, setOpenForm] = useState(false);
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                   )}
                 </div>
                 <p className="mt-0.5 truncate text-sm text-ink-sub">
-                  {formatPhone(d.customer.phone)} · 방문 {d.visitCount}회 · 최근
+                  {displayPhone(d.customer.phone, canSeePhone)} · 방문 {d.visitCount}회 · 최근
                   방문 {formatRelative(d.lastVisitDate)}
                 </p>
                 {/* 시스템이 관리대상으로 판단한 첫 번째 근거 (브리핑과 동일 체계) */}

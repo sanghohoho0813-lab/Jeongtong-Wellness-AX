@@ -9,7 +9,7 @@ import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
 import { CustomerDerived } from "@/lib/types";
 import { daysAgo, formatRelative } from "@/lib/utils/date";
-import { formatPhone } from "@/lib/utils/format";
+import { displayPhone } from "@/lib/utils/format";
 import {
   Badge,
   Card,
@@ -31,9 +31,11 @@ interface Group {
 function CustomerRow({
   derived,
   note,
+  canSeePhone,
 }: {
   derived: CustomerDerived;
   note: string;
+  canSeePhone: boolean;
 }) {
   const c = derived.customer;
   return (
@@ -47,7 +49,7 @@ function CustomerRow({
       <div className="min-w-0 flex-1">
         <p className="truncate font-extrabold text-ink">{c.name}</p>
         <p className="truncate text-xs text-ink-sub">
-          {formatPhone(c.phone)} · 방문 {derived.visitCount}회
+          {displayPhone(c.phone, canSeePhone)} · 방문 {derived.visitCount}회
         </p>
       </div>
       <span className="max-w-[45%] truncate text-right text-sm font-bold text-ink-soft">
@@ -73,7 +75,7 @@ const GROUP_ACCENT: Record<string, string> = {
 };
 
 export default function RetentionPage() {
-  const { derivedById, settings, briefingTasks } = useStore();
+  const { derivedById, settings, briefingTasks, canSeePhone } = useStore();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const rules = settings.careRules;
   const all = [...derivedById.values()];
@@ -276,6 +278,7 @@ export default function RetentionPage() {
                       key={r.derived.customer.id}
                       derived={r.derived}
                       note={r.note}
+                      canSeePhone={canSeePhone}
                     />
                   ),
                 )}

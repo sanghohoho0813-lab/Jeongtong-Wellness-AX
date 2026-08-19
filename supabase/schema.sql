@@ -107,11 +107,125 @@ create table if not exists briefing_task_logs (
 );
 create index if not exists idx_task_logs_date on briefing_task_logs(task_date);
 
+-- 케어 선호 · 특이사항 (고객 감동 포인트)
+create table if not exists customer_preferences (
+  id uuid primary key default gen_random_uuid(),
+  branch_id uuid not null references branches(id),
+  customer_id uuid not null references customers(id) on delete cascade,
+  category text not null check (category in
+    ('temperature','pressure','position','environment','beverage','conversation','caution','etc')),
+  note text not null,
+  pinned boolean not null default false, -- 매 방문 확인 대상
+  created_by_staff_id uuid references staff(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_prefs_customer on customer_preferences(customer_id);
+
+-- 방문에서 확인·반영한 선호 항목 (Visit.appliedPreferenceIds)
+create table if not exists visit_applied_preferences (
+  visit_id uuid not null references visits(id) on delete cascade,
+  preference_id uuid not null references customer_preferences(id) on delete cascade,
+  primary key (visit_id, preference_id)
+);
+
 -- =========================================================
--- RLS (Row Level Security) 기본 방향
--- 연동 시 활성화: 지점 소속 직원만 자기 지점 데이터 접근.
+-- RLS (Row Level Security)
+--
+-- 역할 정의 (lib/auth/permissions.ts 와 동일):
+--   ADMIN = staff.role in ('owner','manager')  → 지점 전체 데이터 R/W
+--   STAFF = staff.role = 'staff'               → 고객·케어 데이터만 R/W,
+--                                                연락처(phone)는 열람 불가
+-- 모든 접근은 branch_id 로 스코프된다.
 -- =========================================================
--- alter table customers enable row level security;
--- create policy customers_by_branch on customers
---   using (branch_id in (select branch_id from staff where auth_user_id = auth.uid()));
--- (memberships, visits, briefing_task_logs 동일 패턴)
+
+-- 현재 사용자의 지점 / 역할 헬퍼
+create or replace function current_branch_id() returns uuid
+language sql stable security definer as $$
+  select branch_id from staff where auth_user_id = auth.uid() and active limit 1;
+$$;
+
+create or replace function is_admin() returns boolean
+language sql stable security definer as $$
+  select exists (
+    select 1 from staff
+    where auth_user_id = auth.uid() and active and role in ('owner','manager')
+  );
+$$;
+
+alter table branches   enable row level security;
+alter table staff      enable row level security;
+alter table customers  enable row level security;
+alter table memberships enable row level security;
+alter table visits     enable row level security;
+alter table customer_preferences enable row level security;
+alter table briefing_task_logs   enable row level security;
+
+-- 지점 / 직원 : 조회는 같은 지점, 변경은 ADMIN 만
+create policy branches_read on branches for select
+  using (id = current_branch_id());
+create policy branches_write on branches for all
+  using (id = current_branch_id() and is_admin())
+  with check (id = current_branch_id() and is_admin());
+
+create policy staff_read on staff for select
+  using (branch_id = current_branch_id());
+create policy staff_write on staff for all
+  using (branch_id = current_branch_id() and is_admin())
+  with check (branch_id = current_branch_id() and is_admin());
+
+-- 고객 / 이용권 / 방문 / 선호 : 같은 지점이면 ADMIN·STAFF 모두 R/W
+--   (직원의 핵심 업무이므로 등록·수정 허용, 연락처만 아래 뷰로 차단)
+create policy customers_all on customers for all
+  using (branch_id = current_branch_id())
+  with check (branch_id = current_branch_id());
+
+create policy memberships_all on memberships for all
+  using (branch_id = current_branch_id())
+  with check (branch_id = current_branch_id());
+
+create policy visits_all on visits for all
+  using (branch_id = current_branch_id())
+  with check (branch_id = current_branch_id());
+
+create policy prefs_all on customer_preferences for all
+  using (branch_id = current_branch_id())
+  with check (branch_id = current_branch_id());
+
+-- 관리 과제 로그 : 조회는 같은 지점, 수정은 ADMIN 또는 본인 처리 건
+create policy tasks_read on briefing_task_logs for select
+  using (branch_id = current_branch_id());
+create policy tasks_write on briefing_task_logs for all
+  using (
+    branch_id = current_branch_id()
+    and (is_admin() or handled_by_staff_id in
+         (select id from staff where auth_user_id = auth.uid()))
+  )
+  with check (branch_id = current_branch_id());
+
+-- ---------------------------------------------------------
+-- 연락처 마스킹
+-- Postgres RLS 는 행 단위라 컬럼 숨김은 뷰로 처리한다.
+-- 앱은 항상 customers_view 를 조회하고, phone 원본은 ADMIN 에게만 내려간다.
+-- (프론트의 displayPhone(phone, canSeePhone) 과 동일한 규칙)
+-- ---------------------------------------------------------
+create or replace view customers_view
+with (security_invoker = true) as
+select
+  c.id, c.branch_id, c.name,
+  case
+    when is_admin() then c.phone
+    else regexp_replace(c.phone, '^(\d{3})\d{4}(\d{4})$', '\1****\2')
+  end as phone,
+  (not is_admin()) as phone_masked,
+  c.gender, c.birth_year, c.registered_at, c.assigned_staff_id,
+  c.memo, c.focus_body_parts, c.next_manage_date, c.last_contact_date,
+  c.tags, c.created_at
+from customers c;
+
+-- 매출 집계는 ADMIN 전용 뷰로 분리 (STAFF 는 접근 자체가 없음)
+create or replace view branch_revenue_view
+with (security_invoker = true) as
+select branch_id, date_trunc('month', purchased_at) as month, sum(price) as revenue
+from memberships
+where is_admin()
+group by 1, 2;

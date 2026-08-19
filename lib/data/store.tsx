@@ -24,6 +24,8 @@ import {
   DEFAULT_SETTINGS,
   Membership,
   Staff,
+  CarePreference,
+  PreferenceCategory,
   TaskOutcome,
   TaskStatus,
   Visit,
@@ -79,6 +81,7 @@ export interface NewVisitInput {
   amount?: number;
   nextManageDate?: string;
   staffId?: string;
+  appliedPreferenceIds?: string[];
 }
 
 interface StoreValue extends PersistedState {
@@ -90,7 +93,16 @@ interface StoreValue extends PersistedState {
   currentStaff: Staff;
   /** 대표/관리자 여부 — 매출·운영 정보 노출 판단 */
   isManager: boolean;
+  /** 연락처 원본 열람 권한 — 대표/관리자만 (직원은 마스킹) */
+  canSeePhone: boolean;
   setCurrentStaff: (staffId: string) => void;
+  /** 케어 선호 · 특이사항 (고객 감동 포인트) */
+  addPreference: (
+    customerId: string,
+    input: { category: PreferenceCategory; note: string; pinned?: boolean },
+  ) => void;
+  togglePreferencePin: (customerId: string, preferenceId: string) => void;
+  removePreference: (customerId: string, preferenceId: string) => void;
   addCustomer: (input: NewCustomerInput) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
   addVisit: (input: NewVisitInput) => Visit;
@@ -212,10 +224,77 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const isManager =
     currentStaff?.role === "owner" || currentStaff?.role === "manager";
+  // 연락처 원본은 대표/관리자만 열람 (직원 화면에서는 마스킹)
+  const canSeePhone = isManager;
 
   const setCurrentStaff = useCallback((staffId: string) => {
     setState((s) => ({ ...s, currentStaffId: staffId }));
   }, []);
+
+  // ---------- 케어 선호 · 특이사항 ----------
+
+  const addPreference = useCallback(
+    (
+      customerId: string,
+      input: { category: PreferenceCategory; note: string; pinned?: boolean },
+    ) => {
+      const pref: CarePreference = {
+        id: `pref-${Date.now().toString(36)}`,
+        category: input.category,
+        note: input.note.trim(),
+        createdAt: new Date().toISOString(),
+        createdByStaffId: currentStaff?.id,
+        pinned: input.pinned,
+      };
+      setState((s) => ({
+        ...s,
+        customers: s.customers.map((c) =>
+          c.id === customerId
+            ? { ...c, preferences: [...(c.preferences ?? []), pref] }
+            : c,
+        ),
+      }));
+    },
+    [currentStaff],
+  );
+
+  const togglePreferencePin = useCallback(
+    (customerId: string, preferenceId: string) => {
+      setState((s) => ({
+        ...s,
+        customers: s.customers.map((c) =>
+          c.id === customerId
+            ? {
+                ...c,
+                preferences: (c.preferences ?? []).map((p) =>
+                  p.id === preferenceId ? { ...p, pinned: !p.pinned } : p,
+                ),
+              }
+            : c,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const removePreference = useCallback(
+    (customerId: string, preferenceId: string) => {
+      setState((s) => ({
+        ...s,
+        customers: s.customers.map((c) =>
+          c.id === customerId
+            ? {
+                ...c,
+                preferences: (c.preferences ?? []).filter(
+                  (p) => p.id !== preferenceId,
+                ),
+              }
+            : c,
+        ),
+      }));
+    },
+    [],
+  );
 
   const addCustomer = useCallback((input: NewCustomerInput): Customer => {
     const customer: Customer = {
@@ -257,6 +336,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       reaction: input.reaction,
       amount: input.amount,
       nextManageDate: input.nextManageDate,
+      appliedPreferenceIds: input.appliedPreferenceIds?.length
+        ? input.appliedPreferenceIds
+        : undefined,
     };
     setState((s) => {
       let memberships = s.memberships;
@@ -366,7 +448,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     derivedById,
     currentStaff,
     isManager,
+    canSeePhone,
     setCurrentStaff,
+    addPreference,
+    togglePreferencePin,
+    removePreference,
     addCustomer,
     updateCustomer,
     addVisit,

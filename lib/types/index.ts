@@ -58,6 +58,46 @@ export interface Customer {
   nextManageDate?: string; // 다음 관리 예정일 (ISO date)
   lastContactDate?: string; // 마지막 연락일
   tags?: string[];
+  /**
+   * 케어 선호 · 특이사항 (고객 감동 포인트).
+   * 현장에서 직원이 기록해 두고, 다음 방문 때 확인·반영한다.
+   * (Supabase: customer_preferences 테이블로 분리 예정)
+   */
+  preferences?: CarePreference[];
+}
+
+// ---------- 케어 선호 · 특이사항 ----------
+
+export type PreferenceCategory =
+  | "temperature" // 온도
+  | "pressure" // 강도
+  | "position" // 자세 / 체위
+  | "environment" // 환경 (음악·조명·온도)
+  | "beverage" // 음료
+  | "conversation" // 대화 성향
+  | "caution" // 주의사항
+  | "etc"; // 기타
+
+export const PREFERENCE_CATEGORY_LABELS: Record<PreferenceCategory, string> = {
+  temperature: "온도",
+  pressure: "강도",
+  position: "자세",
+  environment: "환경",
+  beverage: "음료",
+  conversation: "대화",
+  caution: "주의사항",
+  etc: "기타",
+};
+
+export interface CarePreference {
+  id: string;
+  category: PreferenceCategory;
+  /** 예: "쑥뜸 온도는 살짝 낮게", "대화보다 조용한 편을 선호" */
+  note: string;
+  createdAt: string;
+  createdByStaffId?: string;
+  /** 특히 중요해 매 방문 확인이 필요한 항목 */
+  pinned?: boolean;
 }
 
 // ---------- 신체 부위 ----------
@@ -138,6 +178,8 @@ export interface Visit {
   reaction?: string; // 고객 반응/메모
   amount?: number; // 현장 결제 금액 (이용권 외)
   nextManageDate?: string; // 이 방문에서 잡은 다음 관리 예정일
+  /** 이번 방문에서 확인·반영한 케어 선호 항목 (CarePreference.id) */
+  appliedPreferenceIds?: string[];
 }
 
 // ---------- 오늘의 실행 브리핑 ----------

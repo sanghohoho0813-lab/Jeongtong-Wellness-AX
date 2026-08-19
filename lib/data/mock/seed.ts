@@ -7,6 +7,7 @@
 import {
   BodyPartRecord,
   Branch,
+  CarePreference,
   Customer,
   Membership,
   Staff,
@@ -50,6 +51,21 @@ interface CustomerSpec {
   nextManage?: number; // 다음 관리 예정일 offset
   lastContact?: number;
   tags?: string[];
+  /** 케어 선호 · 특이사항 (고객 감동 포인트) */
+  prefs?: Array<{
+    category:
+      | "temperature"
+      | "pressure"
+      | "position"
+      | "environment"
+      | "beverage"
+      | "conversation"
+      | "caution"
+      | "etc";
+    note: string;
+    pinned?: boolean;
+    at: number;
+  }>;
   /** 방문 offsets (음수, 과거) — type 기본 visit */
   visits: Array<{
     at: number;
@@ -83,6 +99,11 @@ const SPECS: CustomerSpec[] = [
     focus: [{ part: "waist" }, { part: "neck_shoulder" }],
     nextManage: -2, lastContact: -16, tags: ["집중관리"],
     memo: "허리 집중 관리 희망. 따뜻한 온도 선호.",
+    prefs: [
+      { category: "temperature", note: "쑥뜸 온도는 조금 낮게 — 뜨거운 것에 예민하심", pinned: true, at: -58 },
+      { category: "conversation", note: "케어 중에는 조용히 쉬는 편을 선호", at: -44 },
+      { category: "beverage", note: "끝나고 따뜻한 물 챙겨드리면 좋아하심", at: -30 },
+    ],
     visits: [
       { at: -72, program: P_BASIC, parts: [{ part: "waist" }] },
       { at: -58, program: P_BASIC, parts: [{ part: "waist" }], reaction: "허리가 한결 가볍다고 만족" },
@@ -99,6 +120,10 @@ const SPECS: CustomerSpec[] = [
     registered: -220, staff: "staff-3",
     focus: [{ part: "knee" }, { part: "leg" }],
     nextManage: 0, lastContact: -14,
+    prefs: [
+      { category: "position", note: "무릎 케어 시 다리 아래 쿠션 받쳐드리기", pinned: true, at: -70 },
+      { category: "etc", note: "손주 이야기 자주 하심 — 안부 여쭤보면 아주 좋아하심", at: -42 },
+    ],
     visits: [
       { at: -84, program: P_HALF, parts: [{ part: "knee" }] },
       { at: -70, program: P_HALF, parts: [{ part: "knee" }, { part: "leg" }] },
@@ -133,6 +158,10 @@ const SPECS: CustomerSpec[] = [
     registered: -95, staff: "staff-2",
     focus: [{ part: "abdomen" }],
     nextManage: 5, lastContact: -7,
+    prefs: [
+      { category: "environment", note: "조명 어둡게, 음악은 작게 선호", at: -49 },
+      { category: "pressure", note: "복부는 부드럽게 — 강한 압 부담스러워하심", pinned: true, at: -35 },
+    ],
     visits: [
       { at: -63, program: P_BASIC, parts: [{ part: "abdomen" }], membership: "m-04" },
       { at: -49, program: P_BASIC, parts: [{ part: "abdomen" }], membership: "m-04" },
@@ -164,6 +193,10 @@ const SPECS: CustomerSpec[] = [
     id: "c-06", name: "한복순", phone: "01012340006", gender: "female", birthYear: 1949,
     registered: -200, staff: "staff-2",
     focus: [{ part: "waist" }, { part: "foot_ankle" }],
+    prefs: [
+      { category: "caution", note: "발/발목은 열 오래 적용하지 않기", pinned: true, at: -70 },
+      { category: "beverage", note: "차가운 음료 사양 — 항상 따뜻한 차 선호", at: -55 },
+    ],
     visits: [
       { at: -100, program: P_HALF, membership: "m-06", parts: [{ part: "waist" }] },
       { at: -85, program: P_HALF, membership: "m-06", parts: [{ part: "waist" }] },
@@ -296,6 +329,10 @@ const SPECS: CustomerSpec[] = [
     registered: -240, staff: "staff-2",
     focus: [{ part: "abdomen" }, { part: "waist" }],
     nextManage: 11,
+    prefs: [
+      { category: "temperature", note: "복부 온열은 따뜻하게 오래 유지 선호", pinned: true, at: -59 },
+      { category: "conversation", note: "이야기 나누는 것을 좋아하심", at: -31 },
+    ],
     visits: [
       { at: -87, program: P_HALF, parts: [{ part: "abdomen" }], membership: "m-17" },
       { at: -73, program: P_HALF, parts: [{ part: "abdomen" }], membership: "m-17" },
@@ -433,6 +470,16 @@ function build() {
       nextManageDate: s.nextManage !== undefined ? d(s.nextManage) : undefined,
       lastContactDate: s.lastContact !== undefined ? d(s.lastContact) : undefined,
       tags: s.tags,
+      preferences: (s.prefs ?? []).map(
+        (pf, i): CarePreference => ({
+          id: `${s.id}-pref${i + 1}`,
+          category: pf.category,
+          note: pf.note,
+          createdAt: d(pf.at),
+          createdByStaffId: s.staff,
+          pinned: pf.pinned,
+        }),
+      ),
     });
 
     s.visits.forEach((v, i) => {

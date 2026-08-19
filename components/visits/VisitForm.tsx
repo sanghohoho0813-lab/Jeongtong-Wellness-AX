@@ -4,10 +4,16 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/data/store";
-import { BodyPartRecord, VisitType } from "@/lib/types";
+import {
+  BodyPartRecord,
+  PREFERENCE_CATEGORY_LABELS,
+  VisitType,
+} from "@/lib/types";
 import { daysFromToday, formatDateKr } from "@/lib/utils/date";
 import { recommendNextManageDate } from "@/lib/scoring/insight";
-import { Button, FieldLabel, inputCls } from "@/components/ui";
+import { Badge, Button, FieldLabel, inputCls } from "@/components/ui";
+import { CheckIcon } from "@/components/ui/icons";
+import { PREF_TONES } from "@/components/customers/CarePreferenceCard";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
@@ -46,12 +52,15 @@ export default function VisitForm({
     daysFromToday(settings.careRules.defaultCycleDays),
   );
   const [staffId, setStaffId] = useState("");
+  const [appliedPrefs, setAppliedPrefs] = useState<string[]>([]);
   const [error, setError] = useState("");
 
   const sortedCustomers = useMemo(
     () => [...customers].sort((a, b) => a.name.localeCompare(b.name, "ko")),
     [customers],
   );
+
+  const selectedCustomer = customers.find((c) => c.id === customerId);
 
   const activeMemberships = memberships.filter(
     (m) => m.customerId === customerId && m.status === "active",
@@ -66,6 +75,7 @@ export default function VisitForm({
   const selectCustomer = (id: string) => {
     setCustomerId(id);
     setMembershipId("");
+    setAppliedPrefs([]);
     const c = customers.find((x) => x.id === id);
     setParts(c?.focusBodyParts ?? []);
   };
@@ -82,6 +92,7 @@ export default function VisitForm({
       amount: amount ? Number(amount.replace(/\D/g, "")) : undefined,
       nextManageDate: nextManage || undefined,
       staffId: staffId || undefined,
+      appliedPreferenceIds: appliedPrefs,
     });
     const name = customers.find((c) => c.id === customerId)?.name ?? "고객";
     toast(
@@ -182,6 +193,72 @@ export default function VisitForm({
               );
             })()}
           </div>
+        </div>
+      )}
+
+      {/* 고객 감동 포인트 — 케어 전 확인 체크리스트 */}
+      {selectedCustomer && (selectedCustomer.preferences?.length ?? 0) > 0 && (
+        <div className="rounded-card bg-gold-soft/50 px-3.5 py-3 ring-1 ring-gold/25">
+          <p className="flex items-center gap-1.5 text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+            케어 선호 · 특이사항 확인
+          </p>
+          <p className="mt-1 text-xs text-ink-sub">
+            이번 방문에서 반영한 항목을 체크하세요. 체크한 내용은 이용 이력에
+            함께 기록됩니다.
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {[...(selectedCustomer.preferences ?? [])]
+              .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+              .map((p) => {
+                const on = appliedPrefs.includes(p.id);
+                return (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAppliedPrefs((prev) =>
+                          on
+                            ? prev.filter((id) => id !== p.id)
+                            : [...prev, p.id],
+                        )
+                      }
+                      className={`touch-target flex w-full items-start gap-2.5 rounded-btn px-3 py-2 text-left transition-colors ${
+                        on
+                          ? "bg-aqua-50 ring-1 ring-aqua-300"
+                          : "bg-card ring-1 ring-stone-line hover:bg-card-soft"
+                      }`}
+                    >
+                      <span
+                        className={`mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded ${
+                          on
+                            ? "bg-aqua-600 text-white"
+                            : "bg-card-soft ring-1 ring-stone-line"
+                        }`}
+                        style={{ width: "1.125rem", height: "1.125rem" }}
+                      >
+                        {on && <CheckIcon className="h-3 w-3" strokeWidth={3} />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <Badge tone={PREF_TONES[p.category].badge}>
+                            {PREFERENCE_CATEGORY_LABELS[p.category]}
+                          </Badge>
+                          {p.pinned && (
+                            <span className="text-[0.7rem] font-bold text-aqua-700">
+                              매번 확인
+                            </span>
+                          )}
+                        </span>
+                        <span className="mt-0.5 block text-sm text-ink-soft">
+                          {p.note}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+          </ul>
         </div>
       )}
 

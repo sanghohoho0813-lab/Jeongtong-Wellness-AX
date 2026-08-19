@@ -12,7 +12,7 @@ import {
   TaskStatus,
 } from "@/lib/types";
 import { daysFromToday, formatDateKr } from "@/lib/utils/date";
-import { formatPhone } from "@/lib/utils/format";
+import { displayPhone } from "@/lib/utils/format";
 import { Badge, BadgeTone, Button, TaskStatusBadge } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
@@ -106,7 +106,7 @@ export default function TaskCard({
   compact?: boolean;
   variant?: "light" | "hero";
 }) {
-  const { customers, staff, setTaskStatus } = useStore();
+  const { customers, staff, setTaskStatus, canSeePhone } = useStore();
   const toast = useToast();
 
   /** 열려 있는 입력 패널 — 처리완료 결과 / 보류 재확인일 */
@@ -274,7 +274,7 @@ export default function TaskCard({
           )}
           {!compact && (
             <p className={`mt-1 text-xs ${hero ? "text-deep-faint" : "text-ink-sub"}`}>
-              {formatPhone(customer.phone)}
+              {displayPhone(customer.phone, canSeePhone)}
             </p>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2">

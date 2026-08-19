@@ -24,18 +24,24 @@
  *  /settings       ✅      ✅*     *STAFF는 화면 설정만, 매장/직원/관리기준은 ADMIN
  *
  * ── 데이터 접근 (RLS 설계 방향) ─────────────────────
- *  테이블            ADMIN                    STAFF
- *  branches          자기 지점 R/W            자기 지점 R
- *  staff             자기 지점 R/W            자기 지점 R (본인 프로필 W)
- *  customers         자기 지점 R/W            자기 지점 R/W
- *  visits            자기 지점 R/W            자기 지점 R/W (입력 주체)
- *  memberships       자기 지점 R/W            자기 지점 R + 차감(사용) W
- *  briefing_task_logs 자기 지점 R/W           자기 지점 R + 본인 처리 건 W
- *  매출 집계(view)    자기 지점 R              ❌
+ *  테이블               ADMIN            STAFF
+ *  branches             자기 지점 R/W     자기 지점 R
+ *  staff                자기 지점 R/W     자기 지점 R (본인 프로필 W)
+ *  customers            자기 지점 R/W     자기 지점 R/W (단, phone 열람 ❌)
+ *  visits               자기 지점 R/W     자기 지점 R/W (입력 주체)
+ *  memberships          자기 지점 R/W     자기 지점 R + 사용(차감) W
+ *  customer_preferences 자기 지점 R/W     자기 지점 R/W (현장 기록 주체)
+ *  briefing_task_logs   자기 지점 R/W     자기 지점 R + 본인 처리 건 W
+ *  매출 집계(view)       자기 지점 R       ❌
  *
  *  공통 원칙: 모든 행은 branch_id 로 스코프되며,
  *  사용자는 staff.auth_user_id = auth.uid() 로 자기 지점을 판별한다.
- *  (supabase/schema.sql 의 RLS 주석과 동일한 방향)
+ *
+ *  ── 연락처(phone) 처리 ──
+ *  직원에게는 고객 연락처를 노출하지 않는다 (010-****-1234 로 마스킹).
+ *  RLS 는 행 단위이므로 컬럼 차단은 customers_view 에서 처리하며,
+ *  프론트는 displayPhone(phone, canSeePhone) 으로 동일 규칙을 적용한다.
+ *  → useStore().canSeePhone === isManager
  */
 
 import type { StaffRole } from "@/lib/types";
@@ -59,4 +65,5 @@ export const ADMIN_ONLY_UI = [
   "settings.section.staff",
   "settings.section.careRules",
   "settings.section.data",
+  "customer.phone", // 직원에게는 마스킹 (displayPhone)
 ] as const;
