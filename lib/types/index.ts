@@ -319,7 +319,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "light",
   companyName: "정통대왕쑥뜸원",
   branchName: "본점",
-  ownerName: "대표 관리자",
+  ownerName: "최정철",
   openHours: "10:00 - 20:00",
   careRules: DEFAULT_CARE_RULES,
 };

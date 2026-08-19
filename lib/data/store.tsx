@@ -133,6 +133,28 @@ function seedState(): PersistedState {
   };
 }
 
+/**
+ * 저장된 데이터 보정 — 샘플 기본값이 그대로 남아 있는 경우에만 현재 기본값으로 맞춘다.
+ * (사용자가 직접 수정한 값은 건드리지 않는다)
+ */
+function migrate(s: PersistedState): PersistedState {
+  return {
+    ...s,
+    staff: s.staff.map((m) =>
+      m.role === "owner" && m.name === "김대표"
+        ? { ...m, name: DEFAULT_SETTINGS.ownerName }
+        : m,
+    ),
+    settings: {
+      ...s.settings,
+      ownerName:
+        s.settings.ownerName === "대표 관리자" || !s.settings.ownerName
+          ? DEFAULT_SETTINGS.ownerName
+          : s.settings.ownerName,
+    },
+  };
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<PersistedState>(seedState);
   const [ready, setReady] = useState(false);
@@ -144,7 +166,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedState;
         if (parsed.customers?.length) {
-          setState({ ...seedState(), ...parsed });
+          setState(migrate({ ...seedState(), ...parsed }));
         }
       }
     } catch {

@@ -30,7 +30,7 @@ export const seedBranches: Branch[] = [
 ];
 
 export const seedStaff: Staff[] = [
-  { id: "staff-1", branchId: B1, name: "김대표", role: "owner", active: true },
+  { id: "staff-1", branchId: B1, name: "최정철", role: "owner", active: true },
   { id: "staff-2", branchId: B1, name: "이수민", role: "staff", active: true },
   { id: "staff-3", branchId: B1, name: "박정호", role: "staff", active: true },
 ];
