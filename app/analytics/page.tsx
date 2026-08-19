@@ -9,7 +9,12 @@ import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
-import { formatMonthKr, formatRelative } from "@/lib/utils/date";
+import {
+  formatMonthKr,
+  formatRelative,
+  isAfter,
+  localDateOf,
+} from "@/lib/utils/date";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
 import {
   Card,
@@ -161,12 +166,13 @@ export default function AnalyticsPage() {
   // AX 운영 인사이트 — 현재 지표에서만 도출되는 규칙 기반 문장
   // AX 매출기회 집계 — Priority 지표와 별도로 계산한다.
   // 실제 재방문은 처리 시각 이후의 방문 기록이 존재하는 경우만 센다 (추정 없음)
+  // 방문 일시는 지역 시각, 처리 시각은 UTC 로 저장되므로 절대 시각으로 비교한다
   const opp = summarizeOpportunities(briefingTasks, (customerId, sinceIso) =>
     visits.some(
       (v) =>
         v.customerId === customerId &&
         v.type === "visit" &&
-        v.visitedAt > sinceIso,
+        isAfter(v.visitedAt, sinceIso),
     ),
   );
   // 월별 실행 추이 — 저장된 처리 이력에서만 계산
@@ -379,7 +385,8 @@ export default function AnalyticsPage() {
               const count = taskOverrides.filter(
                 (t) =>
                   t.status === "done" &&
-                  t.statusChangedAt?.slice(0, 10) === key,
+                  t.statusChangedAt &&
+                  localDateOf(t.statusChangedAt) === key,
               ).length;
               return { key, label, count };
             });

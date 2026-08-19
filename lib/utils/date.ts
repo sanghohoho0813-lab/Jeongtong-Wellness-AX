@@ -142,3 +142,34 @@ export function recentMonthKeys(n: number): string[] {
   }
   return keys;
 }
+
+/**
+ * 서로 다른 표기의 시각을 안전하게 비교하기
+ * =========================================
+ * 이 앱에는 두 가지 표기가 섞여 있다.
+ *   방문 일시   "2026-08-19T14:30:00"        — 지역(매장) 시각
+ *   처리 시각   "2026-08-19T05:30:00.000Z"   — UTC
+ *
+ * 둘을 문자열로 그대로 비교하면 어긋난다. 한국(UTC+9)에서 저녁 8시에 처리한
+ * 과제와 그날 낮 12시 방문을 비교하면, 문자열로는 방문이 "나중"으로 보인다.
+ * 실제로는 8시간 전인데도 그렇다. 그래서 항상 절대 시각으로 바꿔 비교한다.
+ */
+
+/** 어떤 표기든 절대 시각(ms)으로 읽는다. 읽을 수 없으면 NaN */
+export function toTimestamp(iso: string): number {
+  return new Date(iso).getTime();
+}
+
+/** 어떤 표기든 지역 기준 YYYY-MM-DD 로 바꾼다 (UTC 표기의 날짜 밀림 방지) */
+export function localDateOf(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso.slice(0, 10) : toDateStr(d);
+}
+
+/** a 가 b 보다 나중인가 — 표기가 달라도 올바르게 판단한다 */
+export function isAfter(a: string, b: string): boolean {
+  const ta = toTimestamp(a);
+  const tb = toTimestamp(b);
+  if (Number.isNaN(ta) || Number.isNaN(tb)) return false;
+  return ta > tb;
+}
