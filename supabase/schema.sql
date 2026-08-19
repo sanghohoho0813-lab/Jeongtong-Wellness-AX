@@ -117,9 +117,43 @@ create table if not exists briefing_task_logs (
   sales_opportunity_type text check (sales_opportunity_type in ('renewal','revisit')),
   memo text,
   hold_until date,
+  -- 이 고객이 미처리로 계속 올라온 최초 날짜 ("며칠째 미처리" 계산용)
+  open_since date,
   unique (task_date, customer_id)
 );
 create index if not exists idx_task_logs_date on briefing_task_logs(task_date);
+
+-- ---------------------------------------------------------
+-- 설정
+--
+-- 지금은 브라우저(localStorage)에 한 덩어리로 들어 있지만, 여러 기기에서
+-- 쓰기 시작하면 성격이 다른 두 가지를 나눠야 한다.
+--   지점 공통 : 관리 기준·매출기회 기준·매장 정보 → 모두에게 같은 값이어야 한다
+--   개인 화면 : 글자 크기·화면 밀도·테마       → 사람마다 달라야 한다
+-- 관리 기준을 개인 설정에 두면 직원마다 브리핑이 달라져 버린다.
+-- ---------------------------------------------------------
+
+create table if not exists branch_settings (
+  branch_id uuid primary key references branches(id) on delete cascade,
+  company_name text,
+  owner_name text,
+  -- 고객관리 기준 (CareRuleSettings)
+  care_rules jsonb not null default '{}',
+  -- AX 매출기회 기준 (OpportunityRuleSettings)
+  opportunity_rules jsonb not null default '{}',
+  last_backup_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists staff_display_settings (
+  staff_id uuid primary key references staff(id) on delete cascade,
+  font_scale text not null default 'default'
+    check (font_scale in ('small','default','large')),
+  density text not null default 'default'
+    check (density in ('default','relaxed')),
+  theme text not null default 'light' check (theme in ('light','dark','system')),
+  updated_at timestamptz not null default now()
+);
 
 -- 케어 선호 · 특이사항 (고객 감동 포인트)
 create table if not exists customer_preferences (
@@ -179,6 +213,9 @@ alter table memberships enable row level security;
 alter table visits     enable row level security;
 alter table customer_preferences enable row level security;
 alter table briefing_task_logs   enable row level security;
+alter table visit_applied_preferences enable row level security;
+alter table branch_settings           enable row level security;
+alter table staff_display_settings    enable row level security;
 
 -- 지점 / 직원 : 조회는 같은 지점, 변경은 ADMIN 만
 create policy branches_read on branches for select
@@ -221,6 +258,26 @@ create policy tasks_write on briefing_task_logs for all
          (select id from staff where auth_user_id = auth.uid()))
   )
   with check (branch_id = current_branch_id());
+
+-- 방문에서 반영한 선호 항목 : 방문 기록과 같은 범위로 본다
+create policy visit_prefs_all on visit_applied_preferences for all
+  using (exists (select 1 from visits v
+                 where v.id = visit_id and v.branch_id = current_branch_id()))
+  with check (exists (select 1 from visits v
+                      where v.id = visit_id and v.branch_id = current_branch_id()));
+
+-- 지점 공통 설정 : 조회는 같은 지점 모두, 변경은 ADMIN 만
+--   (직원이 관리 기준을 바꾸면 전 직원의 브리핑이 함께 달라지기 때문)
+create policy branch_settings_read on branch_settings for select
+  using (branch_id = current_branch_id());
+create policy branch_settings_write on branch_settings for all
+  using (branch_id = current_branch_id() and is_admin())
+  with check (branch_id = current_branch_id() and is_admin());
+
+-- 개인 화면 설정 : 본인 것만 읽고 쓴다
+create policy staff_display_own on staff_display_settings for all
+  using (staff_id in (select id from staff where auth_user_id = auth.uid()))
+  with check (staff_id in (select id from staff where auth_user_id = auth.uid()));
 
 -- ---------------------------------------------------------
 -- 연락처 마스킹

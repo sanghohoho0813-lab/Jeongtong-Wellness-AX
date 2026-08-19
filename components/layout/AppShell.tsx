@@ -210,11 +210,43 @@ function RouteGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * 저장 실패 경고.
+ *
+ * 브라우저 저장 공간이 꽉 찼거나 사생활 보호 모드면 화면은 멀쩡히 바뀌는데
+ * 기록은 남지 않는다. 모르고 계속 입력하면 그날 작업이 통째로 사라지므로,
+ * 어느 화면에 있든 눈에 띄게 알리고 백업으로 유도한다.
+ */
+function SaveFailedBanner() {
+  const { saveFailed } = useStore();
+  if (!saveFailed) return null;
+  return (
+    <div className="no-print sticky top-0 z-40 border-b border-danger/30 bg-danger px-4 py-2.5 text-white sm:px-6 lg:ml-64 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-sm font-extrabold">
+          기록이 이 기기에 저장되지 않고 있습니다.
+        </span>
+        <span className="text-sm">
+          브라우저 저장 공간이 가득 찼거나 시크릿 모드일 수 있습니다. 지금 입력한
+          내용이 사라질 수 있으니
+        </span>
+        <Link
+          href="/settings"
+          className="rounded-full bg-white/20 px-3 py-1 text-sm font-extrabold underline-offset-2 ring-1 ring-white/30 hover:bg-white/30"
+        >
+          설정에서 전체 백업받기
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh">
       <Sidebar />
       <MobileHeader />
+      <SaveFailedBanner />
       <main className="px-4 pb-24 pt-4 sm:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-8">
         <div className="mx-auto w-full max-w-7xl">
           <RouteGuard>{children}</RouteGuard>

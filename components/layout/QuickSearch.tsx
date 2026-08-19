@@ -161,6 +161,7 @@ export default function QuickSearch({
       <>
         <button
           type="button"
+          data-tour="quick-search"
           aria-label="고객 찾기 열기"
           onClick={() => setOpen(true)}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
@@ -208,7 +209,7 @@ export default function QuickSearch({
 
   // ---------- PC 사이드바: 항상 보이는 입력 ----------
   return (
-    <div ref={boxRef} className="relative">
+    <div ref={boxRef} data-tour="quick-search" className="relative">
       <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-[1.1rem] w-[1.1rem] -translate-y-1/2 text-ink-faint" />
       <input
         ref={inputRef}

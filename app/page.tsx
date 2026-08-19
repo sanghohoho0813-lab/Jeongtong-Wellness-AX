@@ -2,6 +2,7 @@
 
 import PageHeader from "@/components/layout/PageHeader";
 import KpiRow from "@/components/dashboard/KpiRow";
+import FirstRunCard from "@/components/dashboard/FirstRunCard";
 import BriefingPreview from "@/components/dashboard/BriefingPreview";
 import OpportunityCard from "@/components/dashboard/OpportunityCard";
 import BodyMapCard from "@/components/dashboard/BodyMapCard";
@@ -25,6 +26,8 @@ export default function DashboardPage() {
         description={`${todayLabel()} · ${settings.companyName} ${settings.branchName}`}
       />
       <div className="flex flex-col card-gap">
+        {/* 고객이 한 명도 없을 때만 나오는 첫 시작 안내 */}
+        <FirstRunCard />
         <div data-tour="dash-kpi">
           <KpiRow />
         </div>

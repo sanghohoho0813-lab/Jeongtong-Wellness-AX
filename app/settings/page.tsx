@@ -86,6 +86,7 @@ export default function SettingsPage() {
     updateSettings,
     updateStaff,
     resetData,
+    startFresh,
     isManager,
   } = useStore();
   const toast = useToast();
@@ -93,6 +94,7 @@ export default function SettingsPage() {
   const [newStaffName, setNewStaffName] = useState("");
   const [newStaffRole, setNewStaffRole] = useState<StaffRole>("staff");
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmFresh, setConfirmFresh] = useState(false);
 
   const setRule = (patch: Partial<CareRuleSettings>) =>
     updateSettings({ careRules: { ...settings.careRules, ...patch } });
@@ -415,7 +417,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* 데이터 */}
-        <Card>
+        <Card dataTour="settings-data">
           <SectionTitle>데이터</SectionTitle>
           <p className="-mt-2 mb-3 text-sm leading-relaxed text-ink-sub">
             지금까지 쌓인 기록을 파일로 내려받습니다. 운영 성과 보고 자료로 쓰거나,
@@ -468,6 +470,19 @@ export default function SettingsPage() {
           </div>
 
           <DataImport />
+
+          {/* 실제 운영 시작 — 샘플을 지우고 우리 매장 기록만 남긴다 */}
+          <div className="mt-4 border-t border-stone-line pt-4">
+            <p className="font-bold text-ink">실제 운영 시작</p>
+            <p className="mb-2.5 mt-1 text-sm leading-relaxed text-ink-sub">
+              연습용 샘플 고객 {customers.length}명과 방문 · 이용권 기록을 모두
+              지우고, 빈 상태에서 우리 매장 기록만 쌓기 시작합니다. 매장 정보 ·
+              직원 명단 · 관리 기준은 그대로 유지됩니다.
+            </p>
+            <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
+              샘플 지우고 운영 시작
+            </Button>
+          </div>
 
           <div className="mt-4 border-t border-stone-line pt-4">
             <p className="mb-2 text-sm text-ink-sub">
@@ -535,6 +550,39 @@ export default function SettingsPage() {
               추가
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* 실제 운영 시작 확인 */}
+      <Modal
+        open={confirmFresh}
+        onClose={() => setConfirmFresh(false)}
+        title="샘플 지우고 운영 시작"
+      >
+        <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
+          연습용으로 들어 있던 <b>고객 {customers.length}명</b>, 방문 ·
+          이용 기록 <b>{visits.length}건</b>, 이용권{" "}
+          <b>{memberships.length}건</b>이 모두 지워집니다. 매장 정보와 직원
+          명단, 관리 기준은 그대로 남습니다.
+        </p>
+        <p className="mt-2.5 rounded-btn border-l-4 border-warn bg-amber-50 px-3.5 py-2.5 text-sm leading-relaxed text-ink-soft dark:bg-amber-400/10">
+          되돌릴 수 없습니다. 샘플로 만들어 둔 내용을 남겨야 한다면 먼저{" "}
+          <b>전체 백업</b>을 받아 두세요.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirmFresh(false)}>
+            취소
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              startFresh();
+              setConfirmFresh(false);
+              toast("빈 상태로 시작합니다. 고객 등록부터 진행하세요");
+            }}
+          >
+            지우고 시작
+          </Button>
         </div>
       </Modal>
 

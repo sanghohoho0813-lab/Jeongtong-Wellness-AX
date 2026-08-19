@@ -78,6 +78,14 @@ export function buildTourSteps(
   const customerSteps: TourStep[] = [
     {
       route: "/customers",
+      target: "quick-search",
+      kicker: "어디서나",
+      title: "고객은 어느 화면에서든 바로 찾습니다",
+      body: "이름이나 연락처를 넣으면 바로 아래에 후보가 뜨고, 누르면 그 고객 화면으로 갑니다. 메뉴를 옮겨 다닐 필요가 없습니다.",
+      tip: "초성만으로도 찾습니다 — 홍길동은 ㅎㄱㄷ",
+    },
+    {
+      route: "/customers",
       target: "customer-tiles",
       kicker: "고객",
       title: "상태 타일을 눌러 바로 걸러 봅니다",
@@ -145,6 +153,28 @@ export function buildTourSteps(
       title: "쌓인 기록이 성과로 보입니다",
       body: "방문 · 신규 고객 · 재방문율 · 과제 처리 현황이 기간별로 계산됩니다. 여기 숫자는 모두 실제 저장된 기록에서 나옵니다.",
     },
+    {
+      route: "/analytics",
+      target: "analytics-opportunity",
+      kicker: "AX 도입성과",
+      title: "관리가 매출로 이어졌는지 셉니다",
+      body: "매출기회 대상 → 직원이 실제 관리 → 재방문 예정 확보 → 이용권 재등록 → 실제 재방문 확인 순으로 이어집니다. 전환율이나 예상 매출을 추정하지는 않습니다.",
+    },
+    {
+      route: "/analytics",
+      target: "analytics-staff",
+      kicker: "AX 도입성과",
+      title: "누가 얼마나 관리했는지 봅니다",
+      body: "실행 브리핑에서 과제를 처리한 기록을 담당자별로 셉니다. 순위를 매기려는 것이 아니라, 관리가 한쪽으로 몰려 있지 않은지 확인하기 위한 것입니다.",
+    },
+    {
+      route: "/settings",
+      target: "settings-data",
+      kicker: "설정",
+      title: "명부를 옮기고, 백업으로 되돌립니다",
+      body: "쓰던 엑셀 명부를 한 번에 올릴 수 있고, 받아 둔 백업으로 되돌릴 수도 있습니다. 어느 쪽이든 무엇이 들어오는지 먼저 보여 드린 뒤 반영합니다.",
+      tip: "기록은 이 기기에만 저장됩니다 — 주 1회 전체 백업을 권합니다",
+    },
   ];
 
   return isManager
@@ -163,6 +193,23 @@ export function useTour() {
 }
 
 const PAD = 10;
+
+/**
+ * 표식이 붙은 요소를 찾는다.
+ *
+ * 같은 표식이 PC용과 모바일용에 함께 붙어 있는 경우가 있다(예: 고객 빠른 찾기).
+ * 그중 지금 화면에 실제로 보이는 쪽을 골라야 엉뚱한 자리를 비추지 않는다.
+ */
+function findTourTarget(name: string | undefined): Element | null {
+  if (!name) return null;
+  const all = [...document.querySelectorAll(`[data-tour="${name}"]`)];
+  return (
+    all.find((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    }) ?? null
+  );
+}
 
 interface Box {
   top: number;
@@ -231,7 +278,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     };
 
     const find = () => {
-      const el = document.querySelector(`[data-tour="${step.target}"]`);
+      const el = findTourTarget(step.target);
       if (el) {
         // 대상을 화면 위쪽에 붙여 아래쪽에 설명 카드 자리를 남긴다
         const r = el.getBoundingClientRect();
@@ -252,7 +299,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!active || !step?.target) return;
     const update = () => {
-      const el = document.querySelector(`[data-tour="${step.target}"]`);
+      const el = findTourTarget(step.target);
       if (!el) return;
       const r = el.getBoundingClientRect();
       setBox({ top: r.top, left: r.left, width: r.width, height: r.height });
@@ -454,6 +501,7 @@ function TourOverlay({
       {/* 설명 카드 — 강조 영역을 피해 배치, 자리가 없으면 하단 고정 */}
       <div
         ref={cardRef}
+        data-tour-card
         className={`pointer-events-auto fixed w-[min(26rem,calc(100vw-1.5rem))] ${
           pos
             ? ""

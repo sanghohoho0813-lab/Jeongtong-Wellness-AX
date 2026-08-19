@@ -112,6 +112,11 @@ export interface RemovedMembership {
 
 interface StoreValue extends PersistedState {
   ready: boolean;
+  /**
+   * 마지막 저장이 실패했는지.
+   * 저장 공간이 꽉 찼거나 사생활 보호 모드면 화면만 바뀌고 기록은 남지 않는다.
+   */
+  saveFailed: boolean;
   briefingTasks: BriefingTask[];
   factsById: Map<string, CustomerFacts>;
   derivedById: Map<string, ReturnType<typeof deriveCustomer>>;
@@ -157,6 +162,8 @@ interface StoreValue extends PersistedState {
   ) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   updateStaff: (staff: Staff[]) => void;
+  /** 실제 운영 시작 — 샘플 고객·방문·이용권을 비우고 빈 상태로 만든다 */
+  startFresh: () => void;
   /** 전체 백업 파일로 되돌리기 — 현재 데이터를 백업 시점 상태로 교체한다 */
   restoreBackup: (payload: BackupPayload) => void;
   /**
@@ -210,14 +217,23 @@ function migrate(s: PersistedState): PersistedState {
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<PersistedState>(seedState);
   const [ready, setReady] = useState(false);
+  /** 마지막 저장이 실패했는지 — 화면에서 경고를 띄우는 데 쓴다 */
+  const [saveFailed, setSaveFailed] = useState(false);
 
-  // 최초 로드: localStorage 복원 (seed 날짜가 오래되면 데이터 유지, 설정만 유지해도 됨)
+  /**
+   * 최초 로드: localStorage 복원.
+   *
+   * "고객이 한 명이라도 있으면" 을 기준으로 삼으면 안 된다.
+   * 실제 운영 시작으로 명부를 비운 매장이 새로고침할 때마다
+   * 샘플 고객 24명이 되살아나기 때문이다.
+   * 저장된 형태가 맞는지만 보고, 비어 있는 상태도 그대로 존중한다.
+   */
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedState;
-        if (parsed.customers?.length) {
+        if (Array.isArray(parsed?.customers) && Array.isArray(parsed?.visits)) {
           setState(migrate({ ...seedState(), ...parsed }));
         }
       }
@@ -227,13 +243,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, []);
 
-  // 변경 시 저장
+  /**
+   * 변경 시 저장.
+   *
+   * 저장이 실패하면(브라우저 저장 공간 초과, 사생활 보호 모드 등)
+   * 화면에는 정상적으로 보이지만 실제로는 아무것도 남지 않는다.
+   * 조용히 넘기면 하루치 기록을 통째로 잃을 수 있어, 실패 사실을 밖으로 알린다.
+   */
   useEffect(() => {
     if (!ready) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setSaveFailed(false);
     } catch {
-      // 저장 실패는 무시 (용량 등)
+      setSaveFailed(true);
     }
   }, [state, ready]);
 
@@ -911,9 +934,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(seedState());
   }, []);
 
+  /**
+   * 실제 운영 시작 — 샘플 고객·방문·이용권 기록을 모두 비운다.
+   *
+   * 매장 정보와 직원 명단, 관리 기준 설정은 그대로 둔다.
+   * 도입 준비 과정에서 이미 맞춰 놓은 값이라 다시 입력하게 만들 이유가 없다.
+   */
+  const startFresh = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      customers: [],
+      visits: [],
+      memberships: [],
+      taskOverrides: [],
+      taskFirstSeen: {},
+      seededAt: undefined,
+    }));
+  }, []);
+
   const value: StoreValue = {
     ...state,
     ready,
+    saveFailed,
     briefingTasks,
     factsById,
     derivedById,
@@ -940,6 +982,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateStaff,
     restoreBackup,
     importCustomers,
+    startFresh,
     resetData,
   };
 
