@@ -38,6 +38,7 @@ import {
   stamp,
   visitsCsv,
 } from "@/lib/utils/export";
+import { formatBytes } from "@/lib/utils/storage";
 
 const ROLE_LABELS: Record<StaffRole, string> = {
   owner: "대표/관리자",
@@ -87,6 +88,7 @@ export default function SettingsPage() {
     updateStaff,
     resetData,
     startFresh,
+    storage,
     isManager,
   } = useStore();
   const toast = useToast();
@@ -457,6 +459,37 @@ export default function SettingsPage() {
                   : "아직 백업한 적이 없습니다"}
               </p>
             </div>
+            {/* 저장 공간 — 한도(약 5MB)에 닿으면 저장이 통째로 실패하므로 미리 보여 준다 */}
+            <div className="mt-3">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="text-sm font-bold text-ink-soft">
+                  이 기기 저장 공간
+                </span>
+                <span className="nowrap-num text-sm font-bold text-ink-sub">
+                  {formatBytes(storage.bytes)} / 약 5 MB
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-stone-bg-deep">
+                <div
+                  className={`h-full rounded-full ${
+                    storage.nearLimit
+                      ? "bg-gradient-to-r from-amber-400 to-warn"
+                      : "bg-gradient-to-r from-aqua-400 to-deep-700"
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.round(storage.ratio * 100))}%`,
+                  }}
+                />
+              </div>
+              {storage.nearLimit && (
+                <p className="mt-2 rounded-btn border-l-4 border-warn bg-amber-50 px-3.5 py-2.5 text-sm leading-relaxed text-ink-soft dark:bg-amber-400/10">
+                  저장 공간이 거의 찼습니다. 한도를 넘으면 <b>새 기록이 저장되지
+                  않습니다.</b> 지금 전체 백업을 받아 두시고, 실제 데이터베이스
+                  연결을 앞당기는 것을 권합니다.
+                </p>
+              )}
+            </div>
+
             {/* 지금은 브라우저에만 저장되므로 주기적인 백업이 유일한 안전장치다 */}
             {backupStale && (
               <p className="mt-2 rounded-btn border-l-4 border-warn bg-amber-50 px-3.5 py-2.5 text-sm leading-relaxed text-ink-soft dark:bg-amber-400/10">

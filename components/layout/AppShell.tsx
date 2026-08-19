@@ -14,6 +14,7 @@ import {
 } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
 import QuickSearch from "./QuickSearch";
+import ErrorBoundary from "./ErrorBoundary";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -242,14 +243,29 @@ function SaveFailedBanner() {
 }
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  // 경로가 바뀌면 오류 상태를 푼다 — 다른 화면까지 막아 둘 이유가 없다
+  const pathname = usePathname();
   return (
     <div className="min-h-dvh">
+      {/* 키보드로 쓰는 사람이 메뉴를 매번 지나치지 않도록 본문으로 건너뛴다 */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-btn focus:bg-deep-800 focus:px-4 focus:py-2.5 focus:text-[0.9375rem] focus:font-bold focus:text-white focus:shadow-float"
+      >
+        본문으로 건너뛰기
+      </a>
       <Sidebar />
       <MobileHeader />
       <SaveFailedBanner />
-      <main className="px-4 pb-24 pt-4 sm:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="px-4 pb-24 pt-4 outline-none sm:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-8"
+      >
         <div className="mx-auto w-full max-w-7xl">
-          <RouteGuard>{children}</RouteGuard>
+          <ErrorBoundary resetKey={pathname}>
+            <RouteGuard>{children}</RouteGuard>
+          </ErrorBoundary>
         </div>
       </main>
       <BottomNav />

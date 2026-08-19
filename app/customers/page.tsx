@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
@@ -37,6 +37,9 @@ const STATUS_TILES: Array<{
   { key: "dormant", label: "장기 미방문", tone: "danger" },
 ];
 
+/** 한 번에 그리는 고객 줄 수 — 나머지는 [더 보기]로 이어 그린다 */
+const PAGE_SIZE = 60;
+
 type SortKey = "priority" | "recent" | "name" | "visits";
 
 const SORTS: Array<{ key: SortKey; label: string }> = [
@@ -62,6 +65,12 @@ export default function CustomersPage() {
   const [sort, setSort] = useState<SortKey>("priority");
   const [onlyOpportunity, setOnlyOpportunity] = useState(false);
   const [openForm, setOpenForm] = useState(false);
+  /**
+   * 한 번에 그리는 줄 수.
+   * 고객이 수백 명을 넘어가면 전부 그리느라 화면이 잠깐 멈춘다.
+   * 어차피 아래로 한참 내려가며 보지 않으므로 끊어서 그린다.
+   */
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
   const all = useMemo(() => [...derivedById.values()], [derivedById]);
   const counts = useMemo(() => {
@@ -107,6 +116,10 @@ export default function CustomersPage() {
       });
   }, [all, query, status, sort, onlyOpportunity, opportunityById]);
 
+  // 검색·필터·정렬이 바뀌면 다시 처음부터 보여 준다
+  useEffect(() => setLimit(PAGE_SIZE), [query, status, sort, onlyOpportunity]);
+
+  const visibleRows = rows.slice(0, limit);
   const priorityCount = rows.filter((d) => d.priorityScore > 0).length;
   // AX 매출기회 대상 — 전체 고객 기준 (필터와 무관하게 항상 같은 수)
   const opportunityCount = all.filter(
@@ -220,7 +233,7 @@ export default function CustomersPage() {
         )
       ) : (
         <div className="rise-stagger space-y-2.5">
-          {rows.map((d) => (
+          {visibleRows.map((d) => (
             <Link
               key={d.customer.id}
               data-tour="customer-row"
@@ -285,6 +298,23 @@ export default function CustomersPage() {
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
             </Link>
           ))}
+
+          {rows.length > visibleRows.length && (
+            <div className="pt-1 text-center">
+              <p className="mb-2 text-sm leading-relaxed text-ink-sub">
+                <span className="nowrap-num">
+                  {rows.length}명 중 {visibleRows.length}명
+                </span>{" "}
+                표시 중
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => setLimit((n) => n + PAGE_SIZE)}
+              >
+                더 보기 ({Math.min(PAGE_SIZE, rows.length - visibleRows.length)}명)
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

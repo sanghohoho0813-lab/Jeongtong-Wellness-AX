@@ -264,6 +264,20 @@ a:active {
   transform: translateY(0.5px);
 }
 
+/* ---------- 키보드 초점 ----------
+   마우스로 누를 때는 나타나지 않고(:focus-visible), 키보드로 이동할 때만
+   지금 어디에 있는지 분명히 보이게 한다. 손이 불편하거나 마우스를 쓰기
+   어려운 사용자가 화면을 잃지 않도록 하는 최소 장치다. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid rgb(var(--c-aqua-700));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* 짙은 배경 위에서는 밝은 테두리가 더 잘 보인다 */
+.card-hero :where(a, button):focus-visible {
+  outline-color: #7dd2ce;
+}
+
 /* ---------- 인쇄 ----------
    현장에서 오늘 할 일을 종이로 뽑아 쓰는 경우를 위해
    화면 요소(사이드바·하단네비·버튼)를 빼고 본문만 남긴다. */

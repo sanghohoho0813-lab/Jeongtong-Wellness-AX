@@ -46,6 +46,7 @@ import {
 import { detectSalesOpportunity } from "@/lib/scoring/opportunity";
 import type { BackupPayload, ImportRow } from "@/lib/utils/import";
 import { todayISO } from "@/lib/utils/date";
+import { StorageUsage, measureStorage } from "@/lib/utils/storage";
 
 const STORAGE_KEY = "jeongtong-ax-v1";
 
@@ -117,6 +118,8 @@ interface StoreValue extends PersistedState {
    * 저장 공간이 꽉 찼거나 사생활 보호 모드면 화면만 바뀌고 기록은 남지 않는다.
    */
   saveFailed: boolean;
+  /** 이 기기 저장 공간 사용량 — 한도에 닿기 전에 미리 알리는 데 쓴다 */
+  storage: StorageUsage;
   briefingTasks: BriefingTask[];
   factsById: Map<string, CustomerFacts>;
   derivedById: Map<string, ReturnType<typeof deriveCustomer>>;
@@ -219,6 +222,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   /** 마지막 저장이 실패했는지 — 화면에서 경고를 띄우는 데 쓴다 */
   const [saveFailed, setSaveFailed] = useState(false);
+  const [storage, setStorage] = useState<StorageUsage>({
+    bytes: 0,
+    ratio: 0,
+    nearLimit: false,
+  });
 
   /**
    * 최초 로드: localStorage 복원.
@@ -255,6 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       setSaveFailed(false);
+      setStorage(measureStorage(STORAGE_KEY));
     } catch {
       setSaveFailed(true);
     }
@@ -956,6 +965,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ...state,
     ready,
     saveFailed,
+    storage,
     briefingTasks,
     factsById,
     derivedById,

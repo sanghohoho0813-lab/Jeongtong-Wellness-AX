@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
@@ -12,6 +12,9 @@ import {
 } from "@/lib/types";
 import { Button, Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
 import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
+
+/** 한 번에 그리는 과제 수 — 나머지는 [더 보기]로 이어 그린다 */
+const PAGE_SIZE = 40;
 
 /** 유형별 도트 색 — TaskCard 스트립 색과 동일 체계 */
 const CATEGORY_DOTS: Record<TaskCategory, string> = {
@@ -44,6 +47,7 @@ export default function BriefingPage() {
   const [category, setCategory] = useState<TaskCategory | "all">("all");
   const [status, setStatus] = useState<TaskStatus | "open" | "all">("open");
   const [onlyOpportunity, setOnlyOpportunity] = useState(false);
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
   /** 매출기회 과제 수 — 필터 칩 라벨과 동일 기준 */
   const opportunityTotal = briefingTasks.filter(
@@ -59,6 +63,10 @@ export default function BriefingPage() {
     if (status !== "all" && t.status !== status) return false;
     return true;
   });
+
+  // 하루에 처리할 수 있는 양을 넘어서면 화면만 무거워지므로 끊어서 그린다
+  useEffect(() => setLimit(PAGE_SIZE), [category, status, onlyOpportunity]);
+  const visible = filtered.slice(0, limit);
 
   const openTasks = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
@@ -236,9 +244,27 @@ export default function BriefingPage() {
         />
       ) : (
         <div className="rise-stagger space-y-3">
-          {filtered.map((task, i) => (
+          {visible.map((task, i) => (
             <TaskCard key={task.id} task={task} rank={i + 1} />
           ))}
+
+          {filtered.length > visible.length && (
+            <div className="pt-1 text-center">
+              {/* 긴 문장이라 줄바꿈이 필요하다 — nowrap 을 쓰면 좁은 화면에서 넘친다 */}
+              <p className="mb-2 text-sm leading-relaxed text-ink-sub">
+                <span className="nowrap-num">
+                  {filtered.length}건 중 {visible.length}건
+                </span>{" "}
+                표시 중 · 위쪽부터 우선순위가 높은 순서입니다
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => setLimit((n) => n + PAGE_SIZE)}
+              >
+                더 보기 ({Math.min(PAGE_SIZE, filtered.length - visible.length)}건)
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
