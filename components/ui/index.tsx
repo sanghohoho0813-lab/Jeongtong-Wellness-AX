@@ -228,6 +228,46 @@ const TASK_STATUS_TONE: Record<TaskStatus, { label: string; tone: BadgeTone }> =
   hold: { label: "보류", tone: "warn" },
 };
 
+/**
+ * AI 추천 등급 — Priority Score를 숫자로 노출하지 않고 행동 단계로 표시한다.
+ * (점수 계산 로직은 그대로, 표기만 등급으로 변환)
+ */
+export function recommendLevel(score: number) {
+  if (score >= 60)
+    return {
+      label: "AI 추천 · 우선",
+      short: "우선 연락",
+      chip: "bg-gradient-to-r from-red-500 to-danger text-white",
+      text: "text-danger",
+    };
+  if (score >= 35)
+    return {
+      label: "AI 추천 · 관리",
+      short: "관리 권장",
+      chip: "bg-gradient-to-r from-amber-400 to-warn text-white",
+      text: "text-warn",
+    };
+  return {
+    label: "AI 추천 · 관찰",
+    short: "관찰",
+    chip: "bg-gradient-to-r from-aqua-500 to-deep-700 text-white",
+    text: "text-aqua-700",
+  };
+}
+
+/** AI 추천 등급 칩 (관리 대상일 때만 사용) */
+export function RecommendBadge({ score }: { score: number }) {
+  const r = recommendLevel(score);
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-extrabold shadow-sm ${r.chip}`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+      {r.label}
+    </span>
+  );
+}
+
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   const t = TASK_STATUS_TONE[status];
   return (

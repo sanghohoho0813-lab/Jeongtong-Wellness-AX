@@ -10,14 +10,15 @@ import { CustomerStatus } from "@/lib/types";
 import { formatRelative } from "@/lib/utils/date";
 import { displayPhone } from "@/lib/utils/format";
 import {
-  Badge,
   Button,
   Card,
   CustomerStatusBadge,
   EmptyState,
   Modal,
+  RecommendBadge,
   SummaryTile,
   inputCls,
+  recommendLevel,
 } from "@/components/ui";
 import { ChevronRightIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 
@@ -40,30 +41,6 @@ const AVATAR_BY_STATUS: Record<CustomerStatus, string> = {
   at_risk: "from-amber-300 to-warn",
   dormant: "from-ink-faint to-ink-sub",
 };
-
-/**
- * 관리점수 구간별 표기 — 같은 "우선관리"라도 긴급도를 색으로 구분한다.
- * (점수 계산 로직은 그대로, 표시 구간만 나눈다)
- */
-function priorityLevel(score: number) {
-  if (score >= 60)
-    return {
-      label: "AX 우선관리",
-      badge: "danger" as const,
-      chip: "bg-gradient-to-r from-red-500 to-danger text-white",
-    };
-  if (score >= 35)
-    return {
-      label: "AX 관리 대상",
-      badge: "warn" as const,
-      chip: "bg-gradient-to-r from-amber-400 to-warn text-white",
-    };
-  return {
-    label: "AX 관찰",
-    badge: "aqua" as const,
-    chip: "bg-gradient-to-r from-aqua-500 to-deep-700 text-white",
-  };
-}
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -143,9 +120,10 @@ export default function CustomersPage() {
           </div>
           {priorityCount > 0 && (
             <p className="shrink-0 text-sm font-bold text-ink-sub">
-              AX 우선관리{" "}
-              <span className="nowrap-num text-deep-800 dark:text-aqua-700">{priorityCount}명</span>{" "}
-              포함
+              AI 추천 관리 대상{" "}
+              <span className="nowrap-num text-deep-800 dark:text-aqua-700">
+                {priorityCount}명
+              </span>
             </p>
           )}
         </div>
@@ -183,32 +161,30 @@ export default function CustomersPage() {
                 {d.customer.name.slice(0, 1)}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="truncate font-extrabold text-ink">
+                {/* 이름 + 고객 상태(4단계) + AI 추천 등급 — 모바일에서는 자연히 줄바꿈 */}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="min-w-0 truncate font-extrabold text-ink">
                     {d.customer.name}
                   </span>
-                  {d.priorityScore > 0 ? (
-                    <Badge tone={priorityLevel(d.priorityScore).badge} dot>
-                      {priorityLevel(d.priorityScore).label}
-                    </Badge>
-                  ) : (
-                    <CustomerStatusBadge status={d.status} />
+                  <CustomerStatusBadge status={d.status} />
+                  {d.priorityScore > 0 && (
+                    <RecommendBadge score={d.priorityScore} />
                   )}
                 </div>
-                <p className="mt-0.5 truncate text-sm text-ink-sub">
-                  {displayPhone(d.customer.phone, canSeePhone)} · 방문 {d.visitCount}회 · 최근
-                  방문 {formatRelative(d.lastVisitDate)}
+                {/* 중요한 방문 정보를 앞에 두고, 연락처는 좁은 화면에서 잘리게 */}
+                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-ink-sub">
+                  <span className="nowrap-num shrink-0">
+                    방문 {d.visitCount}회 · 최근{" "}
+                    {formatRelative(d.lastVisitDate)}
+                  </span>
+                  <span className="truncate">
+                    · {displayPhone(d.customer.phone, canSeePhone)}
+                  </span>
                 </p>
                 {/* 시스템이 관리대상으로 판단한 첫 번째 근거 (브리핑과 동일 체계) */}
                 {d.priorityScore > 0 && d.priorityReasons[0] && (
                   <p
-                    className={`mt-0.5 truncate text-xs font-bold ${
-                      d.priorityScore >= 60
-                        ? "text-danger"
-                        : d.priorityScore >= 35
-                          ? "text-warn"
-                          : "text-aqua-700"
-                    }`}
+                    className={`mt-0.5 truncate text-xs font-bold ${recommendLevel(d.priorityScore).text}`}
                   >
                     {d.priorityReasons[0]}
                   </p>
@@ -228,14 +204,6 @@ export default function CustomersPage() {
                   <p className="text-xs text-ink-faint">이용권 없음</p>
                 )}
               </div>
-              {d.priorityScore > 0 && (
-                <span
-                  className={`nowrap-num hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-sm md:inline-flex ${priorityLevel(d.priorityScore).chip}`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-                  관리점수 {d.priorityScore}
-                </span>
-              )}
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
             </Link>
           ))}

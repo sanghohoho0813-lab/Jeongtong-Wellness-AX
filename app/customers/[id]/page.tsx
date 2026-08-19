@@ -19,6 +19,7 @@ import {
   ProgressBar,
   SectionTitle,
   inputCls,
+  recommendLevel,
 } from "@/components/ui";
 import { BodyIcon, ChevronLeftIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
@@ -169,9 +170,17 @@ export default function CustomerDetailPage() {
             <span
               className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${derived.priorityScore > 0 ? "from-amber-300 to-warn" : "from-emerald-300 to-positive"}`}
             />
-            <p className="text-[0.8125rem] font-bold text-ink-sub">관리 우선도</p>
-            <p className="mt-1.5 nowrap-num text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
-              {derived.priorityScore > 0 ? derived.priorityScore : "—"}
+            <p className="text-[0.8125rem] font-bold text-ink-sub">AI 추천</p>
+            <p
+              className={`mt-1.5 truncate text-2xl font-extrabold ${
+                derived.priorityScore > 0
+                  ? recommendLevel(derived.priorityScore).text
+                  : "text-positive"
+              }`}
+            >
+              {derived.priorityScore > 0
+                ? recommendLevel(derived.priorityScore).short
+                : "정상"}
             </p>
             <p className="mt-1 text-xs text-ink-sub">
               {derived.priorityScore > 0 ? "관리 대상" : "정상 관리 중"}
