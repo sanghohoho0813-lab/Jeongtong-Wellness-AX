@@ -37,10 +37,11 @@ export default function BodyMapCard() {
   };
 
   return (
-    <div className="card-accent flex flex-col">
+    <div className="card-accent card-lift group flex flex-col">
       <SectionTitle
+        tone="teal"
         icon={
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <svg viewBox="0 0 24 24" className="icon-pop h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <circle cx="12" cy="4.6" r="2.1" />
             <path d="M12 7.5v6M8 9.2h8M12 13.5l-2.6 6.8M12 13.5l2.6 6.8" />
           </svg>

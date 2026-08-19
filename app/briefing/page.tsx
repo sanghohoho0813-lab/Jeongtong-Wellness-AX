@@ -13,6 +13,16 @@ import {
 import { Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
 import { SparkIcon } from "@/components/ui/icons";
 
+/** 유형별 도트 색 — TaskCard 스트립 색과 동일 체계 */
+const CATEGORY_DOTS: Record<TaskCategory, string> = {
+  revisit_due: "bg-aqua-500",
+  dormant: "bg-danger",
+  membership_low: "bg-gold",
+  new_followup: "bg-sky-500",
+  consult_no_booking: "bg-violet-500",
+  focus_care: "bg-warn",
+};
+
 const CATEGORY_FILTERS: Array<TaskCategory | "all"> = [
   "all",
   "revisit_due",
@@ -124,12 +134,13 @@ export default function BriefingPage() {
                 onClick={() =>
                   setCategory(category === x.key ? "all" : x.key)
                 }
-                className={`touch-target rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${
+                className={`touch-target inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-bold transition-all ${
                   category === x.key
                     ? "bg-white text-deep-900"
                     : "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
                 }`}
               >
+                <span className={`h-2 w-2 rounded-full ${CATEGORY_DOTS[x.key]}`} />
                 {TASK_CATEGORY_LABELS[x.key]}{" "}
                 <span className="nowrap-num opacity-80">{x.count}</span>
               </button>
@@ -141,15 +152,28 @@ export default function BriefingPage() {
       <Card className="mb-4 !py-4">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
-            {CATEGORY_FILTERS.map((c) => (
-              <FilterChip
-                key={c}
-                active={category === c}
-                onClick={() => setCategory(c)}
-              >
-                {c === "all" ? "전체 유형" : TASK_CATEGORY_LABELS[c]}
-              </FilterChip>
-            ))}
+            {CATEGORY_FILTERS.map((c) => {
+              const active = category === c;
+              const dot = c === "all" ? "" : CATEGORY_DOTS[c];
+              return (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
+                    active
+                      ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                      : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                  }`}
+                >
+                  {dot && (
+                    <span
+                      className={`h-2 w-2 rounded-full ${active ? "bg-white/80" : dot}`}
+                    />
+                  )}
+                  {c === "all" ? "전체 유형" : TASK_CATEGORY_LABELS[c]}
+                </button>
+              );
+            })}
           </div>
           <div className="flex flex-wrap gap-2">
             {STATUS_FILTERS.map((s) => (
@@ -176,7 +200,7 @@ export default function BriefingPage() {
           description="필터를 변경하거나, 오늘의 관리 과제를 모두 완료한 상태입니다."
         />
       ) : (
-        <div className="space-y-3">
+        <div className="rise-stagger space-y-3">
           {filtered.map((task, i) => (
             <TaskCard key={task.id} task={task} rank={i + 1} />
           ))}

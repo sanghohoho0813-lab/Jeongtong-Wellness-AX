@@ -24,14 +24,46 @@ import { ChevronRightIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 const STATUS_TILES: Array<{
   key: CustomerStatus | "all";
   label: string;
-  tone: "aqua" | "warn" | "danger" | "gray" | "gold";
+  tone: "aqua" | "warn" | "danger" | "gray" | "gold" | "sky" | "violet" | "green";
 }> = [
-  { key: "all", label: "전체 고객", tone: "gray" },
-  { key: "new", label: "신규", tone: "aqua" },
-  { key: "active", label: "활성", tone: "aqua" },
+  { key: "all", label: "전체 고객", tone: "violet" },
+  { key: "new", label: "신규", tone: "sky" },
+  { key: "active", label: "활성", tone: "green" },
   { key: "at_risk", label: "관리 필요", tone: "warn" },
   { key: "dormant", label: "장기 미방문", tone: "danger" },
 ];
+
+/** 상태별 아바타 그라데이션 — 목록에서 고객 상태를 색으로 인지 */
+const AVATAR_BY_STATUS: Record<CustomerStatus, string> = {
+  new: "from-sky-400 to-sky-600",
+  active: "from-aqua-400 to-deep-700",
+  at_risk: "from-amber-300 to-warn",
+  dormant: "from-ink-faint to-ink-sub",
+};
+
+/**
+ * 관리점수 구간별 표기 — 같은 "우선관리"라도 긴급도를 색으로 구분한다.
+ * (점수 계산 로직은 그대로, 표시 구간만 나눈다)
+ */
+function priorityLevel(score: number) {
+  if (score >= 60)
+    return {
+      label: "AX 우선관리",
+      badge: "danger" as const,
+      chip: "bg-gradient-to-r from-red-500 to-danger text-white",
+    };
+  if (score >= 35)
+    return {
+      label: "AX 관리 대상",
+      badge: "warn" as const,
+      chip: "bg-gradient-to-r from-amber-400 to-warn text-white",
+    };
+  return {
+    label: "AX 관찰",
+    badge: "aqua" as const,
+    chip: "bg-gradient-to-r from-aqua-500 to-deep-700 text-white",
+  };
+}
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -138,14 +170,16 @@ export default function CustomersPage() {
           />
         )
       ) : (
-        <div className="space-y-2.5">
+        <div className="rise-stagger space-y-2.5">
           {rows.map((d) => (
             <Link
               key={d.customer.id}
               href={`/customers/${d.customer.id}`}
-              className="card flex items-center gap-3 !py-3.5 transition-all hover:shadow-card-hover sm:gap-4"
+              className="card card-lift row-accent group flex items-center gap-3 !py-3.5 !pl-5 sm:gap-4"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-50 to-aqua-100 font-extrabold text-aqua-800 ring-1 ring-aqua-200/60">
+              <span
+                className={`icon-pop flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}
+              >
                 {d.customer.name.slice(0, 1)}
               </span>
               <div className="min-w-0 flex-1">
@@ -154,8 +188,8 @@ export default function CustomersPage() {
                     {d.customer.name}
                   </span>
                   {d.priorityScore > 0 ? (
-                    <Badge tone="aqua" dot>
-                      AX 우선관리
+                    <Badge tone={priorityLevel(d.priorityScore).badge} dot>
+                      {priorityLevel(d.priorityScore).label}
                     </Badge>
                   ) : (
                     <CustomerStatusBadge status={d.status} />
@@ -167,7 +201,15 @@ export default function CustomersPage() {
                 </p>
                 {/* 시스템이 관리대상으로 판단한 첫 번째 근거 (브리핑과 동일 체계) */}
                 {d.priorityScore > 0 && d.priorityReasons[0] && (
-                  <p className="mt-0.5 truncate text-xs font-bold text-aqua-700">
+                  <p
+                    className={`mt-0.5 truncate text-xs font-bold ${
+                      d.priorityScore >= 60
+                        ? "text-danger"
+                        : d.priorityScore >= 35
+                          ? "text-warn"
+                          : "text-aqua-700"
+                    }`}
+                  >
                     {d.priorityReasons[0]}
                   </p>
                 )}
@@ -187,8 +229,10 @@ export default function CustomersPage() {
                 )}
               </div>
               {d.priorityScore > 0 && (
-                <span className="nowrap-num hidden shrink-0 items-center gap-1.5 rounded-full bg-deep-800 px-3 py-1 text-xs font-extrabold text-white md:inline-flex">
-                  <span className="h-1.5 w-1.5 rounded-full bg-aqua-300" />
+                <span
+                  className={`nowrap-num hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold shadow-sm md:inline-flex ${priorityLevel(d.priorityScore).chip}`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
                   관리점수 {d.priorityScore}
                 </span>
               )}

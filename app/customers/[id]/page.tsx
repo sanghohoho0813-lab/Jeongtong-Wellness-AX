@@ -98,7 +98,7 @@ export default function CustomerDetailPage() {
 
       <div className="flex flex-col card-gap">
         {/* 상태 요약 — 최근 방문 → 다음 관리일 → 이용권 잔여 → 우선도 순 */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
             <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
@@ -350,7 +350,17 @@ export default function CustomerDetailPage() {
             <ol className="relative space-y-4 border-l-2 border-aqua-100 pl-5">
               {visits.map((v) => (
                 <li key={v.id} className="relative">
-                  <span className="absolute -left-[1.65rem] top-1.5 h-3 w-3 rounded-full bg-gradient-to-br from-aqua-400 to-aqua-600 ring-4 ring-aqua-50" />
+                  <span
+                    className={`absolute -left-[1.65rem] top-1.5 h-3 w-3 rounded-full bg-gradient-to-br ring-4 ring-aqua-50 ${
+                      v.type === "consult"
+                        ? "from-gold to-gold-deep"
+                        : v.programName?.includes("딥 릴랙스")
+                          ? "from-violet-400 to-violet-600"
+                          : v.programName?.includes("반신")
+                            ? "from-sky-400 to-sky-600"
+                            : "from-aqua-400 to-aqua-600"
+                    }`}
+                  />
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-extrabold text-ink">
                       {v.type === "consult" ? "상담" : (v.programName ?? "방문")}

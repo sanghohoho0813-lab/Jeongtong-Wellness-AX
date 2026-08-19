@@ -107,6 +107,24 @@ body {
     @apply bg-card rounded-card shadow-card;
     border: 1px solid var(--c-card-border);
     padding: var(--density-card-pad);
+    transition:
+      box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.28s ease;
+  }
+
+  /* 정보 카드 hover — 살짝 떠오르는 입체감 (포인터 지원 기기에서만) */
+  @media (hover: hover) {
+    .card-lift:hover {
+      @apply shadow-card-hover;
+      transform: translateY(-3px);
+      border-color: rgba(20, 157, 154, 0.22);
+    }
+    .card-hero:hover {
+      box-shadow:
+        0 10px 24px rgba(10, 46, 44, 0.26),
+        0 28px 64px rgba(10, 46, 44, 0.22);
+    }
   }
 
   /* Hero Card — Deep Teal, 대표 강조 영역 (테마 무관) */
@@ -152,6 +170,100 @@ body {
 /* chart neutral track (SVG inline용) */
 :root {
   --chart-track: rgb(var(--c-bg-deep));
+}
+
+/* ---------- 진입 모션 ----------
+   화면이 한꺼번에 나타나지 않고 카드가 순차적으로 올라오게 해
+   제품이 "조립되는" 느낌을 준다. 0.35s / 40ms 간격. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 자식 요소를 순차 등장시킨다 (최대 12개까지 계단식) */
+.rise-stagger > * {
+  animation: rise-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rise-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.rise-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.rise-stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.rise-stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.rise-stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.rise-stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.rise-stagger > *:nth-child(7) { animation-delay: 0.26s; }
+.rise-stagger > *:nth-child(8) { animation-delay: 0.3s; }
+.rise-stagger > *:nth-child(9) { animation-delay: 0.34s; }
+.rise-stagger > *:nth-child(n + 10) { animation-delay: 0.38s; }
+
+/* 리스트 행 hover — 좌측 액센트 바가 스르륵 들어온다 */
+.row-accent {
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.row-accent::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #2ab3af, #0e7f7d);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) {
+  .row-accent:hover::before {
+    transform: scaleY(1);
+  }
+  .row-accent:hover {
+    transform: translateX(2px);
+  }
+}
+
+/* 아이콘 타일 hover 미세 확대 */
+@media (hover: hover) {
+  .icon-pop {
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .group:hover .icon-pop {
+    transform: scale(1.08);
+  }
+}
+
+/* 버튼 눌림 피드백 */
+button:active:not(:disabled),
+a:active {
+  transform: translateY(0.5px);
+}
+
+/* 모션 최소화 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .card-lift:hover,
+  .row-accent:hover {
+    transform: none;
+  }
 }
 
 /* toast */

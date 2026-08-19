@@ -25,11 +25,11 @@ export default function DashboardPage() {
       />
       <div className="flex flex-col card-gap">
         <KpiRow />
-        <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
+        <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
           <BriefingPreview />
           <BodyMapCard />
         </div>
-        <div className="grid grid-cols-1 card-gap md:grid-cols-2 xl:grid-cols-3">
+        <div className="rise-stagger grid grid-cols-1 card-gap md:grid-cols-2 xl:grid-cols-3">
           <SegmentCard />
           <RevisitPreview />
           <BranchSummaryCard />

@@ -22,6 +22,22 @@ import { PlusIcon, SearchIcon } from "@/components/ui/icons";
 
 type TypeFilter = "all" | "visit" | "consult";
 
+/**
+ * 프로그램별 색 — 기록 목록에서 어떤 케어였는지 색으로 구분.
+ * (상담은 골드, 미등록 프로그램은 아쿠아 기본)
+ */
+function programStyle(programName?: string, isConsult?: boolean) {
+  if (isConsult)
+    return { strip: "from-gold to-gold-deep", badge: "gold" as const };
+  if (programName?.includes("딥 릴랙스"))
+    return { strip: "from-violet-400 to-violet-600", badge: "violet" as const };
+  if (programName?.includes("반신"))
+    return { strip: "from-sky-400 to-sky-600", badge: "sky" as const };
+  if (programName?.includes("베이직"))
+    return { strip: "from-aqua-400 to-aqua-600", badge: "aqua" as const };
+  return { strip: "from-emerald-400 to-emerald-600", badge: "positive" as const };
+}
+
 export default function VisitsPage() {
   const { visits, customers, staff } = useStore();
   const [openForm, setOpenForm] = useState(false);
@@ -74,7 +90,7 @@ export default function VisitsPage() {
           (v) => daysAgo(v.visitedAt) <= 7 && v.bodyParts.length > 0,
         ).length;
         return (
-          <div className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <div className="rise-stagger mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             <SummaryTile label="오늘 방문" value={todayVisits} unit="건" tone="aqua" />
             <SummaryTile label="오늘 상담" value={todayConsults} unit="건" tone="gold" />
             <SummaryTile label="최근 7일 방문" value={week} unit="건" tone="sky" />
@@ -125,9 +141,14 @@ export default function VisitsPage() {
           description="우측 상단의 방문 기록 버튼으로 첫 기록을 남겨보세요."
         />
       ) : (
-        <div className="space-y-2.5">
-          {rows.map((v) => (
-            <Card key={v.id} className="!py-4">
+        <div className="rise-stagger space-y-2.5">
+          {rows.map((v) => {
+            const st = programStyle(v.programName, v.type === "consult");
+            return (
+            <Card key={v.id} className="relative overflow-hidden !py-4 !pl-5">
+              <span
+                className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${st.strip}`}
+              />
               <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href={`/customers/${v.customerId}`}
@@ -135,7 +156,7 @@ export default function VisitsPage() {
                 >
                   {customerName(v.customerId)}
                 </Link>
-                <Badge tone={v.type === "consult" ? "gold" : "aqua"}>
+                <Badge tone={st.badge} dot>
                   {v.type === "consult" ? "상담" : (v.programName ?? "방문")}
                 </Badge>
                 <span className="ml-auto nowrap-num text-xs text-ink-sub">
@@ -159,7 +180,8 @@ export default function VisitsPage() {
                   : ""}
               </p>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
           </p>
         </InsightBanner>
         )}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <MetricTile
             label="신규 고객 (최근 30일)"
             dot="sky"
@@ -289,7 +289,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
+        <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
           <TrendBars
             title="월별 방문 건수"
             tone="violet"

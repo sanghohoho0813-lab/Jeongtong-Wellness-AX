@@ -27,6 +27,23 @@ const CATEGORY_TONES: Record<TaskCategory, BadgeTone> = {
   focus_care: "warn",
 };
 
+/** 카드 좌측 컬러 스트립 — 유형을 색으로 즉시 구분 */
+export const CATEGORY_STRIPS: Record<TaskCategory, string> = {
+  revisit_due: "from-aqua-400 to-aqua-600",
+  dormant: "from-red-300 to-danger",
+  membership_low: "from-gold to-gold-deep",
+  new_followup: "from-sky-400 to-sky-600",
+  consult_no_booking: "from-violet-400 to-violet-600",
+  focus_care: "from-amber-300 to-warn",
+};
+
+/** 랭크 뱃지 색 — 1·2·3위 구분 */
+const RANK_COLORS = [
+  "bg-gradient-to-br from-aqua-400 to-deep-700 text-white",
+  "bg-gradient-to-br from-sky-400 to-sky-600 text-white",
+  "bg-gradient-to-br from-violet-400 to-violet-600 text-white",
+];
+
 /**
  * 업무 처리 액션 — 처리완료 / 보류 두 가지로 고정.
  * ("확인"은 행동이 모호하여 제거 — 고객 확인은 '고객 상세' 링크가 담당)
@@ -176,17 +193,24 @@ export default function TaskCard({
 
   const shell = hero
     ? "rounded-card bg-white/[0.07] ring-1 ring-white/10 backdrop-blur-[2px]"
-    : "rounded-card bg-card-soft ring-1 ring-black/[0.04]";
+    : "rounded-card bg-card-soft ring-1 ring-black/[0.04] card-lift";
 
   return (
-    <div className={`${shell} p-4 transition-opacity ${finished ? "opacity-55" : ""}`}>
+    <div
+      className={`group relative overflow-hidden ${shell} p-4 pl-5 transition-opacity ${finished ? "opacity-55" : ""}`}
+    >
+      {/* 관리 유형 컬러 스트립 */}
+      <span
+        className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${CATEGORY_STRIPS[task.category]} ${hero ? "opacity-80" : ""}`}
+      />
       <div className="flex items-start gap-3">
         {rank !== undefined && (
           <span
-            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+            className={`icon-pop mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold shadow-sm ${
               hero
                 ? "bg-aqua-400 text-deep-900 shadow-[0_0_0_4px_rgba(42,179,175,0.18)]"
-                : "bg-deep-800 text-white"
+                : (RANK_COLORS[(rank - 1) % RANK_COLORS.length] ??
+                  "bg-deep-800 text-white")
             }`}
           >
             {rank}

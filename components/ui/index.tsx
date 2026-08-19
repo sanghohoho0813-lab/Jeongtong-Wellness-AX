@@ -10,15 +10,18 @@ export function Card({
   children,
   className = "",
   onClick,
+  lift = true,
 }: {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  /** hover 시 살짝 떠오르는 입체 효과 (기본 on) */
+  lift?: boolean;
 }) {
   return (
     <div
       onClick={onClick}
-      className={`card ${onClick ? "cursor-pointer transition-shadow hover:shadow-card-hover" : ""} ${className}`}
+      className={`card ${lift ? "card-lift" : ""} ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
       {children}
     </div>
@@ -248,6 +251,15 @@ const KPI_TINTS: Record<KpiTint, string> = {
     "bg-violet-500/10 text-violet-600 ring-violet-500/20 dark:text-violet-300",
 };
 
+/** KPI 상단 액센트 바 색 — 카드마다 다른 성격을 색으로 구분 */
+const KPI_BARS: Record<KpiTint, string> = {
+  aqua: "from-aqua-400 to-deep-700",
+  sky: "from-sky-400 to-sky-600",
+  emerald: "from-emerald-400 to-emerald-600",
+  amber: "from-amber-300 to-amber-500",
+  violet: "from-violet-400 to-violet-600",
+};
+
 export function KpiCard({
   label,
   value,
@@ -258,7 +270,7 @@ export function KpiCard({
   tint = "aqua",
 }: {
   label: string;
-  value: string | number;
+  value: ReactNode;
   unit?: string;
   sub?: ReactNode;
   icon?: ReactNode;
@@ -266,14 +278,17 @@ export function KpiCard({
   tint?: KpiTint;
 }) {
   return (
-    <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+    <Card className="group relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+      <span
+        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${KPI_BARS[tint]}`}
+      />
       <div className="flex items-start justify-between gap-3">
         <p className="min-w-0 truncate text-[0.8125rem] font-bold tracking-wide text-ink-sub sm:text-sm">
           {label}
         </p>
         {icon && (
           <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 sm:h-10 sm:w-10 ${KPI_TINTS[tint]}`}
+            className={`icon-pop flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 sm:h-10 sm:w-10 ${KPI_TINTS[tint]}`}
           >
             {icon}
           </div>
@@ -355,11 +370,11 @@ export function SummaryTile({
   return (
     <Tag
       onClick={onClick}
-      className={`min-w-0 rounded-card border bg-card px-3.5 py-3 text-left shadow-card transition-all sm:px-4 ${
+      className={`min-w-0 rounded-card border bg-card px-3.5 py-3 text-left shadow-card transition-all duration-300 sm:px-4 ${
         active
           ? `border-transparent ring-2 ${t.activeRing}`
           : "border-black/[0.045]"
-      } ${onClick ? "cursor-pointer hover:shadow-card-hover" : ""}`}
+      } ${onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-card-hover" : ""}`}
     >
       <p className="flex items-center gap-1.5 truncate text-xs font-bold text-ink-sub">
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
