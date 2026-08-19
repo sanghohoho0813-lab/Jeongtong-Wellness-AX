@@ -13,6 +13,7 @@ import {
   navItemsFor,
 } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
+import QuickSearch from "./QuickSearch";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -50,6 +51,11 @@ function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
       <div className="px-5 pb-3 pt-6">
         <Logo />
+      </div>
+
+      {/* 고객 찾기 — 어느 화면에 있든 가장 자주 하는 동작이라 맨 위에 둔다 */}
+      <div className="mx-3 mb-2">
+        <QuickSearch />
       </div>
 
       {/* 문서 — 메뉴 위에 배치해 처음 쓰는 사람이 먼저 보게 한다 */}
@@ -127,8 +133,10 @@ function MobileHeader() {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
       <Logo />
-      {/* 직원 계정은 실행 브리핑에 접근하지 않으므로 표시하지 않는다 */}
-      {isManager && (
+      <div className="flex shrink-0 items-center gap-2">
+        <QuickSearch variant="icon" />
+        {/* 직원 계정은 실행 브리핑에 접근하지 않으므로 표시하지 않는다 */}
+        {isManager && (
         <Link
           href="/briefing"
           aria-label={`오늘 관리 대상 ${openCount}명 — 실행 브리핑으로 이동`}
@@ -141,7 +149,8 @@ function MobileHeader() {
             </span>
           )}
         </Link>
-      )}
+        )}
+      </div>
     </header>
   );
 }

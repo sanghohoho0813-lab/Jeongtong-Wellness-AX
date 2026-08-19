@@ -71,6 +71,22 @@ export const DownloadIcon = (p: IconProps) => (
   </svg>
 );
 
+export const UploadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 15.5v-11" />
+    <path d="M7.5 8.5 12 4l4.5 4.5" />
+    <path d="M4.5 17.5v1a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-1" />
+  </svg>
+);
+
+export const AlertIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 4.5 21 19.5H3z" />
+    <path d="M12 10v4" />
+    <path d="M12 16.8h.01" />
+  </svg>
+);
+
 export const PrinterIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M7 9V3.5h10V9" />

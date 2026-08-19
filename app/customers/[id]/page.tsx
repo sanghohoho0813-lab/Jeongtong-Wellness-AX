@@ -52,7 +52,9 @@ export default function CustomerDetailPage() {
     updateCustomer,
     updateMembership,
     removeMembership,
+    restoreMembership,
     removeVisit,
+    restoreVisit,
     briefingTasks,
     settings,
     canSeePhone,
@@ -712,7 +714,7 @@ export default function CustomerDetailPage() {
           {confirmDeleteV?.membershipId
             ? " 이 기록에서 차감된 이용권 1회는 다시 되돌아갑니다."
             : ""}{" "}
-          삭제한 기록은 되돌릴 수 없습니다.
+          잘못 누르셨다면 삭제 직후 뜨는 <b>되돌리기</b>로 복구할 수 있습니다.
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirmDeleteV(undefined)}>
@@ -722,10 +724,13 @@ export default function CustomerDetailPage() {
             variant="danger-ghost"
             onClick={() => {
               if (!confirmDeleteV) return;
-              removeVisit(confirmDeleteV.id);
+              const removed = removeVisit(confirmDeleteV.id);
               toast(
                 `${formatDateKr(confirmDeleteV.visitedAt)} 방문 기록을 삭제했습니다`,
                 "info",
+                removed
+                  ? { label: "되돌리기", onAction: () => restoreVisit(removed) }
+                  : undefined,
               );
               setConfirmDeleteV(undefined);
             }}
@@ -754,8 +759,17 @@ export default function CustomerDetailPage() {
             variant="danger-ghost"
             onClick={() => {
               if (!confirmDeleteM) return;
-              removeMembership(confirmDeleteM);
-              toast("이용권을 삭제했습니다", "info");
+              const removed = removeMembership(confirmDeleteM);
+              toast(
+                "이용권을 삭제했습니다",
+                "info",
+                removed
+                  ? {
+                      label: "되돌리기",
+                      onAction: () => restoreMembership(removed),
+                    }
+                  : undefined,
+              );
               setConfirmDeleteM(undefined);
               setEditingMembership(undefined);
             }}

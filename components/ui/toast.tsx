@@ -14,27 +14,48 @@ import {
 } from "react";
 import { CheckIcon } from "./icons";
 
+/** 토스트에 붙는 되돌리기 버튼 */
+export interface ToastAction {
+  label: string;
+  onAction: () => void;
+}
+
 interface ToastItem {
   id: number;
   message: string;
   tone: "success" | "info";
+  action?: ToastAction;
 }
 
 const ToastContext = createContext<{
-  toast: (message: string, tone?: "success" | "info") => void;
+  toast: (
+    message: string,
+    tone?: "success" | "info",
+    action?: ToastAction,
+  ) => void;
 } | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const seq = useRef(0);
 
+  const dismiss = useCallback((id: number) => {
+    setItems((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const toast = useCallback(
-    (message: string, tone: "success" | "info" = "success") => {
+    (
+      message: string,
+      tone: "success" | "info" = "success",
+      action?: ToastAction,
+    ) => {
       const id = ++seq.current;
-      setItems((prev) => [...prev.slice(-2), { id, message, tone }]);
-      window.setTimeout(() => {
-        setItems((prev) => prev.filter((t) => t.id !== id));
-      }, 2600);
+      setItems((prev) => [...prev.slice(-2), { id, message, tone, action }]);
+      // 되돌릴 수 있는 알림은 누를 시간을 넉넉히 준다
+      window.setTimeout(
+        () => setItems((prev) => prev.filter((t) => t.id !== id)),
+        action ? 7000 : 2600,
+      );
     },
     [],
   );
@@ -49,7 +70,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {items.map((t) => (
           <div
             key={t.id}
-            className="flex max-w-md items-center gap-2.5 rounded-full bg-deep-900/95 px-4 py-2.5 text-sm font-bold text-white shadow-float ring-1 ring-white/10 backdrop-blur"
+            className="flex max-w-md items-center gap-2.5 rounded-full bg-deep-900/95 py-2.5 pl-4 pr-2.5 text-sm font-bold text-white shadow-float ring-1 ring-white/10 backdrop-blur"
             style={{ animation: "toast-in 0.22s ease-out" }}
           >
             <span
@@ -60,6 +81,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <CheckIcon className="h-3 w-3" strokeWidth={2.6} />
             </span>
             <span className="min-w-0">{t.message}</span>
+            {t.action ? (
+              <button
+                type="button"
+                onClick={() => {
+                  t.action?.onAction();
+                  dismiss(t.id);
+                }}
+                className="pointer-events-auto ml-0.5 shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold text-aqua-200 ring-1 ring-white/20 hover:bg-white/25"
+              >
+                {t.action.label}
+              </button>
+            ) : (
+              <span className="w-1" />
+            )}
           </div>
         ))}
       </div>

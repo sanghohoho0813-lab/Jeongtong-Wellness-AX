@@ -49,7 +49,7 @@ function programStyle(programName?: string, isConsult?: boolean) {
 }
 
 export default function VisitsPage() {
-  const { visits, customers, staff, removeVisit } = useStore();
+  const { visits, customers, staff, removeVisit, restoreVisit } = useStore();
   const toast = useToast();
   const [openForm, setOpenForm] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | undefined>();
@@ -314,7 +314,7 @@ export default function VisitsPage() {
           {confirmDelete?.membershipId
             ? " 이 기록에서 차감된 이용권 1회는 다시 되돌아갑니다."
             : ""}{" "}
-          삭제한 기록은 되돌릴 수 없습니다.
+          잘못 누르셨다면 삭제 직후 뜨는 <b>되돌리기</b>로 복구할 수 있습니다.
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirmDelete(undefined)}>
@@ -324,10 +324,13 @@ export default function VisitsPage() {
             variant="danger-ghost"
             onClick={() => {
               if (!confirmDelete) return;
-              removeVisit(confirmDelete.id);
+              const removed = removeVisit(confirmDelete.id);
               toast(
                 `${customerName(confirmDelete.customerId)} 고객의 방문 기록을 삭제했습니다`,
                 "info",
+                removed
+                  ? { label: "되돌리기", onAction: () => restoreVisit(removed) }
+                  : undefined,
               );
               setConfirmDelete(undefined);
             }}

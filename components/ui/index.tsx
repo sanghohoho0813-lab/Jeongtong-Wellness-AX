@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CustomerStatus, SalesOpportunity, TaskStatus } from "@/lib/types";
 import { SparkIcon, XIcon } from "./icons";
 
@@ -105,7 +106,13 @@ export function SectionTitle({
 
 // ---------- Button ----------
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger-ghost" | "on-dark";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "danger-ghost"
+  | "on-dark";
 
 export function Button({
   children,
@@ -133,6 +140,9 @@ export function Button({
     secondary:
       "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100",
     ghost: "bg-transparent text-ink-sub hover:bg-stone-bg-deep",
+    // 되돌릴 수 없는 작업의 확인 버튼 — 실수로 누르기 어렵도록 색으로 분명히 구분한다
+    danger:
+      "bg-danger text-white shadow-[0_2px_8px_rgba(200,60,60,0.3)] hover:brightness-110",
     "danger-ghost": "bg-transparent text-danger hover:bg-red-50 dark:hover:bg-red-400/10",
     "on-dark":
       "bg-white/10 text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/20",
@@ -637,6 +647,22 @@ export function FilterChip({
 
 // ---------- Modal (모바일: 하단 시트) ----------
 
+/** 초점을 받을 수 있는 요소들 — 포커스 가둠(trap)에 사용 */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * 모달 — 열려 있는 동안 조작이 모달 안에만 머무르게 한다.
+ *
+ * 현장에서 실제로 겪는 문제들을 막는다.
+ *  - 입력하다 배경이 같이 스크롤돼 위치를 잃는 것 → 배경 스크롤 잠금
+ *  - 닫기 버튼을 못 찾는 것 → ESC 로도 닫힘
+ *  - 키보드/스크린리더 사용자가 모달 밖으로 빠져나가는 것 → 포커스 가둠
+ *  - 닫은 뒤 초점이 화면 맨 위로 튀는 것 → 열기 전 위치로 되돌림
+ *
+ * 그리고 항상 body 바로 아래(portal)에 그린다. 카드 안에서 열린 모달은
+ * 카드의 hover 효과(transform)가 fixed 의 기준을 바꿔 버려 화면이 튀기 때문이다.
+ */
 export function Modal({
   open,
   onClose,
@@ -650,15 +676,85 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
-  if (!open) return null;
-  return (
+  const panelRef = useRef<HTMLDivElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+  // onClose 가 매 렌더 새로 만들어져도 이펙트가 다시 돌지 않게 잡아 둔다
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  // 서버 렌더에는 document 가 없으므로 마운트 후에만 portal 을 만든다
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    restoreRef.current = document.activeElement as HTMLElement | null;
+
+    // 배경 스크롤 잠금 — 스크롤바가 사라지며 화면이 밀리지 않도록 폭을 보정한다
+    const body = document.body;
+    const prevOverflow = body.style.overflow;
+    const prevPadding = body.style.paddingRight;
+    const gap = window.innerWidth - document.documentElement.clientWidth;
+    body.style.overflow = "hidden";
+    if (gap > 0) body.style.paddingRight = `${gap}px`;
+
+    // 첫 초점은 패널 자체에 둔다 (입력란에 커서가 튀어 모바일 키보드가 뜨는 것 방지)
+    panelRef.current?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        closeRef.current();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (el) => el.offsetParent !== null,
+      );
+      if (items.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    // 버블 단계로 듣는다 — 모달 안에 열린 날짜 선택 패널이 ESC 를 먼저
+    // 처리하고 전파를 멈출 수 있어야, 패널만 닫히고 모달은 남는다.
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      body.style.overflow = prevOverflow;
+      body.style.paddingRight = prevPadding;
+      restoreRef.current?.focus?.();
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
         className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={onClose}
       />
       <div
-        className={`relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        className={`relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float outline-none ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
       >
         <div className="flex items-center justify-between gap-3 border-b border-stone-line px-5 py-4">
           <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
@@ -672,6 +768,7 @@ export function Modal({
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

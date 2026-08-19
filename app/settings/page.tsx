@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import { DownloadIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
+import DataImport from "@/components/settings/DataImport";
 import {
   daysAgo,
   formatDateKr,
@@ -465,6 +466,8 @@ export default function SettingsPage() {
               </p>
             )}
           </div>
+
+          <DataImport />
 
           <div className="mt-4 border-t border-stone-line pt-4">
             <p className="mb-2 text-sm text-ink-sub">

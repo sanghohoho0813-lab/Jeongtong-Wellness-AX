@@ -8,7 +8,8 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
 import { formatRelative } from "@/lib/utils/date";
-import { displayPhone } from "@/lib/utils/format";
+import { displayPhone, phoneDigits } from "@/lib/utils/format";
+import { matchesQuery } from "@/lib/utils/hangul";
 import {
   Button,
   Card,
@@ -86,12 +87,10 @@ export default function CustomersPage() {
         )
           return false;
         if (!q) return true;
-        return (
-          d.customer.name.includes(q) ||
-          d.customer.phone
-            .replace(/\D/g, "")
-            .includes(q.replace(/\D/g, "") || " ")
-        );
+        // 이름은 초성(ㅎㄱㄷ)으로도 찾을 수 있게 한다
+        if (matchesQuery(d.customer.name, q)) return true;
+        const digits = phoneDigits(q);
+        return digits.length >= 2 && phoneDigits(d.customer.phone).includes(digits);
       })
       .sort((a, b) => {
         switch (sort) {
@@ -150,7 +149,7 @@ export default function CustomersPage() {
             <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
             <input
               className={`${inputCls} pl-11`}
-              placeholder="고객명 또는 연락처 검색"
+              placeholder="고객명 · 초성 · 연락처 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />

@@ -44,6 +44,7 @@ import {
   generateDailyBriefing,
 } from "@/lib/scoring/priority";
 import { detectSalesOpportunity } from "@/lib/scoring/opportunity";
+import type { BackupPayload, ImportRow } from "@/lib/utils/import";
 import { todayISO } from "@/lib/utils/date";
 
 const STORAGE_KEY = "jeongtong-ax-v1";
@@ -103,6 +104,12 @@ export interface NewVisitInput {
   appliedPreferenceIds?: string[];
 }
 
+/** 삭제한 이용권 스냅샷 — 되돌리기 위해 끊어진 방문 연결까지 같이 들고 있는다 */
+export interface RemovedMembership {
+  membership: Membership;
+  linkedVisitIds: string[];
+}
+
 interface StoreValue extends PersistedState {
   ready: boolean;
   briefingTasks: BriefingTask[];
@@ -129,12 +136,20 @@ interface StoreValue extends PersistedState {
   addVisit: (input: NewVisitInput) => Visit;
   /** 방문/상담 기록 수정 — 이용권 차감도 함께 정정한다 */
   updateVisit: (id: string, input: NewVisitInput) => void;
-  /** 방문/상담 기록 삭제 — 차감했던 이용권을 되돌린다 */
-  removeVisit: (id: string) => void;
+  /**
+   * 방문/상담 기록 삭제 — 차감했던 이용권을 되돌린다.
+   * 삭제한 기록을 그대로 돌려주므로 화면에서 '되돌리기'에 쓸 수 있다.
+   */
+  removeVisit: (id: string) => Visit | undefined;
+  /** 삭제한 방문 기록을 원래대로 되살린다 (이용권 차감도 다시 적용) */
+  restoreVisit: (visit: Visit) => void;
   /** 이용권 등록 (신규 구매 · 재구매) */
   addMembership: (input: NewMembershipInput) => Membership;
   updateMembership: (id: string, patch: Partial<Membership>) => void;
-  removeMembership: (id: string) => void;
+  /** 이용권 삭제 — 삭제한 이용권과 끊긴 방문 연결을 돌려주어 '되돌리기'에 쓴다 */
+  removeMembership: (id: string) => RemovedMembership | undefined;
+  /** 삭제한 이용권을 방문 연결까지 원래대로 되살린다 */
+  restoreMembership: (removed: RemovedMembership) => void;
   setTaskStatus: (
     taskId: string,
     status: TaskStatus,
@@ -142,6 +157,16 @@ interface StoreValue extends PersistedState {
   ) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   updateStaff: (staff: Staff[]) => void;
+  /** 전체 백업 파일로 되돌리기 — 현재 데이터를 백업 시점 상태로 교체한다 */
+  restoreBackup: (payload: BackupPayload) => void;
+  /**
+   * 고객 명부 일괄 등록.
+   * mode "skip" 은 이미 있는 연락처를 건너뛰고, "update" 는 비어 있던 항목만 채운다.
+   */
+  importCustomers: (
+    rows: ImportRow[],
+    mode: "skip" | "update",
+  ) => { added: number; updated: number };
   resetData: () => void;
 }
 
@@ -598,14 +623,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeVisit = useCallback((id: string) => {
+  const removeVisit = useCallback(
+    (id: string): Visit | undefined => {
+      const removed = state.visits.find((v) => v.id === id);
+      setState((s) => {
+        const old = s.visits.find((v) => v.id === id);
+        if (!old) return s;
+        return {
+          ...s,
+          memberships: applyMembershipDelta(s.memberships, old.membershipId, +1),
+          visits: s.visits.filter((v) => v.id !== id),
+        };
+      });
+      return removed;
+    },
+    [state.visits],
+  );
+
+  /** 삭제 직후 '되돌리기' — 기록과 이용권 차감을 함께 복구한다 */
+  const restoreVisit = useCallback((visit: Visit) => {
     setState((s) => {
-      const old = s.visits.find((v) => v.id === id);
-      if (!old) return s;
+      if (s.visits.some((v) => v.id === visit.id)) return s;
       return {
         ...s,
-        memberships: applyMembershipDelta(s.memberships, old.membershipId, +1),
-        visits: s.visits.filter((v) => v.id !== id),
+        memberships: applyMembershipDelta(s.memberships, visit.membershipId, -1),
+        visits: [visit, ...s.visits],
       };
     });
   }, []);
@@ -659,15 +701,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const removeMembership = useCallback((id: string) => {
-    setState((s) => ({
-      ...s,
-      memberships: s.memberships.filter((m) => m.id !== id),
-      // 이 이용권을 쓴 방문 기록은 남기되 연결만 끊는다 (기록 자체는 보존)
-      visits: s.visits.map((v) =>
-        v.membershipId === id ? { ...v, membershipId: undefined } : v,
-      ),
-    }));
+  const removeMembership = useCallback(
+    (id: string): RemovedMembership | undefined => {
+      const membership = state.memberships.find((m) => m.id === id);
+      if (!membership) return undefined;
+      const linkedVisitIds = state.visits
+        .filter((v) => v.membershipId === id)
+        .map((v) => v.id);
+      setState((s) => ({
+        ...s,
+        memberships: s.memberships.filter((m) => m.id !== id),
+        // 이 이용권을 쓴 방문 기록은 남기되 연결만 끊는다 (기록 자체는 보존)
+        visits: s.visits.map((v) =>
+          v.membershipId === id ? { ...v, membershipId: undefined } : v,
+        ),
+      }));
+      return { membership, linkedVisitIds };
+    },
+    [state.memberships, state.visits],
+  );
+
+  const restoreMembership = useCallback((removed: RemovedMembership) => {
+    setState((s) => {
+      if (s.memberships.some((m) => m.id === removed.membership.id)) return s;
+      const linked = new Set(removed.linkedVisitIds);
+      return {
+        ...s,
+        memberships: [removed.membership, ...s.memberships],
+        visits: s.visits.map((v) =>
+          linked.has(v.id) ? { ...v, membershipId: removed.membership.id } : v,
+        ),
+      };
+    });
   }, []);
 
   const setTaskStatus = useCallback(
@@ -755,6 +820,92 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, staff }));
   }, []);
 
+  // ---------- 가져오기 / 복원 ----------
+
+  /**
+   * 백업 파일로 되돌리기.
+   * 기록(고객·방문·이용권·직원·지점)은 백업 시점으로 교체하되,
+   * 화면 표시 설정처럼 이 기기에서 쓰던 값은 백업에 있을 때만 덮어쓴다.
+   * 브리핑 과제 상태는 기록이 통째로 바뀌면 의미가 없으므로 비운다.
+   */
+  const restoreBackup = useCallback((payload: BackupPayload) => {
+    setState((s) => ({
+      ...s,
+      customers: payload.customers,
+      visits: payload.visits,
+      memberships: payload.memberships,
+      staff: payload.staff.length ? payload.staff : s.staff,
+      branches: payload.branches.length ? payload.branches : s.branches,
+      settings:
+        payload.settings && typeof payload.settings === "object"
+          ? { ...s.settings, ...(payload.settings as Partial<AppSettings>) }
+          : s.settings,
+      taskOverrides: [],
+      taskFirstSeen: {},
+    }));
+  }, []);
+
+  /**
+   * 고객 명부 일괄 등록.
+   * - "skip"   : 이미 있는 연락처는 건너뛴다 (기존 기록을 절대 건드리지 않음)
+   * - "update" : 기존 고객에서 비어 있던 항목만 파일 값으로 채운다 (덮어쓰기 아님)
+   * 어느 쪽이든 기존 방문·이용권 기록은 그대로 둔다.
+   */
+  const importCustomers = useCallback(
+    (rows: ImportRow[], mode: "skip" | "update") => {
+      const branchId = state.branches[0]?.id ?? "branch-main";
+      const today = todayISO();
+      let added = 0;
+      let updated = 0;
+
+      setState((s) => {
+        const byId = new Map(s.customers.map((c) => [c.id, c]));
+        const fresh: Customer[] = [];
+
+        rows.forEach((row, i) => {
+          if (row.existingId && byId.has(row.existingId)) {
+            if (mode !== "update") return;
+            const cur = byId.get(row.existingId)!;
+            // 비어 있던 항목만 채운다
+            const patched: Customer = {
+              ...cur,
+              gender: cur.gender ?? row.gender,
+              birthYear: cur.birthYear ?? row.birthYear,
+              nextManageDate: cur.nextManageDate ?? row.nextManageDate,
+              memo: cur.memo || row.memo,
+            };
+            const changed = (Object.keys(patched) as Array<keyof Customer>).some(
+              (k) => patched[k] !== cur[k],
+            );
+            if (changed) {
+              byId.set(cur.id, patched);
+              updated++;
+            }
+            return;
+          }
+          fresh.push({
+            id: `c-i${Date.now().toString(36)}-${i}`,
+            branchId,
+            name: row.name,
+            phone: row.phone,
+            gender: row.gender,
+            birthYear: row.birthYear,
+            registeredAt: row.registeredAt ?? today,
+            memo: row.memo,
+            focusBodyParts: [],
+            nextManageDate: row.nextManageDate,
+          });
+          added++;
+        });
+
+        return { ...s, customers: [...fresh, ...byId.values()] };
+      });
+
+      return { added, updated };
+    },
+    [state.branches],
+  );
+
   const resetData = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
     setState(seedState());
@@ -779,12 +930,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addVisit,
     updateVisit,
     removeVisit,
+    restoreVisit,
     addMembership,
     updateMembership,
     removeMembership,
+    restoreMembership,
     setTaskStatus,
     updateSettings,
     updateStaff,
+    restoreBackup,
+    importCustomers,
     resetData,
   };
 

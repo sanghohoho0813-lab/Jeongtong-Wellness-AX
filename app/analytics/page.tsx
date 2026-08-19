@@ -9,7 +9,7 @@ import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
-import { formatMonthKr } from "@/lib/utils/date";
+import { formatMonthKr, formatRelative } from "@/lib/utils/date";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
 import {
   Card,
@@ -23,6 +23,7 @@ import { TrendUpIcon } from "@/components/ui/icons";
 import {
   monthlyOpportunityResults,
   summarizeOpportunities,
+  summarizeStaffActivity,
 } from "@/lib/scoring/opportunity";
 import { buildOperationInsight } from "@/lib/scoring/insight";
 
@@ -144,6 +145,7 @@ export default function AnalyticsPage() {
     visits,
     memberships,
     taskOverrides,
+    staff,
     isManager,
   } = useStore();
   const summary = calcAxSummary(
@@ -173,6 +175,16 @@ export default function AnalyticsPage() {
     monthly.map((m) => m.month),
   );
   const oppMonthlyTotal = oppMonthly.reduce((n, m) => n + m.handled, 0);
+
+  // 담당자별 실행 현황 — 저장된 처리 이력에서만 계산 (평가가 아니라 쏠림 확인용)
+  const staffActivity = summarizeStaffActivity(taskOverrides);
+  const staffTotal = staffActivity.reduce((n, s) => n + s.handled, 0);
+  const staffName = (id: string) =>
+    staff.find((s) => s.id === id)?.name ?? "(퇴사·삭제된 직원)";
+  /** 아직 한 건도 처리하지 않은 재직 직원 — 업무 배분을 점검할 근거 */
+  const idleStaff = staff.filter(
+    (s) => s.active && !staffActivity.some((a) => a.staffId === s.id),
+  );
 
   const openTaskCount = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
@@ -551,6 +563,76 @@ export default function AnalyticsPage() {
                 </p>
               )}
             </>
+          )}
+        </Card>
+
+        {/* 담당자별 실행 현황 — 누가 얼마나 관리했는지 (평가가 아니라 배분 점검용) */}
+        <Card dataTour="analytics-staff">
+          <SectionTitle>담당자별 실행 현황</SectionTitle>
+          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
+            실행 브리핑에서 관리과제를 처리한 기록을 담당자별로 셉니다. 평가를
+            위한 순위가 아니라, 관리가 한 사람에게 쏠려 있거나 비어 있는지를
+            확인하기 위한 지표입니다.
+          </p>
+
+          {staffActivity.length === 0 ? (
+            <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm leading-relaxed text-ink-sub">
+              아직 처리 기록이 없습니다. 실행 브리핑에서 관리과제를 처리하면
+              담당자별로 쌓입니다.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {staffActivity.map((a) => {
+                const share = Math.round((a.handled / Math.max(staffTotal, 1)) * 100);
+                return (
+                  <li
+                    key={a.staffId}
+                    className="rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-50 to-aqua-100 text-sm font-extrabold text-aqua-800 ring-1 ring-aqua-200/60">
+                        {staffName(a.staffId).slice(0, 1)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-extrabold text-ink">
+                          {staffName(a.staffId)}
+                        </span>
+                        <span className="nowrap-num block truncate text-xs text-ink-sub">
+                          처리완료 {a.done}건 · 보류 {a.held}건
+                          {a.lastHandledAt
+                            ? ` · 마지막 ${formatRelative(a.lastHandledAt)}`
+                            : ""}
+                        </span>
+                      </span>
+                      <span className="nowrap-num shrink-0 text-right">
+                        <span className="block text-xl font-extrabold text-ink">
+                          {a.handled}
+                          <span className="ml-0.5 text-sm font-bold text-ink-sub">
+                            건
+                          </span>
+                        </span>
+                        <span className="block text-xs font-bold text-ink-faint">
+                          전체의 {share}%
+                        </span>
+                      </span>
+                    </div>
+                    {a.opportunityHandled > 0 && (
+                      <p className="nowrap-num mt-2 border-t border-stone-line pt-2 text-xs font-bold text-ink-soft">
+                        매출기회 처리 {a.opportunityHandled}건 · 재방문 예정{" "}
+                        {a.revisitPlanned}건 · 재등록 {a.renewed}건
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {idleStaff.length > 0 && staffTotal > 0 && (
+            <p className="mt-3 rounded-btn border-l-4 border-warn bg-amber-50 px-4 py-3 text-sm leading-relaxed text-ink-soft dark:bg-amber-400/10">
+              <b>{idleStaff.map((s) => s.name).join(", ")}</b> 님은 아직 처리한
+              관리과제가 없습니다. 업무가 한쪽에 몰려 있지 않은지 확인해 보세요.
+            </p>
           )}
         </Card>
 

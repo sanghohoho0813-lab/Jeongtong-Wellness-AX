@@ -352,7 +352,16 @@ export function DateTimeField({
       </button>
 
       {open && !disabled && (
-        <div className="mt-2">
+        <div
+          className="mt-2"
+          // 모달 안에서 열렸을 때 ESC 가 모달까지 닫아 버리지 않도록,
+          // 패널이 열려 있으면 여기서 먼저 처리하고 전파를 멈춘다.
+          onKeyDown={(e) => {
+            if (e.key !== "Escape") return;
+            e.stopPropagation();
+            setOpen(false);
+          }}
+        >
           <DateTimePanel
             date={date}
             time={time}

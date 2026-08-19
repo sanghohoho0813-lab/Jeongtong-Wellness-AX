@@ -11,6 +11,7 @@ import {
   detectSalesOpportunity,
   monthlyOpportunityResults,
   summarizeOpportunities,
+  summarizeStaffActivity,
 } from "./opportunity";
 import { CustomerFacts } from "./priority";
 
@@ -335,5 +336,76 @@ describe("월별 매출기회 실행 추이", () => {
     expect(rows[0].handled).toBe(1);
     expect(rows[0].revisitPlanned).toBe(1);
     expect(rows[0].renewed).toBe(1);
+  });
+});
+
+describe("담당자별 실행 현황", () => {
+  const task = (
+    staffId: string | undefined,
+    status: string,
+    extra: Record<string, unknown> = {},
+  ) => ({ handledByStaffId: staffId, status, ...extra });
+
+  it("처리한 사람만 세고, 미처리 과제는 세지 않는다", () => {
+    const rows = summarizeStaffActivity([
+      task("s1", "done"),
+      task("s1", "hold"),
+      task("s2", "done"),
+      task("s1", "pending"), // 미처리 — 제외
+      task(undefined, "done"), // 처리자 미상 — 제외
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].staffId).toBe("s1");
+    expect(rows[0].handled).toBe(2);
+    expect(rows[0].done).toBe(1);
+    expect(rows[0].held).toBe(1);
+    expect(rows[1].handled).toBe(1);
+  });
+
+  it("매출기회 성과는 처리완료 건에서만 센다", () => {
+    const rows = summarizeStaffActivity([
+      task("s1", "done", {
+        outcome: {
+          contactResult: "reserved",
+          revisitPlanned: true,
+          membershipRenewed: true,
+          opportunityType: "renewal",
+        },
+      }),
+      // 보류는 성과로 세지 않는다
+      task("s1", "hold", {
+        outcome: {
+          contactResult: "contacted",
+          revisitPlanned: true,
+          opportunityType: "revisit",
+        },
+      }),
+      // 매출기회가 아닌 과제는 성과 집계에서 빠진다
+      task("s1", "done", {
+        outcome: { contactResult: "contacted", revisitPlanned: true },
+      }),
+    ]);
+    expect(rows[0].opportunityHandled).toBe(1);
+    expect(rows[0].revisitPlanned).toBe(1);
+    expect(rows[0].renewed).toBe(1);
+  });
+
+  it("마지막 처리 시각은 가장 최근 것을 남긴다", () => {
+    const rows = summarizeStaffActivity([
+      task("s1", "done", { statusChangedAt: "2026-08-01T10:00:00.000Z" }),
+      task("s1", "done", { statusChangedAt: "2026-08-15T10:00:00.000Z" }),
+      task("s1", "done", { statusChangedAt: "2026-08-09T10:00:00.000Z" }),
+    ]);
+    expect(rows[0].lastHandledAt).toBe("2026-08-15T10:00:00.000Z");
+  });
+
+  it("처리 건수가 많은 순으로 정렬한다", () => {
+    const rows = summarizeStaffActivity([
+      task("s1", "done"),
+      task("s2", "done"),
+      task("s2", "done"),
+      task("s2", "hold"),
+    ]);
+    expect(rows.map((r) => r.staffId)).toEqual(["s2", "s1"]);
   });
 });

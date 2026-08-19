@@ -342,3 +342,80 @@ export function monthlyOpportunityResults(
     };
   });
 }
+
+// ---------- 담당자별 실행 현황 ----------
+
+export interface StaffActivity {
+  staffId: string;
+  /** 처리한 관리과제 수 (완료 + 보류) */
+  handled: number;
+  /** 그중 처리완료 */
+  done: number;
+  /** 그중 보류 */
+  held: number;
+  /** 매출기회 과제를 처리한 수 */
+  opportunityHandled: number;
+  /** 재방문 일정을 잡은 수 */
+  revisitPlanned: number;
+  /** 이용권 재등록으로 이어진 수 */
+  renewed: number;
+  /** 마지막 처리 시각 (ISO) */
+  lastHandledAt?: string;
+}
+
+/**
+ * 누가 무엇을 처리했는지 센다.
+ *
+ * 등수를 매기거나 평가하기 위한 것이 아니라, 관리가 특정 직원에게 쏠려 있는지,
+ * 아무도 손대지 않는 과제가 있는지를 대표가 바로 보게 하려는 것이다.
+ * 저장된 처리 이력만 사용하며 추정치는 만들지 않는다.
+ */
+export function summarizeStaffActivity(
+  history: Array<{
+    status: string;
+    handledByStaffId?: string;
+    statusChangedAt?: string;
+    outcome?: TaskOutcome;
+    opportunity?: SalesOpportunity;
+  }>,
+): StaffActivity[] {
+  const map = new Map<string, StaffActivity>();
+
+  for (const t of history) {
+    if (t.status !== "done" && t.status !== "hold") continue;
+    const id = t.handledByStaffId;
+    if (!id) continue;
+
+    const cur: StaffActivity = map.get(id) ?? {
+      staffId: id,
+      handled: 0,
+      done: 0,
+      held: 0,
+      opportunityHandled: 0,
+      revisitPlanned: 0,
+      renewed: 0,
+    };
+
+    cur.handled++;
+    if (t.status === "done") cur.done++;
+    else cur.held++;
+
+    const oppType = t.outcome?.opportunityType ?? t.opportunity?.type ?? "none";
+    if (t.status === "done" && oppType !== "none") {
+      cur.opportunityHandled++;
+      if (t.outcome?.revisitPlanned) cur.revisitPlanned++;
+      if (t.outcome?.membershipRenewed) cur.renewed++;
+    }
+
+    if (
+      t.statusChangedAt &&
+      (!cur.lastHandledAt || t.statusChangedAt > cur.lastHandledAt)
+    ) {
+      cur.lastHandledAt = t.statusChangedAt;
+    }
+
+    map.set(id, cur);
+  }
+
+  return [...map.values()].sort((a, b) => b.handled - a.handled);
+}
