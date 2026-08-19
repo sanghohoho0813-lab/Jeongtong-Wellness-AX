@@ -11,16 +11,20 @@ export function Card({
   className = "",
   onClick,
   lift = true,
+  dataTour,
 }: {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
   /** hover 시 살짝 떠오르는 입체 효과 (기본 on) */
   lift?: boolean;
+  /** 단계별 안내(투어)에서 이 카드를 가리킬 때 쓰는 표식 */
+  dataTour?: string;
 }) {
   return (
     <div
       onClick={onClick}
+      data-tour={dataTour}
       className={`card ${lift ? "card-lift" : ""} ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
       {children}
@@ -32,11 +36,17 @@ export function Card({
 export function HeroCard({
   children,
   className = "",
+  dataTour,
 }: {
   children: ReactNode;
   className?: string;
+  dataTour?: string;
 }) {
-  return <div className={`card-hero ${className}`}>{children}</div>;
+  return (
+    <div data-tour={dataTour} className={`card-hero ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 /** 섹션 아이콘 타일 색상 */
@@ -105,6 +115,7 @@ export function Button({
   type = "button",
   disabled,
   size = "md",
+  dataTour,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -113,6 +124,8 @@ export function Button({
   type?: "button" | "submit";
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
+  /** 단계별 안내(투어) 표식 */
+  dataTour?: string;
 }) {
   const variants: Record<ButtonVariant, string> = {
     primary:
@@ -134,6 +147,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      data-tour={dataTour}
       className={`inline-flex items-center justify-center gap-1.5 rounded-btn font-bold whitespace-nowrap transition-all touch-target ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}

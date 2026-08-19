@@ -11,7 +11,7 @@
 }
 
 :root {
-  --font-scale: 1;
+  --font-scale: 1.1;
   --density-gap: 1.125rem;
   --density-card-pad: 1.375rem;
 
@@ -56,11 +56,16 @@
   --c-card-border: rgba(255, 255, 255, 0.06);
 }
 
+/* 글자 크기 — 50~60대 사용자 기준으로 전 단계를 상향 조정.
+   작게 0.92→0.97 (+5%), 기본 1.00→1.10 (+10%), 크게 1.14→1.31 (+15%) */
 :root[data-font-scale="small"] {
-  --font-scale: 0.92;
+  --font-scale: 0.97;
+}
+:root[data-font-scale="default"] {
+  --font-scale: 1.1;
 }
 :root[data-font-scale="large"] {
-  --font-scale: 1.14;
+  --font-scale: 1.31;
 }
 
 :root[data-density="relaxed"] {

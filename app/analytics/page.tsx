@@ -217,7 +217,10 @@ export default function AnalyticsPage() {
           </p>
         </InsightBanner>
         )}
-        <div className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div
+          data-tour="analytics-kpi"
+          className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
+        >
           <MetricTile
             label="신규 고객 (최근 30일)"
             dot="sky"

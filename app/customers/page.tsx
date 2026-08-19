@@ -94,7 +94,10 @@ export default function CustomersPage() {
       />
 
       {/* 상태 요약 = 필터 */}
-      <div className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+      <div
+        data-tour="customer-tiles"
+        className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5"
+      >
         {STATUS_TILES.map((t) => (
           <SummaryTile
             key={t.key}
@@ -152,6 +155,7 @@ export default function CustomersPage() {
           {rows.map((d) => (
             <Link
               key={d.customer.id}
+              data-tour="customer-row"
               href={`/customers/${d.customer.id}`}
               className="card card-lift row-accent group flex items-center gap-3 !py-3.5 !pl-5 sm:gap-4"
             >

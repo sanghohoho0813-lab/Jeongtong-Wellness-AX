@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProvider } from "@/lib/data/store";
 import AppShell from "@/components/layout/AppShell";
 import { ToastProvider } from "@/components/ui/toast";
+import { TourProvider } from "@/components/docs/Tour";
 
 export const metadata: Metadata = {
   title: "정통대왕쑥뜸원 AX Platform",
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body>
         <AppProvider>
           <ToastProvider>
-            <AppShell>{children}</AppShell>
+            <TourProvider>
+              <AppShell>{children}</AppShell>
+            </TourProvider>
           </ToastProvider>
         </AppProvider>
       </body>

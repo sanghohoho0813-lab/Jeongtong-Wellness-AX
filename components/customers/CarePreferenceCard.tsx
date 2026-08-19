@@ -168,7 +168,10 @@ export default function CarePreferenceCard({
   };
 
   return (
-    <div className="card-accent card-lift group flex flex-col">
+    <div
+      data-tour="care-pref"
+      className="card-accent card-lift group flex flex-col"
+    >
       <SectionTitle
         tone="gold"
         icon={<SparkIcon className="icon-pop h-4 w-4" />}

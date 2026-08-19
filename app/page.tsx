@@ -24,7 +24,9 @@ export default function DashboardPage() {
         description={`${todayLabel()} · ${settings.companyName} ${settings.branchName}`}
       />
       <div className="flex flex-col card-gap">
-        <KpiRow />
+        <div data-tour="dash-kpi">
+          <KpiRow />
+        </div>
         <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
           <BriefingPreview />
           <BodyMapCard />

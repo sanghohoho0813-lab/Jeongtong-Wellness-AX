@@ -77,7 +77,7 @@ export default function BriefingPage() {
       />
 
       {/* Hero 요약 밴드 */}
-      <HeroCard className="mb-4 !p-5 sm:!p-6 lg:mb-5">
+      <HeroCard dataTour="briefing-hero" className="mb-4 !p-5 sm:!p-6 lg:mb-5">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-aqua-400/25 text-aqua-300 ring-1 ring-aqua-300/30">

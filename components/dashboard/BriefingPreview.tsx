@@ -19,7 +19,7 @@ export default function BriefingPreview() {
   const progress = total > 0 ? doneToday / total : 0;
 
   return (
-    <HeroCard className="flex flex-col">
+    <HeroCard dataTour="dash-briefing" className="flex flex-col">
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex min-w-0 items-center gap-2.5 text-[1.125rem] font-extrabold tracking-tight text-white sm:text-[1.25rem]">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-400/25 text-aqua-300 ring-1 ring-aqua-300/30">

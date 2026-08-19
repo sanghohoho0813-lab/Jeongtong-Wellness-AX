@@ -32,6 +32,28 @@ const TONE_BAR: Record<DocTone, string> = {
   gold: "from-gold to-gold-deep",
 };
 
+/** 섹션 카드 배경 — 톤마다 아주 옅게 색을 깐다 */
+const TONE_TINT: Record<DocTone, string> = {
+  aqua: "bg-gradient-to-br from-aqua-50 via-card to-card",
+  teal: "bg-gradient-to-br from-deep-700/[0.07] via-card to-card",
+  sky: "bg-gradient-to-br from-sky-500/[0.07] via-card to-card",
+  violet: "bg-gradient-to-br from-violet-500/[0.07] via-card to-card",
+  amber: "bg-gradient-to-br from-amber-400/[0.09] via-card to-card",
+  emerald: "bg-gradient-to-br from-emerald-500/[0.07] via-card to-card",
+  gold: "bg-gradient-to-br from-gold-soft via-card to-card",
+};
+
+/** 섹션 소제목(kicker) 색 */
+const TONE_TEXT: Record<DocTone, string> = {
+  aqua: "text-aqua-700",
+  teal: "text-deep-700 dark:text-aqua-700",
+  sky: "text-sky-600 dark:text-sky-300",
+  violet: "text-violet-600 dark:text-violet-300",
+  amber: "text-amber-600 dark:text-amber-300",
+  emerald: "text-emerald-600 dark:text-emerald-300",
+  gold: "text-gold-deep",
+};
+
 const TONE_SOFT: Record<DocTone, string> = {
   aqua: "bg-aqua-50 text-aqua-800 ring-aqua-100",
   teal: "bg-deep-700/10 text-deep-800 ring-deep-700/15 dark:text-aqua-700",
@@ -64,24 +86,24 @@ export function DocHero({
   return (
     <header className="card-hero rise-in relative overflow-hidden !p-6 sm:!p-9">
       <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-aqua-400/15 blur-3xl" />
-      <p className="text-[0.7rem] font-extrabold uppercase tracking-[0.18em] text-aqua-300">
+      <p className="text-[0.8125rem] font-extrabold uppercase tracking-[0.18em] text-aqua-300">
         {eyebrow}
       </p>
-      <h1 className="mt-2.5 text-2xl font-extrabold leading-tight text-white sm:text-[2rem]">
+      <h1 className="mt-2.5 text-[1.875rem] font-extrabold leading-tight text-white sm:text-[2.375rem]">
         {title}
       </h1>
       {subtitle && (
-        <p className="mt-3 border-l-2 border-gold/60 pl-3.5 text-base font-bold leading-relaxed text-white sm:text-lg">
+        <p className="mt-3.5 border-l-[3px] border-gold pl-4 text-[1.125rem] font-bold leading-relaxed text-white sm:text-[1.3125rem]">
           {subtitle}
         </p>
       )}
       {lead && (
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-deep-sub sm:text-[0.9375rem]">
+        <p className="mt-4 max-w-2xl text-[1rem] leading-[1.8] text-deep-sub sm:text-[1.0625rem]">
           {lead}
         </p>
       )}
       {meta && (
-        <p className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-deep-sub ring-1 ring-white/15">
+        <p className="mt-4 inline-flex rounded-full bg-white/10 px-3.5 py-1.5 text-[0.875rem] font-bold text-deep-sub ring-1 ring-white/15">
           {meta}
         </p>
       )}
@@ -99,7 +121,7 @@ export function DocToc({
 }) {
   return (
     <nav className="card rise-in !py-5" aria-label="차례">
-      <p className="mb-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+      <p className="mb-3 text-sm font-extrabold uppercase tracking-wider text-aqua-700">
         차례
       </p>
       <ol className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,10 +131,10 @@ export function DocToc({
               href={i.href}
               className="group flex items-center gap-2.5 rounded-btn px-2.5 py-2 transition-colors hover:bg-aqua-50"
             >
-              <span className="nowrap-num flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-stone-bg-deep text-[0.7rem] font-extrabold text-ink-sub transition-colors group-hover:bg-aqua-600 group-hover:text-white">
+              <span className="nowrap-num flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-aqua-50 text-[0.8125rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors group-hover:bg-aqua-600 group-hover:text-white">
                 {i.no}
               </span>
-              <span className="min-w-0 truncate text-sm font-bold text-ink-soft group-hover:text-aqua-800">
+              <span className="min-w-0 truncate text-[1rem] font-bold text-ink-soft group-hover:text-aqua-800">
                 {i.label}
               </span>
             </a>
@@ -120,7 +142,7 @@ export function DocToc({
         ))}
       </ol>
       {flow && (
-        <p className="mt-3 rounded-btn bg-card-soft px-3.5 py-2.5 text-xs leading-relaxed text-ink-sub ring-1 ring-stone-line">
+        <p className="mt-3 rounded-btn bg-gradient-to-r from-aqua-50 to-card px-4 py-3 text-[0.9375rem] font-semibold leading-relaxed text-ink-soft ring-1 ring-aqua-100">
           {flow}
         </p>
       )}
@@ -145,26 +167,31 @@ export function DocSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="card rise-in relative overflow-hidden scroll-mt-24">
+    <section
+      id={id}
+      className={`card rise-in relative overflow-hidden scroll-mt-24 ${TONE_TINT[tone]}`}
+    >
       <span
-        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${TONE_BAR[tone]}`}
+        className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${TONE_BAR[tone]}`}
       />
       <div className="flex items-start gap-3.5">
         <span
-          className={`nowrap-num flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold shadow-sm ${TONE_BADGE[tone]}`}
+          className={`nowrap-num flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-extrabold shadow-sm ${TONE_BADGE[tone]}`}
         >
           {no}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+          <p
+            className={`text-[0.8125rem] font-extrabold uppercase tracking-wider ${TONE_TEXT[tone]}`}
+          >
             {kicker}
           </p>
-          <h2 className="mt-1 text-xl font-extrabold leading-snug text-ink sm:text-[1.375rem]">
+          <h2 className="mt-1 text-[1.375rem] font-extrabold leading-snug text-ink sm:text-[1.625rem]">
             {title}
           </h2>
         </div>
       </div>
-      <div className="mt-4 space-y-3.5 text-[0.9375rem] leading-[1.75] text-ink-soft">
+      <div className="mt-5 space-y-4 text-[1.0625rem] leading-[1.85] text-ink-soft">
         {children}
       </div>
     </section>
@@ -181,7 +208,7 @@ export function DocQuote({
 }) {
   return (
     <p
-      className={`rounded-card px-4 py-3.5 text-[0.9375rem] font-extrabold leading-relaxed ring-1 ${TONE_SOFT[tone]}`}
+      className={`rounded-card px-[1.125rem] py-4 text-[1.125rem] font-extrabold leading-[1.7] ring-1 ${TONE_SOFT[tone]}`}
     >
       {children}
     </p>
@@ -191,7 +218,7 @@ export function DocQuote({
 /** 참고 / 주의 문단 */
 export function DocNote({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-btn border-l-[3px] border-gold bg-card-soft px-3.5 py-2.5 text-sm leading-relaxed text-ink-sub">
+    <p className="rounded-btn border-l-4 border-gold bg-gold-soft/60 px-4 py-3 text-[0.9375rem] leading-relaxed text-ink-soft">
       {children}
     </p>
   );
@@ -210,17 +237,17 @@ export function DocFlow({
       {steps.map((s, i) => (
         <li
           key={s.title}
-          className="relative flex items-start gap-3 rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04]"
+          className="relative flex items-start gap-3 rounded-card bg-card px-4 py-3.5 shadow-card ring-1 ring-black/[0.04]"
         >
           <span
-            className={`nowrap-num flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-extrabold ${TONE_BADGE[tone]}`}
+            className={`nowrap-num flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-extrabold ${TONE_BADGE[tone]}`}
           >
             {i + 1}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-ink">{s.title}</p>
+            <p className="text-[1.0625rem] font-extrabold text-ink">{s.title}</p>
             {s.desc && (
-              <p className="mt-0.5 text-sm leading-relaxed text-ink-sub">
+              <p className="mt-0.5 text-[0.9375rem] leading-relaxed text-ink-sub">
                 {s.desc}
               </p>
             )}
@@ -242,12 +269,15 @@ export function DocCompare({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div className="rounded-card bg-card-soft p-4 ring-1 ring-stone-line">
-        <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+        <p className="text-sm font-extrabold uppercase tracking-wider text-ink-sub">
           {before.title}
         </p>
         <ul className="mt-2.5 space-y-1.5">
           {before.items.map((t) => (
-            <li key={t} className="flex items-start gap-2 text-sm text-ink-sub">
+            <li
+              key={t}
+              className="flex items-start gap-2 text-[0.9375rem] text-ink-sub"
+            >
               <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink-faint" />
               <span className="min-w-0">{t}</span>
             </li>
@@ -255,14 +285,14 @@ export function DocCompare({
         </ul>
       </div>
       <div className="rounded-card bg-gradient-to-br from-aqua-50 to-card p-4 ring-1 ring-aqua-200/60">
-        <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-aqua-800">
+        <p className="text-sm font-extrabold uppercase tracking-wider text-aqua-800">
           {after.title}
         </p>
         <ul className="mt-2.5 space-y-1.5">
           {after.items.map((t) => (
             <li
               key={t}
-              className="flex items-start gap-2 text-sm font-semibold text-ink-soft"
+              className="flex items-start gap-2 text-[0.9375rem] font-semibold text-ink-soft"
             >
               <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-aqua-600" />
               <span className="min-w-0">{t}</span>
@@ -287,7 +317,7 @@ export function DocList({
       {items.map((t) => (
         <li
           key={t}
-          className={`rounded-btn px-3.5 py-2 text-sm font-semibold ring-1 ${TONE_SOFT[tone]}`}
+          className={`rounded-btn px-4 py-2.5 text-[1rem] font-semibold ring-1 ${TONE_SOFT[tone]}`}
         >
           {t}
         </li>
@@ -307,7 +337,7 @@ export function DocChain({
       {items.map((s, i) => (
         <li key={s.title} className="relative flex items-start gap-3">
           <div className="flex shrink-0 flex-col items-center self-stretch">
-            <span className="nowrap-num flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-800 text-xs font-extrabold text-white shadow-sm">
+            <span className="nowrap-num flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-800 text-sm font-extrabold text-white shadow-sm">
               {i + 1}
             </span>
             {i < items.length - 1 && (
@@ -315,8 +345,8 @@ export function DocChain({
             )}
           </div>
           <div className="min-w-0 flex-1 pb-2">
-            <p className="font-extrabold text-ink">{s.title}</p>
-            <p className="mt-0.5 text-sm leading-relaxed text-ink-sub">
+            <p className="text-[1.0625rem] font-extrabold text-ink">{s.title}</p>
+            <p className="mt-0.5 text-[0.9375rem] leading-relaxed text-ink-sub">
               {s.desc}
             </p>
           </div>
@@ -337,18 +367,22 @@ export function DocPillars({
       {items.map((p) => (
         <div
           key={p.title}
-          className="relative overflow-hidden rounded-card bg-card p-4 shadow-card ring-1 ring-black/[0.04]"
+          className="relative overflow-hidden rounded-card bg-card p-[1.125rem] shadow-card ring-1 ring-black/[0.04]"
         >
           <span
             className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${TONE_BAR[p.tone]}`}
           />
           <span
-            className={`nowrap-num flex h-8 w-8 items-center justify-center rounded-xl text-xs font-extrabold ${TONE_BADGE[p.tone]}`}
+            className={`nowrap-num flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold ${TONE_BADGE[p.tone]}`}
           >
             {p.no}
           </span>
-          <p className="mt-2.5 font-extrabold text-ink">{p.title}</p>
-          <p className="mt-1 text-sm leading-relaxed text-ink-sub">{p.desc}</p>
+          <p className="mt-2.5 text-[1.125rem] font-extrabold text-ink">
+            {p.title}
+          </p>
+          <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-sub">
+            {p.desc}
+          </p>
         </div>
       ))}
     </div>
@@ -373,10 +407,10 @@ export function DocLinks({
             className={`h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${TONE_BAR[l.tone]}`}
           />
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-extrabold text-ink">
+            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
               {l.label}
             </span>
-            <span className="mt-0.5 block truncate text-xs text-ink-sub">
+            <span className="mt-0.5 block truncate text-[0.875rem] text-ink-sub">
               {l.desc}
             </span>
           </span>
@@ -398,15 +432,15 @@ export function DocSteps({
       {steps.map((s, i) => (
         <li
           key={s.title}
-          className="rounded-card bg-card-soft px-4 py-3.5 ring-1 ring-black/[0.04]"
+          className="rounded-card bg-card px-4 py-4 shadow-card ring-1 ring-black/[0.04]"
         >
-          <p className="flex items-center gap-2 font-extrabold text-ink">
-            <span className="nowrap-num flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-aqua-600 text-[0.7rem] text-white">
+          <p className="flex items-center gap-2.5 text-[1.0625rem] font-extrabold text-ink">
+            <span className="nowrap-num flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-aqua-500 to-deep-700 text-sm text-white shadow-sm">
               {i + 1}
             </span>
             <span className="min-w-0">{s.title}</span>
           </p>
-          <div className="mt-1.5 pl-8 text-sm leading-relaxed text-ink-sub">
+          <div className="mt-2 pl-[2.375rem] text-[0.9375rem] leading-[1.8] text-ink-sub">
             {s.body}
           </div>
         </li>
@@ -418,7 +452,7 @@ export function DocSteps({
 /** 화면 속 표현을 그대로 인용할 때 */
 export function Ui({ children }: { children: ReactNode }) {
   return (
-    <span className="nowrap-num rounded-md bg-stone-bg-deep px-1.5 py-0.5 text-[0.85em] font-bold text-ink-soft">
+    <span className="nowrap-num rounded-md bg-aqua-50 px-2 py-0.5 text-[0.9em] font-extrabold text-aqua-800 ring-1 ring-aqua-100">
       {children}
     </span>
   );
@@ -435,10 +469,15 @@ export function DocFaq({
       {items.map((f) => (
         <li
           key={f.q}
-          className="rounded-card bg-card-soft px-4 py-3.5 ring-1 ring-black/[0.04]"
+          className="rounded-card bg-card px-4 py-4 shadow-card ring-1 ring-black/[0.04]"
         >
-          <p className="font-extrabold text-ink">Q. {f.q}</p>
-          <p className="mt-1 text-sm leading-relaxed text-ink-sub">{f.a}</p>
+          <p className="text-[1.0625rem] font-extrabold text-ink">
+            <span className="mr-1 text-aqua-700">Q.</span>
+            {f.q}
+          </p>
+          <p className="mt-1.5 text-[0.9375rem] leading-[1.8] text-ink-sub">
+            {f.a}
+          </p>
         </li>
       ))}
     </ul>

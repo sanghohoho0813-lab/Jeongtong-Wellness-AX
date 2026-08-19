@@ -114,7 +114,12 @@ export default function CustomerDetailPage() {
               담당 {staffName(c.assignedStaffId)}
             </p>
           </div>
-          <Button onClick={() => setOpenVisit(true)} size="lg" className="w-full sm:w-auto">
+          <Button
+            dataTour="visit-record"
+            onClick={() => setOpenVisit(true)}
+            size="lg"
+            className="w-full sm:w-auto"
+          >
             <PlusIcon className="h-4 w-4" />
             방문 · 상담 기록
           </Button>
@@ -136,6 +141,7 @@ export default function CustomerDetailPage() {
             </p>
           </Card>
           <Card
+            dataTour="next-manage"
             className={`relative min-w-0 overflow-hidden !p-4 sm:!p-5 ${derived.priorityScore > 0 ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}
           >
             <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-aqua-400 to-deep-700" />
@@ -206,7 +212,7 @@ export default function CustomerDetailPage() {
         </div>
 
         {/* AX INSIGHT — 브리핑과 동일한 판단근거·권장행동 체계를 재사용 */}
-        <div className="card-accent">
+        <div data-tour="ax-insight" className="card-accent">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="flex items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-deep-800 dark:text-aqua-700">
               <span
@@ -236,7 +242,7 @@ export default function CustomerDetailPage() {
 
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
           {/* 집중 케어 부위 — 주요 기능 */}
-          <div className="card-accent">
+          <div data-tour="body-map" className="card-accent">
             <SectionTitle
               icon={<BodyIcon className="h-4 w-4" />}
               action={

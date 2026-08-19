@@ -23,7 +23,8 @@ import {
   Ui,
   type DocTone,
 } from "@/components/docs/DocParts";
-import { ChevronRightIcon } from "@/components/ui/icons";
+import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
+import { useTour } from "@/components/docs/Tour";
 
 const TOC = [
   { no: "1", label: "하루 흐름", href: "#g1" },
@@ -61,6 +62,7 @@ const GUIDE_LINKS: Array<{
 
 export default function GuidePage() {
   const { settings, isManager } = useStore();
+  const { startTour } = useTour();
 
   return (
     <DocPage>
@@ -72,6 +74,28 @@ export default function GuidePage() {
           lead="컴퓨터가 익숙하지 않으셔도 순서대로 따라 하시면 됩니다. 각 항목은 실제 화면에 적힌 버튼 이름 그대로 적었습니다. 필요한 부분만 차례에서 골라 보셔도 됩니다."
           meta="전체를 읽는 데 10분쯤 걸립니다"
         />
+
+        {/* 실제 화면에서 단계별로 따라 하기 */}
+        <section className="card-accent rise-in flex flex-col gap-4 sm:flex-row sm:items-center">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-aqua-500 to-deep-800 text-white shadow-[0_4px_12px_rgba(10,46,44,0.25)]">
+            <SparkIcon className="h-7 w-7" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[1.25rem] font-extrabold text-ink">
+              실제 화면에서 따라 해 보기
+            </p>
+            <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-soft">
+              읽는 대신 직접 보면서 배우실 수 있습니다. 화면을 하나씩 옮겨 가며
+              설명할 부분만 밝게 보여 드립니다.
+            </p>
+          </div>
+          <button
+            onClick={startTour}
+            className="touch-target shrink-0 rounded-btn bg-gradient-to-b from-aqua-500 to-aqua-700 px-6 py-3 text-[1.0625rem] font-extrabold text-white shadow-[0_2px_10px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-600 hover:to-aqua-800"
+          >
+            단계별 안내 시작
+          </button>
+        </section>
 
         <DocToc
           items={TOC}

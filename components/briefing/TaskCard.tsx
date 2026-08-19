@@ -201,6 +201,7 @@ export default function TaskCard({
 
   return (
     <div
+      data-tour="task-card"
       className={`group relative overflow-hidden ${shell} p-4 pl-5 transition-opacity ${finished ? "opacity-55" : ""}`}
     >
       {/* 관리 유형 컬러 스트립 */}
