@@ -111,6 +111,10 @@ create table if not exists briefing_task_logs (
   revisit_expected boolean,
   next_management_date date,
   next_management_time time,
+  -- AX 매출기회 결과: 재등록 기회 과제가 실제 재등록으로 이어졌는지
+  membership_renewed boolean,
+  -- 판정 당시의 매출기회 유형 (renewal / revisit) — 성과 집계용 스냅샷
+  sales_opportunity_type text check (sales_opportunity_type in ('renewal','revisit')),
   memo text,
   hold_until date,
   unique (task_date, customer_id)

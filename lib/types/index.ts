@@ -189,6 +189,41 @@ export interface Visit {
   appliedPreferenceIds?: string[];
 }
 
+// ---------- AX 매출기회 ----------
+
+/**
+ * AX 매출기회 — 기존 고객의 실제 이용 데이터에서
+ * 재방문 / 이용권 재등록으로 이어질 수 있는 관리 대상을 식별한 결과.
+ *
+ * 중요: Priority Score(지금 관리가 필요한가)와는 별개의 파생 분류다.
+ *  - Priority Score : "지금 챙겨야 하는 고객인가"
+ *  - 매출기회       : "챙기면 기존 매출로 이어질 수 있는가"
+ * 두 값은 서로 덮어쓰지 않으며, 화면에서도 구분해 표시한다.
+ */
+export type SalesOpportunityType =
+  | "renewal" // 이용권 재등록 기회
+  | "revisit" // 재방문 기회
+  | "none"; // 해당 없음
+
+export type OpportunityLevel = "high" | "normal" | "none";
+
+export interface SalesOpportunity {
+  type: SalesOpportunityType;
+  level: OpportunityLevel;
+  /** 화면 표기 — "재등록 기회" / "재방문 기회" */
+  label: string;
+  /** 왜 매출기회로 판단했는지 (저장된 데이터에서 계산한 사실만) */
+  reasons: string[];
+  /** 권장 실행 — "이용권 재등록 안내 권장" 등 */
+  action: string;
+}
+
+export const OPPORTUNITY_LABELS: Record<SalesOpportunityType, string> = {
+  renewal: "재등록 기회",
+  revisit: "재방문 기회",
+  none: "해당 없음",
+};
+
 // ---------- 오늘의 실행 브리핑 ----------
 
 export type TaskCategory =
@@ -231,6 +266,11 @@ export interface BriefingTask {
   holdUntil?: string;
   /** 실행결과 — 처리완료 시 기록되며, 향후 AX 분석/스코어 개선의 입력이 된다 */
   outcome?: TaskOutcome;
+  /**
+   * AX 매출기회 — 과제 생성 후 파생 계산되어 붙는다.
+   * priorityScore 계산에는 전혀 관여하지 않는다.
+   */
+  opportunity?: SalesOpportunity;
 }
 
 /**
@@ -255,6 +295,12 @@ export interface TaskOutcome {
   nextManageTime?: string;
   /** 간단 메모 (Supabase: memo) */
   note?: string;
+  /**
+   * 이용권 재등록 여부 (Supabase: membership_renewed)
+   * 재등록 기회 고객을 실제로 관리했을 때만 기록한다.
+   * 매출기회 → 실행 → 재등록 성과를 잇는 유일한 결과값이다.
+   */
+  membershipRenewed?: boolean;
 }
 
 export const TASK_CONTACT_RESULT_LABELS: Record<TaskContactResult, string> = {

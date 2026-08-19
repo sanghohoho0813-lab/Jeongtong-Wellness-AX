@@ -7,7 +7,7 @@ import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
-import { CustomerDerived } from "@/lib/types";
+import { CustomerDerived, SalesOpportunity } from "@/lib/types";
 import { daysAgo, formatRelative } from "@/lib/utils/date";
 import { displayPhone } from "@/lib/utils/format";
 import {
@@ -15,6 +15,7 @@ import {
   Card,
   Em,
   InsightBanner,
+  OpportunityBadge,
   SectionTitle,
   SummaryTile,
 } from "@/components/ui";
@@ -32,10 +33,12 @@ function CustomerRow({
   derived,
   note,
   canSeePhone,
+  opportunity,
 }: {
   derived: CustomerDerived;
   note: string;
   canSeePhone: boolean;
+  opportunity?: SalesOpportunity;
 }) {
   const c = derived.customer;
   return (
@@ -47,7 +50,14 @@ function CustomerRow({
         {c.name.slice(0, 1)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-extrabold text-ink">{c.name}</p>
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          <span className="min-w-0 truncate font-extrabold text-ink">
+            {c.name}
+          </span>
+          {opportunity && opportunity.type !== "none" && (
+            <OpportunityBadge opportunity={opportunity} size="sm" />
+          )}
+        </div>
         <p className="truncate text-xs text-ink-sub">
           {displayPhone(c.phone, canSeePhone)} · 방문 {derived.visitCount}회
         </p>
@@ -75,7 +85,8 @@ const GROUP_ACCENT: Record<string, string> = {
 };
 
 export default function RetentionPage() {
-  const { derivedById, settings, briefingTasks, canSeePhone } = useStore();
+  const { derivedById, opportunityById, settings, briefingTasks, canSeePhone } =
+    useStore();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const rules = settings.careRules;
   const all = [...derivedById.values()];
@@ -162,6 +173,11 @@ export default function RetentionPage() {
 
   const groups = [dueGroup, atRiskGroup, dormantGroup, lowGroup];
 
+  // AX 매출기회 대상 수 — 재방문/재등록 기회가 있는 고객 (Priority 와 별개)
+  const opportunityCount = all.filter(
+    (d) => (opportunityById.get(d.customer.id)?.type ?? "none") !== "none",
+  ).length;
+
   // 오늘 우선관리 — 우선도 상위 3명
   const topPriority = all
     .filter((d) => d.priorityScore > 0)
@@ -224,8 +240,8 @@ export default function RetentionPage() {
         );
       })()}
 
-      {/* 그룹 요약 타일 */}
-      <div className="rise-stagger mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+      {/* 그룹 요약 타일 + AX 매출기회 */}
+      <div className="rise-stagger mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
         <SummaryTile
           label="재방문 예정"
           value={dueGroup.rows.length}
@@ -245,6 +261,11 @@ export default function RetentionPage() {
           label="이용권 임박·소진"
           value={lowGroup.rows.length}
           tone="gold"
+        />
+        <SummaryTile
+          label="AX 매출기회"
+          value={opportunityCount}
+          tone="green"
         />
       </div>
 
@@ -279,6 +300,7 @@ export default function RetentionPage() {
                       derived={r.derived}
                       note={r.note}
                       canSeePhone={canSeePhone}
+                      opportunity={opportunityById.get(r.derived.customer.id)}
                     />
                   ),
                 )}

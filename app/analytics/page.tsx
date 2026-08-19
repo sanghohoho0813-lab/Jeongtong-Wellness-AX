@@ -11,7 +11,16 @@ import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import { formatMonthKr } from "@/lib/utils/date";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
-import { Card, Em, FilterChip, InsightBanner, SectionTitle } from "@/components/ui";
+import {
+  Card,
+  Em,
+  FilterChip,
+  InsightBanner,
+  SectionTitle,
+  SummaryTile,
+} from "@/components/ui";
+import { TrendUpIcon } from "@/components/ui/icons";
+import { summarizeOpportunities } from "@/lib/scoring/opportunity";
 import { buildOperationInsight } from "@/lib/scoring/insight";
 
 const METRIC_DOTS: Record<string, string> = {
@@ -145,6 +154,9 @@ export default function AnalyticsPage() {
   const prev = monthly.at(-2);
 
   // AX 운영 인사이트 — 현재 지표에서만 도출되는 규칙 기반 문장
+  // AX 매출기회 집계 — Priority 지표와 별도로 계산한다
+  const opp = summarizeOpportunities(briefingTasks);
+
   const openTaskCount = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
   ).length;
@@ -377,6 +389,110 @@ export default function AnalyticsPage() {
               </div>
             );
           })()}
+        </Card>
+
+        {/* AX 매출기회 현황 — 대상 → 실행 → 결과 흐름 (추정치 없음) */}
+        <Card dataTour="analytics-opportunity">
+          <SectionTitle tone="gold" icon={<TrendUpIcon className="h-4 w-4" />}>
+            AX 매출기회 현황
+          </SectionTitle>
+          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
+            기존 고객의 이용 데이터에서 재방문 · 재등록으로 이어질 수 있는
+            관리 대상과, 실제 실행 결과를 셉니다. 전환율이나 예상 매출은
+            추정하지 않습니다.
+          </p>
+
+          {opp.total === 0 ? (
+            <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm text-ink-sub">
+              현재 매출기회로 판정된 고객이 없습니다. 방문 · 이용권 기록이
+              쌓이면 자동으로 집계됩니다.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+                <SummaryTile
+                  label="재등록 관리대상"
+                  value={opp.renewal}
+                  tone="gold"
+                />
+                <SummaryTile
+                  label="재방문 관리대상"
+                  value={opp.revisit}
+                  tone="green"
+                />
+                <SummaryTile
+                  label="실행 완료"
+                  value={opp.handled}
+                  tone="aqua"
+                />
+                <SummaryTile
+                  label="재방문 예정 확보"
+                  value={opp.revisitPlanned}
+                  tone="sky"
+                />
+              </div>
+
+              {/* 대상 → 실행 → 결과 */}
+              <ol className="mt-4 space-y-1.5">
+                {[
+                  {
+                    label: "매출기회 대상",
+                    value: opp.total,
+                    desc: "재등록 + 재방문 기회로 판정된 고객",
+                    bar: "from-gold to-gold-deep",
+                  },
+                  {
+                    label: "직원이 실제 관리",
+                    value: opp.handled,
+                    desc: "실행 브리핑에서 처리완료로 기록된 건",
+                    bar: "from-aqua-400 to-deep-700",
+                  },
+                  {
+                    label: "재방문 예정 확보",
+                    value: opp.revisitPlanned,
+                    desc: "처리 결과에 재방문 예정이 기록된 건",
+                    bar: "from-sky-400 to-sky-600",
+                  },
+                  {
+                    label: "이용권 재등록",
+                    value: opp.renewed,
+                    desc: "처리 결과에 재등록으로 기록된 건",
+                    bar: "from-emerald-400 to-positive",
+                  },
+                ].map((row) => (
+                  <li
+                    key={row.label}
+                    className="flex items-center gap-3 rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04]"
+                  >
+                    <span
+                      className={`h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${row.bar}`}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-extrabold text-ink">
+                        {row.label}
+                      </span>
+                      <span className="block truncate text-xs text-ink-sub">
+                        {row.desc}
+                      </span>
+                    </span>
+                    <span className="nowrap-num shrink-0 text-xl font-extrabold text-ink">
+                      {row.value}
+                      <span className="ml-0.5 text-sm font-bold text-ink-sub">
+                        명
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+
+              {opp.handled === 0 && (
+                <p className="mt-3 rounded-btn border-l-4 border-gold bg-gold-soft/60 px-4 py-3 text-sm leading-relaxed text-ink-soft">
+                  매출기회 성과 데이터 축적 중입니다. 실행 브리핑에서 매출기회
+                  과제를 처리하면 실행 · 재방문 · 재등록 결과가 여기에 쌓입니다.
+                </p>
+              )}
+            </>
+          )}
         </Card>
 
         <Card className="border-l-4 border-gold">

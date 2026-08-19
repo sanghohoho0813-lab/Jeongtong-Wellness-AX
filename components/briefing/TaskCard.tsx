@@ -13,7 +13,13 @@ import {
 } from "@/lib/types";
 import { daysFromToday, formatDateKr, formatTimeKr } from "@/lib/utils/date";
 import { displayPhone } from "@/lib/utils/format";
-import { Badge, BadgeTone, Button, TaskStatusBadge } from "@/components/ui";
+import {
+  Badge,
+  BadgeTone,
+  Button,
+  OpportunityBadge,
+  TaskStatusBadge,
+} from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
 import { DateTimeField } from "@/components/ui/DateTimeField";
@@ -117,6 +123,7 @@ export default function TaskCard({
   const [revisitPlanned, setRevisitPlanned] = useState(true);
   const [nextDate, setNextDate] = useState("");
   const [nextTime, setNextTime] = useState<string | undefined>();
+  const [renewed, setRenewed] = useState(false);
   const [note, setNote] = useState("");
   const [holdUntil, setHoldUntil] = useState(() => daysFromToday(3));
 
@@ -133,6 +140,9 @@ export default function TaskCard({
   };
 
   const finished = task.status === "done";
+  /** AX 매출기회 — 있으면 실행 카드에 함께 노출한다 (Priority Score 와 무관) */
+  const opp = task.opportunity;
+  const isRenewal = opp?.type === "renewal";
   const hero = variant === "hero";
 
   /** 처리완료 패널 열기 — 기존 결과 또는 고객의 현재 다음 관리일로 초기화 */
@@ -143,6 +153,7 @@ export default function TaskCard({
     setRevisitPlanned(o?.revisitPlanned ?? !!d);
     setNextDate(d);
     setNextTime(o?.nextManageTime ?? customer.nextManageTime);
+    setRenewed(!!o?.membershipRenewed);
     setNote(o?.note ?? "");
     setPanel("done");
   };
@@ -160,6 +171,7 @@ export default function TaskCard({
         nextManageDate: revisitPlanned ? nextDate || undefined : undefined,
         nextManageTime: revisitPlanned && nextDate ? nextTime : undefined,
         note: note.trim() || undefined,
+        membershipRenewed: isRenewal ? renewed : undefined,
       },
     });
     setPanel(null);
@@ -235,6 +247,9 @@ export default function TaskCard({
               {TASK_CATEGORY_LABELS[task.category]}
             </Badge>
             {!hero && <TaskStatusBadge status={task.status} />}
+            {opp && opp.type !== "none" && (
+              <OpportunityBadge opportunity={opp} size="sm" />
+            )}
             <span className="ml-auto">
               <PriorityRing score={task.priorityScore} onDark={hero} />
             </span>
@@ -247,6 +262,14 @@ export default function TaskCard({
               <p className="mt-1 text-sm font-bold text-aqua-300">
                 → {task.suggestedAction}
               </p>
+              {opp && opp.type !== "none" && (
+                <p className="mt-1 text-sm font-bold text-gold">
+                  → {opp.action}
+                  <span className="ml-1.5 font-medium text-deep-sub">
+                    ({opp.reasons[0]})
+                  </span>
+                </p>
+              )}
             </>
           ) : (
             // 데이터 → 판단 → 실행 흐름을 명시적으로 표현
@@ -267,6 +290,27 @@ export default function TaskCard({
                   ))}
                 </ul>
               </div>
+              {opp && opp.type !== "none" && (
+                <div className="rounded-btn bg-gold-soft/70 px-3 py-2">
+                  <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
+                    매출기회 · {opp.label}
+                  </p>
+                  <ul className="mt-0.5 space-y-0.5">
+                    {opp.reasons.slice(0, 3).map((r, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                      >
+                        <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
+                        {r}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 text-sm font-bold text-gold-deep">
+                    → {opp.action}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
                   권장 행동
@@ -398,6 +442,29 @@ export default function TaskCard({
                 </div>
               </div>
 
+              {/* 재등록 기회 과제에서만 — 매출 성과로 이어졌는지 남긴다 */}
+              {isRenewal && (
+                <button
+                  onClick={() => setRenewed((v) => !v)}
+                  className={`mt-2.5 flex w-full items-center gap-2 rounded-btn px-3 py-2.5 text-left text-sm font-bold transition-colors ${
+                    renewed
+                      ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                      : hero
+                        ? "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20"
+                        : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold-soft"
+                  }`}
+                >
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
+                      renewed ? "bg-white/25" : "bg-white/60 dark:bg-white/10"
+                    }`}
+                  >
+                    {renewed && <CheckIcon className="h-3.5 w-3.5" />}
+                  </span>
+                  이용권 재등록으로 이어짐
+                </button>
+              )}
+
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -490,6 +557,7 @@ export default function TaskCard({
                       : ""
                   }`
                 : " · 재방문 미정"}
+              {task.outcome.membershipRenewed ? " · 이용권 재등록" : ""}
               {task.outcome.note ? ` · ${task.outcome.note}` : ""}
             </p>
           )}

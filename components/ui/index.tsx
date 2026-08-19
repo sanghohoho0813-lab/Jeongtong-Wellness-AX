@@ -1,8 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { CustomerStatus, TaskStatus } from "@/lib/types";
-import { XIcon } from "./icons";
+import { CustomerStatus, SalesOpportunity, TaskStatus } from "@/lib/types";
+import { SparkIcon, XIcon } from "./icons";
 
 // ---------- Card ----------
 
@@ -540,6 +540,39 @@ export function FieldLabel({ children }: { children: ReactNode }) {
 
 export const inputCls =
   "w-full rounded-btn border border-stone-line bg-card px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none transition-shadow focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
+
+/**
+ * AX 매출기회 배지 — 재등록 / 재방문 기회를 색으로 구분한다.
+ * 관리 필요(Priority)와 혼동되지 않도록 골드·에메랄드 계열만 사용한다.
+ */
+export function OpportunityBadge({
+  opportunity,
+  size = "md",
+}: {
+  opportunity: SalesOpportunity;
+  size?: "sm" | "md";
+}) {
+  if (opportunity.type === "none") return null;
+  const renewal = opportunity.type === "renewal";
+  const high = opportunity.level === "high";
+  const cls = renewal
+    ? high
+      ? "bg-gradient-to-r from-gold to-gold-deep text-white"
+      : "bg-gold-soft text-gold-deep ring-1 ring-gold/25"
+    : high
+      ? "bg-gradient-to-r from-emerald-400 to-positive text-white"
+      : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full font-extrabold ${cls} ${
+        size === "sm" ? "px-2 py-0.5 text-[0.7rem]" : "px-2.5 py-1 text-xs"
+      }`}
+    >
+      <SparkIcon className={size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+      {opportunity.label}
+    </span>
+  );
+}
 
 /** 선택형 세그먼트 (설정 · 화면 표시 공통) */
 export function SegmentedControl<T extends string>({

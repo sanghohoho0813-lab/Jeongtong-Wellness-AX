@@ -20,6 +20,7 @@ import {
   CustomerStatusBadge,
   EmptyState,
   Modal,
+  OpportunityBadge,
   ProgressBar,
   SectionTitle,
   recommendLevel,
@@ -46,6 +47,7 @@ export default function CustomerDetailPage() {
   const {
     derivedById,
     factsById,
+    opportunityById,
     staff,
     updateCustomer,
     updateMembership,
@@ -95,6 +97,8 @@ export default function CustomerDetailPage() {
   const insight = buildCustomerInsight(derived, task, settings.careRules);
   // 다음 관리 예정일 선택 시 함께 제시하는 추천일 (방문 폼과 동일 기준)
   const recommendation = recommendNextManageDate(facts, settings.careRules);
+  // AX 매출기회 — Priority Score 와 별개로 계산된 파생 판정
+  const opportunity = opportunityById.get(c.id);
 
   return (
     <div>
@@ -253,11 +257,21 @@ export default function CustomerDetailPage() {
               />
               AX Insight
             </p>
-            <Badge tone={insight.attention ? "aqua" : "positive"} dot>
-              {insight.attention ? "AI 추천 · 관리 대상" : "정상 관리군"}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge tone={insight.attention ? "aqua" : "positive"} dot>
+                {insight.attention ? "AI 추천 · 관리 대상" : "정상 관리군"}
+              </Badge>
+              {opportunity && opportunity.type !== "none" && (
+                <OpportunityBadge opportunity={opportunity} />
+              )}
+            </div>
           </div>
-          <ul className="mt-2.5 space-y-1">
+
+          {/* 관리상태 — 지금 챙겨야 하는 이유 (Priority 기준) */}
+          <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+            관리상태
+          </p>
+          <ul className="mt-1 space-y-1">
             {insight.reasons.map((r, i) => (
               <li
                 key={i}
@@ -268,9 +282,39 @@ export default function CustomerDetailPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-sm font-bold text-aqua-700">
+
+          {/* 매출기회 — 관리하면 기존 매출로 이어질 수 있는 근거 */}
+          {opportunity && opportunity.type !== "none" && (
+            <>
+              <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
+                매출기회 · {opportunity.label}
+              </p>
+              <ul className="mt-1 space-y-1">
+                {opportunity.reasons.map((r, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                  >
+                    <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* 권장 실행 — 관리 권장행동 + (있으면) 매출기회 권장행동 */}
+          <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+            권장 실행
+          </p>
+          <p className="mt-1 text-sm font-bold text-aqua-700">
             → {insight.recommendation}
           </p>
+          {opportunity && opportunity.type !== "none" && (
+            <p className="mt-0.5 text-sm font-bold text-gold-deep">
+              → {opportunity.action}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">

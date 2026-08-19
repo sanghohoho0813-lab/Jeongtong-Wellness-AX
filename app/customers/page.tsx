@@ -16,6 +16,7 @@ import {
   EmptyState,
   FilterChip,
   Modal,
+  OpportunityBadge,
   RecommendBadge,
   SummaryTile,
   inputCls,
@@ -54,10 +55,11 @@ const AVATAR_BY_STATUS: Record<CustomerStatus, string> = {
 
 export default function CustomersPage() {
   const router = useRouter();
-  const { derivedById, canSeePhone } = useStore();
+  const { derivedById, opportunityById, canSeePhone } = useStore();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<CustomerStatus | "all">("all");
   const [sort, setSort] = useState<SortKey>("priority");
+  const [onlyOpportunity, setOnlyOpportunity] = useState(false);
   const [openForm, setOpenForm] = useState(false);
 
   const all = useMemo(() => [...derivedById.values()], [derivedById]);
@@ -78,6 +80,11 @@ export default function CustomersPage() {
     return all
       .filter((d) => {
         if (status !== "all" && d.status !== status) return false;
+        if (
+          onlyOpportunity &&
+          (opportunityById.get(d.customer.id)?.type ?? "none") === "none"
+        )
+          return false;
         if (!q) return true;
         return (
           d.customer.name.includes(q) ||
@@ -99,9 +106,13 @@ export default function CustomersPage() {
             return b.priorityScore - a.priorityScore;
         }
       });
-  }, [all, query, status, sort]);
+  }, [all, query, status, sort, onlyOpportunity, opportunityById]);
 
   const priorityCount = rows.filter((d) => d.priorityScore > 0).length;
+  // AX 매출기회 대상 — 전체 고객 기준 (필터와 무관하게 항상 같은 수)
+  const opportunityCount = all.filter(
+    (d) => (opportunityById.get(d.customer.id)?.type ?? "none") !== "none",
+  ).length;
 
   return (
     <div>
@@ -168,6 +179,18 @@ export default function CustomersPage() {
               {sopt.label}
             </FilterChip>
           ))}
+          {opportunityCount > 0 && (
+            <button
+              onClick={() => setOnlyOpportunity((v) => !v)}
+              className={`touch-target nowrap-num ml-1 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                onlyOpportunity
+                  ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                  : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
+              }`}
+            >
+              매출기회 {opportunityCount}
+            </button>
+          )}
           <span className="nowrap-num ml-auto text-sm font-bold text-ink-sub">
             {rows.length}명
           </span>
@@ -189,7 +212,11 @@ export default function CustomersPage() {
         ) : (
           <EmptyState
             title="조건에 맞는 고객이 없습니다"
-            description="검색어나 필터를 변경해 보세요."
+            description={
+              onlyOpportunity
+                ? "지금 매출기회로 볼 만한 고객이 없습니다. 매출기회 필터를 해제해 보세요."
+                : "검색어나 필터를 변경해 보세요."
+            }
           />
         )
       ) : (
@@ -216,6 +243,12 @@ export default function CustomersPage() {
                   {d.priorityScore > 0 && (
                     <RecommendBadge score={d.priorityScore} />
                   )}
+                  {(() => {
+                    const opp = opportunityById.get(d.customer.id);
+                    return opp && opp.type !== "none" ? (
+                      <OpportunityBadge opportunity={opp} size="sm" />
+                    ) : null;
+                  })()}
                 </div>
                 {/* 중요한 방문 정보를 앞에 두고, 연락처는 좁은 화면에서 잘리게 */}
                 <p className="mt-0.5 flex items-center gap-1.5 text-sm text-ink-sub">

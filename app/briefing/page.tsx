@@ -43,9 +43,17 @@ export default function BriefingPage() {
   const { briefingTasks } = useStore();
   const [category, setCategory] = useState<TaskCategory | "all">("all");
   const [status, setStatus] = useState<TaskStatus | "open" | "all">("open");
+  const [onlyOpportunity, setOnlyOpportunity] = useState(false);
+
+  /** 매출기회 과제 수 — 필터 칩 라벨과 동일 기준 */
+  const opportunityTotal = briefingTasks.filter(
+    (t) => t.opportunity && t.opportunity.type !== "none",
+  ).length;
 
   const filtered = briefingTasks.filter((t) => {
     if (category !== "all" && t.category !== category) return false;
+    if (onlyOpportunity && (t.opportunity?.type ?? "none") === "none")
+      return false;
     if (status === "open")
       return t.status === "pending" || t.status === "confirmed";
     if (status !== "all" && t.status !== status) return false;
@@ -175,7 +183,7 @@ export default function BriefingPage() {
               );
             })}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {STATUS_FILTERS.map((s) => (
               <FilterChip
                 key={s}
@@ -190,13 +198,30 @@ export default function BriefingPage() {
                     : TASK_STATUS_LABELS[s]}
               </FilterChip>
             ))}
+            {/* AX 매출기회만 보기 — 관리 필요와 별개의 축이라 색을 달리한다 */}
+            {opportunityTotal > 0 && (
+              <button
+                onClick={() => setOnlyOpportunity((v) => !v)}
+                className={`touch-target nowrap-num ml-auto rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                  onlyOpportunity
+                    ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                    : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
+                }`}
+              >
+                매출기회 {opportunityTotal}
+              </button>
+            )}
           </div>
         </div>
       </Card>
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="해당 조건의 실행 과제가 없습니다"
+          title={
+            onlyOpportunity
+              ? "해당 조건의 매출기회 과제가 없습니다"
+              : "해당 조건의 실행 과제가 없습니다"
+          }
           description="필터를 변경하거나, 오늘의 관리 과제를 모두 완료한 상태입니다."
         />
       ) : (

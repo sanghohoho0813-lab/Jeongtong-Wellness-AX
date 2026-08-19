@@ -26,6 +26,7 @@ import {
   Staff,
   CarePreference,
   PreferenceCategory,
+  SalesOpportunity,
   TaskOutcome,
   TaskStatus,
   Visit,
@@ -42,6 +43,7 @@ import {
   deriveCustomer,
   generateDailyBriefing,
 } from "@/lib/scoring/priority";
+import { detectSalesOpportunity } from "@/lib/scoring/opportunity";
 import { todayISO } from "@/lib/utils/date";
 
 const STORAGE_KEY = "jeongtong-ax-v1";
@@ -102,6 +104,8 @@ interface StoreValue extends PersistedState {
   briefingTasks: BriefingTask[];
   factsById: Map<string, CustomerFacts>;
   derivedById: Map<string, ReturnType<typeof deriveCustomer>>;
+  /** AX 매출기회 — 고객별 파생 판정 (Priority Score 와 별개) */
+  opportunityById: Map<string, SalesOpportunity>;
   /** 현재 사용자 (기본: 첫 owner) */
   currentStaff: Staff;
   /** 대표/관리자 여부 — 매출·운영 정보 노출 판단 */
@@ -243,14 +247,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return map;
   }, [factsById, state.settings.careRules]);
 
+  /**
+   * AX 매출기회 — Priority Score 와 분리된 파생 판정.
+   * 과제 생성이 끝난 뒤 고객별로 계산해 얹기만 하므로 기존 엔진에 영향이 없다.
+   */
+  const opportunityById = useMemo(() => {
+    const map = new Map<string, SalesOpportunity>();
+    for (const [id, facts] of factsById) {
+      // 직전 관리의 처리 결과를 근거로 함께 사용한다
+      const lastOutcome = state.taskOverrides
+        .filter((t) => t.customerId === id && t.outcome)
+        .sort((a, b) =>
+          (b.statusChangedAt ?? "").localeCompare(a.statusChangedAt ?? ""),
+        )[0]?.outcome;
+      map.set(
+        id,
+        detectSalesOpportunity(facts, state.settings.careRules, lastOutcome),
+      );
+    }
+    return map;
+  }, [factsById, state.settings.careRules, state.taskOverrides]);
+
   const briefingTasks = useMemo(
     () =>
       generateDailyBriefing(
         [...factsById.values()],
         state.settings.careRules,
         state.taskOverrides,
-      ),
-    [factsById, state.settings.careRules, state.taskOverrides],
+      ).map((t) => ({ ...t, opportunity: opportunityById.get(t.customerId) })),
+    [factsById, state.settings.careRules, state.taskOverrides, opportunityById],
   );
 
   // 현재 사용자 — 지정되지 않았거나 비활성이면 첫 owner(없으면 첫 직원)
@@ -607,6 +632,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             nextManageDate,
             nextManageTime: nextManageDate ? nextManageTime : undefined,
             note: o?.note ?? base?.note,
+            // 매출기회(재등록) 과제에서만 기록되는 결과값
+            membershipRenewed: o?.membershipRenewed ?? base?.membershipRenewed,
           };
           // 결과에서 다음 관리일을 조정했으면 고객 데이터에도 반영 (기존 필드 갱신)
           if (
@@ -661,6 +688,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     briefingTasks,
     factsById,
     derivedById,
+    opportunityById,
     currentStaff,
     isManager,
     canSeePhone,

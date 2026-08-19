@@ -3,6 +3,7 @@
 import PageHeader from "@/components/layout/PageHeader";
 import KpiRow from "@/components/dashboard/KpiRow";
 import BriefingPreview from "@/components/dashboard/BriefingPreview";
+import OpportunityCard from "@/components/dashboard/OpportunityCard";
 import BodyMapCard from "@/components/dashboard/BodyMapCard";
 import SegmentCard from "@/components/dashboard/SegmentCard";
 import RevisitPreview from "@/components/dashboard/RevisitPreview";
@@ -29,10 +30,13 @@ export default function DashboardPage() {
         </div>
         <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
           <BriefingPreview />
-          <BodyMapCard />
+          <OpportunityCard />
         </div>
-        <div className="rise-stagger grid grid-cols-1 card-gap md:grid-cols-2 xl:grid-cols-3">
+        <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
+          <BodyMapCard />
           <SegmentCard />
+        </div>
+        <div className="rise-stagger grid grid-cols-1 card-gap md:grid-cols-2">
           <RevisitPreview />
           <BranchSummaryCard />
         </div>
