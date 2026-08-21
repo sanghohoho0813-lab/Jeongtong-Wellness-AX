@@ -313,6 +313,52 @@ a:active {
     animation: none !important;
     transition: none !important;
   }
+
+  /* ---------- 고객 케어 리포트만 인쇄 ----------
+     리포트는 모달 안에서 열리므로, 그냥 인쇄하면 뒤 화면까지 함께 나간다.
+     인쇄 순간에만 body 에 print-report 를, 리포트를 담은 모달에 print-root 를
+     붙여서 그 하나만 남긴다.
+
+     visibility 로 숨기지 않는 이유: 숨겨도 자리는 그대로 차지해서
+     리포트가 빈 종이 몇 장 뒤에 찍힌다. display 로 아예 빼야 한다. */
+  body.print-report > *:not(.print-root) {
+    display: none !important;
+  }
+  body.print-report .no-print,
+  /* 모달 제목줄은 화면용이다 — 종이에는 리포트 자체 머리글만 나간다 */
+  body.print-report .modal-header {
+    display: none !important;
+  }
+  /* 모달 껍데기를 종이 위에서는 펴 준다.
+     그대로 두면 화면 속 모달 위치에 찍히고, 스크롤 영역 밖은 잘려 나간다. */
+  body.print-report .print-root {
+    position: static !important;
+    display: block !important;
+    max-height: none !important;
+  }
+  body.print-report .print-root > div {
+    position: static !important;
+    max-width: none !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  body.print-report .print-root .overflow-y-auto,
+  body.print-report .print-root .overflow-hidden {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  body.print-report .print-region {
+    position: static !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* 리포트 안의 막대는 배경색이 그대로 찍혀야 의미가 있다 */
+  .print-region * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* 모션 최소화 설정 존중 */

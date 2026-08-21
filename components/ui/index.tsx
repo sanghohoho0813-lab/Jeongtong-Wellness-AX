@@ -756,7 +756,7 @@ export function Modal({
         tabIndex={-1}
         className={`relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float outline-none ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-stone-line px-5 py-4">
+        <div className="modal-header flex items-center justify-between gap-3 border-b border-stone-line px-5 py-4">
           <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
           <button
             onClick={onClose}

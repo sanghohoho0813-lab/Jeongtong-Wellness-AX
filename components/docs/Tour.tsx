@@ -138,6 +138,14 @@ export function buildTourSteps(
     },
     {
       route: detail,
+      target: "care-report",
+      kicker: "고객 상세",
+      title: "고객과 함께 보는 한 장",
+      body: "지금까지 얼마나 이용하셨고 어디를 관리해 왔는지가 한 장으로 정리됩니다. 화면으로 함께 보거나 종이로 뽑아 드릴 수 있습니다.",
+      tip: "재등록 안내가 권유가 아니라 확인이 됩니다",
+    },
+    {
+      route: detail,
       target: "visit-record",
       kicker: "고객 상세",
       title: "방문은 이 버튼 하나로 기록합니다",
@@ -159,6 +167,13 @@ export function buildTourSteps(
       kicker: "AX 도입성과",
       title: "관리가 매출로 이어졌는지 셉니다",
       body: "매출기회 대상 → 직원이 실제 관리 → 재방문 예정 확보 → 이용권 재등록 → 실제 재방문 확인 순으로 이어집니다. 전환율이나 예상 매출을 추정하지는 않습니다.",
+    },
+    {
+      route: "/analytics",
+      target: "analytics-program",
+      kicker: "AX 도입성과",
+      title: "어떤 프로그램이 다음 방문으로 이어졌나",
+      body: "프로그램별로 이용 뒤에 다시 오신 분이 몇 명인지 셉니다. 프로그램이 원인이라는 뜻은 아니고, 무엇을 권할지 정할 때 볼 근거입니다.",
     },
     {
       route: "/analytics",

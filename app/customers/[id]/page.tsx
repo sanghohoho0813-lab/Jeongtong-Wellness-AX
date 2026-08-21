@@ -27,6 +27,7 @@ import {
 } from "@/components/ui";
 import {
   BodyIcon,
+  BookIcon,
   CalendarIcon,
   ChevronLeftIcon,
   PlusIcon,
@@ -40,6 +41,7 @@ import {
 import CarePreferenceCard from "@/components/customers/CarePreferenceCard";
 import CustomerForm from "@/components/customers/CustomerForm";
 import MembershipForm from "@/components/customers/MembershipForm";
+import CareReport from "@/components/customers/CareReport";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
 export default function CustomerDetailPage() {
@@ -65,6 +67,7 @@ export default function CustomerDetailPage() {
   const [confirmDeleteV, setConfirmDeleteV] = useState<Visit | undefined>();
   const [openSchedule, setOpenSchedule] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
+  const [openReport, setOpenReport] = useState(false);
   const [openMembership, setOpenMembership] = useState(false);
   const [editingMembership, setEditingMembership] = useState<
     Membership | undefined
@@ -134,6 +137,15 @@ export default function CustomerDetailPage() {
             </p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setOpenReport(true)}
+              dataTour="care-report"
+            >
+              <BookIcon className="h-4 w-4" />
+              케어 리포트
+            </Button>
             <Button
               variant="secondary"
               size="lg"
@@ -738,6 +750,16 @@ export default function CustomerDetailPage() {
             삭제
           </Button>
         </div>
+      </Modal>
+
+      {/* 고객 케어 리포트 — 고객과 함께 보는 한 장 */}
+      <Modal
+        open={openReport}
+        onClose={() => setOpenReport(false)}
+        title={`${c.name} 님 케어 리포트`}
+        wide
+      >
+        <CareReport customer={c} />
       </Modal>
 
       {/* 이용권 삭제 확인 */}

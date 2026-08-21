@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import {
@@ -24,6 +24,7 @@ import {
 import { DownloadIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import DataImport from "@/components/settings/DataImport";
+import { previewRuleChange } from "@/lib/scoring/rule-preview";
 import {
   daysAgo,
   formatDateKr,
@@ -88,6 +89,7 @@ export default function SettingsPage() {
     updateStaff,
     resetData,
     startFresh,
+    factsById,
     storage,
     isManager,
   } = useStore();
@@ -98,8 +100,25 @@ export default function SettingsPage() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmFresh, setConfirmFresh] = useState(false);
 
+  /**
+   * 관리 기준은 바로 저장하지 않고 초안으로 둔다.
+   * 저장 전에 "이 기준이면 오늘 대상이 몇 명이 되는지"를 먼저 보여 주기 위해서다.
+   * 그동안은 저장하고 나서야 결과를 알 수 있어 감으로 정하게 됐다.
+   */
+  const [draftRules, setDraftRules] = useState<CareRuleSettings>(
+    settings.careRules,
+  );
+  // 밖에서 기준이 바뀌면(초기화·백업 복원 등) 초안도 따라간다
+  useEffect(() => setDraftRules(settings.careRules), [settings.careRules]);
+
   const setRule = (patch: Partial<CareRuleSettings>) =>
-    updateSettings({ careRules: { ...settings.careRules, ...patch } });
+    setDraftRules((r) => ({ ...r, ...patch }));
+
+  const allFacts = useMemo(() => [...factsById.values()], [factsById]);
+  const preview = useMemo(
+    () => previewRuleChange(allFacts, settings.careRules, draftRules),
+    [allFacts, settings.careRules, draftRules],
+  );
 
   // 매출기회 기준 — 저장된 값이 없으면 기본값을 쓴다 (기존 데이터 호환)
   const oppRules = settings.opportunityRules ?? DEFAULT_OPPORTUNITY_RULES;
@@ -357,34 +376,120 @@ export default function SettingsPage() {
         {/* 고객관리 기준 */}
         <Card>
           <SectionTitle>고객관리 기준</SectionTitle>
-          <p className="-mt-2 mb-4 text-sm text-ink-sub">
-            아래 기준은 오늘의 실행 브리핑과 재방문 관리 분류에 바로 적용됩니다.
+          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
+            오늘의 실행 브리핑과 재방문 관리가 이 기준으로 대상을 가려냅니다.
+            숫자를 바꾸면 <b>저장하기 전에</b> 대상이 어떻게 달라지는지 아래에서
+            보여 드립니다.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <RuleField
               label="장기 미방문 판단 기준"
-              value={settings.careRules.dormantDays}
+              value={draftRules.dormantDays}
               unit="일 이상 미방문"
               onChange={(n) => setRule({ dormantDays: n })}
             />
             <RuleField
               label="이용권 소진 임박 기준"
-              value={settings.careRules.membershipLowCount}
+              value={draftRules.membershipLowCount}
               unit="회 이하 잔여"
               onChange={(n) => setRule({ membershipLowCount: n })}
             />
             <RuleField
               label="재방문 예정 기준"
-              value={settings.careRules.revisitWindowDays}
+              value={draftRules.revisitWindowDays}
               unit="일 전부터 알림"
               onChange={(n) => setRule({ revisitWindowDays: n })}
             />
             <RuleField
               label="신규 고객 후속관리 기간"
-              value={settings.careRules.newFollowupDays}
+              value={draftRules.newFollowupDays}
               unit="일"
               onChange={(n) => setRule({ newFollowupDays: n })}
             />
+          </div>
+
+          {/* 저장 전 영향 미리보기 — 규칙 엔진을 그대로 돌려 센 값이다 */}
+          <div className="mt-4 border-t border-stone-line pt-4">
+            {preview.unchanged ? (
+              <p className="text-sm leading-relaxed text-ink-sub">
+                지금 기준으로 오늘 관리 대상은{" "}
+                <b className="nowrap-num text-ink">{preview.before.total}명</b>
+                입니다. 위 숫자를 바꾸면 대상이 어떻게 달라지는지 저장하기 전에
+                여기서 확인하실 수 있습니다.
+              </p>
+            ) : (
+              <div>
+                {preview.totalDelta === 0 ? (
+                  <p className="text-sm leading-relaxed text-ink-soft">
+                    오늘 관리 대상은{" "}
+                    <b className="nowrap-num">{preview.after.total}명</b>으로
+                    그대로지만,{" "}
+                    {preview.changed.length > 0
+                      ? "어떤 이유로 잡히는지가 달라집니다."
+                      : "달라지는 것이 없습니다."}
+                  </p>
+                ) : (
+                  <p className="text-sm leading-relaxed text-ink-soft">
+                    이 기준으로 바꾸면 오늘 관리 대상이{" "}
+                    <b className="nowrap-num">{preview.before.total}명</b> →{" "}
+                    <b className="nowrap-num text-deep-800 dark:text-aqua-700">
+                      {preview.after.total}명
+                    </b>
+                    <span className="nowrap-num">
+                      {" "}
+                      ({preview.totalDelta > 0 ? "+" : ""}
+                      {preview.totalDelta}명)
+                    </span>
+                    이 됩니다.
+                  </p>
+                )}
+
+                {preview.changed.length > 0 && (
+                  <ul className="mt-2.5 space-y-1">
+                    {preview.changed.map((r) => (
+                      <li
+                        key={r.category}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                            r.delta > 0 ? "bg-warn" : "bg-positive"
+                          }`}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-ink-soft">
+                          {r.label}
+                        </span>
+                        <span className="nowrap-num shrink-0 font-bold text-ink">
+                          {r.before} → {r.after}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <p className="mt-2.5 text-xs leading-relaxed text-ink-faint">
+                  실제 브리핑을 만드는 규칙을 그대로 돌려 센 숫자입니다. 아직
+                  저장되지 않았습니다.
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => {
+                      updateSettings({ careRules: draftRules });
+                      toast("관리 기준을 적용했습니다");
+                    }}
+                  >
+                    기준 적용
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setDraftRules(settings.careRules)}
+                  >
+                    되돌리기
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 

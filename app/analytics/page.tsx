@@ -31,6 +31,7 @@ import {
   summarizeStaffActivity,
 } from "@/lib/scoring/opportunity";
 import { buildOperationInsight } from "@/lib/scoring/insight";
+import { programHeadline, summarizePrograms } from "@/lib/scoring/program";
 
 const METRIC_DOTS: Record<string, string> = {
   sky: "bg-sky-500",
@@ -191,6 +192,10 @@ export default function AnalyticsPage() {
   const idleStaff = staff.filter(
     (s) => s.active && !staffActivity.some((a) => a.staffId === s.id),
   );
+
+  // 프로그램별 성과 — 저장된 방문·이용권 기록에서만 계산 (예측 없음)
+  const programs = summarizePrograms(visits, memberships);
+  const programNote = programHeadline(programs);
 
   const openTaskCount = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
@@ -569,6 +574,91 @@ export default function AnalyticsPage() {
                   과제를 처리하면 실행 · 재방문 · 재등록 결과가 여기에 쌓입니다.
                 </p>
               )}
+            </>
+          )}
+        </Card>
+
+        {/* 프로그램별 성과 — 무엇을 권할지 판단할 근거 (실제 기록 집계) */}
+        <Card dataTour="analytics-program">
+          <SectionTitle>프로그램별 성과</SectionTitle>
+          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
+            어떤 프로그램이 다음 방문으로 이어졌는지를 실제 기록에서 셉니다.
+            프로그램이 원인이라는 뜻은 아니며, 이용 이후 방문 기록이 있었다는
+            사실만 보여 드립니다.
+          </p>
+
+          {programs.length === 0 ? (
+            <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm leading-relaxed text-ink-sub">
+              아직 프로그램이 기록된 방문이 없습니다. 방문을 기록할 때 프로그램을
+              함께 남기면 여기에 쌓입니다.
+            </p>
+          ) : (
+            <>
+              {programNote && (
+                <p className="mb-3 rounded-btn border-l-4 border-gold bg-gold-soft/60 px-4 py-3 text-sm leading-relaxed text-ink-soft">
+                  {programNote}
+                </p>
+              )}
+              <ul className="space-y-1.5">
+                {programs.map((p) => {
+                  const rate =
+                    p.customerCount > 0
+                      ? Math.round((p.returnedCustomers / p.customerCount) * 100)
+                      : 0;
+                  return (
+                    <li
+                      key={p.name}
+                      className="rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04]"
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                        <span className="min-w-0 flex-1 truncate font-extrabold text-ink">
+                          {p.name}
+                        </span>
+                        <span className="nowrap-num shrink-0 text-sm font-bold text-ink-sub">
+                          이용 {p.visitCount}회 · {p.customerCount}명
+                        </span>
+                      </div>
+
+                      {/* 이용 후 다시 방문한 고객 비율 */}
+                      <div className="mt-2 flex items-center gap-2.5">
+                        <span className="h-2 flex-1 overflow-hidden rounded-full bg-stone-bg-deep">
+                          <span
+                            className="block h-full rounded-full bg-gradient-to-r from-aqua-400 to-deep-700"
+                            style={{ width: `${rate}%` }}
+                          />
+                        </span>
+                        <span className="nowrap-num shrink-0 text-sm font-extrabold text-ink">
+                          {p.returnedCustomers}/{p.customerCount}명 재방문
+                        </span>
+                      </div>
+
+                      <p className="mt-1.5 text-xs leading-relaxed text-ink-sub">
+                        {p.medianReturnDays !== undefined && (
+                          <span className="nowrap-num">
+                            다음 방문까지 보통 {p.medianReturnDays}일
+                          </span>
+                        )}
+                        {p.repeatCustomers > 0 && (
+                          <span className="nowrap-num">
+                            {p.medianReturnDays !== undefined ? " · " : ""}
+                            같은 프로그램 재이용 {p.repeatCustomers}명
+                          </span>
+                        )}
+                        {isManager && p.membershipCount > 0 && (
+                          <span className="nowrap-num">
+                            {" · "}이용권 {p.membershipCount}건{" "}
+                            {formatKrw(p.membershipRevenue)}
+                          </span>
+                        )}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-3 text-xs leading-relaxed text-ink-faint">
+                &lsquo;다음 방문까지 보통 N일&rsquo;은 중앙값입니다. 한두 분의 긴 공백이
+                전체를 왜곡하지 않도록 평균 대신 씁니다.
+              </p>
             </>
           )}
         </Card>
