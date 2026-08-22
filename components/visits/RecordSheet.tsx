@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatusBadge } from "@/components/ui";
-import { SearchIcon, XIcon } from "@/components/ui/icons";
+import { PlusIcon, SearchIcon, XIcon } from "@/components/ui/icons";
 import { displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative, todayISO } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
@@ -31,10 +31,13 @@ export default function RecordSheet({
   open,
   onClose,
   onPick,
+  onNew,
 }: {
   open: boolean;
   onClose: () => void;
   onPick: (customerId: string) => void;
+  /** 처음 오신 분 — 검색어를 이름으로 넘겨 등록 화면을 연다 */
+  onNew: (name: string) => void;
 }) {
   const { derivedById, canSeePhone } = useStore();
   const [query, setQuery] = useState("");
@@ -146,13 +149,15 @@ export default function RecordSheet({
         </div>
 
         {rows.length === 0 ? (
-          <p className="px-4 py-10 text-center text-[0.9375rem] leading-relaxed text-ink-sub">
+          <p className="px-4 py-8 text-center text-[0.9375rem] leading-relaxed text-ink-sub">
             {query.trim()
-              ? "찾으시는 고객이 없습니다."
-              : "등록된 고객이 없습니다. 먼저 고객을 등록해 주세요."}
+              ? `'${query.trim()}' 님은 아직 등록되어 있지 않습니다.`
+              : "등록된 고객이 없습니다."}
+            <br />
+            아래에서 바로 등록하고 기록할 수 있습니다.
           </p>
         ) : (
-          <ul className="min-h-0 flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+          <ul className="min-h-0 flex-1 overflow-y-auto">
             {rows.map(({ d }) => {
               const due = d.customer.nextManageDate;
               const isDue = !!due && due <= today;
@@ -191,6 +196,23 @@ export default function RecordSheet({
             })}
           </ul>
         )}
+
+        {/*
+          처음 오신 분 — 목록에 없다고 되돌아 나가지 않도록 늘 보이게 둔다.
+          현장에서 새 손님을 받는 일은 드물지 않은데, 지금까지는
+          시트를 닫고 고객 메뉴로 들어가 등록한 뒤 다시 기록을 시작해야 했다.
+          검색칸에 적어 둔 이름은 등록 화면에 그대로 넘긴다.
+        */}
+        <div className="shrink-0 border-t border-stone-line px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3">
+          <button
+            type="button"
+            onClick={() => onNew(query.trim())}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-btn bg-aqua-50 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-200 active:bg-aqua-100"
+          >
+            <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
+            처음 오신 분 등록하고 기록
+          </button>
+        </div>
       </div>
     </div>,
     document.body,

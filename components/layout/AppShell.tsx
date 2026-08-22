@@ -24,6 +24,8 @@ import LiveClock from "./LiveClock";
 import ErrorBoundary from "./ErrorBoundary";
 import QuickVisitModal from "@/components/visits/QuickVisitModal";
 import RecordSheet from "@/components/visits/RecordSheet";
+import CustomerForm from "@/components/customers/CustomerForm";
+import { Modal } from "@/components/ui";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -320,6 +322,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [recordFor, setRecordFor] = useState<string | undefined>();
   /** 폰 하단 [기록] 단추가 여는 고객 고르기 화면 */
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** 처음 오신 분 등록 — 값이 있으면 등록 창이 열린다 (검색칸에 적던 이름) */
+  const [newName, setNewName] = useState<string | undefined>();
 
   /**
    * Ctrl/⌘ + K 로 어디서든 연다.
@@ -361,7 +365,27 @@ export default function AppShell({ children }: { children: ReactNode }) {
           setSheetOpen(false);
           setRecordFor(id);
         }}
+        onNew={(name) => {
+          setSheetOpen(false);
+          setNewName(name);
+        }}
       />
+      {/* 처음 오신 분 — 등록이 끝나면 곧바로 그분의 기록 창으로 이어진다 */}
+      <Modal
+        open={newName !== undefined}
+        onClose={() => setNewName(undefined)}
+        title="처음 오신 분 등록"
+        wide
+      >
+        <CustomerForm
+          initialName={newName || undefined}
+          onCancel={() => setNewName(undefined)}
+          onSaved={(id) => {
+            setNewName(undefined);
+            setRecordFor(id);
+          }}
+        />
+      </Modal>
       {/* 찾자마자 기록 — 화면을 옮기지 않고 그 자리에서 끝낸다 */}
       <QuickVisitModal
         customerId={recordFor}

@@ -18,18 +18,21 @@ import BodyMap from "@/components/body-map/BodyMap";
 
 export default function CustomerForm({
   customer,
+  initialName,
   onSaved,
   onCancel,
 }: {
   /** 있으면 수정 모드 */
   customer?: Customer;
+  /** 등록 모드에서 이름 칸을 미리 채워 둔다 (기록 화면에서 찾다가 넘어온 경우) */
+  initialName?: string;
   onSaved: (customerId: string) => void;
   onCancel: () => void;
 }) {
   const { staff, settings, customers, addCustomer, updateCustomer } = useStore();
   const toast = useToast();
   const editing = !!customer;
-  const [name, setName] = useState(customer?.name ?? "");
+  const [name, setName] = useState(customer?.name ?? initialName ?? "");
   const [phone, setPhone] = useState(
     customer ? formatPhoneInput(customer.phone) : "",
   );
