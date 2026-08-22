@@ -280,14 +280,34 @@ export function recommendLevel(score: number) {
 }
 
 /** AI 추천 등급 칩 (관리 대상일 때만 사용) */
-export function RecommendBadge({ score }: { score: number }) {
+export function RecommendBadge({
+  score,
+  compact = false,
+}: {
+  score: number;
+  /**
+   * 목록의 한 줄처럼 자리가 빠듯한 곳에서는 등급만 한 글자로 줄인다.
+   * ("AI 추천 · 우선" 여덟 자가 자리를 다 먹어 정작 왜 챙겨야 하는지가
+   *  잘려 나갔다 — 이유 쪽이 더 쓸모 있다)
+   */
+  compact?: boolean;
+}) {
   const r = recommendLevel(score);
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-extrabold shadow-sm ${r.chip}`}
+      title={compact ? r.label : undefined}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-      {r.label}
+      {compact ? (
+        <>
+          {/* 폰에서만 줄여 쓴다 — 자리가 넉넉하면 원래 이름이 더 분명하다 */}
+          <span className="sm:hidden">{r.label.replace("AI 추천 · ", "")}</span>
+          <span className="hidden sm:inline">{r.label}</span>
+        </>
+      ) : (
+        r.label
+      )}
     </span>
   );
 }
@@ -346,8 +366,12 @@ export function KpiCard({
       <span
         className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${KPI_BARS[tint]}`}
       />
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 truncate text-[0.8125rem] font-bold tracking-wide text-ink-sub sm:text-sm">
+      <div className="flex items-start justify-between gap-2.5">
+        {/*
+          지표 이름은 자르지 않는다 — '오늘 방…' '월 매출 …' 처럼 잘리면
+          무슨 숫자인지 알 수 없다. 좁으면 두 줄로 접힌다.
+        */}
+        <p className="min-w-0 text-[0.8125rem] font-bold leading-snug tracking-wide text-ink-sub sm:text-sm">
           {label}
         </p>
         {icon && (
@@ -440,9 +464,10 @@ export function SummaryTile({
           : "border-black/[0.045]"
       } ${onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-card-hover" : ""}`}
     >
-      <p className="flex items-center gap-1.5 truncate text-xs font-bold text-ink-sub">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
-        {label}
+      {/* 지표 이름은 자르지 않는다 — 좁으면 두 줄로 접힌다 */}
+      <p className="flex items-start gap-1.5 text-xs font-bold leading-snug text-ink-sub">
+        <span className={`mt-[0.3rem] h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
+        <span className="min-w-0">{label}</span>
       </p>
       <p className="mt-1 nowrap-num text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
         {value}
@@ -467,19 +492,24 @@ export function InsightBanner({
   action?: ReactNode;
   className?: string;
 }) {
+  /**
+   * 단추는 **제목 줄 옆**에, 본문은 그 아래 전체 폭으로.
+   *
+   * 예전에는 단추가 본문과 나란히 놓여 폰에서 글 폭을 절반으로 깎았다.
+   * 두 문장이 여덟 줄로 늘어나 배너 하나가 화면을 통째로 먹었고,
+   * 정작 단추 아래는 텅 비어 있었다.
+   */
   return (
     <div className={`card-hero !p-5 sm:!p-6 ${className}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-aqua-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-aqua-300" />
-            {title}
-          </p>
-          <div className="mt-2 text-[0.9375rem] leading-relaxed text-white sm:text-base">
-            {children}
-          </div>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex min-w-0 items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-aqua-300">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-aqua-300" />
+          <span className="truncate">{title}</span>
+        </p>
         {action && <div className="shrink-0">{action}</div>}
+      </div>
+      <div className="mt-2 text-[0.9375rem] leading-relaxed text-white sm:text-base">
+        {children}
       </div>
     </div>
   );

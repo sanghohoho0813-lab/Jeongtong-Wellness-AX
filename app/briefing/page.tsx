@@ -89,7 +89,7 @@ export default function BriefingPage() {
     <div>
       <PageHeader
         title="오늘의 실행 브리핑"
-        description="고객 데이터에서 계산된 우선순위에 따라 오늘 실행할 관리 과제를 보여줍니다."
+        description="오늘 챙길 고객을 우선순위대로 정리했습니다."
         action={
           <Button
             variant="secondary"

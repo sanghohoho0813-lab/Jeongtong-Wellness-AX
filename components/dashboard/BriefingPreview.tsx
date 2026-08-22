@@ -32,18 +32,22 @@ function PreviewRow({
         {rank}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-baseline gap-2">
-          <Link
-            href={`/customers/${customer.id}`}
-            className="tap-line min-w-0 truncate text-[1.0625rem] font-extrabold text-white hover:text-aqua-200"
-          >
-            {customer.name}
-          </Link>
-          <span className="shrink-0 text-[0.75rem] font-bold text-aqua-300">
+        {/*
+          이름은 자르지 않는다 — 누구인지가 이 줄의 전부다.
+          관리 유형은 자리가 모자라면 줄고, 할 일은 두 줄까지 접어서
+          '안부 연락 후 방문 …' 처럼 끊기지 않게 한다.
+        */}
+        <Link
+          href={`/customers/${customer.id}`}
+          className="tap-line text-[1.0625rem] font-extrabold text-white hover:text-aqua-200"
+        >
+          {customer.name}
+        </Link>
+        <p className="line-clamp-2 text-[0.8125rem] leading-snug text-deep-sub">
+          <span className="font-bold text-aqua-300">
             {TASK_CATEGORY_LABELS[task.category]}
           </span>
-        </p>
-        <p className="truncate text-[0.8125rem] text-deep-sub">
+          {" · "}
           {task.suggestedAction}
         </p>
       </div>
@@ -81,12 +85,21 @@ export default function BriefingPreview() {
 
   return (
     <HeroCard dataTour="dash-briefing" className="flex flex-col">
+      {/*
+        제목이 길어 [전체 보기] 옆에서 세 줄로 쪼개졌다 ("AI" 만 한 줄).
+        폰에서는 짧은 이름으로, 자리가 있는 화면에서만 긴 이름으로 쓴다.
+      */}
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex min-w-0 items-center gap-2.5 text-[1.125rem] font-extrabold tracking-tight text-white sm:text-[1.25rem]">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-400/25 text-aqua-300 ring-1 ring-aqua-300/30">
             <SparkIcon className="h-5 w-5" />
           </span>
-          <span className="min-w-0">AI 고객관리 · 오늘의 실행 브리핑</span>
+          <span className="min-w-0">
+            <span className="sm:hidden">오늘의 실행 브리핑</span>
+            <span className="hidden sm:inline">
+              AI 고객관리 · 오늘의 실행 브리핑
+            </span>
+          </span>
         </h2>
         <Link
           href="/briefing"

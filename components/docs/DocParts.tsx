@@ -410,7 +410,8 @@ export function DocLinks({
             <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
               {l.label}
             </span>
-            <span className="mt-0.5 block truncate text-[0.875rem] text-ink-sub">
+            {/* 어떤 화면인지 설명하는 줄이라 자르지 않는다 (폰에서 잘려 있었다) */}
+            <span className="mt-0.5 block text-[0.875rem] leading-snug text-ink-sub">
               {l.desc}
             </span>
           </span>

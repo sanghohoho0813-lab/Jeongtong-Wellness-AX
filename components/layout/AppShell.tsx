@@ -46,8 +46,9 @@ function Logo() {
         <span className="block truncate text-[1.05rem] font-extrabold leading-tight tracking-tight text-ink">
           정통대왕쑥뜸원
         </span>
-        {/* AX 브랜드 시그니처 — 한글 브랜드보다 작게, PC/모바일 동일 문구 */}
-        <span className="block truncate text-[0.625rem] font-bold uppercase tracking-[0.1em] text-aqua-700">
+        {/* AX 브랜드 시그니처 — 한글 브랜드보다 작게, PC/모바일 동일 문구.
+            좁은 폰(360px)에서는 자간을 줄여 글자가 잘리지 않게 한다 */}
+        <span className="block truncate text-[0.5625rem] font-bold uppercase tracking-normal text-aqua-700 xs:text-[0.625rem] xs:tracking-[0.1em]">
           Wellness Business AX
         </span>
       </span>

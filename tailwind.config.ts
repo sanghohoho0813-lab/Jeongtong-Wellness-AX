@@ -15,6 +15,12 @@ const config: Config = {
   darkMode: ["class", '[data-theme="dark"]'],
   theme: {
     extend: {
+      /**
+       * xs — 요즘 쓰이는 폰 중 좁은 축(360px, 갤럭시 A 계열)과
+       * 보통 폰(390~430px)을 가르는 지점.
+       * 좁은 폰에서만 글자·여백을 한 단계 줄일 때 쓴다.
+       */
+      screens: { xs: "400px" },
       colors: {
         stone: {
           bg: v("--c-bg"),

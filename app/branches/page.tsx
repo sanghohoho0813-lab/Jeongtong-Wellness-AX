@@ -44,7 +44,7 @@ export default function BranchesPage() {
     <div>
       <PageHeader
         title="지점 / 운영"
-        description="본사(HQ) → 지점 → 직원 → 고객 구조입니다. 지점이 추가되면 동일한 운영 지표를 지점별로 비교할 수 있습니다."
+        description="본사 → 지점 → 직원 → 고객 구조로 운영합니다."
       />
 
       <div className="flex flex-col card-gap">

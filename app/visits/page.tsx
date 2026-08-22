@@ -85,7 +85,7 @@ export default function VisitsPage() {
     <div>
       <PageHeader
         title="방문 / 이용 기록"
-        description="방문·상담 기록이 시간순으로 쌓입니다. 기록 시 이용권 차감과 다음 관리일이 함께 처리됩니다."
+        description="방문·상담 기록이 시간순으로 쌓입니다."
         action={
           <Button
             onClick={() => {

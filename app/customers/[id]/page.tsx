@@ -136,23 +136,13 @@ export default function CustomerDetailPage() {
               담당 {staffName(c.assignedStaffId)}
             </p>
           </div>
-          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setOpenReport(true)}
-              dataTour="care-report"
-            >
-              <BookIcon className="h-4 w-4" />
-              케어 리포트
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setOpenProfile(true)}
-            >
-              정보 수정
-            </Button>
+          {/*
+            여기서 할 일은 대부분 '방문 기록'이다.
+            셋 다 같은 크기로 세로로 쌓아 두었더니 폰에서 화면 절반이
+            단추 밭이 되고, 정작 어느 것을 눌러야 하는지도 흐릿했다.
+            주 동작 하나만 크게 두고 나머지 둘은 그 아래 한 줄로 나눈다.
+          */}
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto">
             <Button
               dataTour="visit-record"
               onClick={() => {
@@ -160,10 +150,29 @@ export default function CustomerDetailPage() {
                 setOpenVisit(true);
               }}
               size="lg"
+              className="w-full sm:w-auto"
             >
               <PlusIcon className="h-4 w-4" />
               방문 · 상담 기록
             </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setOpenReport(true)}
+                dataTour="care-report"
+                className="flex-1 sm:flex-none"
+              >
+                <BookIcon className="h-4 w-4" />
+                케어 리포트
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setOpenProfile(true)}
+                className="flex-1 sm:flex-none"
+              >
+                정보 수정
+              </Button>
+            </div>
           </div>
         </div>
       </Card>

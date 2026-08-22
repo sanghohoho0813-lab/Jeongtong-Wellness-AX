@@ -37,6 +37,18 @@ const STATUS_TILES: Array<{
   { key: "dormant", label: "장기 미방문", tone: "danger" },
 ];
 
+/** 폰 필터 칩의 상태 점 색 — 타일과 같은 색 체계를 쓴다 */
+const TILE_DOT: Record<string, string> = {
+  violet: "bg-violet-500",
+  sky: "bg-sky-500",
+  green: "bg-positive",
+  warn: "bg-warn",
+  danger: "bg-danger",
+  aqua: "bg-aqua-500",
+  gold: "bg-gold",
+  gray: "bg-ink-faint",
+};
+
 /** 한 번에 그리는 고객 줄 수 — 나머지는 [더 보기]로 이어 그린다 */
 const PAGE_SIZE = 60;
 
@@ -130,7 +142,7 @@ export default function CustomersPage() {
     <div>
       <PageHeader
         title="고객"
-        description="우선 관리가 필요한 고객부터 표시됩니다. 상태 타일을 눌러 바로 필터링하세요."
+        description="우선 관리가 필요한 고객부터 보여 드립니다."
         action={
           <Button onClick={() => setOpenForm(true)}>
             <PlusIcon className="h-4 w-4" />
@@ -139,11 +151,42 @@ export default function CustomersPage() {
         }
       />
 
-      {/* 상태 요약 = 필터 */}
+      {/*
+        상태 요약 = 필터.
+
+        폰에서는 타일 다섯 장이 화면의 3분의 1을 먹어서, 정작 고객 목록이
+        첫 화면 밖으로 밀려났다. 고객 화면에 들어오는 이유는 고객을 찾기
+        위해서다. 그래서 폰에서는 옆으로 넘기는 칩 한 줄로 줄이고,
+        자리가 넉넉한 태블릿·PC 에서만 타일로 보여 준다.
+      */}
       <div
         data-tour="customer-tiles"
-        className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5"
+        className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4 sm:hidden"
       >
+        {STATUS_TILES.map((t) => {
+          const on = status === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setStatus(t.key)}
+              aria-pressed={on}
+              className={`touch-target nowrap-num inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors ${
+                on
+                  ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                  : "bg-card text-ink-sub ring-1 ring-stone-line"
+              }`}
+            >
+              <span className={`h-2 w-2 shrink-0 rounded-full ${on ? "bg-white/80" : TILE_DOT[t.tone]}`} />
+              {t.label}
+              <span className={on ? "font-extrabold" : "font-extrabold text-ink"}>
+                {counts[t.key]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mb-4 hidden gap-2.5 sm:grid sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {STATUS_TILES.map((t) => (
           <SummaryTile
             key={t.key}
@@ -156,57 +199,64 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      <Card className="mb-4 !py-4">
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
-            <input
-              className={`${inputCls} pl-11`}
-              placeholder="고객명 · 초성 · 연락처 검색"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          {priorityCount > 0 && (
-            <p className="shrink-0 text-sm font-bold text-ink-sub">
-              AI 추천 관리 대상{" "}
-              <span className="nowrap-num text-deep-800 dark:text-aqua-700">
-                {priorityCount}명
-              </span>
-            </p>
-          )}
+      {/*
+        검색 · 정렬.
+        정렬 칩 넷이 폰에서 두 줄로 접히며 카드가 화면 절반까지 커졌다.
+        옆으로 넘기는 한 줄로 바꾸고, 두 군데로 흩어져 있던 숫자
+        (AI 추천 n명 / n명)를 한 줄로 합쳤다.
+      */}
+      <Card className="mb-3 !py-3.5 lg:mb-4">
+        <div className="relative">
+          <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
+          <input
+            className={`${inputCls} pl-11`}
+            placeholder="고객명 · 초성 · 연락처 검색"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
 
-        {/* 정렬 */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-line pt-3">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-ink-faint">
+        {/* 정렬 · 매출기회 — 폰에서는 한 줄로 두고 옆으로 넘긴다 */}
+        <div className="mt-2.5 flex items-center gap-2 border-t border-stone-line pt-2.5">
+          <span className="shrink-0 text-xs font-extrabold uppercase tracking-wider text-ink-faint">
             정렬
           </span>
-          {SORTS.map((sopt) => (
-            <FilterChip
-              key={sopt.key}
-              active={sort === sopt.key}
-              onClick={() => setSort(sopt.key)}
-            >
-              {sopt.label}
-            </FilterChip>
-          ))}
-          {opportunityCount > 0 && (
-            <button
-              onClick={() => setOnlyOpportunity((v) => !v)}
-              className={`touch-target nowrap-num ml-1 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                onlyOpportunity
-                  ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
-                  : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
-              }`}
-            >
-              매출기회 {opportunityCount}
-            </button>
-          )}
-          <span className="nowrap-num ml-auto text-sm font-bold text-ink-sub">
-            {rows.length}명
-          </span>
+          <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
+            {SORTS.map((sopt) => (
+              <FilterChip
+                key={sopt.key}
+                active={sort === sopt.key}
+                onClick={() => setSort(sopt.key)}
+              >
+                <span className="whitespace-nowrap">{sopt.label}</span>
+              </FilterChip>
+            ))}
+            {opportunityCount > 0 && (
+              <button
+                onClick={() => setOnlyOpportunity((v) => !v)}
+                aria-pressed={onlyOpportunity}
+                className={`touch-target nowrap-num inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold transition-colors ${
+                  onlyOpportunity
+                    ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                    : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
+                }`}
+              >
+                매출기회 {opportunityCount}
+              </button>
+            )}
+          </div>
         </div>
+        <p className="nowrap-num mt-2 text-[0.8125rem] font-bold text-ink-sub">
+          {rows.length}명 표시
+          {priorityCount > 0 && (
+            <>
+              {" · "}
+              <span className="text-deep-800 dark:text-aqua-700">
+                AI 추천 {priorityCount}명
+              </span>
+            </>
+          )}
+        </p>
       </Card>
 
       {rows.length === 0 ? (
@@ -245,41 +295,64 @@ export default function CustomersPage() {
               >
                 {d.customer.name.slice(0, 1)}
               </span>
+              {/*
+                한 줄에 배지를 넷씩 늘어놓았더니 폰에서 세 줄로 접히면서
+                연락처가 '010-1…' 로 잘려 아무 쓸모가 없었다.
+                이제는 이름 옆에 상태 하나만 두고, AI 추천·매출기회 표시는
+                아래 '왜 챙겨야 하는지' 한 줄과 같은 줄에 붙인다.
+                연락처는 좁은 화면에서 감춘다 — 목록에서 하는 일은
+                번호를 읽는 게 아니라 사람을 고르는 것이다.
+              */}
               <div className="min-w-0 flex-1">
-                {/* 이름 + 고객 상태(4단계) + AI 추천 등급 — 모바일에서는 자연히 줄바꿈 */}
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="min-w-0 truncate font-extrabold text-ink">
+                {/* 이름이 먼저다 — 자리가 모자라면 상태 배지 쪽이 줄어든다 */}
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0 text-[1.0625rem] font-extrabold text-ink">
                     {d.customer.name}
                   </span>
-                  <CustomerStatusBadge status={d.status} />
-                  {d.priorityScore > 0 && (
-                    <RecommendBadge score={d.priorityScore} />
-                  )}
-                  {(() => {
-                    const opp = opportunityById.get(d.customer.id);
-                    return opp && opp.type !== "none" ? (
-                      <OpportunityBadge opportunity={opp} size="sm" />
-                    ) : null;
-                  })()}
-                </div>
-                {/* 중요한 방문 정보를 앞에 두고, 연락처는 좁은 화면에서 잘리게 */}
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-ink-sub">
-                  <span className="nowrap-num shrink-0">
-                    방문 {d.visitCount}회 · 최근{" "}
-                    {formatRelative(d.lastVisitDate)}
+                  <span className="min-w-0 overflow-hidden">
+                    <CustomerStatusBadge status={d.status} />
                   </span>
-                  <span className="truncate">
-                    · {displayPhone(d.customer.phone, canSeePhone)}
+                </div>
+                <p className="nowrap-num mt-0.5 truncate text-[0.875rem] text-ink-sub">
+                  방문 {d.visitCount}회 · 최근 {formatRelative(d.lastVisitDate)}
+                  {/* 잔여 회차는 넓은 화면에서 오른쪽에 따로 나오므로 여기선 뺀다 */}
+                  <span className="hidden sm:inline">
+                    {" · "}
+                    {displayPhone(d.customer.phone, canSeePhone)}
                   </span>
                 </p>
-                {/* 시스템이 관리대상으로 판단한 첫 번째 근거 (브리핑과 동일 체계) */}
-                {d.priorityScore > 0 && d.priorityReasons[0] && (
-                  <p
-                    className={`mt-0.5 truncate text-xs font-bold ${recommendLevel(d.priorityScore).text}`}
-                  >
-                    {d.priorityReasons[0]}
-                  </p>
-                )}
+                {(() => {
+                  const opp = opportunityById.get(d.customer.id);
+                  const hasOpp = opp && opp.type !== "none";
+                  const reason = d.priorityScore > 0 ? d.priorityReasons[0] : "";
+                  if (!hasOpp && !reason) return null;
+                  return (
+                    <>
+                      {(d.priorityScore > 0 || hasOpp) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {d.priorityScore > 0 && (
+                            <RecommendBadge score={d.priorityScore} compact />
+                          )}
+                          {hasOpp && (
+                            <OpportunityBadge opportunity={opp} size="sm" />
+                          )}
+                        </div>
+                      )}
+                      {/*
+                        왜 챙겨야 하는지는 줄을 따로 준다.
+                        배지와 같은 줄에 두었더니 배지가 자리를 다 먹어
+                        "등록 12…" 처럼 첫 글자만 남는 일이 잦았다.
+                      */}
+                      {reason && (
+                        <p
+                          className={`mt-0.5 line-clamp-2 text-[0.8125rem] font-bold leading-snug ${recommendLevel(d.priorityScore).text}`}
+                        >
+                          {reason}
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
               <div className="hidden shrink-0 text-right sm:block">
                 {d.activeMembership ? (

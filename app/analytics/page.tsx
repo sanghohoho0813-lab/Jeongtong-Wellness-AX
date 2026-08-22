@@ -60,9 +60,14 @@ function MetricTile({
 }) {
   return (
     <Card className={`min-w-0 !p-4 sm:!p-5 ${highlight ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}>
-      <p className="flex items-center gap-1.5 truncate text-[0.8125rem] font-bold text-ink-sub">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${METRIC_DOTS[dot]}`} />
-        {label}
+      {/*
+        지표 이름은 자르지 않는다.
+        '신규 고객 (최근 3(' 처럼 반쯤 잘리면 무슨 숫자인지 알 수 없어
+        지표가 아니라 수수께끼가 된다. 두 줄이 되더라도 끝까지 보여 준다.
+      */}
+      <p className="flex items-start gap-1.5 text-[0.8125rem] font-bold leading-snug text-ink-sub">
+        <span className={`mt-[0.4rem] h-1.5 w-1.5 shrink-0 rounded-full ${METRIC_DOTS[dot]}`} />
+        <span className="min-w-0">{label}</span>
       </p>
       <p
         className={`mt-1.5 nowrap-num text-2xl font-extrabold tracking-tight ${highlight ? "text-deep-800 dark:text-aqua-700" : "text-ink"}`}
@@ -160,7 +165,7 @@ export default function AnalyticsPage() {
     <div>
       <PageHeader
         title="AX 도입성과"
-        description="운영 데이터가 쌓일수록 아래 지표로 AX 적용 전후 변화를 비교할 수 있습니다. 모든 수치는 저장된 실제 기록에서 계산됩니다."
+        description="모든 수치는 저장된 실제 기록에서 계산됩니다."
       />
 
       <div className="flex flex-col card-gap">
@@ -177,7 +182,12 @@ export default function AnalyticsPage() {
           <p className="mt-2 font-bold text-aqua-300">
             → {opInsight.recommendation}
           </p>
-          <p className="mt-2.5 border-t border-white/10 pt-2.5 text-[0.8125rem] text-deep-sub">
+          {/*
+            아래 지표 타일과 같은 숫자다.
+            폰에서는 이 줄이 한 화면을 더 밀어내 정작 지표가 안 보였다.
+            자리가 넉넉한 화면에서만 요약으로 보여 준다.
+          */}
+          <p className="mt-2.5 hidden border-t border-white/10 pt-2.5 text-[0.8125rem] text-deep-sub sm:block">
             이번 달 방문 <Em>{latest.visitCount}건</Em>
             {visitTrend && prev && (
               <>
@@ -431,7 +441,8 @@ export default function AnalyticsPage() {
                       <span className="block font-extrabold text-ink">
                         {row.label}
                       </span>
-                      <span className="block truncate text-xs text-ink-sub">
+                      {/* 이 숫자가 무엇을 센 것인지 알려 주는 줄이라 자르지 않는다 */}
+                      <span className="block text-xs leading-snug text-ink-sub">
                         {row.desc}
                       </span>
                     </span>
@@ -524,7 +535,8 @@ export default function AnalyticsPage() {
                       className="rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04]"
                     >
                       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                        <span className="min-w-0 flex-1 truncate font-extrabold text-ink">
+                        {/* 프로그램 이름이 잘리면 어느 프로그램 성과인지 알 수 없다 */}
+                        <span className="min-w-0 flex-1 font-extrabold leading-snug text-ink">
                           {p.name}
                         </span>
                         <span className="nowrap-num shrink-0 text-sm font-bold text-ink-sub">

@@ -49,7 +49,7 @@ export default function MorePage() {
             <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
               기획의도
             </span>
-            <span className="block truncate text-[0.875rem] text-gold-deep">
+            <span className="block text-[0.875rem] leading-snug text-gold-deep">
               이 시스템을 만든 이유
             </span>
           </span>
@@ -66,7 +66,7 @@ export default function MorePage() {
             <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
               사용 가이드
             </span>
-            <span className="block truncate text-[0.875rem] text-aqua-800">
+            <span className="block text-[0.875rem] leading-snug text-aqua-800">
               화면별 사용법 · 단계별 안내
             </span>
           </span>

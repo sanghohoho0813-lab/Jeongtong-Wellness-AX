@@ -41,6 +41,12 @@ function CustomerRow({
   opportunity?: SalesOpportunity;
 }) {
   const c = derived.customer;
+  /**
+   * 폰에서는 이름·배지·설명이 한 줄에서 서로 밀어내다가 글자가 포개졌다.
+   * (이름은 '한…' 으로 잘리고 연락처는 '01…' 만 남았다)
+   * 그래서 폰에서는 위에서 아래로 쌓고, 자리가 넉넉한 화면에서만
+   * 설명을 오른쪽 끝에 붙인다.
+   */
   return (
     <Link
       href={`/customers/${c.id}`}
@@ -50,19 +56,28 @@ function CustomerRow({
         {c.name.slice(0, 1)}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-          <span className="min-w-0 truncate font-extrabold text-ink">
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-[1.0625rem] font-extrabold text-ink">
             {c.name}
           </span>
           {opportunity && opportunity.type !== "none" && (
-            <OpportunityBadge opportunity={opportunity} size="sm" />
+            <span className="min-w-0 overflow-hidden">
+              <OpportunityBadge opportunity={opportunity} size="sm" />
+            </span>
           )}
         </div>
-        <p className="truncate text-xs text-ink-sub">
-          {displayPhone(c.phone, canSeePhone)} · 방문 {derived.visitCount}회
+        <p className="nowrap-num truncate text-[0.8125rem] text-ink-sub">
+          방문 {derived.visitCount}회
+          <span className="hidden sm:inline">
+            {" · "}
+            {displayPhone(c.phone, canSeePhone)}
+          </span>
+        </p>
+        <p className="truncate text-[0.875rem] font-bold text-ink-soft sm:hidden">
+          {note}
         </p>
       </div>
-      <span className="max-w-[45%] truncate text-right text-sm font-bold text-ink-soft">
+      <span className="hidden max-w-[45%] shrink-0 truncate text-right text-sm font-bold text-ink-soft sm:block">
         {note}
       </span>
       <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
@@ -188,7 +203,7 @@ export default function RetentionPage() {
     <div>
       <PageHeader
         title="재방문 관리"
-        description="관리 기준은 설정에서 조정할 수 있으며, 오늘의 실행 브리핑과 동일한 기준을 사용합니다."
+        description="다음 방문이 늦어지는 고객을 모았습니다."
       />
 
       {/* 오늘 우선관리 인사이트 */}
