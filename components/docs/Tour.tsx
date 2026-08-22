@@ -80,9 +80,9 @@ export function buildTourSteps(
       route: "/customers",
       target: "quick-search",
       kicker: "어디서나",
-      title: "고객은 어느 화면에서든 바로 찾습니다",
-      body: "이름이나 연락처를 넣으면 바로 아래에 후보가 뜨고, 누르면 그 고객 화면으로 갑니다. 메뉴를 옮겨 다닐 필요가 없습니다.",
-      tip: "초성만으로도 찾습니다 — 홍길동은 ㅎㄱㄷ",
+      title: "여기 하나로 다 됩니다",
+      body: "고객 찾기 · 화면 이동 · 자주 쓰는 동작이 한 창에 있습니다. 고객 줄 오른쪽의 [방문 기록]을 누르면 화면을 옮기지 않고 그 자리에서 기록할 수 있습니다.",
+      tip: "Ctrl(⌘)+K 로도 열립니다 · 초성으로도 찾습니다 — 홍길동은 ㅎㄱㄷ",
     },
     {
       route: "/customers",
@@ -160,6 +160,14 @@ export function buildTourSteps(
       kicker: "AX 도입성과",
       title: "쌓인 기록이 성과로 보입니다",
       body: "방문 · 신규 고객 · 재방문율 · 과제 처리 현황이 기간별로 계산됩니다. 여기 숫자는 모두 실제 저장된 기록에서 나옵니다.",
+    },
+    {
+      route: "/analytics",
+      target: "analytics-trend",
+      kicker: "AX 도입성과",
+      title: "달별 흐름은 이렇게 읽습니다",
+      body: "막대가 없는 달은 값이 0인 달입니다. 이번 달은 아직 끝나지 않아 옅게 칠하고 '진행 중'이라고 적습니다 — 줄어든 것이 아닙니다.",
+      tip: "막대를 짚으면 값이 뜨고, [표로 보기]로 숫자만 볼 수도 있습니다",
     },
     {
       route: "/analytics",

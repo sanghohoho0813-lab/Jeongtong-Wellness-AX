@@ -33,6 +33,17 @@
   --c-gold-soft: 245 238 223; /* #F5EEDF */
   --c-gold-deep: 138 111 58; /* #8A6F3A */
   --c-card-border: rgba(0, 0, 0, 0.045);
+
+  /* ---- 차트 (검증된 2색 체계) ----
+     count = 건수·인원 / money = 금액. 값은 색각 이상 구별도까지 검증한 것이라
+     임의로 바꾸면 안 된다 (components/charts/palette.ts 설명 참고). */
+  --chart-count: #00908c;
+  --chart-money: #c08a2e;
+  /* 격자·기준선 — 표면에서 한 단계만 떨어진 실선 hairline */
+  --chart-grid: rgba(26, 34, 38, 0.09);
+  --chart-axis: rgba(26, 34, 38, 0.16);
+  /* 도넛·진행 링의 남은 부분 (막대 차트에는 쓰지 않는다 — 0을 0으로 보이게) */
+  --chart-track: rgb(var(--c-bg-deep));
 }
 
 :root[data-theme="dark"] {
@@ -54,6 +65,13 @@
   --c-gold-soft: 50 43 28;
   --c-gold-deep: 216 188 133;
   --c-card-border: rgba(255, 255, 255, 0.06);
+
+  /* 다크 표면(#1C2825)에 맞춰 다시 고른 값 — 라이트 값을 밝게 뒤집은 것이 아니다 */
+  --chart-count: #1e9e9a;
+  --chart-money: #b08528;
+  --chart-grid: rgba(233, 239, 237, 0.1);
+  --chart-axis: rgba(233, 239, 237, 0.2);
+  --chart-track: rgb(var(--c-bg-deep));
 }
 
 /* 글자 크기 — 50~60대 사용자 기준으로 전 단계를 상향 조정.
@@ -178,11 +196,6 @@ body {
 .nowrap-num {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-}
-
-/* chart neutral track (SVG inline용) */
-:root {
-  --chart-track: rgb(var(--c-bg-deep));
 }
 
 /* ---------- 진입 모션 ----------

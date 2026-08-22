@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { canAccessRoute, STAFF_HOME } from "@/lib/auth/permissions";
-import { BellIcon, BookIcon, SparkIcon } from "@/components/ui/icons";
+import {
+  BellIcon,
+  BookIcon,
+  SearchIcon,
+  SparkIcon,
+} from "@/components/ui/icons";
 import {
   BOTTOM_NAV_ITEMS,
   NAV_TONE_CLASS,
@@ -13,8 +18,9 @@ import {
   navItemsFor,
 } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
-import QuickSearch from "./QuickSearch";
+import CommandPalette from "./CommandPalette";
 import ErrorBoundary from "./ErrorBoundary";
+import QuickVisitModal from "@/components/visits/QuickVisitModal";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -44,7 +50,7 @@ function Logo() {
   );
 }
 
-function Sidebar() {
+function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
   const pathname = usePathname();
   const { isManager } = useStore();
   const items = navItemsFor(SIDEBAR_ITEMS, isManager);
@@ -54,9 +60,21 @@ function Sidebar() {
         <Logo />
       </div>
 
-      {/* 고객 찾기 — 어느 화면에 있든 가장 자주 하는 동작이라 맨 위에 둔다 */}
+      {/* 빠른 실행 — 고객 찾기가 하루 중 가장 잦은 동작이라 맨 위에 둔다.
+          누르거나 Ctrl/⌘+K 로 열린다. */}
       <div className="mx-3 mb-2">
-        <QuickSearch />
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          data-tour="quick-search"
+          className="flex h-10 w-full items-center gap-2 rounded-btn border border-stone-line bg-card-soft px-3 text-left text-sm text-ink-faint transition-colors hover:border-aqua-500 hover:bg-card"
+        >
+          <SearchIcon className="h-[1.1rem] w-[1.1rem] shrink-0" />
+          <span className="min-w-0 flex-1 truncate">고객 · 화면 찾기</span>
+          <kbd className="nowrap-num shrink-0 rounded bg-stone-bg-deep px-1.5 py-0.5 text-[0.6875rem] font-bold text-ink-sub">
+            {"\u2318K"}
+          </kbd>
+        </button>
       </div>
 
       {/* 문서 — 메뉴 위에 배치해 처음 쓰는 사람이 먼저 보게 한다 */}
@@ -124,7 +142,7 @@ function Sidebar() {
   );
 }
 
-function MobileHeader() {
+function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
   const { briefingTasks, isManager } = useStore();
   // 오늘 아직 처리하지 않은 관리 대상 — 장식이 아니라 실제 건수를 보여준다
   const openCount = briefingTasks.filter(
@@ -135,7 +153,15 @@ function MobileHeader() {
     <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
       <Logo />
       <div className="flex shrink-0 items-center gap-2">
-        <QuickSearch variant="icon" />
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          data-tour="quick-search"
+          aria-label="고객 찾기 열기"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
+        >
+          <SearchIcon className="h-5 w-5" />
+        </button>
         {/* 직원 계정은 실행 브리핑에 접근하지 않으므로 표시하지 않는다 */}
         {isManager && (
         <Link
@@ -245,6 +271,26 @@ function SaveFailedBanner() {
 export default function AppShell({ children }: { children: ReactNode }) {
   // 경로가 바뀌면 오류 상태를 푼다 — 다른 화면까지 막아 둘 이유가 없다
   const pathname = usePathname();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  /** 빠른 실행에서 바로 기록을 여는 고객 */
+  const [recordFor, setRecordFor] = useState<string | undefined>();
+
+  /**
+   * Ctrl/⌘ + K 로 어디서든 연다.
+   * 글자를 입력하는 중에는 가로채지 않는다 — 메모를 적다가 K 를 누르면
+   * 창이 열려 버리면 곤란하기 때문이다(조합키가 눌린 경우만 받는다).
+   */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="min-h-dvh">
       {/* 키보드로 쓰는 사람이 메뉴를 매번 지나치지 않도록 본문으로 건너뛴다 */}
@@ -254,8 +300,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
       >
         본문으로 건너뛰기
       </a>
-      <Sidebar />
-      <MobileHeader />
+      <Sidebar onOpenPalette={() => setPaletteOpen(true)} />
+      <MobileHeader onOpenPalette={() => setPaletteOpen(true)} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onRecordVisit={setRecordFor}
+      />
+      {/* 찾자마자 기록 — 화면을 옮기지 않고 그 자리에서 끝낸다 */}
+      <QuickVisitModal
+        customerId={recordFor}
+        onClose={() => setRecordFor(undefined)}
+      />
       <SaveFailedBanner />
       <main
         id="main"

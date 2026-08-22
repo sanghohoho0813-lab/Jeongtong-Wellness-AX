@@ -32,6 +32,7 @@ import {
   todayISO,
 } from "@/lib/utils/date";
 import {
+  buildBackupFile,
   customersCsv,
   downloadFile,
   membershipsCsv,
@@ -167,16 +168,15 @@ export default function SettingsPage() {
     !settings.lastBackupAt || daysAgo(settings.lastBackupAt) >= 7;
 
   const exportBackup = () => {
-    const payload = JSON.stringify(
-      { exportedAt: new Date().toISOString(), customers, visits, memberships, staff, branches, settings },
-      null,
-      2,
-    );
-    downloadFile(
-      `정통대왕쑥뜸원_전체백업_${stamp(todayISO())}.json`,
-      payload,
-      "application/json;charset=utf-8",
-    );
+    const file = buildBackupFile({
+      customers,
+      visits,
+      memberships,
+      staff,
+      branches,
+      settings,
+    });
+    downloadFile(file.name, file.content, file.mime);
     updateSettings({ lastBackupAt: new Date().toISOString() });
     toast("전체 백업 파일을 내려받았습니다");
   };

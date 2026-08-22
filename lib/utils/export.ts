@@ -212,6 +212,27 @@ export function preferencesCsv(customers: Customer[], staff: Staff[]): string {
   );
 }
 
+/**
+ * 전체 백업 파일 만들기 — 설정 화면과 명령 팔레트가 같은 것을 쓴다.
+ * 두 곳에서 따로 만들면 한쪽만 항목이 빠지는 사고가 난다.
+ */
+export function buildBackupFile(data: {
+  customers: unknown[];
+  visits: unknown[];
+  memberships: unknown[];
+  staff: unknown[];
+  branches: unknown[];
+  settings: unknown;
+}): { name: string; content: string; mime: string } {
+  const d = new Date();
+  const stampStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  return {
+    name: `정통대왕쑥뜸원_전체백업_${stampStr}.json`,
+    content: JSON.stringify({ exportedAt: d.toISOString(), ...data }, null, 2),
+    mime: "application/json;charset=utf-8",
+  };
+}
+
 /** 파일명 뒤에 붙일 날짜 */
 export function stamp(today: string): string {
   return today.replace(/-/g, "");

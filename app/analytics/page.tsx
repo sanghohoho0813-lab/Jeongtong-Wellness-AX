@@ -32,6 +32,7 @@ import {
 } from "@/lib/scoring/opportunity";
 import { buildOperationInsight } from "@/lib/scoring/insight";
 import { programHeadline, summarizePrograms } from "@/lib/scoring/program";
+import ColumnChart from "@/components/charts/ColumnChart";
 
 const METRIC_DOTS: Record<string, string> = {
   sky: "bg-sky-500",
@@ -69,75 +70,6 @@ function MetricTile({
         {value}
       </p>
       {caption && <p className="mt-1 text-xs text-ink-sub">{caption}</p>}
-    </Card>
-  );
-}
-
-const TREND_BARS: Record<string, string> = {
-  violet: "bg-gradient-to-t from-violet-600 to-violet-400",
-  aqua: "bg-gradient-to-t from-deep-700 to-aqua-400",
-  sky: "bg-gradient-to-t from-sky-600 to-sky-400",
-  amber: "bg-gradient-to-t from-amber-600 to-amber-400",
-};
-
-function TrendBars({
-  title,
-  data,
-  format,
-  tone = "aqua",
-}: {
-  title: string;
-  data: Array<{ month: string; value: number }>;
-  format: (v: number) => string;
-  tone?: keyof typeof TREND_BARS;
-}) {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  const dense = data.length > 8; // 12개월 뷰: 라벨 간소화
-  const isEmpty = data.every((d) => d.value === 0);
-  if (isEmpty) {
-    // 데이터가 없으면 0으로 차트를 그리지 않는다
-    return (
-      <Card>
-        <SectionTitle>{title}</SectionTitle>
-        <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-10 text-center text-sm text-ink-sub">
-          데이터 축적 중 — 기록이 쌓이면 추이가 표시됩니다.
-        </p>
-      </Card>
-    );
-  }
-  return (
-    <Card>
-      <SectionTitle>{title}</SectionTitle>
-      <div className="flex items-end justify-between gap-1.5 sm:gap-3">
-        {data.map((d, i) => {
-          const h = Math.round((d.value / max) * 100);
-          const showValue = !dense || d.value === max || i === data.length - 1;
-          const showMonth = !dense || i % 2 === data.length % 2;
-          return (
-            <div
-              key={d.month}
-              className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
-            >
-              <span
-                className={`nowrap-num text-xs font-semibold text-ink-soft ${showValue ? "" : "invisible"}`}
-              >
-                {format(d.value)}
-              </span>
-              <div className="flex h-28 w-full max-w-10 items-end rounded-lg bg-stone-bg-deep/50">
-                <div
-                  className={`w-full rounded-lg ${d.value > 0 ? `${TREND_BARS[tone]} shadow-sm` : "bg-transparent"}`}
-                  style={{ height: `${Math.max(h, d.value > 0 ? 8 : 0)}%` }}
-                />
-              </div>
-              <span
-                className={`truncate text-[0.7rem] text-ink-sub ${showMonth ? "" : "invisible"}`}
-              >
-                {d.month.slice(5)}월
-              </span>
-            </div>
-          );
-        })}
-      </div>
     </Card>
   );
 }
@@ -345,92 +277,73 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
-          <TrendBars
+          <ColumnChart
             title="월별 방문 건수"
-            tone="violet"
-            data={monthly.map((m) => ({ month: m.month, value: m.visitCount }))}
-            format={(v) => `${v}`}
+            dataTour="analytics-trend"
+            unit="건"
+            data={monthly.map((m, i) => ({
+              label: `${Number(m.month.slice(5))}월`,
+              value: m.visitCount,
+              inProgress: i === monthly.length - 1,
+            }))}
           />
-          <TrendBars
+          <ColumnChart
             title="월별 재방문 고객 수"
-            tone="aqua"
-            data={monthly.map((m) => ({
-              month: m.month,
+            caption="그 달에 2회 이상 방문하신 고객"
+            unit="명"
+            data={monthly.map((m, i) => ({
+              label: `${Number(m.month.slice(5))}월`,
               value: m.revisitCustomers,
+              inProgress: i === monthly.length - 1,
             }))}
-            format={(v) => `${v}`}
           />
-          <TrendBars
+          <ColumnChart
             title="월별 신규 고객"
-            tone="sky"
-            data={monthly.map((m) => ({
-              month: m.month,
+            unit="명"
+            data={monthly.map((m, i) => ({
+              label: `${Number(m.month.slice(5))}월`,
               value: m.newCustomers,
+              inProgress: i === monthly.length - 1,
             }))}
-            format={(v) => `${v}`}
           />
           {isManager && (
-            <TrendBars
+            <ColumnChart
               title="월별 매출"
-              tone="amber"
-              data={monthly.map((m) => ({ month: m.month, value: m.revenue }))}
-              format={(v) => (v > 0 ? formatKrw(v) : "0")}
+              caption="이용권 판매 + 현장 결제 합산"
+              kind="money"
+              format={formatKrw}
+              data={monthly.map((m, i) => ({
+                label: `${Number(m.month.slice(5))}월`,
+                value: m.revenue,
+                display: m.revenue > 0 ? formatKrw(m.revenue) : "0",
+                inProgress: i === monthly.length - 1,
+              }))}
             />
           )}
         </div>
 
         {/* 관리과제 처리 추이 — 브리핑에서 처리한 이력이 날짜별로 축적된다 */}
-        <Card>
-          <SectionTitle>관리과제 처리 추이 (최근 7일)</SectionTitle>
-          {(() => {
-            const days = Array.from({ length: 7 }, (_, i) => {
-              const d = new Date(Date.now() - (6 - i) * 86400000);
-              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-              const label = `${d.getMonth() + 1}/${d.getDate()}`;
-              const count = taskOverrides.filter(
+        <ColumnChart
+          title="관리과제 처리 추이 (최근 7일)"
+          caption="실행 브리핑에서 처리완료로 기록한 건"
+          emptyNote="아직 처리 이력이 없습니다. 오늘의 실행 브리핑에서 과제를 처리하면 날짜별로 쌓입니다."
+          unit="건"
+          data={Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(Date.now() - (6 - i) * 86400000);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            return {
+              label: `${d.getMonth() + 1}/${d.getDate()}`,
+              value: taskOverrides.filter(
                 (t) =>
                   t.status === "done" &&
                   t.statusChangedAt &&
                   localDateOf(t.statusChangedAt) === key,
-              ).length;
-              return { key, label, count };
-            });
-            const total = days.reduce((s, d) => s + d.count, 0);
-            const max = Math.max(...days.map((d) => d.count), 1);
-            if (total === 0)
-              return (
-                <p className="rounded-card bg-card-soft py-8 text-center text-sm text-ink-sub">
-                  아직 처리 이력이 없습니다. 오늘의 실행 브리핑에서 과제를
-                  처리하면 날짜별로 축적됩니다.
-                </p>
-              );
-            return (
-              <div className="flex items-end justify-between gap-2 sm:gap-3">
-                {days.map((d) => (
-                  <div
-                    key={d.key}
-                    className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
-                  >
-                    <span className="nowrap-num text-xs font-semibold text-ink-soft">
-                      {d.count > 0 ? `${d.count}건` : ""}
-                    </span>
-                    <div className="flex h-20 w-full max-w-10 items-end rounded-lg bg-stone-bg-deep/50">
-                      <div
-                        className={`w-full rounded-lg ${d.count > 0 ? "bg-gradient-to-t from-deep-700 to-aqua-400" : "bg-transparent"}`}
-                        style={{
-                          height: `${Math.max(Math.round((d.count / max) * 100), d.count > 0 ? 10 : 0)}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="nowrap-num text-[0.7rem] text-ink-sub">
-                      {d.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </Card>
+              ).length,
+              // 오늘은 아직 하루가 끝나지 않았다
+              inProgress: i === 6,
+            };
+          })}
+        />
 
         {/* AX 매출기회 현황 — 대상 → 실행 → 결과 흐름 (추정치 없음) */}
         <Card dataTour="analytics-opportunity">
