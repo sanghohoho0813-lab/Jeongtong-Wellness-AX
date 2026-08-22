@@ -159,7 +159,7 @@ export default function DataImport() {
         onClick={() =>
           downloadFile("고객명부_양식.csv", customerImportTemplate())
         }
-        className="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-aqua-700 underline-offset-4 hover:underline"
+        className="touch-target mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-aqua-700 underline-offset-4 hover:underline"
       >
         <DownloadIcon className="h-4 w-4" />
         가져오기 양식 내려받기

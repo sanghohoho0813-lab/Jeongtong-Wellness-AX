@@ -57,7 +57,7 @@ export default function BranchSummaryCard() {
           isManager ? (
             <Link
               href="/branches"
-              className="inline-flex items-center gap-0.5 text-sm font-semibold text-aqua-700 hover:text-aqua-800 whitespace-nowrap"
+              className="touch-target -my-2.5 inline-flex items-center gap-0.5 text-sm font-semibold text-aqua-700 hover:text-aqua-800 whitespace-nowrap"
             >
               지점 / 운영
               <ChevronRightIcon className="h-4 w-4" />

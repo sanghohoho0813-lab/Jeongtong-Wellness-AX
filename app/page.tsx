@@ -11,19 +11,14 @@ import RevisitPreview from "@/components/dashboard/RevisitPreview";
 import BranchSummaryCard from "@/components/dashboard/BranchSummaryCard";
 import { useStore } from "@/lib/data/store";
 
-function todayLabel(): string {
-  const d = new Date();
-  const days = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
-}
-
 export default function DashboardPage() {
   const { settings } = useStore();
   return (
     <div>
+      {/* 날짜는 위(폰)·왼쪽(PC)의 실시간 시계가 이미 보여 준다 — 여기서 또 쓰지 않는다 */}
       <PageHeader
         title="대시보드"
-        description={`${todayLabel()} · ${settings.companyName} ${settings.branchName}`}
+        description={`${settings.companyName} ${settings.branchName}`}
       />
       <div className="flex flex-col card-gap">
         {/* 고객이 한 명도 없을 때만 나오는 첫 시작 안내 */}

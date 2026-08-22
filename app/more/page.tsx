@@ -100,9 +100,12 @@ export default function MorePage() {
         </Card>
       )}
 
-      {/* 직원 계정: 설정 화면 대신 여기서 화면 표시만 조정 */}
-      {!isManager && (
-        <Card className="mt-4">
+      {/*
+        글자 크기·테마는 누구에게나 여기서 바로 바뀐다.
+        설정 화면 안쪽까지 들어가야 했더니, 글씨가 작아 불편한 분이
+        정작 그 설정을 찾지 못했다. 폰에서 가장 먼저 손이 가는 자리에 둔다.
+      */}
+      <Card className="mt-4">
           <SectionTitle tone="gray">화면 표시</SectionTitle>
           <div className="space-y-5">
             <div>
@@ -132,12 +135,12 @@ export default function MorePage() {
               />
             </div>
             <p className="text-sm leading-relaxed text-ink-sub">
-              매장 정보, 직원 관리, 고객관리 기준은 대표/관리자 계정에서
-              설정합니다.
+              {isManager
+                ? "매장 정보, 직원 관리, 고객관리 기준은 설정 화면에서 조정합니다."
+                : "매장 정보, 직원 관리, 고객관리 기준은 대표/관리자 계정에서 설정합니다."}
             </p>
           </div>
         </Card>
-      )}
     </div>
   );
 }

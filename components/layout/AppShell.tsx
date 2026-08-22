@@ -8,6 +8,7 @@ import { canAccessRoute, STAFF_HOME } from "@/lib/auth/permissions";
 import {
   BellIcon,
   BookIcon,
+  PlusIcon,
   SearchIcon,
   SparkIcon,
 } from "@/components/ui/icons";
@@ -19,8 +20,10 @@ import {
 } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
 import CommandPalette from "./CommandPalette";
+import LiveClock from "./LiveClock";
 import ErrorBoundary from "./ErrorBoundary";
 import QuickVisitModal from "@/components/visits/QuickVisitModal";
+import RecordSheet from "@/components/visits/RecordSheet";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -58,6 +61,11 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
       <div className="px-5 pb-3 pt-6">
         <Logo />
+      </div>
+
+      {/* 오늘 날짜와 지금 시각 — 기록할 때 폰을 꺼내 확인하지 않게 */}
+      <div className="mx-3 mb-2">
+        <LiveClock />
       </div>
 
       {/* 빠른 실행 — 고객 찾기가 하루 중 가장 잦은 동작이라 맨 위에 둔다.
@@ -150,7 +158,8 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
   ).length;
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-2.5 backdrop-blur-md lg:hidden">
+      <div className="flex items-center justify-between gap-3">
       <Logo />
       <div className="flex shrink-0 items-center gap-2">
         <button
@@ -178,41 +187,76 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
         </Link>
         )}
       </div>
+      </div>
+      {/* 날짜 · 지금 시각 — 손에 든 채로 바로 보이게 */}
+      <div className="mt-1.5">
+        <LiveClock variant="header" />
+      </div>
     </header>
   );
 }
 
-function BottomNav() {
+/**
+ * 폰 하단 메뉴 — 가운데는 [기록] 단추.
+ *
+ * 하루에 가장 많이 하는 일이 방문 기록인데, 지금까지는 고객 메뉴로 들어가
+ * 목록에서 찾고 고객을 연 다음에야 기록할 수 있었다. 어느 화면에 있든
+ * 엄지가 가장 편하게 닿는 가운데 자리에서 바로 시작하게 한다.
+ */
+function BottomNav({ onRecord }: { onRecord: () => void }) {
   const pathname = usePathname();
   const { isManager } = useStore();
   const items = navItemsFor(BOTTOM_NAV_ITEMS, isManager);
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-card/90 pb-[env(safe-area-inset-bottom)] shadow-nav backdrop-blur-md lg:hidden">
-      {/* 직원 계정은 메뉴가 '고객' 하나뿐이라 탭이 과하게 벌어지지 않게 폭을 좁힌다 */}
-      <div
-        className={`mx-auto flex items-stretch justify-between ${
-          items.length > 2 ? "max-w-lg" : "max-w-[16rem]"
+  // 관리자 4개 → 좌 2 / 우 2, 직원 2개 → 좌 1 / 우 1. 항상 한가운데에 놓인다.
+  const split = Math.ceil(items.length / 2);
+
+  const tab = (item: (typeof items)[number]) => {
+    const active = isActive(pathname, item.href);
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold ${
+          active ? "text-deep-800 dark:text-aqua-700" : "text-ink-faint"
         }`}
       >
-        {items.map((item) => {
-          const active = isActive(pathname, item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold ${
-                active ? "text-deep-800 dark:text-aqua-700" : "text-ink-faint"
-              }`}
-            >
-              {active && (
-                <span className="absolute top-0 h-[3px] w-9 rounded-b-full bg-aqua-500" />
-              )}
-              <Icon className={`h-6 w-6 ${active ? "" : "opacity-85"}`} />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
+        {active && (
+          <span className="absolute top-0 h-[3px] w-9 rounded-b-full bg-aqua-500" />
+        )}
+        <Icon className={`h-6 w-6 ${active ? "" : "opacity-85"}`} />
+        <span className="truncate">{item.label}</span>
+      </Link>
+    );
+  };
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-card/90 pb-[env(safe-area-inset-bottom)] shadow-nav backdrop-blur-md lg:hidden">
+      {/* 직원 계정은 메뉴가 적어 탭이 과하게 벌어지지 않게 폭을 좁힌다 */}
+      <div
+        className={`mx-auto flex items-stretch justify-between ${
+          items.length > 2 ? "max-w-lg" : "max-w-[19rem]"
+        }`}
+      >
+        {items.slice(0, split).map(tab)}
+
+        {/* 가운데 [기록] — 다른 탭보다 크고 튀어나오게 해서 한눈에 구분된다 */}
+        <div className="flex w-[5.5rem] shrink-0 flex-col items-center justify-start">
+          <button
+            type="button"
+            onClick={onRecord}
+            data-tour="record-fab"
+            aria-label="방문 기록하기"
+            className="-mt-5 flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-800 text-white shadow-[0_6px_18px_rgba(10,46,44,0.35)] ring-4 ring-card transition-transform active:scale-95"
+          >
+            <PlusIcon className="h-8 w-8" strokeWidth={2.6} />
+          </button>
+          <span className="mt-1 text-[0.72rem] font-extrabold text-deep-800 dark:text-aqua-700">
+            기록
+          </span>
+        </div>
+
+        {items.slice(split).map(tab)}
       </div>
     </nav>
   );
@@ -274,6 +318,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   /** 빠른 실행에서 바로 기록을 여는 고객 */
   const [recordFor, setRecordFor] = useState<string | undefined>();
+  /** 폰 하단 [기록] 단추가 여는 고객 고르기 화면 */
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   /**
    * Ctrl/⌘ + K 로 어디서든 연다.
@@ -307,6 +353,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setPaletteOpen(false)}
         onRecordVisit={setRecordFor}
       />
+      {/* 폰 하단 [기록] → 고객 고르기 → 곧바로 기록 창 */}
+      <RecordSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onPick={(id) => {
+          setSheetOpen(false);
+          setRecordFor(id);
+        }}
+      />
       {/* 찾자마자 기록 — 화면을 옮기지 않고 그 자리에서 끝낸다 */}
       <QuickVisitModal
         customerId={recordFor}
@@ -324,7 +379,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </ErrorBoundary>
         </div>
       </main>
-      <BottomNav />
+      <BottomNav onRecord={() => setSheetOpen(true)} />
       <footer className="hidden pb-6 text-center text-xs text-ink-faint lg:ml-64 lg:block">
         © 2026 정통대왕쑥뜸원 AX Platform
       </footer>

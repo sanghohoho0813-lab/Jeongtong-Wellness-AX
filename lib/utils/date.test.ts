@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  clockText,
+  clockTextKr,
   daysAgo,
   diffDays,
   formatRelative,
+  fullDateKr,
   isAfter,
   localDateOf,
+  openStateAt,
+  parseOpenHours,
   splitIsoDateTime,
   toIsoDateTime,
   todayISO,
@@ -92,5 +97,70 @@ describe("날짜 · 시간 합치고 나누기", () => {
   it("시간이 없으면 날짜만 남는다", () => {
     const iso = toIsoDateTime("2026-08-19", undefined);
     expect(iso.slice(0, 10)).toBe("2026-08-19");
+  });
+});
+
+describe("영업시간 읽기", () => {
+  it("흔한 표기를 모두 받아들인다", () => {
+    expect(parseOpenHours("10:00 - 20:00")).toEqual({
+      openMin: 600,
+      closeMin: 1200,
+    });
+    expect(parseOpenHours("10:00~20:00")).toEqual({
+      openMin: 600,
+      closeMin: 1200,
+    });
+    expect(parseOpenHours("평일 09:30 ~ 18:00")).toEqual({
+      openMin: 570,
+      closeMin: 1080,
+    });
+  });
+
+  it("시간처럼 보이지 않으면 모른다고 답한다", () => {
+    expect(parseOpenHours(undefined)).toBeUndefined();
+    expect(parseOpenHours("연중무휴")).toBeUndefined();
+    // 25시는 시각이 아니다 — 잘못 적힌 값으로 '영업 중'을 단정하지 않는다
+    expect(parseOpenHours("25:00 - 26:00")).toBeUndefined();
+  });
+});
+
+describe("지금 영업 중인지", () => {
+  /** 그날 h시 m분 (로컬) */
+  const at = (h: number, m = 0) => new Date(2026, 7, 22, h, m, 0);
+
+  it("열기 전 · 영업 중 · 마감 후를 구분한다", () => {
+    expect(openStateAt(at(9, 59), "10:00 - 20:00")).toBe("before");
+    expect(openStateAt(at(10, 0), "10:00 - 20:00")).toBe("open");
+    expect(openStateAt(at(19, 59), "10:00 - 20:00")).toBe("open");
+    expect(openStateAt(at(20, 0), "10:00 - 20:00")).toBe("closed");
+  });
+
+  it("자정을 넘겨 닫는 매장도 맞게 본다", () => {
+    expect(openStateAt(at(23, 30), "22:00 - 02:00")).toBe("open");
+    expect(openStateAt(at(1, 30), "22:00 - 02:00")).toBe("open");
+    expect(openStateAt(at(3, 0), "22:00 - 02:00")).toBe("closed");
+  });
+
+  it("영업시간을 적어 두지 않았으면 아무 말도 하지 않는다", () => {
+    expect(openStateAt(at(12), undefined)).toBe("unknown");
+    expect(openStateAt(at(12), "매일 영업")).toBe("unknown");
+  });
+});
+
+describe("시계 표시", () => {
+  it("시:분:초를 두 자리로 채운다", () => {
+    expect(clockText(new Date(2026, 7, 22, 7, 5, 3))).toBe("07:05:03");
+    expect(clockText(new Date(2026, 7, 22, 23, 59, 59))).toBe("23:59:59");
+  });
+
+  it("오전 · 오후를 사람이 읽는 대로 쓴다", () => {
+    expect(clockTextKr(new Date(2026, 7, 22, 0, 5))).toBe("오전 12시 05분");
+    expect(clockTextKr(new Date(2026, 7, 22, 12, 0))).toBe("오후 12시 00분");
+    expect(clockTextKr(new Date(2026, 7, 22, 13, 7))).toBe("오후 1시 07분");
+  });
+
+  it("날짜에 요일까지 붙인다", () => {
+    // 2026-08-22 는 토요일
+    expect(fullDateKr(new Date(2026, 7, 22))).toBe("2026년 8월 22일 (토)");
   });
 });

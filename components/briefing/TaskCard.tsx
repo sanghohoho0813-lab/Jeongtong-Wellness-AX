@@ -138,6 +138,8 @@ export default function TaskCard({
   >();
   const [note, setNote] = useState("");
   const [holdUntil, setHoldUntil] = useState(() => daysFromToday(3));
+  /** 폰에서 '판단 이유 · 매출기회 근거'를 펼쳤는지 (PC 는 항상 펼침) */
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
@@ -258,7 +260,7 @@ export default function TaskCard({
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/customers/${customer.id}`}
-              className={`truncate text-[1.0625rem] font-extrabold ${
+              className={`tap-line truncate text-[1.0625rem] font-extrabold ${
                 hero ? "text-white hover:text-aqua-200" : "text-ink hover:text-aqua-700"
               }`}
             >
@@ -307,52 +309,77 @@ export default function TaskCard({
               )}
             </>
           ) : (
-            // 데이터 → 판단 → 실행 흐름을 명시적으로 표현
+            /**
+             * 폰에서는 **할 일**만 먼저 보이고, 왜 그런지는 눌러야 펼쳐진다.
+             *
+             * 한 화면에 근거까지 다 펼치면 카드 하나가 폰 화면의 3/4을 먹어서
+             * 열 명만 넘어가도 한참을 쓸어내려야 한다. 실제로 필요한 건
+             * "누구에게 무엇을" 이고, 근거는 확인하고 싶을 때만 본다.
+             * PC 는 자리가 넉넉하므로 늘 펼친 상태로 둔다(lg:block).
+             */
             <div className="mt-2 space-y-2">
-              <div>
+              <div className="rounded-btn bg-aqua-50 px-3 py-2 dark:bg-aqua-500/10">
                 <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-                  판단 이유
+                  권장 행동
                 </p>
-                <ul className="mt-0.5 space-y-0.5">
-                  {task.reason.split(" · ").map((r, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
-                    >
-                      <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
-                      {r}
-                    </li>
-                  ))}
-                </ul>
+                <p className="mt-0.5 text-[0.9375rem] font-bold leading-relaxed text-aqua-800">
+                  {task.suggestedAction}
+                </p>
               </div>
-              {opp && opp.type !== "none" && (
-                <div className="rounded-btn bg-gold-soft/70 px-3 py-2">
-                  <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
-                    매출기회 · {opp.label}
+
+              {/* 폰 전용 — 근거 펼치기 */}
+              <button
+                type="button"
+                onClick={() => setDetailOpen((v) => !v)}
+                aria-expanded={detailOpen}
+                className="touch-target inline-flex w-full items-center justify-between gap-2 rounded-btn bg-card px-3 py-2 text-sm font-bold text-ink-sub ring-1 ring-stone-line lg:hidden"
+              >
+                <span>{detailOpen ? "판단 이유 접기" : "왜 이 고객인가요?"}</span>
+                <ChevronRightIcon
+                  className={`h-4 w-4 shrink-0 transition-transform ${detailOpen ? "rotate-90" : ""}`}
+                />
+              </button>
+
+              <div
+                className={`space-y-2 ${detailOpen ? "block" : "hidden lg:block"}`}
+              >
+                <div>
+                  <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                    판단 이유
                   </p>
                   <ul className="mt-0.5 space-y-0.5">
-                    {opp.reasons.slice(0, 3).map((r, i) => (
+                    {task.reason.split(" · ").map((r, i) => (
                       <li
                         key={i}
                         className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
                       >
-                        <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
+                        <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
                         {r}
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-1 text-sm font-bold text-gold-deep">
-                    → {opp.action}
-                  </p>
                 </div>
-              )}
-              <div>
-                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-                  권장 행동
-                </p>
-                <p className="mt-0.5 text-sm font-bold text-aqua-700">
-                  → {task.suggestedAction}
-                </p>
+                {opp && opp.type !== "none" && (
+                  <div className="rounded-btn bg-gold-soft/70 px-3 py-2">
+                    <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
+                      매출기회 · {opp.label}
+                    </p>
+                    <ul className="mt-0.5 space-y-0.5">
+                      {opp.reasons.slice(0, 3).map((r, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                        >
+                          <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
+                          {r}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-1 text-sm font-bold text-gold-deep">
+                      → {opp.action}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

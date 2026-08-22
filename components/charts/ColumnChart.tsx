@@ -105,7 +105,7 @@ export default function ColumnChart({
           onClick={() => setShowTable((v) => !v)}
           aria-expanded={showTable}
           aria-controls={tableId}
-          className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-sub ring-1 ring-black/[0.06] transition-colors hover:bg-stone-bg dark:ring-white/10"
+          className="touch-target inline-flex shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-ink-sub ring-1 ring-black/[0.06] transition-colors hover:bg-stone-bg dark:ring-white/10"
         >
           {showTable ? "그래프로" : "표로 보기"}
         </button>

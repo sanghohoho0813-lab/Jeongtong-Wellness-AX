@@ -235,17 +235,18 @@ export default function VisitsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href={`/customers/${v.customerId}`}
-                  className="font-bold text-ink hover:text-aqua-700"
+                  className="tap-line font-bold text-ink hover:text-aqua-700"
                 >
                   {customerName(v.customerId)}
                 </Link>
                 <Badge tone={st.badge} dot>
                   {v.type === "consult" ? "상담" : (v.programName ?? "방문")}
                 </Badge>
-                <span className="ml-auto nowrap-num text-xs text-ink-sub">
-                  {formatDateKr(v.visitedAt)} ({formatRelative(v.visitedAt)})
-                </span>
               </div>
+              {/* 날짜는 아래 줄로 — 이름·프로그램과 한 줄에 두면 폰에서 늘 줄이 넘친다 */}
+              <p className="nowrap-num mt-0.5 text-[0.8125rem] font-bold text-ink-soft">
+                {formatDateKr(v.visitedAt)} ({formatRelative(v.visitedAt)})
+              </p>
               {v.bodyParts.length > 0 && (
                 <div className="mt-2">
                   <BodyPartTags records={v.bodyParts} />
@@ -254,27 +255,32 @@ export default function VisitsPage() {
               {v.reaction && (
                 <p className="mt-2 text-sm text-ink-soft">{v.reaction}</p>
               )}
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <p className="min-w-0 text-xs text-ink-sub">
-                  담당 {staffName(v.staffId)}
-                  {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
-                  {v.membershipId ? " · 이용권 차감" : ""}
-                  {v.nextManageDate
-                    ? ` · 다음 관리일 ${formatDateKr(v.nextManageDate)}`
-                    : ""}
-                </p>
+              {/*
+                담당·결제 정보는 한 줄로, [수정]·[삭제]는 그 아래 오른쪽에.
+                한 줄에 섞어 두면 좁은 화면에서 글이 길어질 때마다 단추가
+                제멋대로 다음 줄로 밀려나 위치가 매번 달라진다.
+              */}
+              <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
+                담당 {staffName(v.staffId)}
+                {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
+                {v.membershipId ? " · 이용권 차감" : ""}
+                {v.nextManageDate
+                  ? ` · 다음 관리일 ${formatDateKr(v.nextManageDate)}`
+                  : ""}
+              </p>
+              <div className="-mb-1.5 mt-0.5 flex items-center justify-end gap-1.5">
                 <button
                   onClick={() => {
                     setEditingVisit(v);
                     setOpenForm(true);
                   }}
-                  className="ml-auto shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+                  className="touch-target inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
                 >
                   수정
                 </button>
                 <button
                   onClick={() => setConfirmDelete(v)}
-                  className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-faint transition-colors hover:text-danger"
+                  className="touch-target inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink-faint transition-colors hover:text-danger"
                 >
                   삭제
                 </button>

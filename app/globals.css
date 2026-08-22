@@ -182,6 +182,21 @@ body {
   .touch-target {
     min-height: 44px;
   }
+  /*
+   * 글줄 안에 있는 링크(고객 이름 등)를 손가락으로 누를 수 있게.
+   *
+   * 이름은 대개 한 줄짜리 글씨라 누를 자리가 20~28px밖에 안 된다.
+   * 손끝이 닿는 넓이는 44px 이상이어야 하는데, 글자만 키우면 화면이 어수선해진다.
+   * 그래서 **누를 자리는 위아래로 넓히고, 넓힌 만큼 바깥 여백을 되돌려**
+   * 보이는 모양(줄 간격)은 그대로 두었다.
+   */
+  .tap-line {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: -0.625rem;
+    margin-bottom: -0.625rem;
+  }
   /* 가로 스크롤 선택줄(시/분 칩) — 스크롤은 되지만 막대는 숨긴다 */
   .no-scrollbar {
     -ms-overflow-style: none;

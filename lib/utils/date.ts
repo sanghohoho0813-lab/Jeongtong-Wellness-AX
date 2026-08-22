@@ -173,3 +173,63 @@ export function isAfter(a: string, b: string): boolean {
   if (Number.isNaN(ta) || Number.isNaN(tb)) return false;
   return ta > tb;
 }
+
+// ---------- 실시간 시계 ----------
+
+/**
+ * 영업시간 문자열("10:00 - 20:00")을 분 단위로 푼다.
+ * 매장마다 적는 방식이 조금씩 달라(~, ―, 공백 유무) 숫자만 뽑아 쓴다.
+ * 형식을 알 수 없으면 undefined — 그때는 영업 중 여부를 표시하지 않는다.
+ */
+export function parseOpenHours(
+  text: string | undefined,
+): { openMin: number; closeMin: number } | undefined {
+  if (!text) return undefined;
+  const m = text.match(/(\d{1,2})\s*:\s*(\d{2})\D+(\d{1,2})\s*:\s*(\d{2})/);
+  if (!m) return undefined;
+  const openMin = Number(m[1]) * 60 + Number(m[2]);
+  const closeMin = Number(m[3]) * 60 + Number(m[4]);
+  if (openMin >= 1440 || closeMin > 1440) return undefined;
+  return { openMin, closeMin };
+}
+
+export type OpenState = "before" | "open" | "closed" | "unknown";
+
+/**
+ * 지금이 영업 중인지.
+ * 자정을 넘겨 닫는 매장(22:00 - 02:00)도 있어 그 경우를 따로 본다.
+ */
+export function openStateAt(
+  now: Date,
+  openHours: string | undefined,
+): OpenState {
+  const range = parseOpenHours(openHours);
+  if (!range) return "unknown";
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const { openMin, closeMin } = range;
+  if (closeMin > openMin) {
+    if (cur < openMin) return "before";
+    return cur < closeMin ? "open" : "closed";
+  }
+  // 자정을 넘기는 영업시간
+  return cur >= openMin || cur < closeMin ? "open" : "closed";
+}
+
+/** 시:분:초 (24시간, 두 자리) — 시계 표시용 */
+export function clockText(now: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+}
+
+/** "오전 9시 05분" 같은 사람이 읽는 시각 (초 없음) */
+export function clockTextKr(now: Date): string {
+  const h = now.getHours();
+  const ampm = h < 12 ? "오전" : "오후";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${ampm} ${h12}시 ${String(now.getMinutes()).padStart(2, "0")}분`;
+}
+
+/** "2026년 8월 22일 (토)" */
+export function fullDateKr(now: Date): string {
+  return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${WEEKDAY_KR[now.getDay()]})`;
+}

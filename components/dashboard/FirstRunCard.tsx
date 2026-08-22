@@ -119,64 +119,80 @@ export default function FirstRunCard() {
         ))}
       </div>
 
-      <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      {/*
+        지금 할 단계 하나만 크게 펼치고, 나머지는 한 줄로 줄인다.
+        네 단계를 모두 펼쳐 두면 폰에서 이 안내만 화면 하나를 넘겨서
+        정작 오늘의 할 일이 화면 밖으로 밀려난다.
+        끝난 단계는 지웠다는 표시로 남기고, 남은 단계는 예고로만 보인다.
+      */}
+      <ul className="mt-4 space-y-2">
         {steps.map((s, i) => {
           const Icon = s.icon;
           const isCurrent = s.key === current.key;
+
+          if (!isCurrent) {
+            return (
+              <li key={s.key}>
+                <Link
+                  href={s.href}
+                  className="flex items-center gap-2.5 rounded-card bg-card/60 px-3.5 py-2.5 ring-1 ring-black/[0.04]"
+                >
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ${
+                      s.done
+                        ? "bg-emerald-50 text-positive ring-emerald-100 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                        : "bg-stone-bg-deep text-ink-faint ring-black/[0.04]"
+                    }`}
+                  >
+                    {s.done ? (
+                      <CheckIcon className="h-4 w-4" strokeWidth={2.8} />
+                    ) : (
+                      <Icon className="h-4 w-4" />
+                    )}
+                  </span>
+                  <span className="nowrap-num shrink-0 text-xs font-extrabold text-ink-faint">
+                    {i + 1}단계
+                  </span>
+                  <span
+                    className={`min-w-0 flex-1 truncate text-[0.9375rem] font-bold ${
+                      s.done ? "text-ink-faint line-through" : "text-ink-sub"
+                    }`}
+                  >
+                    {s.title}
+                  </span>
+                </Link>
+              </li>
+            );
+          }
+
           return (
             <li key={s.key}>
               <Link
                 href={s.href}
-                aria-current={isCurrent ? "step" : undefined}
-                className={`group flex h-full flex-col rounded-card p-4 transition-shadow ${
-                  s.done
-                    ? "bg-card/60 ring-1 ring-black/[0.04]"
-                    : isCurrent
-                      ? "bg-card ring-2 ring-aqua-500 hover:shadow-card-hover"
-                      : "bg-card ring-1 ring-black/[0.05] hover:shadow-card-hover"
-                }`}
+                aria-current="step"
+                className="group flex flex-col rounded-card bg-card p-4 ring-2 ring-aqua-500 transition-shadow hover:shadow-card-hover"
               >
                 <span className="flex items-center gap-2">
-                  <span
-                    className={`icon-pop flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ${
-                      s.done
-                        ? "bg-emerald-50 text-positive ring-emerald-100 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
-                        : "bg-aqua-50 text-aqua-700 ring-aqua-100"
-                    }`}
-                  >
-                    {s.done ? (
-                      <CheckIcon className="h-5 w-5" strokeWidth={2.6} />
-                    ) : (
-                      <Icon className="h-5 w-5" />
-                    )}
+                  <span className="icon-pop flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100">
+                    <Icon className="h-5 w-5" />
                   </span>
                   <span className="nowrap-num text-xs font-extrabold text-ink-faint">
                     {i + 1}단계
                   </span>
-                  {isCurrent && (
-                    <span className="rounded-full bg-aqua-500 px-2 py-0.5 text-[0.6875rem] font-extrabold text-white">
-                      지금 할 일
-                    </span>
-                  )}
+                  <span className="rounded-full bg-aqua-500 px-2 py-0.5 text-[0.6875rem] font-extrabold text-white">
+                    지금 할 일
+                  </span>
                 </span>
 
-                <span
-                  className={`mt-2.5 block font-extrabold ${
-                    s.done ? "text-ink-faint line-through" : "text-ink"
-                  }`}
-                >
+                <span className="mt-2.5 block text-[1.0625rem] font-extrabold text-ink">
                   {s.title}
                 </span>
-                {!s.done && (
-                  <>
-                    <span className="mt-1 block flex-1 text-sm leading-relaxed text-ink-sub">
-                      {s.desc}
-                    </span>
-                    <span className="mt-2.5 block text-sm font-extrabold text-aqua-700">
-                      {s.cta} →
-                    </span>
-                  </>
-                )}
+                <span className="mt-1 block text-sm leading-relaxed text-ink-sub">
+                  {s.desc}
+                </span>
+                <span className="mt-2.5 block text-sm font-extrabold text-aqua-700">
+                  {s.cta} →
+                </span>
               </Link>
             </li>
           );
@@ -185,7 +201,10 @@ export default function FirstRunCard() {
 
       <p className="mt-3 text-xs leading-relaxed text-ink-faint">
         네 단계를 마치면 이 안내는 사라집니다. 사용법을 처음부터 보고 싶으시면{" "}
-        <Link href="/guide" className="font-bold text-aqua-700 hover:underline">
+        <Link
+          href="/guide"
+          className="tap-line font-bold text-aqua-700 hover:underline"
+        >
           사용 가이드
         </Link>
         를 열어 보세요.

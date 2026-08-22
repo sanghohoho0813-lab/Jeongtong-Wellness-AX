@@ -331,7 +331,7 @@ export default function SettingsPage() {
               >
                 <span className="font-semibold text-ink">{s.name}</span>
                 <select
-                  className={`${inputCls} !w-auto !py-1.5 text-sm`}
+                  className={`${inputCls} touch-target !w-auto !py-1.5 text-sm`}
                   value={s.role}
                   onChange={(e) =>
                     updateStaff(
@@ -360,7 +360,7 @@ export default function SettingsPage() {
                       ),
                     )
                   }
-                  className={`ml-auto rounded-full px-3 py-1 text-xs font-semibold ${
+                  className={`touch-target ml-auto inline-flex items-center rounded-full px-3.5 text-sm font-semibold ${
                     s.active
                       ? "bg-aqua-100 text-aqua-800"
                       : "bg-stone-bg-deep text-ink-sub"

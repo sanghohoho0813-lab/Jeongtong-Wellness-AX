@@ -3,7 +3,6 @@ import { canAccessRoute } from "@/lib/auth/permissions";
 import {
   BodyIcon,
   BuildingIcon,
-  CalendarIcon,
   ChartIcon,
   ClipboardIcon,
   HomeIcon,
@@ -48,18 +47,27 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray" },
 ];
 
-/** Mobile 하단 네비 (5탭) */
+/**
+ * Mobile 하단 네비.
+ *
+ * 가운데에는 메뉴가 아니라 **[기록]** 단추가 들어간다(AppShell 에서 끼워 넣는다).
+ * 하루 중 가장 자주 하는 일이 방문 기록이라, 어느 화면에 있든 엄지가 닿는
+ * 자리에서 바로 시작할 수 있어야 하기 때문이다.
+ *
+ * 그래서 '방문/이용 기록' 목록 화면은 하단 탭에서 내리고 더보기로 옮겼다.
+ * (기록하는 동작과 기록을 훑어보는 화면은 쓰임새가 다르다 —
+ *  현장에서 급한 쪽은 언제나 '기록하기'다.)
+ */
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
   { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua" },
   { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky" },
-  { href: "/visits", label: "방문/상담", icon: CalendarIcon, tone: "violet" },
   { href: "/analytics", label: "분석", icon: ChartIcon, tone: "emerald" },
   { href: "/more", label: "더보기", icon: MoreIcon, tone: "gray" },
 ];
 
 /**
  * Mobile 더보기 — 하단 네비에 없는 보조/관리 기능만.
- * 하단 네비와 동일한 경로(/, /customers, /visits, /analytics)는 중복 배치하지 않는다.
+ * 하단 네비와 동일한 경로(/, /customers, /analytics)는 중복 배치하지 않는다.
  */
 export const MORE_ITEMS: NavItem[] = SIDEBAR_ITEMS.filter(
   (item) => !BOTTOM_NAV_ITEMS.some((b) => b.href === item.href),

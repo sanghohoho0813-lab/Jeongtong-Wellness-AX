@@ -3,13 +3,74 @@
 /** 대시보드 Hero — AI 고객관리 · 오늘의 실행 브리핑 (Deep Teal Hero Card) */
 
 import Link from "next/link";
+import { useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { HeroCard } from "@/components/ui";
 import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
 import TaskCard from "@/components/briefing/TaskCard";
+import { BriefingTask, TASK_CATEGORY_LABELS } from "@/lib/types";
+
+/**
+ * 접힌 상태의 한 줄 — 순번 · 이름 · 관리 유형 · 할 일 · [처리]
+ * 여기서 필요한 정보는 "누구에게 무엇을"이 전부다.
+ */
+function PreviewRow({
+  task,
+  rank,
+  onOpen,
+}: {
+  task: BriefingTask;
+  rank: number;
+  onOpen: () => void;
+}) {
+  const { customers } = useStore();
+  const customer = customers.find((c) => c.id === task.customerId);
+  if (!customer) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-card bg-white/[0.07] px-3 py-2.5 ring-1 ring-white/10">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-aqua-400 text-[0.8125rem] font-extrabold text-deep-900">
+        {rank}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="flex items-baseline gap-2">
+          <Link
+            href={`/customers/${customer.id}`}
+            className="tap-line min-w-0 truncate text-[1.0625rem] font-extrabold text-white hover:text-aqua-200"
+          >
+            {customer.name}
+          </Link>
+          <span className="shrink-0 text-[0.75rem] font-bold text-aqua-300">
+            {TASK_CATEGORY_LABELS[task.category]}
+          </span>
+        </p>
+        <p className="truncate text-[0.8125rem] text-deep-sub">
+          {task.suggestedAction}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`${customer.name} 처리하기`}
+        className="touch-target inline-flex shrink-0 items-center rounded-full bg-white/15 px-4 text-sm font-extrabold text-white ring-1 ring-white/20 transition-colors hover:bg-white/25"
+      >
+        처리
+      </button>
+    </div>
+  );
+}
 
 export default function BriefingPreview() {
   const { briefingTasks } = useStore();
+  /**
+   * 펼쳐 놓은 과제.
+   *
+   * 대시보드는 '오늘 뭘 해야 하나'를 한눈에 보는 자리다. 그런데 과제 카드를
+   * 통째로 세 장 펼쳐 두면 폰에서 그것만 세 화면을 넘어가서, 정작 아래에 있는
+   * 다른 현황은 아무도 보지 않게 된다.
+   * 그래서 평소에는 한 줄로 접어 두고, [처리]를 누른 것 하나만 펼친다.
+   * (펼친 카드에서 할 수 있는 일은 브리핑 화면과 똑같다)
+   */
+  const [openId, setOpenId] = useState<string | null>(null);
   const open = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
   );
@@ -29,7 +90,7 @@ export default function BriefingPreview() {
         </h2>
         <Link
           href="/briefing"
-          className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
+          className="touch-target inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
         >
           전체 보기
           <ChevronRightIcon className="h-4 w-4" />
@@ -74,10 +135,25 @@ export default function BriefingPreview() {
             : "오늘 처리할 관리 과제를 모두 완료했습니다. 수고하셨습니다."}
         </p>
       ) : (
-        <div className="mt-4 space-y-3">
-          {top3.map((task, i) => (
-            <TaskCard key={task.id} task={task} rank={i + 1} compact variant="hero" />
-          ))}
+        <div className="mt-4 space-y-2">
+          {top3.map((task, i) =>
+            openId === task.id ? (
+              <TaskCard
+                key={task.id}
+                task={task}
+                rank={i + 1}
+                compact
+                variant="hero"
+              />
+            ) : (
+              <PreviewRow
+                key={task.id}
+                rank={i + 1}
+                task={task}
+                onOpen={() => setOpenId(task.id)}
+              />
+            ),
+          )}
         </div>
       )}
     </HeroCard>

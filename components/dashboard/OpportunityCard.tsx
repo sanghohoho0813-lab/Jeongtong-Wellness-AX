@@ -44,7 +44,7 @@ export default function OpportunityCard() {
         action={
           <Link
             href="/briefing"
-            className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-gold-soft px-3.5 py-1.5 text-sm font-bold text-gold-deep ring-1 ring-gold/25 transition-colors hover:bg-gold/20"
+            className="touch-target -my-1 inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-gold-soft px-3.5 text-sm font-bold text-gold-deep ring-1 ring-gold/25 transition-colors hover:bg-gold/20"
           >
             실행 브리핑
             <ChevronRightIcon className="h-4 w-4" />

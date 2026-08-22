@@ -199,7 +199,7 @@ export default function RetentionPage() {
           action={
             <Link
               href="/briefing"
-              className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
+              className="touch-target inline-flex items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
             >
               실행 브리핑
               <ChevronRightIcon className="h-4 w-4" />
@@ -211,7 +211,7 @@ export default function RetentionPage() {
             <span key={d.customer.id}>
               <Link
                 href={`/customers/${d.customer.id}`}
-                className="font-extrabold text-white underline decoration-aqua-400/60 underline-offset-4 hover:text-aqua-200"
+                className="tap-line font-extrabold text-white underline decoration-aqua-400/60 underline-offset-4 hover:text-aqua-200"
               >
                 {d.customer.name}
               </Link>
