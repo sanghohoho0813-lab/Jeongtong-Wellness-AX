@@ -248,6 +248,10 @@ body {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  /* 종이에만 나오는 것 (손으로 적는 칸 등) — 화면에서는 숨긴다 */
+  .print-only {
+    display: none;
+  }
 }
 
 /* number + unit never break apart */
@@ -361,12 +365,34 @@ a:active {
    현장에서 오늘 할 일을 종이로 뽑아 쓰는 경우를 위해
    화면 요소(사이드바·하단네비·버튼)를 빼고 본문만 남긴다. */
 @media print {
+  /*
+   * 다크로 쓰다가 그대로 인쇄하면 흰 종이에 밝은 글자가 찍혀 안 보인다.
+   * 그건 색 변수만으로는 못 고쳐서(뱃지·알약은 dark: 클래스로 색이 붙는다)
+   * 인쇄 직전에 data-theme 을 light 로 되돌린다 — lib/data/store.tsx 참고.
+   * 여기서는 종이에 남길 것/뺄 것만 정한다.
+   *
+   * 색 알약(선택된 칩·순위 번호·유형 뱃지)은 배경이 안 찍히면 흰 글자만
+   * 남아 사라진다. 배경을 그대로 찍게 해서 알약을 알약으로 남긴다.
+   */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   aside,
   header,
   nav.fixed,
   footer,
   .no-print {
     display: none !important;
+  }
+  /* 폰에서 접어 둔 근거는 종이에서는 펼쳐서 찍는다 — 종이에는 펼칠 단추가 없다 */
+  .print-open {
+    display: block !important;
+  }
+  /* 반대로 종이에만 나오는 것 — 손으로 적는 칸 등 */
+  .print-only {
+    display: block !important;
   }
   main {
     margin: 0 !important;

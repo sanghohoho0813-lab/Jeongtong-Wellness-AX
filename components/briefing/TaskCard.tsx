@@ -333,7 +333,7 @@ export default function TaskCard({
                 type="button"
                 onClick={() => setDetailOpen((v) => !v)}
                 aria-expanded={detailOpen}
-                className="touch-target inline-flex w-full items-center justify-between gap-2 rounded-btn bg-card px-3 py-2 text-sm font-bold text-ink-sub ring-1 ring-stone-line lg:hidden"
+                className="no-print touch-target inline-flex w-full items-center justify-between gap-2 rounded-btn bg-card px-3 py-2 text-sm font-bold text-ink-sub ring-1 ring-stone-line lg:hidden"
               >
                 <span>{detailOpen ? "판단 이유 접기" : "왜 이 고객인가요?"}</span>
                 <ChevronRightIcon
@@ -342,7 +342,7 @@ export default function TaskCard({
               </button>
 
               <div
-                className={`space-y-2 ${detailOpen ? "block" : "hidden lg:block"}`}
+                className={`print-open space-y-2 ${detailOpen ? "block" : "hidden lg:block"}`}
               >
                 <div>
                   <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
@@ -389,7 +389,17 @@ export default function TaskCard({
               {displayPhone(customer.phone, canSeePhone)}
             </p>
           )}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          {/*
+            종이로 뽑아 손에 들고 도는 경우 — 통화하고 나서 그 자리에 적을
+            칸이 없으면 뒷면에 따로 적게 된다. 화면에는 안 보이고 종이에만 나온다.
+          */}
+          <div className="print-only mt-2 border-t border-dashed border-stone-line pt-2 text-[0.8125rem] text-ink-sub">
+            <span>□ 통화함</span>
+            <span className="ml-4">□ 다음 방문 잡음</span>
+            <span className="ml-4">메모</span>
+            <span className="ml-1 inline-block w-56 border-b border-stone-line align-bottom" />
+          </div>
+          <div className="no-print mt-3 flex flex-wrap items-center gap-2">
             {NEXT_ACTIONS.map((a) => {
               const active = task.status === a.status;
               const activeCls =

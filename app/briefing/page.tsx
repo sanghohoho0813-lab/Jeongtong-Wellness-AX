@@ -175,7 +175,8 @@ export default function BriefingPage() {
         )}
       </HeroCard>
 
-      <Card className="mb-4 !py-4">
+      {/* 화면에서 목록을 좁히는 도구 — 종이에는 필요 없다 */}
+      <Card className="no-print mb-4 !py-4">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             {CATEGORY_FILTERS.map((c) => {

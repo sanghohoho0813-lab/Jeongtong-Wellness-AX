@@ -302,10 +302,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         theme === "system" ? (media.matches ? "dark" : "light") : theme;
     };
     apply();
-    if (theme === "system") {
-      media.addEventListener("change", apply);
-      return () => media.removeEventListener("change", apply);
-    }
+
+    /*
+     * 인쇄할 때는 무조건 라이트로 되돌린다.
+     * 다크로 쓰다가 '오늘 할 일 인쇄'를 누르면 흰 종이에 밝은 회색 글자가
+     * 찍혀 거의 아무것도 안 보였다. CSS 만으로는 반쪽짜리다 — 색 변수는
+     * 바꿀 수 있어도 dark: 로 붙은 뱃지·알약 색까지는 못 되돌리기 때문에,
+     * 인쇄 직전에 data-theme 자체를 light 로 바꾸고 끝나면 되돌린다.
+     */
+    const toLight = () => {
+      root.dataset.theme = "light";
+    };
+    window.addEventListener("beforeprint", toLight);
+    window.addEventListener("afterprint", apply);
+
+    if (theme === "system") media.addEventListener("change", apply);
+    return () => {
+      window.removeEventListener("beforeprint", toLight);
+      window.removeEventListener("afterprint", apply);
+      if (theme === "system") media.removeEventListener("change", apply);
+    };
   }, [state.settings.fontScale, state.settings.density, state.settings.theme]);
 
   const factsById = useMemo(() => {
