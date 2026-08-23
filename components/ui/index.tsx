@@ -140,14 +140,14 @@ export function Button({
 }) {
   const variants: Record<ButtonVariant, string> = {
     primary:
-      "bg-gradient-to-b from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] hover:from-aqua-600 hover:to-aqua-800 disabled:from-ink-faint disabled:to-ink-faint disabled:shadow-none",
+      "bg-gradient-to-b from-aqua-650 to-aqua-850 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] hover:from-aqua-850 hover:to-deep-700 disabled:from-ink-faint disabled:to-ink-faint disabled:shadow-none",
     secondary:
       "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100",
     ghost: "bg-transparent text-ink-sub hover:bg-stone-bg-deep",
     // 되돌릴 수 없는 작업의 확인 버튼 — 실수로 누르기 어렵도록 색으로 분명히 구분한다
     danger:
       "bg-danger text-white shadow-[0_2px_8px_rgba(200,60,60,0.3)] hover:brightness-110",
-    "danger-ghost": "bg-transparent text-danger hover:bg-red-50 dark:hover:bg-red-400/10",
+    "danger-ghost": "bg-transparent text-danger-text hover:bg-red-50 dark:hover:bg-red-400/10",
     "on-dark":
       "bg-white/10 text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/20",
   };
@@ -266,19 +266,19 @@ export function recommendLevel(score: number) {
       label: "AI 추천 · 우선",
       short: "우선 연락",
       chip: "bg-gradient-to-r from-red-500 to-danger text-white",
-      text: "text-danger",
+      text: "text-danger-text",
     };
   if (score >= 35)
     return {
       label: "AI 추천 · 관리",
       short: "관리 권장",
       chip: "bg-gradient-to-r from-amber-400 to-warn text-white",
-      text: "text-warn",
+      text: "text-warn-text",
     };
   return {
     label: "AI 추천 · 관찰",
     short: "관찰",
-    chip: "bg-gradient-to-r from-aqua-500 to-deep-700 text-white",
+    chip: "bg-gradient-to-r from-aqua-650 to-deep-700 text-white",
     text: "text-aqua-700",
   };
 }
@@ -508,7 +508,7 @@ export function InsightBanner({
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-aqua-300">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-aqua-300" />
-          <span className="truncate">{title}</span>
+          <span className="min-w-0">{title}</span>
         </p>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -555,7 +555,7 @@ export function FormActions({
       {error && (
         <p
           role="alert"
-          className="mb-2 rounded-btn bg-red-50 px-3 py-2 text-sm font-bold text-danger dark:bg-red-400/10"
+          className="mb-2 rounded-btn bg-red-50 px-3 py-2 text-sm font-bold text-danger-text dark:bg-red-400/10"
         >
           {error}
         </p>
@@ -675,7 +675,7 @@ export function SegmentedControl<T extends string>({
           onClick={() => onChange(o.key)}
           className={`touch-target flex-1 rounded-btn px-4 py-2.5 text-sm font-bold transition-colors ${
             value === o.key
-              ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+              ? "bg-sel text-sel-ink shadow-sm"
               : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
           }`}
         >
@@ -698,10 +698,15 @@ export function FilterChip({
   children: ReactNode;
   tone?: "aqua" | "ink";
 }) {
+  /*
+   * 다크에서 ink-soft 는 거의 흰색이라, 그 위의 흰 글자는 대비가 1.4 였다.
+   * (골라 놓고도 무엇을 골랐는지 읽을 수 없었다)
+   * 어두운 표면 + 밝은 글자로 뒤집는다.
+   */
   const activeCls =
     tone === "aqua"
-      ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
-      : "bg-ink-soft text-white shadow-sm";
+      ? "bg-sel text-sel-ink shadow-sm"
+      : "bg-ink-soft text-white shadow-sm dark:bg-deep-800 dark:text-white";
   return (
     <button
       onClick={onClick}

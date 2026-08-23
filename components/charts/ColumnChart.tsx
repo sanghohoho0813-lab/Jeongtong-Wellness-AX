@@ -205,6 +205,10 @@ export default function ColumnChart({
 
                     <button
                       type="button"
+                      /* 값을 길이로 보여 주는 자리라 폭을 44px 로 못 키운다
+                         — 24px 이상(WCAG 2.5.8 AA)이고, 값은 aria-label 과
+                         아래 '표로 보기' 로도 읽을 수 있다. */
+                      data-chart-bar
                       onMouseEnter={() => setHover(i)}
                       onMouseLeave={() => setHover(null)}
                       onFocus={() => setHover(i)}

@@ -229,7 +229,7 @@ export default function VisitForm({
           }}
         />
         {visitDate && visitDate < todayISO() && (
-          <p className="mt-1.5 text-[0.8125rem] font-bold text-warn">
+          <p className="mt-1.5 text-[0.8125rem] font-bold text-warn-text">
             {formatDateKr(visitDate)} 방문으로 기록됩니다 (지난 날짜)
           </p>
         )}
@@ -250,7 +250,7 @@ export default function VisitForm({
               onClick={() => setType(t.key)}
               className={`touch-target flex-1 rounded-btn px-4 py-2.5 text-sm font-bold transition-colors ${
                 type === t.key
-                  ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                  ? "bg-sel text-sel-ink shadow-sm"
                   : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
               }`}
             >
@@ -354,7 +354,7 @@ export default function VisitForm({
                       <span
                         className={`mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded ${
                           on
-                            ? "bg-aqua-600 text-white"
+                            ? "bg-sel text-sel-ink"
                             : "bg-card-soft ring-1 ring-stone-line"
                         }`}
                         style={{ width: "1.125rem", height: "1.125rem" }}

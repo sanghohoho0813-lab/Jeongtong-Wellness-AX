@@ -76,7 +76,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="card mx-auto max-w-2xl">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-warn ring-1 ring-warn/20 dark:bg-amber-400/10">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-warn-text ring-1 ring-warn/20 dark:bg-amber-400/10">
           <AlertIcon className="h-6 w-6" />
         </span>
         <h2 className="mt-3 text-xl font-extrabold text-ink">
@@ -91,7 +91,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={() => this.setState({ error: null })}
-            className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-gradient-to-b from-aqua-500 to-aqua-700 px-4 py-2.5 text-[0.9375rem] font-bold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
+            className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-4 py-2.5 text-[0.9375rem] font-bold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
           >
             <RefreshIcon className="h-4 w-4" />
             다시 시도

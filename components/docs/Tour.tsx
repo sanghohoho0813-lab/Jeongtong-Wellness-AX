@@ -586,7 +586,7 @@ function TourOverlay({
               </button>
               <button
                 onClick={onNext}
-                className="touch-target ml-auto flex items-center gap-1 rounded-btn bg-gradient-to-b from-aqua-500 to-aqua-700 px-4 py-2 text-sm font-extrabold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-600 hover:to-aqua-800"
+                className="touch-target ml-auto flex items-center gap-1 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-4 py-2 text-sm font-extrabold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-850 hover:to-deep-700"
               >
                 {index >= total - 1 ? "안내 마치기" : "다음"}
                 {index < total - 1 && <ChevronRightIcon className="h-4 w-4" />}

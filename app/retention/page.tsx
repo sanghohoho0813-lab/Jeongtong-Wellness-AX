@@ -66,18 +66,18 @@ function CustomerRow({
             </span>
           )}
         </div>
-        <p className="nowrap-num truncate text-[0.8125rem] text-ink-sub">
+        <p className="tabular line-clamp-2 text-[0.8125rem] leading-snug text-ink-sub">
           방문 {derived.visitCount}회
           <span className="hidden sm:inline">
             {" · "}
             {displayPhone(c.phone, canSeePhone)}
           </span>
         </p>
-        <p className="truncate text-[0.875rem] font-bold text-ink-soft sm:hidden">
+        <p className="text-[0.875rem] font-bold leading-snug text-ink-soft sm:hidden">
           {note}
         </p>
       </div>
-      <span className="hidden max-w-[45%] shrink-0 truncate text-right text-sm font-bold text-ink-soft sm:block">
+      <span className="hidden max-w-[45%] shrink-0 text-right text-sm font-bold leading-snug text-ink-soft sm:block">
         {note}
       </span>
       <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />

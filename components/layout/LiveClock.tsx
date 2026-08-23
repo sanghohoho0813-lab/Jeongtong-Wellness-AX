@@ -19,6 +19,7 @@ import {
   clockText,
   clockTextKr,
   fullDateKr,
+  monthDayKr,
   openStateAt,
   type OpenState,
 } from "@/lib/utils/date";
@@ -31,7 +32,7 @@ const STATE_LABEL: Record<Exclude<OpenState, "unknown">, string> = {
 
 const STATE_STYLE: Record<Exclude<OpenState, "unknown">, string> = {
   before: "bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20",
-  open: "bg-emerald-50 text-positive ring-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20",
+  open: "bg-emerald-50 text-positive-text ring-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20",
   closed: "bg-stone-bg-deep text-ink-sub ring-black/[0.04]",
 };
 
@@ -60,8 +61,9 @@ export default function LiveClock({
   if (variant === "header") {
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 leading-none">
+        {/* 폰 제목줄 — 연도를 빼 한 줄에 담는다 (글자 크게 설정에서도) */}
         <span className="nowrap-num text-sm font-bold text-ink-soft">
-          {now ? fullDateKr(now) : " "}
+          {now ? monthDayKr(now) : " "}
         </span>
         <span
           className="nowrap-num text-base font-extrabold tabular tracking-tight text-deep-800 dark:text-aqua-700"

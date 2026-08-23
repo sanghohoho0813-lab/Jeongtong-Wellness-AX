@@ -173,7 +173,7 @@ export default function CustomersPage() {
               aria-pressed={on}
               className={`touch-target nowrap-num inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors ${
                 on
-                  ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                  ? "bg-sel text-sel-ink shadow-sm"
                   : "bg-card text-ink-sub ring-1 ring-stone-line"
               }`}
             >
@@ -313,7 +313,7 @@ export default function CustomersPage() {
                     <CustomerStatusBadge status={d.status} />
                   </span>
                 </div>
-                <p className="nowrap-num mt-0.5 truncate text-[0.875rem] text-ink-sub">
+                <p className="tabular mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub">
                   방문 {d.visitCount}회 · 최근 {formatRelative(d.lastVisitDate)}
                   {/* 잔여 회차는 넓은 화면에서 오른쪽에 따로 나오므로 여기선 뺀다 */}
                   <span className="hidden sm:inline">

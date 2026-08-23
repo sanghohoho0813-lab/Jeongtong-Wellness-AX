@@ -39,6 +39,11 @@ const config: Config = {
           400: "#2AB3AF",
           500: "#149D9A",
           600: "#128B89",
+          /* 650·850 은 테마 무관 고정 — 주 버튼 그라데이션 전용.
+             예전 from-aqua-500 은 흰 글자 대비가 3.32 였고, 700/800 은
+             테마 변수라 다크에서 밝은 색으로 뒤집혀 흰 글자가 묻혔다. */
+          650: "#0F8280",
+          850: "#0B6462",
           700: v("--c-aqua-700"),
           800: v("--c-aqua-800"),
         },
@@ -53,6 +58,9 @@ const config: Config = {
           sub: "#9CC8C3",
           faint: "#6E9A95",
         },
+        /* 선택된 칩·세그먼트 (배경/글자 한 쌍) */
+        sel: v("--c-sel"),
+        "sel-ink": v("--c-sel-ink"),
         ink: {
           DEFAULT: v("--c-ink"),
           soft: v("--c-ink-soft"),
@@ -65,6 +73,10 @@ const config: Config = {
           soft: v("--c-gold-soft"),
         },
         danger: "#CC4B44",
+        /* 글자 전용 상태색 — 테마에 따라 값이 바뀐다 (globals.css 설명 참고) */
+        "danger-text": v("--c-danger-text"),
+        "warn-text": v("--c-warn-text"),
+        "positive-text": v("--c-positive-text"),
         warn: "#DB9A32",
         positive: "#2E9E6B",
       },

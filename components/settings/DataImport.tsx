@@ -128,10 +128,10 @@ export default function DataImport() {
             <UploadIcon className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-bold text-ink">
+            <span className="block font-bold leading-snug text-ink">
               고객 명부 가져오기
             </span>
-            <span className="block truncate text-xs text-ink-sub">
+            <span className="block text-xs leading-snug text-ink-sub">
               엑셀에서 저장한 CSV
             </span>
           </span>
@@ -145,10 +145,10 @@ export default function DataImport() {
             <UploadIcon className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-bold text-ink">
+            <span className="block font-bold leading-snug text-ink">
               백업으로 되돌리기
             </span>
-            <span className="block truncate text-xs text-ink-sub">
+            <span className="block text-xs leading-snug text-ink-sub">
               전체 백업 JSON
             </span>
           </span>
@@ -313,7 +313,7 @@ export default function DataImport() {
             {csvPreview.errors.length > 0 && (
               <div>
                 <p className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-ink">
-                  <AlertIcon className="h-4 w-4 text-warn" />
+                  <AlertIcon className="h-4 w-4 text-warn-text" />
                   읽지 못한 행 {csvPreview.errors.length}건
                 </p>
                 <ul className="max-h-40 space-y-1 overflow-y-auto rounded-card bg-card-soft p-2.5 ring-1 ring-black/[0.04]">

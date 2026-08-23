@@ -233,3 +233,12 @@ export function clockTextKr(now: Date): string {
 export function fullDateKr(now: Date): string {
   return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${WEEKDAY_KR[now.getDay()]})`;
 }
+
+/**
+ * "8월 23일 (일)" — 연도를 뺀 짧은 날짜.
+ * 폰 제목줄처럼 자리가 빠듯한 곳에서 쓴다. 오늘이 몇 년인지는
+ * 굳이 볼 일이 없는데, 그 네 글자 때문에 줄이 하나 더 생기곤 했다.
+ */
+export function monthDayKr(now: Date): string {
+  return `${now.getMonth() + 1}월 ${now.getDate()}일 (${WEEKDAY_KR[now.getDay()]})`;
+}

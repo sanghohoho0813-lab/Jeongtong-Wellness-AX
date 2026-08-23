@@ -222,7 +222,7 @@ export default function TaskCard({
     : "text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint";
   const chipOn = hero
     ? "bg-white text-deep-900"
-    : "bg-aqua-600 text-white";
+    : "bg-sel text-sel-ink";
   const chipOff = hero
     ? "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20"
     : "bg-card-soft text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50";
@@ -280,7 +280,7 @@ export default function TaskCard({
                   hero
                     ? "bg-white/15 text-white ring-1 ring-white/25"
                     : openDays >= 3
-                      ? "bg-red-50 text-danger ring-1 ring-red-100 dark:bg-red-400/10 dark:ring-red-400/20"
+                      ? "bg-red-50 text-danger-text ring-1 ring-red-100 dark:bg-red-400/10 dark:ring-red-400/20"
                       : "bg-amber-50 text-amber-700 ring-1 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20"
                 }`}
               >
@@ -319,7 +319,8 @@ export default function TaskCard({
              */
             <div className="mt-2 space-y-2">
               <div className="rounded-btn bg-aqua-50 px-3 py-2 dark:bg-aqua-500/10">
-                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                {/* 작은 대문자 라벨이라 한 단계 진하게 — 아쿠아 배경 위 5.75 */}
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-sub">
                   권장 행동
                 </p>
                 <p className="mt-0.5 text-[0.9375rem] font-bold leading-relaxed text-aqua-800">
@@ -655,7 +656,7 @@ export default function TaskCard({
 
           {panel === null && task.status === "hold" && task.holdUntil && (
             <p
-              className={`mt-2.5 text-[0.7rem] font-bold ${hero ? "text-deep-faint" : "text-warn"}`}
+              className={`mt-2.5 text-[0.7rem] font-bold ${hero ? "text-deep-faint" : "text-warn-text"}`}
             >
               재확인 예정 {formatDateKr(task.holdUntil)}
               {handlerName ? ` · ${handlerName} 보류` : ""}

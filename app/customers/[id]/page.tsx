@@ -202,7 +202,7 @@ export default function CustomerDetailPage() {
             <p className="mt-1.5 text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
               {formatRelative(c.nextManageDate)}
             </p>
-            <p className="mt-1 nowrap-num truncate text-xs text-ink-sub">
+            <p className="tabular mt-1 text-xs leading-snug text-ink-sub">
               {c.nextManageDate
                 ? formatDateTimeKr(c.nextManageDate, c.nextManageTime)
                 : "예정일 미정"}
@@ -258,7 +258,7 @@ export default function CustomerDetailPage() {
               className={`mt-1.5 truncate text-2xl font-extrabold ${
                 derived.priorityScore > 0
                   ? recommendLevel(derived.priorityScore).text
-                  : "text-positive"
+                  : "text-positive-text"
               }`}
             >
               {derived.priorityScore > 0
@@ -389,12 +389,8 @@ export default function CustomerDetailPage() {
             {editingParts ? (
               <BodyMap value={draftParts} onChange={setDraftParts} compactChips />
             ) : (
-              <>
-                <BodyMap value={c.focusBodyParts} readOnly compactChips />
-                <div className="mt-3">
-                  <BodyPartTags records={c.focusBodyParts} />
-                </div>
-              </>
+              // 읽기 모드에서는 그림 + 고른 부위 칩만 (아래 태그는 같은 내용이라 뺀다)
+              <BodyMap value={c.focusBodyParts} readOnly compactChips />
             )}
           </div>
 
@@ -532,7 +528,7 @@ export default function CustomerDetailPage() {
                           )}
                           <button
                             onClick={() => setConfirmDeleteM(m.id)}
-                            className="touch-target ml-auto rounded-full px-3 py-1 text-xs font-bold text-ink-faint hover:text-danger"
+                            className="touch-target ml-auto rounded-full px-3 py-1 text-xs font-bold text-ink-faint hover:text-danger-text"
                           >
                             삭제
                           </button>
@@ -662,7 +658,7 @@ export default function CustomerDetailPage() {
                     </button>
                     <button
                       onClick={() => setConfirmDeleteV(v)}
-                      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-faint transition-colors hover:text-danger"
+                      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-faint transition-colors hover:text-danger-text"
                     >
                       삭제
                     </button>

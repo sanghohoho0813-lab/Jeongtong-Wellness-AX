@@ -280,7 +280,7 @@ export default function VisitsPage() {
                 </button>
                 <button
                   onClick={() => setConfirmDelete(v)}
-                  className="touch-target inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink-faint transition-colors hover:text-danger"
+                  className="touch-target inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text"
                 >
                   삭제
                 </button>

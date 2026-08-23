@@ -88,7 +88,7 @@ export default function MorePage() {
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-aqua-50 text-aqua-700">
                       <Icon className="h-5 w-5" />
                     </span>
-                    <span className="flex-1 truncate font-semibold text-ink">
+                    <span className="flex-1 font-semibold leading-snug text-ink">
                       {item.label}
                     </span>
                     <ChevronRightIcon className="h-5 w-5 text-ink-faint" />

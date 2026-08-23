@@ -147,7 +147,7 @@ export default function BranchesPage() {
                 영업시간 {branch.openHours ?? settings.openHours} · 관리자{" "}
                 {settings.ownerName}
                 {attention && (
-                  <span className="ml-2 font-bold text-warn">
+                  <span className="ml-2 font-bold text-warn-text">
                     관리 대기 고객 비율이 높습니다 — 실행 브리핑을 확인하세요.
                   </span>
                 )}

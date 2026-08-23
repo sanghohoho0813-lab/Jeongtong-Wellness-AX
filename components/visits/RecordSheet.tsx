@@ -183,7 +183,7 @@ export default function RecordSheet({
                         )}
                         {!isDue && <CustomerStatusBadge status={d.status} />}
                       </span>
-                      <span className="nowrap-num mt-0.5 block truncate text-[0.8125rem] text-ink-sub">
+                      <span className="tabular mt-0.5 block line-clamp-2 text-[0.8125rem] leading-snug text-ink-sub">
                         {displayPhone(d.customer.phone, canSeePhone)}
                         {d.lastVisitDate
                           ? ` · 최근 ${formatRelative(d.lastVisitDate)}`

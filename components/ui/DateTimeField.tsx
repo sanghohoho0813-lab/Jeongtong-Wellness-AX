@@ -41,7 +41,7 @@ const QUICK = [
 function chipCls(active: boolean): string {
   return `touch-target shrink-0 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${
     active
-      ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+      ? "bg-sel text-sel-ink shadow-sm"
       : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
   }`;
 }
@@ -120,7 +120,7 @@ export function DateTimePanel({
             onClick={() => pickDate(recommended.date)}
             className={`touch-target shrink-0 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${
               date === recommended.date
-                ? "bg-gradient-to-r from-aqua-500 to-deep-700 text-white shadow-sm"
+                ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
                 : "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-100 hover:bg-aqua-100"
             }`}
           >
@@ -171,7 +171,7 @@ export function DateTimePanel({
               key={w}
               className={`py-1 text-center text-[0.6875rem] font-bold ${
                 i === 0
-                  ? "text-danger"
+                  ? "text-danger-text"
                   : i === 6
                     ? "text-sky-600"
                     : "text-ink-faint"
@@ -193,7 +193,7 @@ export function DateTimePanel({
                 onClick={() => pickDate(d)}
                 className={`nowrap-num flex h-9 items-center justify-center rounded-lg text-sm font-bold transition-colors ${
                   selected
-                    ? "bg-gradient-to-br from-aqua-500 to-deep-700 text-white shadow-sm"
+                    ? "bg-gradient-to-br from-aqua-650 to-deep-700 text-white shadow-sm"
                     : isToday
                       ? "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-100"
                       : past
@@ -227,7 +227,7 @@ export function DateTimePanel({
                   onClick={() => pickMeridiem(v)}
                   className={`touch-target flex-1 rounded-btn px-3 py-2 text-sm font-bold transition-colors ${
                     meridiem === v
-                      ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                      ? "bg-sel text-sel-ink shadow-sm"
                       : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
                   }`}
                 >
@@ -282,7 +282,7 @@ export function DateTimePanel({
         <button
           type="button"
           onClick={() => onChange("", undefined)}
-          className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-bold text-ink-sub transition-colors hover:bg-stone-bg hover:text-danger"
+          className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-bold text-ink-sub transition-colors hover:bg-stone-bg hover:text-danger-text"
         >
           <XIcon className="h-3.5 w-3.5" />
           지우기
@@ -291,7 +291,7 @@ export function DateTimePanel({
           <button
             type="button"
             onClick={onDone}
-            className="touch-target rounded-btn bg-deep-800 px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors dark:bg-aqua-600"
+            className="touch-target rounded-btn bg-sel px-4 py-2 text-sm font-bold text-sel-ink shadow-sm transition-colors"
           >
             완료
           </button>

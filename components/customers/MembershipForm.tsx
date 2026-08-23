@@ -121,7 +121,7 @@ export default function MembershipForm({
                 onClick={() => applyPreset(p)}
                 className={`touch-target flex items-center justify-between gap-2 rounded-btn px-3.5 py-2.5 text-left text-sm font-bold transition-colors ${
                   on
-                    ? "bg-gradient-to-r from-aqua-500 to-deep-700 text-white shadow-sm"
+                    ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
                     : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
                 }`}
               >
@@ -162,7 +162,7 @@ export default function MembershipForm({
               }}
               className={`nowrap-num touch-target rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
                 totalCount === n
-                  ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                  ? "bg-sel text-sel-ink shadow-sm"
                   : "bg-card-soft text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
               }`}
             >

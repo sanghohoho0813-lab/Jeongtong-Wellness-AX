@@ -98,7 +98,7 @@ export function PreferenceRow({
             title={pref.pinned ? "매번 확인 해제" : "매번 확인으로 고정"}
             className={`touch-target rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
               pref.pinned
-                ? "bg-aqua-600 text-white"
+                ? "bg-sel text-sel-ink"
                 : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
             }`}
           >
@@ -107,7 +107,7 @@ export function PreferenceRow({
           <button
             onClick={() => removePreference(customerId, pref.id)}
             aria-label="삭제"
-            className="touch-target flex h-8 w-8 items-center justify-center rounded-full text-ink-faint hover:bg-red-50 hover:text-danger dark:hover:bg-red-400/10"
+            className="touch-target flex h-8 w-8 items-center justify-center rounded-full text-ink-faint hover:bg-red-50 hover:text-danger-text dark:hover:bg-red-400/10"
           >
             <XIcon className="h-4 w-4" />
           </button>
@@ -208,7 +208,7 @@ export default function CarePreferenceCard({
                 onClick={() => changeCategory(c)}
                 className={`touch-target rounded-full px-3 py-1 text-xs font-bold transition-colors ${
                   category === c
-                    ? "bg-aqua-600 text-white"
+                    ? "bg-sel text-sel-ink"
                     : "bg-card-soft text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
                 }`}
               >
@@ -236,7 +236,7 @@ export default function CarePreferenceCard({
                       done
                         ? "cursor-not-allowed bg-stone-bg text-ink-faint line-through"
                         : on
-                          ? "bg-gradient-to-r from-aqua-500 to-deep-700 text-white shadow-sm"
+                          ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
                           : "bg-card text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
                     }`}
                   >

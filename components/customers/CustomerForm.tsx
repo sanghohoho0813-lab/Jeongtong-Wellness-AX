@@ -129,7 +129,7 @@ export default function CustomerForm({
             maxLength={13}
           />
           {duplicate && (
-            <p className="mt-1.5 text-[0.8125rem] font-bold text-warn">
+            <p className="mt-1.5 text-[0.8125rem] font-bold text-warn-text">
               같은 연락처의 <b>{duplicate.name}</b> 고객이 이미 있습니다. 중복
               등록이 아닌지 확인해 주세요.
             </p>

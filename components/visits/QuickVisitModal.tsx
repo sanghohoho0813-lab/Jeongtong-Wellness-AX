@@ -42,7 +42,7 @@ export default function QuickVisitModal({
               <p className="truncate font-extrabold text-ink">
                 {derived.customer.name}
               </p>
-              <p className="nowrap-num truncate text-xs text-ink-sub">
+              <p className="tabular line-clamp-2 text-xs leading-snug text-ink-sub">
                 {displayPhone(derived.customer.phone, canSeePhone)} · 방문{" "}
                 {derived.visitCount}회
                 {derived.lastVisitDate

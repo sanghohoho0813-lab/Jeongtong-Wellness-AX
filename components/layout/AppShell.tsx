@@ -42,13 +42,17 @@ function Logo() {
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
         鼎
       </span>
+      {/*
+        상호와 브랜드 표기는 **글자 크기 설정을 따르지 않는다.**
+        '크게'로 두면 상호가 '정통대왕…' 으로 잘려 오히려 못 읽었다.
+        여기는 읽는 글이 아니라 "지금 어느 앱인지"를 알아보는 표식이라
+        px 로 고정한다. (본문·지표는 설정대로 커진다)
+      */}
       <span className="min-w-0">
-        <span className="block truncate text-[1.05rem] font-extrabold leading-tight tracking-tight text-ink">
+        <span className="block truncate text-[17px] font-extrabold leading-tight tracking-tight text-ink">
           정통대왕쑥뜸원
         </span>
-        {/* AX 브랜드 시그니처 — 한글 브랜드보다 작게, PC/모바일 동일 문구.
-            좁은 폰(360px)에서는 자간을 줄여 글자가 잘리지 않게 한다 */}
-        <span className="block truncate text-[0.5625rem] font-bold uppercase tracking-normal text-aqua-700 xs:text-[0.625rem] xs:tracking-[0.1em]">
+        <span className="block truncate text-[9px] font-bold uppercase tracking-normal text-aqua-700 xs:text-[10px] xs:tracking-[0.1em]">
           Wellness Business AX
         </span>
       </span>
@@ -105,7 +109,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           href="/guide"
           className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
             isActive(pathname, "/guide")
-              ? "bg-gradient-to-r from-aqua-500 to-deep-700 text-white shadow-sm"
+              ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
               : "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100"
           }`}
         >

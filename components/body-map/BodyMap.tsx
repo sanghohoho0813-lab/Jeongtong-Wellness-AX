@@ -413,10 +413,15 @@ export default function BodyMap({
           readOnly={readOnly}
         />
       </div>
+      {/*
+        읽기 전용일 때는 **고른 부위만** 보여 준다.
+        고를 수도 없는 칩 열한 개를 늘어놓으면 폰에서 한 화면 반을 먹으면서
+        정작 "이 분은 어디를 주로 하시나"는 그 안에 묻힌다.
+      */}
       <div
         className={`flex flex-wrap content-start gap-2 sm:w-48 sm:flex-col ${compactChips ? "sm:w-44" : ""}`}
       >
-        {CHIP_ORDER.map((part) => {
+        {CHIP_ORDER.filter((part) => !readOnly || recordByPart.has(part)).map((part) => {
           const record = recordByPart.get(part);
           const selected = !!record;
           const sided = SIDED_PARTS.includes(part);
@@ -428,7 +433,7 @@ export default function BodyMap({
                 onClick={() => toggle(part)}
                 className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
                   selected
-                    ? "bg-gradient-to-r from-aqua-500 to-aqua-700 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
+                    ? "bg-gradient-to-r from-aqua-650 to-aqua-850 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
                     : "bg-card text-ink-soft ring-1 ring-stone-line"
                 } ${readOnly ? "" : "hover:ring-aqua-400"}`}
               >
@@ -452,7 +457,7 @@ export default function BodyMap({
                       onClick={() => setSide(part, s)}
                       className={`rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
                         (record.side ?? "both") === s
-                          ? "bg-deep-800 text-white dark:bg-aqua-600"
+                          ? "bg-sel text-sel-ink"
                           : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50"
                       }`}
                     >

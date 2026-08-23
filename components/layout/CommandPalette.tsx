@@ -425,7 +425,7 @@ export default function CommandPalette({
                           {it.badge}
                         </span>
                         {it.hint && (
-                          <span className="nowrap-num block truncate text-xs text-ink-sub">
+                          <span className="tabular block truncate text-xs text-ink-sub">
                             {it.hint}
                           </span>
                         )}

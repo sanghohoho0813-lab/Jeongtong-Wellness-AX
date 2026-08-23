@@ -187,7 +187,7 @@ export default function BriefingPage() {
                   onClick={() => setCategory(c)}
                   className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
                     active
-                      ? "bg-deep-800 text-white shadow-sm dark:bg-aqua-600"
+                      ? "bg-sel text-sel-ink shadow-sm"
                       : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
                   }`}
                 >

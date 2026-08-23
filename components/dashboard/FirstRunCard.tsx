@@ -140,7 +140,7 @@ export default function FirstRunCard() {
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ${
                       s.done
-                        ? "bg-emerald-50 text-positive ring-emerald-100 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
+                        ? "bg-emerald-50 text-positive-text ring-emerald-100 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
                         : "bg-stone-bg-deep text-ink-faint ring-black/[0.04]"
                     }`}
                   >
@@ -154,7 +154,7 @@ export default function FirstRunCard() {
                     {i + 1}단계
                   </span>
                   <span
-                    className={`min-w-0 flex-1 truncate text-[0.9375rem] font-bold ${
+                    className={`min-w-0 flex-1 text-[0.9375rem] font-bold leading-snug ${
                       s.done ? "text-ink-faint line-through" : "text-ink-sub"
                     }`}
                   >
@@ -179,7 +179,7 @@ export default function FirstRunCard() {
                   <span className="nowrap-num text-xs font-extrabold text-ink-faint">
                     {i + 1}단계
                   </span>
-                  <span className="rounded-full bg-aqua-500 px-2 py-0.5 text-[0.6875rem] font-extrabold text-white">
+                  <span className="rounded-full bg-sel px-2 py-0.5 text-[0.6875rem] font-extrabold text-sel-ink">
                     지금 할 일
                   </span>
                 </span>

@@ -56,7 +56,7 @@ export default function KpiRow() {
         unit="명"
         sub={
           overdue > 0 ? (
-            <span className="font-bold text-danger">
+            <span className="font-bold text-danger-text">
               관리일 경과 {overdue}명
             </span>
           ) : (

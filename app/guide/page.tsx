@@ -95,7 +95,7 @@ export default function GuidePage() {
           </div>
           <button
             onClick={startTour}
-            className="touch-target shrink-0 rounded-btn bg-gradient-to-b from-aqua-500 to-aqua-700 px-6 py-3 text-[1.0625rem] font-extrabold text-white shadow-[0_2px_10px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-600 hover:to-aqua-800"
+            className="touch-target shrink-0 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-6 py-3 text-[1.0625rem] font-extrabold text-white shadow-[0_2px_10px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-850 hover:to-deep-700"
           >
             단계별 안내 시작
           </button>

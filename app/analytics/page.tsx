@@ -253,7 +253,7 @@ export default function AnalyticsPage() {
                     <span
                       className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
                         s.done
-                          ? "bg-emerald-50 text-positive dark:bg-emerald-400/10"
+                          ? "bg-emerald-50 text-positive-text dark:bg-emerald-400/10"
                           : "bg-stone-bg-deep text-ink-sub"
                       }`}
                     >
@@ -688,7 +688,7 @@ export default function AnalyticsPage() {
                         <span className="block truncate font-extrabold text-ink">
                           {staffName(a.staffId)}
                         </span>
-                        <span className="nowrap-num block truncate text-xs text-ink-sub">
+                        <span className="tabular block text-xs leading-snug text-ink-sub">
                           처리완료 {a.done}건 · 보류 {a.held}건
                           {a.lastHandledAt
                             ? ` · 마지막 ${formatRelative(a.lastHandledAt)}`
