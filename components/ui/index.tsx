@@ -13,6 +13,7 @@ export function Card({
   onClick,
   lift = true,
   dataTour,
+  id,
 }: {
   children: ReactNode;
   className?: string;
@@ -21,9 +22,12 @@ export function Card({
   lift?: boolean;
   /** 단계별 안내(투어)에서 이 카드를 가리킬 때 쓰는 표식 */
   dataTour?: string;
+  /** 화면 안 바로가기의 도착 지점 */
+  id?: string;
 }) {
   return (
     <div
+      id={id}
       onClick={onClick}
       data-tour={dataTour}
       className={`card ${lift ? "card-lift" : ""} ${onClick ? "cursor-pointer" : ""} ${className}`}
@@ -521,6 +525,43 @@ export function Em({ children }: { children: ReactNode }) {
     <strong className="nowrap-num font-extrabold text-aqua-300">
       {children}
     </strong>
+  );
+}
+
+/**
+ * 폼 아래쪽 [취소] · [저장] 줄 — 창 맨 아래에 붙여 둔다.
+ *
+ * 방문 기록 폼은 다 펼치면 폰 화면의 네 배쯤 된다. 저장 단추가 그 끝에
+ * 있으면 간단한 기록 하나를 남기려고 화면을 몇 번씩 쓸어내려야 했다.
+ * 이제 어디까지 내려가 있든 저장 단추가 늘 손 닿는 자리에 있다.
+ *
+ * (모달 본문의 좌우·아래 여백을 음수 여백으로 되돌려 창 폭에 꽉 채우고,
+ *  홈 인디케이터가 있는 폰을 위해 아래 여백을 안전영역만큼 더 준다)
+ */
+export function FormActions({
+  children,
+  error,
+}: {
+  children: ReactNode;
+  /**
+   * 입력이 덜 됐을 때의 안내.
+   * 단추 바로 위에 띄운다 — 폼 위쪽에 두면 아래에서 저장을 누른 사람에게는
+   * 화면 밖이라, "눌렀는데 아무 일도 안 일어난다"로 보인다.
+   */
+  error?: string;
+}) {
+  return (
+    <div className="sticky bottom-0 z-10 -mx-5 -mb-4 mt-3 border-t border-stone-line bg-card px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      {error && (
+        <p
+          role="alert"
+          className="mb-2 rounded-btn bg-red-50 px-3 py-2 text-sm font-bold text-danger dark:bg-red-400/10"
+        >
+          {error}
+        </p>
+      )}
+      <div className="flex items-center justify-end gap-2">{children}</div>
+    </div>
   );
 }
 

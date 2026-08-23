@@ -5,6 +5,7 @@
  * 저장된 운영 데이터에서 계산한 지표와 월별 추이를 축적해 보여준다.
  */
 
+import Link from "next/link";
 import { useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
@@ -24,7 +25,7 @@ import {
   SectionTitle,
   SummaryTile,
 } from "@/components/ui";
-import { TrendUpIcon } from "@/components/ui/icons";
+import { CheckIcon, ChevronRightIcon, TrendUpIcon } from "@/components/ui/icons";
 import {
   monthlyOpportunityResults,
   summarizeOpportunities,
@@ -150,6 +151,9 @@ export default function AnalyticsPage() {
     membershipLowCount,
   );
 
+  /** 지금까지 저장된 방문 기록 수 — 이 화면을 그릴지 말지의 기준 */
+  const visitCount = visits.filter((v) => v.type === "visit").length;
+
   // 데이터 기반 인사이트 문장 (허구 수치 없음 — 저장된 기록에서만 계산)
   const visitDelta = prev ? latest.visitCount - prev.visitCount : 0;
   const visitTrend =
@@ -170,11 +174,11 @@ export default function AnalyticsPage() {
 
       <div className="flex flex-col card-gap">
         {/* 초기 데이터 부족: 억지 0% 대신 축적 안내 */}
-        {visits.filter((v) => v.type === "visit").length < 5 ? (
+        {visitCount < 5 ? (
           <InsightBanner title="기준 데이터 축적 중">
-            운영 데이터가 누적되면 이 화면에서 도입 전후 변화 추이를 확인할 수
-            있습니다. 방문·이용 기록이 쌓이는 대로 재방문율과 월별 지표가
-            자동으로 계산됩니다.
+            방문·이용 기록이 쌓이는 대로 재방문율과 월별 지표가 자동으로
+            계산됩니다. 지금까지 방문 기록 <Em>{visitCount}건</Em> · 고객{" "}
+            <Em>{customers.length}명</Em>이 저장되어 있습니다.
           </InsightBanner>
         ) : (
         <InsightBanner title="AX 운영 인사이트">
@@ -211,6 +215,71 @@ export default function AnalyticsPage() {
           </p>
         </InsightBanner>
         )}
+
+        {/*
+          기록이 거의 없을 때는 지표·차트를 그리지 않는다.
+
+          예전에는 0 이 적힌 타일 여덟 장과 빈 그래프 넉 장이 다섯 화면쯤
+          이어졌다. 아무것도 알려 주지 않으면서 화면만 채우고, 정작
+          "무엇을 하면 이 화면이 채워지는지"는 어디에도 없었다.
+        */}
+        {visitCount < 5 ? (
+          <Card>
+            <SectionTitle tone="aqua">이 화면이 채워지려면</SectionTitle>
+            <ol className="space-y-2.5">
+              {[
+                {
+                  done: customers.length > 0,
+                  text: "고객을 등록합니다",
+                  href: "/customers",
+                },
+                {
+                  done: visitCount > 0,
+                  text: "다녀가신 분의 방문을 기록합니다",
+                  href: "/visits",
+                },
+                {
+                  done: visitCount >= 5,
+                  text: `방문 기록이 5건 모이면 재방문율·월별 추이가 계산됩니다 (지금 ${visitCount}건)`,
+                  href: "/visits",
+                },
+              ].map((s, i) => (
+                // 줄 전체를 눌러 이동한다 — 좁은 화면에서 단추가 글을 밀어내지 않게
+                <li key={i}>
+                  <Link
+                    href={s.href}
+                    className="flex items-center gap-3 rounded-card px-1 py-2 transition-colors active:bg-aqua-50"
+                  >
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+                        s.done
+                          ? "bg-emerald-50 text-positive dark:bg-emerald-400/10"
+                          : "bg-stone-bg-deep text-ink-sub"
+                      }`}
+                    >
+                      {s.done ? (
+                        <CheckIcon className="h-4 w-4" strokeWidth={2.8} />
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    <span
+                      className={`min-w-0 flex-1 text-[0.9375rem] leading-snug ${
+                        s.done ? "text-ink-faint" : "font-bold text-ink-soft"
+                      }`}
+                    >
+                      {s.text}
+                    </span>
+                    {!s.done && (
+                      <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        ) : (
+        <>
         <div
           data-tour="analytics-kpi"
           className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
@@ -666,6 +735,8 @@ export default function AnalyticsPage() {
             부터의 기록이 기준이며, 성과 수치는 실제 기록에서만 산출됩니다.
           </p>
         </Card>
+        </>
+        )}
       </div>
     </div>
   );

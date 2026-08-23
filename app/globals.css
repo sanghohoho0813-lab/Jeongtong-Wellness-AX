@@ -389,6 +389,13 @@ a:active {
   }
 }
 
+/* 화면 안 바로가기 — 뛰어간 자리가 어디쯤인지 알 수 있게 부드럽게 움직인다 */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 /* 모션 최소화 설정 존중 */
 @media (prefers-reduced-motion: reduce) {
   *,

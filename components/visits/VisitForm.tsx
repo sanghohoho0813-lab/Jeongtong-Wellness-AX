@@ -2,7 +2,7 @@
 
 /** 방문/상담 기록 폼 — 이용권 차감, 신체부위 기록, 다음 관리일 지정 포함 */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import {
   BodyPartRecord,
@@ -19,7 +19,7 @@ import {
   todayISO,
 } from "@/lib/utils/date";
 import { recommendNextManageDate } from "@/lib/scoring/insight";
-import { Badge, Button, FieldLabel, inputCls } from "@/components/ui";
+import { Badge, Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { CheckIcon } from "@/components/ui/icons";
 import { PREF_TONES } from "@/components/customers/CarePreferenceCard";
@@ -53,6 +53,7 @@ export default function VisitForm({
     addVisit,
     updateVisit,
     factsById,
+    visits,
   } = useStore();
   const toast = useToast();
   const editing = !!visit;
@@ -104,6 +105,44 @@ export default function VisitForm({
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
   /**
+   * 이 고객의 지난 방문 — 이번 기록의 밑그림으로 쓴다.
+   * (수정 중인 기록 자신은 제외)
+   */
+  const lastVisit = useMemo(() => {
+    if (!customerId) return undefined;
+    return [...visits]
+      .filter(
+        (v) =>
+          v.customerId === customerId &&
+          v.type === "visit" &&
+          v.id !== visit?.id,
+      )
+      .sort((a, b) => b.visitedAt.localeCompare(a.visitedAt))[0];
+  }, [visits, customerId, visit?.id]);
+
+  /**
+   * 고객이 정해지면 **지난 회차를 그대로 이어받는다.**
+   *
+   * 같은 분이 오시면 대개 같은 프로그램에 같은 부위다. 그런데도 매번
+   * 첫 프로그램부터 다시 고르고 부위를 다시 짚어야 했다. 하루에 열 번이면
+   * 열 번을 다시 골랐다. 이제 지난번 그대로 채워 두고, 달라진 것만 손보면 된다.
+   * (수정 모드에서는 원래 기록을 건드리지 않는다)
+   */
+  useEffect(() => {
+    if (editing || !customerId) return;
+    const c = customers.find((x) => x.id === customerId);
+    if (!c) return;
+    setProgramName(lastVisit?.programName ?? PROGRAMS[0]);
+    setParts(
+      lastVisit && lastVisit.bodyParts.length > 0
+        ? lastVisit.bodyParts
+        : (c.focusBodyParts ?? []),
+    );
+    setStaffId(c.assignedStaffId ?? lastVisit?.staffId ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]);
+
+  /**
    * 선택 가능한 이용권 — 사용 중인 것 + (수정 모드에서) 이미 이 기록에 연결된 것.
    * 소진된 이용권이라도 원래 기록에 걸려 있으면 선택지에서 사라지면 안 된다.
    */
@@ -119,12 +158,11 @@ export default function VisitForm({
     settings.careRules,
   );
 
+  // 프로그램 · 부위 · 담당은 위 useEffect 가 지난 회차를 보고 채운다
   const selectCustomer = (id: string) => {
     setCustomerId(id);
     setMembershipId("");
     setAppliedPrefs([]);
-    const c = customers.find((x) => x.id === id);
-    setParts(c?.focusBodyParts ?? []);
   };
 
   const submit = () => {
@@ -347,11 +385,24 @@ export default function VisitForm({
       )}
 
       <div>
-        <FieldLabel>이번 회차 케어 부위</FieldLabel>
-        {fixedCustomerId && parts.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <FieldLabel>이번 회차 케어 부위</FieldLabel>
+          {!editing && parts.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setParts([])}
+              className="touch-target -my-2 shrink-0 text-[0.8125rem] font-bold text-ink-sub underline-offset-4 hover:text-aqua-700 hover:underline"
+            >
+              모두 지우기
+            </button>
+          )}
+        </div>
+        {/* 어디서 온 값인지 밝혀 둔다 — 미리 채워져 있으면 왜 그런지 알아야 고친다 */}
+        {!editing && parts.length > 0 && (
           <p className="mb-2 text-xs text-ink-sub">
-            고객의 주요 케어 부위가 기본으로 선택되어 있습니다. 이번 방문에서
-            실제 케어한 부위로 조정하세요.
+            {lastVisit && lastVisit.bodyParts.length > 0
+              ? `지난 회차(${formatDateKr(lastVisit.visitedAt)})와 같게 미리 골라 두었습니다. 달라진 부위만 고치세요.`
+              : "고객이 평소 원하시는 부위를 미리 골라 두었습니다. 실제 케어한 부위로 조정하세요."}
           </p>
         )}
         <BodyMap value={parts} onChange={setParts} compactChips />
@@ -444,14 +495,14 @@ export default function VisitForm({
         />
       </div>
 
-      {error && <p className="text-sm font-semibold text-danger">{error}</p>}
-
-      <div className="flex justify-end gap-2 pt-1">
+      <FormActions error={error || undefined}>
         <Button variant="ghost" onClick={onCancel}>
           취소
         </Button>
-        <Button onClick={submit}>{editing ? "수정 저장" : "기록 저장"}</Button>
-      </div>
+        <Button onClick={submit} className="min-w-32 flex-1 sm:flex-none">
+          {editing ? "수정 저장" : "기록 저장"}
+        </Button>
+      </FormActions>
     </div>
   );
 }

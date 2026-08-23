@@ -192,9 +192,35 @@ export default function SettingsPage() {
         }
       />
 
+      {/*
+        섹션 바로가기.
+        설정은 폰에서 여섯 화면 반쯤 된다. 영업시간 하나 고치려고 매번
+        아래로 쓸어내리는 대신, 여기서 눌러 바로 그 자리로 간다.
+      */}
+      {isManager && (
+        <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
+          {[
+            { id: "set-screen", label: "화면" },
+            { id: "set-store", label: "매장" },
+            { id: "set-staff", label: "직원" },
+            { id: "set-rules", label: "고객관리 기준" },
+            { id: "set-opp", label: "매출기회 기준" },
+            { id: "set-data", label: "데이터 · 백업" },
+          ].map((s) => (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              className="touch-target inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-card px-4 text-sm font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+            >
+              {s.label}
+            </a>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 card-gap xl:grid-cols-2 xl:items-start">
         {/* 화면 */}
-        <Card>
+        <Card id="set-screen" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>화면</SectionTitle>
           <div className="space-y-5">
             <div>
@@ -259,7 +285,7 @@ export default function SettingsPage() {
         {isManager && (
           <>
         {/* 매장 */}
-        <Card>
+        <Card id="set-store" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>매장</SectionTitle>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
@@ -308,7 +334,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* 직원 */}
-        <Card>
+        <Card id="set-staff" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle
             action={
               <Button
@@ -374,7 +400,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* 고객관리 기준 */}
-        <Card>
+        <Card id="set-rules" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>고객관리 기준</SectionTitle>
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
             오늘의 실행 브리핑과 재방문 관리가 이 기준으로 대상을 가려냅니다.
@@ -494,7 +520,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* 매출기회 기준 — Priority 기준과 분리된 별도 카드 */}
-        <Card>
+        <Card id="set-opp" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>AX 매출기회 기준</SectionTitle>
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
             재방문 · 이용권 재등록 기회를 판단하는 기준입니다. 위의 고객관리
@@ -524,7 +550,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* 데이터 */}
-        <Card dataTour="settings-data">
+        <Card id="set-data" dataTour="settings-data" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>데이터</SectionTitle>
           <p className="-mt-2 mb-3 text-sm leading-relaxed text-ink-sub">
             지금까지 쌓인 기록을 파일로 내려받습니다. 운영 성과 보고 자료로 쓰거나,

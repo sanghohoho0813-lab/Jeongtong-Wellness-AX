@@ -11,7 +11,7 @@ import { useStore } from "@/lib/data/store";
 import { Membership } from "@/lib/types";
 import { todayISO } from "@/lib/utils/date";
 import { formatKrw } from "@/lib/utils/format";
-import { Button, FieldLabel, inputCls } from "@/components/ui";
+import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 
@@ -241,14 +241,14 @@ export default function MembershipForm({
         </div>
       </div>
 
-      {error && <p className="text-sm font-semibold text-danger">{error}</p>}
-
-      <div className="flex justify-end gap-2 pt-1">
+      <FormActions error={error || undefined}>
         <Button variant="ghost" onClick={onCancel}>
           취소
         </Button>
-        <Button onClick={submit}>{editing ? "수정 저장" : "이용권 등록"}</Button>
-      </div>
+        <Button onClick={submit} className="min-w-32 flex-1 sm:flex-none">
+          {editing ? "수정 저장" : "이용권 등록"}
+        </Button>
+      </FormActions>
     </div>
   );
 }
