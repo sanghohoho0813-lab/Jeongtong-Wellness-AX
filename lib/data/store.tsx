@@ -118,6 +118,11 @@ interface StoreValue extends PersistedState {
    * 저장 공간이 꽉 찼거나 사생활 보호 모드면 화면만 바뀌고 기록은 남지 않는다.
    */
   saveFailed: boolean;
+  /**
+   * 자료를 읽으면서 모양이 깨져 건너뛴 기록.
+   * 비어 있지 않으면 화면 위에 알리고, 그대로 파일로 내려받게 한다.
+   */
+  droppedRecords: unknown[];
   /** 이 기기 저장 공간 사용량 — 한도에 닿기 전에 미리 알리는 데 쓴다 */
   storage: StorageUsage;
   briefingTasks: BriefingTask[];
@@ -196,6 +201,53 @@ function seedState(): PersistedState {
 }
 
 /**
+ * 읽어 들인 자료 중 화면이 다룰 수 없는 모양을 걸러 낸다.
+ *
+ * 날짜가 비어 있는 방문 기록 하나 때문에 우선순위 계산이 멈추면 화면 전체가
+ * 하얗게 된다. 원장 입장에서는 "어제까지 되던 게 갑자기 안 된다"이고,
+ * 무엇이 잘못됐는지 알 길도 없다.
+ * 못 읽는 줄은 빼서 화면을 살리되, 뺀 줄은 그대로 손에 쥐어 준다
+ * (화면 위 안내에서 파일로 내려받을 수 있다).
+ */
+function sanitize(s: PersistedState): {
+  state: PersistedState;
+  dropped: unknown[];
+} {
+  const isDate = (v: unknown) => typeof v === "string" && v.length >= 8;
+  const dropped: unknown[] = [];
+
+  function keep<T>(kind: string, list: T[] | undefined, ok: (x: T) => boolean) {
+    if (!Array.isArray(list)) return [];
+    const out: T[] = [];
+    for (const row of list) {
+      if (ok(row)) out.push(row);
+      else dropped.push({ kind, row });
+    }
+    return out;
+  }
+
+  const state: PersistedState = {
+    ...s,
+    customers: keep(
+      "customer",
+      s.customers,
+      (c) => typeof c?.id === "string" && typeof c?.name === "string",
+    ),
+    visits: keep(
+      "visit",
+      s.visits,
+      (v) => typeof v?.id === "string" && isDate(v?.visitedAt),
+    ),
+    memberships: keep(
+      "membership",
+      s.memberships,
+      (m) => typeof m?.id === "string" && isDate(m?.purchasedAt),
+    ),
+  };
+  return { state, dropped };
+}
+
+/**
  * 저장된 데이터 보정 — 샘플 기본값이 그대로 남아 있는 경우에만 현재 기본값으로 맞춘다.
  * (사용자가 직접 수정한 값은 건드리지 않는다)
  */
@@ -222,6 +274,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   /** 마지막 저장이 실패했는지 — 화면에서 경고를 띄우는 데 쓴다 */
   const [saveFailed, setSaveFailed] = useState(false);
+  /** 읽는 중에 건너뛴 기록 — 비어 있지 않으면 화면에 알리고 내려받게 한다 */
+  const [droppedRecords, setDroppedRecords] = useState<unknown[]>([]);
   const [storage, setStorage] = useState<StorageUsage>({
     bytes: 0,
     ratio: 0,
@@ -242,7 +296,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedState;
         if (Array.isArray(parsed?.customers) && Array.isArray(parsed?.visits)) {
-          setState(migrate({ ...seedState(), ...parsed }));
+          const clean = sanitize(migrate({ ...seedState(), ...parsed }));
+          setState(clean.state);
+          setDroppedRecords(clean.dropped);
         }
       }
     } catch {
@@ -981,6 +1037,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ...state,
     ready,
     saveFailed,
+    droppedRecords,
     storage,
     briefingTasks,
     factsById,

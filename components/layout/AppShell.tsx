@@ -158,11 +158,14 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
 }
 
 function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
-  const { briefingTasks, isManager } = useStore();
-  // 오늘 아직 처리하지 않은 관리 대상 — 장식이 아니라 실제 건수를 보여준다
-  const openCount = briefingTasks.filter(
-    (t) => t.status === "pending" || t.status === "confirmed",
-  ).length;
+  const { briefingTasks, isManager, ready } = useStore();
+  // 오늘 아직 처리하지 않은 관리 대상 — 장식이 아니라 실제 건수를 보여준다.
+  // 저장된 자료를 읽기 전에는 세지 않는다 (예시 건수가 잠깐 떴다 사라진다)
+  const openCount = ready
+    ? briefingTasks.filter(
+        (t) => t.status === "pending" || t.status === "confirmed",
+      ).length
+    : 0;
 
   return (
     <header className="sticky top-0 z-30 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-2.5 backdrop-blur-md lg:hidden">
@@ -288,6 +291,32 @@ function RouteGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** 자료를 읽는 동안의 뼈대 — 실제 화면과 같은 자리에 회색 덩어리만 */
+function ContentSkeleton() {
+  return (
+    <div>
+      {/* 화면을 읽어 주는 도구에는 상황을 말로 알린다 (덩어리들은 읽을 것이 없다) */}
+      <p role="status" className="sr-only">
+        불러오는 중입니다
+      </p>
+      <div className="animate-pulse" aria-hidden>
+        <div className="mb-5 h-9 w-52 rounded-btn bg-stone-line/70" />
+        <div className="mb-4 h-28 rounded-card bg-stone-line/50" />
+        <div className="mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-24 rounded-card bg-stone-line/50" />
+          ))}
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-24 rounded-card bg-stone-line/40" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * 저장 실패 경고.
  *
@@ -319,9 +348,62 @@ function SaveFailedBanner() {
   );
 }
 
+/**
+ * 읽다가 건너뛴 기록 안내.
+ *
+ * 백업 파일이 중간에 잘렸거나 옮기다 깨지면 날짜가 빈 줄이 섞여 들어온다.
+ * 예전에는 그 한 줄 때문에 화면이 통째로 하얘졌다. 이제는 그 줄만 빼고
+ * 화면을 살리되, 무엇을 뺐는지 숨기지 않고 파일로 받아 갈 수 있게 한다.
+ */
+function DroppedRecordsBanner() {
+  const { droppedRecords } = useStore();
+  const [dismissed, setDismissed] = useState(false);
+  if (droppedRecords.length === 0 || dismissed) return null;
+
+  const save = () => {
+    const blob = new Blob([JSON.stringify(droppedRecords, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "건너뛴-기록.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  return (
+    <div className="no-print sticky top-0 z-40 border-b border-warn/30 bg-warn px-4 py-2.5 text-white sm:px-6 lg:ml-64 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-sm font-extrabold">
+          읽을 수 없는 기록 {droppedRecords.length}건을 건너뛰었습니다.
+        </span>
+        <span className="text-sm">
+          나머지 기록은 그대로입니다. 건너뛴 내용을 파일로 받아 두시면 확인해
+          드릴 수 있습니다.
+        </span>
+        <button
+          type="button"
+          onClick={save}
+          className="rounded-full bg-white/20 px-3 py-1 text-sm font-extrabold ring-1 ring-white/30 hover:bg-white/30"
+        >
+          건너뛴 기록 내려받기
+        </button>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          className="rounded-full px-3 py-1 text-sm font-bold text-white/80 hover:text-white"
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AppShell({ children }: { children: ReactNode }) {
   // 경로가 바뀌면 오류 상태를 푼다 — 다른 화면까지 막아 둘 이유가 없다
   const pathname = usePathname();
+  const { ready } = useStore();
   const [paletteOpen, setPaletteOpen] = useState(false);
   /** 빠른 실행에서 바로 기록을 여는 고객 */
   const [recordFor, setRecordFor] = useState<string | undefined>();
@@ -397,15 +479,33 @@ export default function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setRecordFor(undefined)}
       />
       <SaveFailedBanner />
+      <DroppedRecordsBanner />
       <main
         id="main"
         tabIndex={-1}
         className="px-4 pb-24 pt-4 outline-none sm:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-8"
       >
         <div className="mx-auto w-full max-w-7xl">
-          <ErrorBoundary resetKey={pathname}>
-            <RouteGuard>{children}</RouteGuard>
-          </ErrorBoundary>
+          {/*
+            저장된 자료를 아직 못 읽었으면 뼈대만 보여 준다.
+
+            이 화면은 브라우저가 먼저 그린 뒤에 저장된 자료를 읽어 다시
+            그린다. 그 사이(느린 폰에서 0.3~0.6초)에는 처음 들어 있던 예시
+            자료가 그대로 보였다 — 샘플을 지우고 실제로 쓰는 원장 화면에
+            모르는 이름이 잠깐 떴다 사라진다는 뜻이다.
+            남의 이름을 보여 주느니 뼈대를 보여 준다.
+
+            가름은 방어막 **바깥**에 둔다. 안쪽에 두면 화면을 그리다 오류가
+            났을 때 리액트가 다시 그려 보는 사이 뼈대와 본문이 뒤바뀌어,
+            방어막이 오류를 받지 못하고 앱 전체가 하얘진다.
+          */}
+          {ready ? (
+            <ErrorBoundary resetKey={pathname}>
+              <RouteGuard>{children}</RouteGuard>
+            </ErrorBoundary>
+          ) : (
+            <ContentSkeleton />
+          )}
         </div>
       </main>
       <BottomNav onRecord={() => setSheetOpen(true)} />
