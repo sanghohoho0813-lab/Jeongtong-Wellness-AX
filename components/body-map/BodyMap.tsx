@@ -36,88 +36,155 @@ const SIDE_LABELS: Record<BodySide, string> = {
  *     통짜 덩어리라 큰 티셔츠 하나 걸친 모습에 가까웠다.
  *  3. 비례를 한자리에서 조절할 수 있다.
  *
- * 비례는 8등신 중립 — 어깨가 골반보다 아주 조금 넓고, 가슴·엉덩이를
- * 강조하지 않는다. 남녀 어느 쪽으로도 읽히지 않게 하려는 것이다.
+ * 비례 — 해부학 교과서의 7.5등신
+ * ------------------------------
+ * 앞서 그린 그림은 8.2등신에 팔뚝 두께가 머리 너비의 1/3밖에 안 됐다.
+ * 패션 일러스트의 비례이고, 사람 몸으로 보면 머리가 작고 팔다리만 가늘게
+ * 늘어난 모습이다. 실제 성인의 비례로 다시 잡았다.
+ *
+ * 기준선 (머리 하나 = 32, 전체 키 = 240 = 7.5머리)
+ *   정수리 14 · 턱 46 · 어깨 62 · 젖꼭지 78 · 배꼽 112 · 골반 132
+ *   가랑이 141 · 무릎 187 · 발목 242 · 바닥 254
+ *
+ * 실측 비례로 맞춘 것들 (성인 인체 계측 기준, 키 대비)
+ *   어깨너비 23%  · 가슴 18%  · 허리 16%  · 골반 19%
+ *   가랑이 높이 47.5%   무릎 높이 28%
+ *   팔꿈치는 허리 높이, 손목은 가랑이 높이, 손끝은 허벅지 중간
+ *
+ * 남녀 어느 쪽으로도 읽히지 않게 가슴·엉덩이를 강조하지 않되,
+ * 허리를 지나치게 잘록하게 만들지도 않았다 (허리/어깨 = 0.71).
  */
 type Point = [number, number];
 
-/** 화면 왼쪽 절반의 윤곽 — 정수리에서 가랑이까지 */
-const HALF_OUTLINE: Point[] = [
-  // 머리 — 두개골이 가장 넓은 곳은 위쪽이고, 광대에서 턱으로 각이 진다.
-  // (위아래로 고른 타원을 그리면 달걀이 되어 풍선처럼 떠 보인다)
-  [60, 16],
-  [53.8, 18],
-  [49.2, 23],
-  [48.4, 29],
-  [49.4, 35],
-  [51.2, 39.5],
-  [53.4, 42],
-  [54.6, 45.5],
-  // 목 — 짧고 굵게. 여기가 가늘고 길면 머리가 풍선처럼 떠 보인다
-  [53.4, 48.5],
-  [52.8, 51.5],
-  // 등세모근 → 어깨 → 삼각근
-  [49.6, 54],
-  [44.6, 57],
-  [39.2, 60],
-  [35.2, 64],
-  [33.5, 69.5],
-  // 위팔 바깥
-  [32.9, 78],
-  [32.1, 90],
-  [31.4, 102],
-  // 아래팔 바깥 → 손목
-  [30.8, 113],
-  [30.3, 123],
-  [29.9, 132],
-  // 손 — 손목보다 넓게 벌어졌다가 둥글게 맺는다
-  [28.6, 139],
-  [28.8, 149],
-  [30.8, 154],
-  [33.6, 151],
-  [34.8, 143],
-  [35.0, 134],
-  // 아래팔 안쪽
-  [36.1, 123],
-  [37.4, 113],
-  // 위팔 안쪽 → 겨드랑이
-  [38.6, 102],
-  [40.1, 90],
-  [41.4, 78],
-  // 몸통 옆선 — 가슴이 넓고 허리에서 들어갔다 골반에서 다시 벌어진다
-  [42.6, 77],
-  [42.5, 85],
-  [43.2, 94],
-  [44.4, 103],
-  [43.8, 112],
-  [42.6, 121],
-  [41.6, 131],
-  [41.4, 139],
+/**
+ * 몸통 — 화면 왼쪽 절반, 정수리에서 가랑이까지 (팔은 뺀다)
+ *
+ * 팔을 이 윤곽에 넣지 않는 이유
+ * -----------------------------
+ * 처음에는 팔까지 한 줄로 이어 그렸다. 그랬더니 팔과 몸통 사이가
+ * **절대로** 벌어지지 않는다 — 바깥 팔선을 따라 내려갔다가 안쪽 팔선을
+ * 타고 되올라오면, 그 사이 공간이 윤곽 안쪽이 되어 그대로 칠해지기
+ * 때문이다. 비례를 아무리 고쳐도 어깨부터 엉덩이까지 한 덩어리가 됐다.
+ *
+ * 그래서 팔은 따로 닫힌 모양으로 그린다. 위쪽은 어깨에 겹쳐 두어 팔이
+ * 몸에서 자라나 보이게 하고, 겨드랑이 아래부터 사이가 벌어진다.
+ */
+const TORSO_HALF: Point[] = [
+  // 머리 — 머리 높이 32 (= 키의 1/7.5). 이게 작아지면 곧바로 외계인이 된다
+  [60, 14],
+  [52.6, 15.8],
+  [48.4, 20.5],
+  [47.8, 26.0],
+  [48.6, 32.0],
+  [50.2, 37.5],
+  [52.8, 42.5],
+  [56.0, 45.6],
+  // 목 — 짧고 굵게. 턱보다 넓다
+  [55.0, 48.0],
+  [53.6, 51.5],
+  [53.6, 56.0],
+  /*
+   * 등세모근 → 어깨뼈 끝(견봉).
+   * 어깨뼈 사이 너비는 키의 23% 라 몸통에서 가장 넓은 곳이다.
+   * 여기를 좁게 잡았더니 어깨보다 엉덩이가 넓어져서, 허리 없는
+   * 네모난 몸통이 됐다.
+   */
+  [51.0, 58.0],
+  [46.0, 60.0],
+  [40.0, 62.5],
+  [35.5, 64.5],
+  [33.2, 68.0],
+  // 겨드랑이 — 여기서 안쪽으로 꺾여 몸통 옆선이 시작된다
+  [37.0, 76.0],
+  // 몸통 옆선 — 가슴 44, 허리 41, 골반 48 (허리/어깨 0.77)
+  [38.2, 84.0],
+  [38.0, 92.0],
+  [38.6, 102.0],
+  [39.4, 112.0],
+  [38.6, 120.0],
+  [37.0, 128.0],
+  [36.2, 134.0],
+  [36.8, 141.0],
   // 허벅지 바깥 → 무릎
-  [41.2, 147],
-  [40.0, 163],
-  [41.8, 181],
-  // 종아리 — 바깥쪽이 볼록해야 통짜 막대로 보이지 않는다
-  [39.4, 198],
-  [42.8, 219],
-  [46.6, 236],
+  [37.0, 148.0],
+  [36.8, 158.0],
+  [37.8, 168.0],
+  [39.8, 178.0],
+  [42.2, 187.0],
+  // 종아리 — 바깥이 볼록해야 막대로 보이지 않는다
+  [42.6, 194.0],
+  [41.4, 203.0],
+  [41.0, 212.0],
+  [42.6, 222.0],
+  [45.0, 232.0],
+  [47.4, 242.0],
   // 발
-  [46.0, 243],
-  [43.6, 250],
-  [43.0, 255],
-  [49.0, 258],
-  [56.0, 257.5],
-  [57.0, 251],
-  [55.2, 244],
-  // 발목 안쪽 → 종아리 안쪽
-  [53.6, 236],
-  [54.0, 219],
-  [52.0, 199],
-  // 무릎 안쪽 → 허벅지 안쪽 → 가랑이
-  [53.6, 181],
-  [55.2, 163],
-  [57.4, 151],
-  [60, 143],
+  [46.6, 247.0],
+  [45.2, 251.0],
+  [46.0, 254.0],
+  [53.0, 254.5],
+  [57.2, 252.0],
+  [57.0, 246.0],
+  [56.0, 242.0],
+  // 종아리 안쪽 → 무릎 안쪽
+  [55.4, 232.0],
+  [55.6, 222.0],
+  [55.8, 212.0],
+  [55.2, 203.0],
+  [54.4, 194.0],
+  [54.0, 187.0],
+  // 허벅지 안쪽 → 가랑이
+  [54.0, 178.0],
+  [54.2, 168.0],
+  [55.0, 158.0],
+  [56.2, 148.0],
+  [60, 141],
+];
+
+/**
+ * 왼팔 — 그 자체로 닫힌 모양
+ *
+ * 삼각근(어깨 바깥 근육)이 여기 들어 있다. 위쪽 서너 점이 몸통의 어깨와
+ * 겹쳐서, 팔이 몸에 붙어 있는 것처럼 보인다.
+ * 두께는 위팔 11.6 · 아래팔 11 · 손목 8.2 — 키의 4~5%로 실제 성인 비례다.
+ */
+const ARM_OUTLINE: Point[] = [
+  // 어깨에 얹히는 위쪽 — 어깨선보다 낮게 두어야 혹처럼 솟지 않는다
+  [38.0, 64.0],
+  [34.6, 66.0],
+  // 삼각근 바깥 → 위팔 바깥
+  [31.8, 68.5],
+  [30.8, 78.0],
+  [29.6, 88.0],
+  [28.2, 98.0],
+  [27.0, 108.0],
+  // 팔꿈치 (허리 높이)
+  [26.2, 116.0],
+  // 아래팔 바깥 → 손목
+  [25.4, 124.0],
+  [24.6, 133.0],
+  [24.0, 142.0],
+  [23.8, 150.0],
+  // 손 — 손끝이 허벅지 중간(163)쯤에 온다
+  [23.6, 157.0],
+  [24.2, 165.0],
+  [27.0, 169.0],
+  [30.2, 167.0],
+  [31.8, 160.0],
+  [32.0, 152.0],
+  // 아래팔 안쪽
+  [33.6, 143.0],
+  [35.0, 133.0],
+  [36.4, 124.0],
+  // 팔꿈치 안쪽
+  [37.6, 116.0],
+  // 위팔 안쪽 → 겨드랑이
+  [38.6, 108.0],
+  [39.8, 98.0],
+  [41.0, 88.0],
+  [42.0, 78.0],
+  [42.4, 72.0],
+  [41.2, 66.5],
 ];
 
 const CENTER_X = 60;
@@ -154,7 +221,14 @@ function closedSpline(pts: Point[], tension = 0.22): string {
   return `${d} Z`;
 }
 
-const BODY_PATH = closedSpline(mirrored(HALF_OUTLINE));
+const TORSO_PATH = closedSpline(mirrored(TORSO_HALF));
+const ARM_PATH_L = closedSpline(ARM_OUTLINE);
+const ARM_PATH_R = closedSpline(
+  ARM_OUTLINE.map(([x, y]) => [CENTER_X * 2 - x, y] as Point),
+);
+
+/** 몸통 + 양팔 — 칠할 때도, 잘라 낼 때도 이 셋을 함께 쓴다 */
+const BODY_PARTS_D = [TORSO_PATH, ARM_PATH_L, ARM_PATH_R];
 
 interface Zone {
   part: BodyPart;
@@ -172,20 +246,20 @@ interface Zone {
  * 누르는 자리는 자르지 않은 원래 네모라 손끝이 닿기 쉬운 크기를 유지한다.
  */
 const ARM_SHAPES: Zone["shapes"] = [
-  { kind: "rect", x: 26, y: 72, w: 15, h: 88, r: 7 },
-  { kind: "rect", x: 79, y: 72, w: 15, h: 88, r: 7 },
+  { kind: "rect", x: 21, y: 66, w: 24, h: 104, r: 10 },
+  { kind: "rect", x: 75, y: 66, w: 24, h: 104, r: 10 },
 ];
 const LEG_SHAPES: Zone["shapes"] = [
-  { kind: "rect", x: 36, y: 141, w: 23, h: 93, r: 11 },
-  { kind: "rect", x: 61, y: 141, w: 23, h: 93, r: 11 },
+  { kind: "rect", x: 35, y: 142, w: 24, h: 94, r: 11 },
+  { kind: "rect", x: 61, y: 142, w: 24, h: 94, r: 11 },
 ];
 const FOOT_SHAPES: Zone["shapes"] = [
-  { kind: "rect", x: 38, y: 232, w: 22, h: 30, r: 9 },
-  { kind: "rect", x: 60, y: 232, w: 22, h: 30, r: 9 },
+  { kind: "rect", x: 38, y: 235, w: 22, h: 26, r: 9 },
+  { kind: "rect", x: 60, y: 235, w: 22, h: 26, r: 9 },
 ];
 const KNEE_SHAPES: Zone["shapes"] = [
-  { kind: "ellipse", cx: 47.7, cy: 181, rx: 7.4, ry: 10 },
-  { kind: "ellipse", cx: 72.3, cy: 181, rx: 7.4, ry: 10 },
+  { kind: "ellipse", cx: 48.2, cy: 187, rx: 7.6, ry: 10.5 },
+  { kind: "ellipse", cx: 71.8, cy: 187, rx: 7.6, ry: 10.5 },
 ];
 /*
  * 몸통 부위는 네모가 아니라 타원으로 잡는다.
@@ -193,13 +267,13 @@ const KNEE_SHAPES: Zone["shapes"] = [
  * 타원 + 가장자리로 갈수록 옅어지는 칠은 '그 언저리'로 읽힌다.
  */
 const SHOULDER_SHAPE: Zone["shapes"] = [
-  { kind: "ellipse", cx: 60, cy: 67, rx: 22, ry: 11.5 },
+  { kind: "ellipse", cx: 60, cy: 64, rx: 22, ry: 12 },
 ];
 
 const FRONT_ZONES: Zone[] = [
   { part: "neck_shoulder", shapes: SHOULDER_SHAPE },
-  { part: "abdomen", shapes: [{ kind: "ellipse", cx: 60, cy: 97, rx: 18, ry: 20 }] },
-  { part: "pelvis_hip", shapes: [{ kind: "ellipse", cx: 60, cy: 130, rx: 19, ry: 15 }] },
+  { part: "abdomen", shapes: [{ kind: "ellipse", cx: 60, cy: 98, rx: 19, ry: 21 }] },
+  { part: "pelvis_hip", shapes: [{ kind: "ellipse", cx: 60, cy: 132, rx: 20, ry: 15 }] },
   { part: "arm", shapes: ARM_SHAPES },
   { part: "leg", shapes: LEG_SHAPES },
   { part: "knee", shapes: KNEE_SHAPES },
@@ -208,9 +282,9 @@ const FRONT_ZONES: Zone[] = [
 
 const BACK_ZONES: Zone[] = [
   { part: "neck_shoulder", shapes: SHOULDER_SHAPE },
-  { part: "back", shapes: [{ kind: "ellipse", cx: 60, cy: 89, rx: 18, ry: 14 }] },
-  { part: "waist", shapes: [{ kind: "ellipse", cx: 60, cy: 111, rx: 17, ry: 9 }] },
-  { part: "pelvis_hip", shapes: [{ kind: "ellipse", cx: 60, cy: 132, rx: 19, ry: 14 }] },
+  { part: "back", shapes: [{ kind: "ellipse", cx: 60, cy: 90, rx: 19, ry: 15 }] },
+  { part: "waist", shapes: [{ kind: "ellipse", cx: 60, cy: 113, rx: 18, ry: 9.5 }] },
+  { part: "pelvis_hip", shapes: [{ kind: "ellipse", cx: 60, cy: 133, rx: 20, ry: 14 }] },
   { part: "arm", shapes: ARM_SHAPES },
   { part: "leg", shapes: LEG_SHAPES },
   { part: "knee", shapes: KNEE_SHAPES },
@@ -227,10 +301,10 @@ function AnatomyLines({ view }: { view: View }) {
       opacity="0.28"
       strokeLinecap="round"
     >
-      {/* 쇄골 */}
-      <path d="M47.5 65 Q54 69.5 60 68.8 Q66 69.5 72.5 65" />
+      {/* 쇄골 — 어깨선(62) 바로 아래 */}
+      <path d="M47 61 Q54 65.5 60 64.8 Q66 65.5 73 61" />
       {/* 명치에서 배꼽으로 내려오는 정중선 */}
-      <path d="M60 77 V 113" opacity="0.55" />
+      <path d="M60 74 V 116" opacity="0.55" />
     </g>
   ) : (
     <g
@@ -241,12 +315,12 @@ function AnatomyLines({ view }: { view: View }) {
       strokeLinecap="round"
     >
       {/* 척주 */}
-      <path d="M60 59 V 134" />
+      <path d="M60 56 V 136" />
       {/* 견갑골 */}
-      <path d="M49.5 71 Q54.5 77.5 53.2 86" />
-      <path d="M70.5 71 Q65.5 77.5 66.8 86" />
+      <path d="M49 70 Q54.5 77 53.4 86" />
+      <path d="M71 70 Q65.5 77 66.6 86" />
       {/* 골반 라인 */}
-      <path d="M48.5 136 Q60 143.5 71.5 136" />
+      <path d="M48 137 Q60 144 72 137" />
     </g>
   );
 }
@@ -255,24 +329,29 @@ function AnatomyLines({ view }: { view: View }) {
 function Silhouette({ view, clipId }: { view: View; clipId: string }) {
   return (
     <g>
-      <path d={BODY_PATH} fill="url(#bodyFill)" />
+      {BODY_PARTS_D.map((d, i) => (
+        <path key={i} d={d} fill="url(#bodyFill)" />
+      ))}
       {/* 몸 안쪽에만 얹히는 은은한 입체감 — 왼쪽에서 들어오는 빛 한 겹 */}
       <rect
-        x="24"
-        y="6"
-        width="72"
-        height="256"
+        x="18"
+        y="4"
+        width="84"
+        height="262"
         fill="url(#bodyShade)"
         clipPath={`url(#${clipId})`}
       />
       <AnatomyLines view={view} />
-      <path
-        d={BODY_PATH}
-        fill="none"
-        stroke="url(#bodyEdge)"
-        strokeWidth="0.9"
-        strokeLinejoin="round"
-      />
+      {BODY_PARTS_D.map((d, i) => (
+        <path
+          key={i}
+          d={d}
+          fill="none"
+          stroke="url(#bodyEdge)"
+          strokeWidth="0.9"
+          strokeLinejoin="round"
+        />
+      ))}
     </g>
   );
 }
@@ -336,14 +415,16 @@ function BodyFigure({
       <div className="rounded-card bg-gradient-to-b from-aqua-50/70 to-card px-2.5 pb-1.5 pt-3 ring-1 ring-aqua-100">
         <svg
           /* 사람 하나는 세로로 길다 — 틀을 몸에 맞춰 잘라야 여백이 안 뜬다 */
-          viewBox="26 10 68 252"
+          viewBox="20 8 80 254"
           className="h-auto w-full max-w-[80px] sm:max-w-[98px]"
           role="group"
           aria-label={view === "front" ? "신체 앞면" : "신체 뒷면"}
         >
           <defs>
             <clipPath id={clipId}>
-              <path d={BODY_PATH} />
+              {BODY_PARTS_D.map((d, i) => (
+                <path key={i} d={d} />
+              ))}
             </clipPath>
             <linearGradient id="bodyFill" x1="0" y1="0" x2="0.35" y2="1">
               <stop offset="0%" stopColor="#DCEEEB" />
@@ -408,14 +489,17 @@ function BodyFigure({
           </g>
 
           {/* 고른 부위 위에 다시 얹는 몸 윤곽 — 색이 몸 모양을 따라간 것을 분명히 */}
-          <path
-            d={BODY_PATH}
-            fill="none"
-            stroke="url(#bodyEdge)"
-            strokeWidth="0.9"
-            strokeLinejoin="round"
-            pointerEvents="none"
-          />
+          {BODY_PARTS_D.map((d, i) => (
+            <path
+              key={i}
+              d={d}
+              fill="none"
+              stroke="url(#bodyEdge)"
+              strokeWidth="0.9"
+              strokeLinejoin="round"
+              pointerEvents="none"
+            />
+          ))}
         </svg>
         <p className="pb-1 pt-1.5 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-0.5 text-xs font-bold text-ink-sub ring-1 ring-stone-line">
