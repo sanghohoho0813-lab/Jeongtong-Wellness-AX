@@ -12,7 +12,7 @@ import {
   formatDateTimeKr,
   formatRelative,
 } from "@/lib/utils/date";
-import { displayPhone, formatKrw } from "@/lib/utils/format";
+import { displayName, displayPhone, formatKrw } from "@/lib/utils/format";
 import {
   Badge,
   Button,
@@ -59,8 +59,7 @@ export default function CustomerDetailPage() {
     restoreVisit,
     briefingTasks,
     settings,
-    canSeePhone,
-  } = useStore();
+    canSeePhone, privacyMode } = useStore();
   const toast = useToast();
   const [openVisit, setOpenVisit] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | undefined>();
@@ -119,11 +118,13 @@ export default function CustomerDetailPage() {
       <Card className="mb-4 lg:mb-5">
         <div className="flex flex-wrap items-center gap-4">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-aqua-500 to-deep-800 text-xl font-extrabold text-white shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16 sm:text-2xl">
-            {c.name.slice(0, 1)}
+            {displayName(c.name, privacyMode).slice(0, 1)}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-page-title text-ink">{c.name}</h1>
+              <h1 className="text-page-title text-ink">
+                {displayName(c.name, privacyMode)}
+              </h1>
               <CustomerStatusBadge status={derived.status} />
               {c.tags?.map((t) => (
                 <Badge key={t} tone="gold" dot>
@@ -132,8 +133,10 @@ export default function CustomerDetailPage() {
               ))}
             </div>
             <p className="mt-1 text-sm text-ink-sub">
-              {displayPhone(c.phone, canSeePhone)} · 등록일 {formatDateKr(c.registeredAt)} ·
-              담당 {staffName(c.assignedStaffId)}
+              {displayPhone(c.phone, canSeePhone)}
+              {c.ageGroup ? ` · ${c.ageGroup}` : ""} · 등록일{" "}
+              {formatDateKr(c.registeredAt)} · 담당{" "}
+              {staffName(c.assignedStaffId)}
             </p>
           </div>
           {/*
@@ -553,6 +556,32 @@ export default function CustomerDetailPage() {
           customerId={c.id}
           preferences={c.preferences ?? []}
         />
+
+        {/*
+          고객 원문 상담메모.
+
+          처음 오셨을 때 고객이 직접 이야기한 내용을 옮겨 둔 것이다.
+          이 글에는 몸 상태에 대한 고객의 표현이 그대로 들어 있어서,
+          시스템이 이를 읽고 무엇이라 판정하거나 무엇을 하라고 권하면
+          하지 말아야 할 일을 하는 것이 된다.
+          그래서 (1) 원문 그대로만 보여주고 (2) 어디서 온 글인지 밝히고
+          (3) 우선순위·매출기회 계산에는 넣지 않는다.
+        */}
+        {c.consultationNote && (
+          <Card>
+            <SectionTitle>고객 원문 상담메모</SectionTitle>
+            <blockquote className="rounded-card border-l-4 border-aqua-400 bg-aqua-50 px-4 py-3.5 dark:bg-aqua-500/10">
+              <p className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-ink-soft">
+                {c.consultationNote}
+              </p>
+            </blockquote>
+            <p className="mt-2.5 text-[0.8125rem] leading-relaxed text-ink-sub">
+              처음 상담에서 <b>고객이 말한 그대로</b> 옮겨 둔 내용입니다.
+              시스템은 이 글을 해석하지 않으며, 관리 우선순위나 매출기회
+              판단에도 사용하지 않습니다.
+            </p>
+          </Card>
+        )}
 
         {/* 최근 상담/메모 */}
         {(consultNotes.length > 0 || c.memo) && (

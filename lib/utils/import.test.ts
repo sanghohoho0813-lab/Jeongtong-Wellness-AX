@@ -4,6 +4,8 @@ import {
   checkBackup,
   customerImportTemplate,
   matchHeader,
+  normalizeAgeGroup,
+  normalizeCareAreas,
   normalizeDate,
   parseCsv,
   parseCustomerCsv,
@@ -152,7 +154,11 @@ describe("고객 명부 가져오기 미리보기", () => {
     const p = parseCustomerCsv(customerImportTemplate(), []);
     expect(p.errors).toHaveLength(0);
     expect(p.fresh).toHaveLength(2);
-    expect(p.fresh[0].registeredAt).toBe("2024-03-05");
+    expect(p.fresh[0].registeredAt).toBe("2026-03-05");
+    // 양식에 새로 들어간 칸도 그대로 읽힌다
+    expect(p.fresh[0].ageGroup).toBe("60대");
+    expect(p.fresh[0].consultationNote).toBe("어깨가 무겁다고 이야기함");
+    expect(p.fresh[0].careAreas?.map((c) => c.part)).toEqual(["neck_shoulder"]);
   });
 });
 
@@ -196,5 +202,69 @@ describe("백업 파일 검사", () => {
   it("배열이 아닌 최상위 값은 거절한다", () => {
     expect(checkBackup("[1,2,3]").ok).toBe(false);
     expect(checkBackup("null").ok).toBe(false);
+  });
+});
+
+/**
+ * 매장이 쓰던 고객차트를 그대로 옮길 때 생기는 것들.
+ * (시트 한 장 = 고객 한 명, 연락처는 대부분 비어 있고,
+ *  상담내역에는 고객이 말한 표현이 그대로 적혀 있다)
+ */
+describe("고객차트 항목 이관", () => {
+  it("연령 칸을 대(帶)로 맞춘다", () => {
+    expect(normalizeAgeGroup("60대")).toBe("60대");
+    expect(normalizeAgeGroup("60")).toBe("60대");
+    expect(normalizeAgeGroup("65세")).toBe("60대");
+    expect(normalizeAgeGroup("")).toBeUndefined();
+  });
+
+  it("알아볼 수 없는 연령 표기는 적힌 그대로 둔다", () => {
+    expect(normalizeAgeGroup("중년")).toBe("중년");
+  });
+
+  it("관리부위를 부위 코드로 바꾸고, 모르는 말은 따로 돌려준다", () => {
+    const r = normalizeCareAreas("목/어깨, 허리, 오른쪽 옆구리");
+    expect(r.parts.map((p) => p.part)).toEqual(["neck_shoulder", "waist"]);
+    expect(r.unknown).toEqual(["오른쪽 옆구리"]);
+  });
+
+  it("관리부위가 비어 있으면 아무것도 추측하지 않는다", () => {
+    expect(normalizeCareAreas("")).toEqual({ parts: [], unknown: [] });
+  });
+
+  it("연령 · 상담내역 · 특이사항 머리글을 알아본다", () => {
+    expect(matchHeader("연령")).toBe("ageGroup");
+    expect(matchHeader("상담내역")).toBe("consultationNote");
+    expect(matchHeader("관리부위")).toBe("careAreas");
+    expect(matchHeader("특이사항")).toBe("memo");
+  });
+
+  it("상담내역을 해석하지 않고 원문 그대로 싣는다", () => {
+    const csv = [
+      "고객명,연락처,연령,등록일,상담내역",
+      "옥윤용,010-2848-2992,60대,2026-08-12,우측 하반신 시림증상",
+    ].join("\n");
+    const r = parseCustomerCsv(csv, []);
+    expect(r.fresh).toHaveLength(1);
+    expect(r.fresh[0].consultationNote).toBe("우측 하반신 시림증상");
+    expect(r.fresh[0].ageGroup).toBe("60대");
+    expect(r.fresh[0].registeredAt).toBe("2026-08-12");
+  });
+
+  it("연락처가 없는 고객도 받아들인다", () => {
+    const csv = ["고객명,연락처,상담내역", "김청하,,구안와사"].join("\n");
+    const r = parseCustomerCsv(csv, []);
+    expect(r.errors).toHaveLength(0);
+    expect(r.fresh[0].phone).toBe("");
+    expect(r.fresh[0].consultationNote).toBe("구안와사");
+  });
+
+  it("연락처가 없으면 이름으로 겹침을 잡는다 (같은 파일 두 번 올리기 방지)", () => {
+    const existing = [customer({ id: "c-9", name: "김청하", phone: "" })];
+    const csv = ["고객명,연락처,상담내역", "김청하,,구안와사"].join("\n");
+    const r = parseCustomerCsv(csv, existing);
+    expect(r.fresh).toHaveLength(0);
+    expect(r.duplicated).toHaveLength(1);
+    expect(r.duplicated[0].existingId).toBe("c-9");
   });
 });

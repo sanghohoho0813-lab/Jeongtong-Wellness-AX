@@ -41,8 +41,15 @@ export default function CustomerForm({
       ? customer.gender
       : "",
   );
-  const [birthYear, setBirthYear] = useState(
-    customer?.birthYear ? String(customer.birthYear) : "",
+  /*
+   * 출생연도 입력칸은 없앴다 — 매장이 쓰던 고객차트는 생년이 아니라
+   * "60대"처럼 대(帶)로 적혀 있고, 현장에서 생년을 여쭙기도 어렵다.
+   * 예전에 저장된 값은 지우지 않고 그대로 들고 간다.
+   */
+  const birthYear = customer?.birthYear;
+  const [ageGroup, setAgeGroup] = useState(customer?.ageGroup ?? "");
+  const [consultationNote, setConsultationNote] = useState(
+    customer?.consultationNote ?? "",
   );
   const [staffId, setStaffId] = useState(customer?.assignedStaffId ?? "");
   const [memo, setMemo] = useState(customer?.memo ?? "");
@@ -79,7 +86,9 @@ export default function CustomerForm({
         name: name.trim(),
         phone: phone.trim(),
         gender: gender || undefined,
-        birthYear: birthYear ? Number(birthYear) : undefined,
+        birthYear,
+        ageGroup: ageGroup.trim() || undefined,
+        consultationNote: consultationNote.trim() || undefined,
         memo: memo || undefined,
         focusBodyParts: parts,
         assignedStaffId: staffId || undefined,
@@ -95,7 +104,9 @@ export default function CustomerForm({
       name,
       phone,
       gender: gender || undefined,
-      birthYear: birthYear ? Number(birthYear) : undefined,
+      birthYear,
+      ageGroup: ageGroup.trim() || undefined,
+      consultationNote: consultationNote.trim() || undefined,
       memo: memo || undefined,
       focusBodyParts: parts,
       assignedStaffId: staffId || undefined,
@@ -148,15 +159,17 @@ export default function CustomerForm({
           </select>
         </div>
         <div>
-          <FieldLabel>출생연도</FieldLabel>
+          <FieldLabel>연령대</FieldLabel>
           <input
             className={inputCls}
-            value={birthYear}
-            onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
-            placeholder="예: 1965"
-            inputMode="numeric"
-            maxLength={4}
+            value={ageGroup}
+            onChange={(e) => setAgeGroup(e.target.value)}
+            placeholder="예: 60대"
+            maxLength={10}
           />
+          <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
+            정확한 생년을 여쭙기 어려울 때 적어 두는 칸입니다.
+          </p>
         </div>
         <div>
           <FieldLabel>담당 직원</FieldLabel>
@@ -193,13 +206,32 @@ export default function CustomerForm({
         <BodyMap value={parts} onChange={setParts} compactChips />
       </div>
 
+      {/*
+        원문 상담메모와 특이사항을 나눠 둔다.
+        원문은 고객이 말한 그대로 남겨 두는 칸이라 나중에 고쳐 쓰지 않고,
+        운영하며 알게 된 것은 아래 특이사항에 쌓는다.
+      */}
       <div>
-        <FieldLabel>상담 메모</FieldLabel>
+        <FieldLabel>고객 원문 상담메모</FieldLabel>
+        <textarea
+          className={`${inputCls} min-h-20`}
+          value={consultationNote}
+          onChange={(e) => setConsultationNote(e.target.value)}
+          placeholder="첫 상담에서 고객이 말한 내용을 그대로 적어 주세요"
+        />
+        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-sub">
+          고객이 말한 그대로 보관합니다. 시스템이 이 글을 해석하거나 관리
+          방법을 자동으로 정하지 않고, 우선순위 계산에도 쓰지 않습니다.
+        </p>
+      </div>
+
+      <div>
+        <FieldLabel>특이사항</FieldLabel>
         <textarea
           className={`${inputCls} min-h-20`}
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
-          placeholder="고객 특이사항, 상담 내용 등"
+          placeholder="운영하며 알게 된 참고사항"
         />
       </div>
 

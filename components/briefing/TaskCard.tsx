@@ -18,7 +18,7 @@ import {
   formatDateKr,
   formatTimeKr,
 } from "@/lib/utils/date";
-import { displayPhone } from "@/lib/utils/format";
+import { displayName, displayPhone } from "@/lib/utils/format";
 import {
   Badge,
   BadgeTone,
@@ -121,7 +121,7 @@ export default function TaskCard({
   compact?: boolean;
   variant?: "light" | "hero";
 }) {
-  const { customers, staff, setTaskStatus, canSeePhone } = useStore();
+  const { customers, staff, setTaskStatus, canSeePhone, privacyMode } = useStore();
   const toast = useToast();
 
   /** 열려 있는 입력 패널 — 처리완료 결과 / 보류 재확인일 */
@@ -264,7 +264,7 @@ export default function TaskCard({
                 hero ? "text-white hover:text-aqua-200" : "text-ink hover:text-aqua-700"
               }`}
             >
-              {customer.name}
+              {displayName(customer.name, privacyMode)}
             </Link>
             <Badge tone={hero ? "on-dark" : CATEGORY_TONES[task.category]} dot>
               {TASK_CATEGORY_LABELS[task.category]}

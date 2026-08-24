@@ -305,6 +305,88 @@ export function summarizeOpportunities(
   };
 }
 
+// ---------- 관리 후 실제 등록된 이용권 ----------
+
+export interface RenewalRevenue {
+  /** 관리한 뒤 실제로 등록된 이용권 건수 */
+  count: number;
+  /** 그 이용권들의 실제 판매금액 합 (원) */
+  amount: number;
+  /** 몇 일 안의 등록까지 셌는지 */
+  windowDays: number;
+}
+
+/**
+ * 재등록 기회를 관리한 뒤, 그 고객에게 **실제로 등록된 이용권**을 센다.
+ *
+ * 왜 이것만 세는가
+ * ----------------
+ * "이 고객이 재등록할 확률", "예상 매출 40만원" 같은 값은 만들지 않는다.
+ * 아직 일어나지 않은 일이라 근거가 없기 때문이다.
+ * 대신 이미 일어난 것 — 직원이 관리한 날짜 이후 창(窓) 안에 실제로
+ * 등록된 이용권과 그 금액 — 만 집계한다.
+ *
+ * 인과관계에 대하여
+ * -----------------
+ * 관리 뒤에 등록되었다고 해서 그 관리 때문이라고 단정할 수는 없다.
+ * 그래서 이 값의 이름도 "AX가 만든 매출"이 아니라
+ * "관리 후 실제로 등록된 이용권"이다. 화면 문구도 그렇게 쓴다.
+ *
+ * 같은 이용권이 두 과제에 걸쳐 두 번 세어지지 않도록 id 로 한 번만 센다.
+ */
+export function renewalRevenueAfterHandling(
+  tasks: Array<{
+    customerId?: string;
+    status: string;
+    statusChangedAt?: string;
+    opportunity?: SalesOpportunity;
+    outcome?: TaskOutcome;
+  }>,
+  memberships: Array<{
+    id: string;
+    customerId: string;
+    purchasedAt: string;
+    price: number;
+  }>,
+  windowDays = 30,
+): RenewalRevenue {
+  const handled = tasks.filter(
+    (t) =>
+      t.status === "done" &&
+      t.customerId &&
+      t.statusChangedAt &&
+      (t.outcome?.opportunityType ?? t.opportunity?.type) === "renewal",
+  );
+  if (handled.length === 0) return { count: 0, amount: 0, windowDays };
+
+  /** 고객별로 가장 이른 처리 시각 (여러 번 관리했으면 첫 관리부터 본다) */
+  const firstHandledAt = new Map<string, string>();
+  for (const t of handled) {
+    const at = t.statusChangedAt!.slice(0, 10);
+    const cur = firstHandledAt.get(t.customerId!);
+    if (!cur || at < cur) firstHandledAt.set(t.customerId!, at);
+  }
+
+  const counted = new Set<string>();
+  let count = 0;
+  let amount = 0;
+
+  for (const m of memberships) {
+    if (counted.has(m.id)) continue;
+    const since = firstHandledAt.get(m.customerId);
+    if (!since) continue;
+    const bought = m.purchasedAt.slice(0, 10);
+    if (bought < since) continue;
+    // diffDays(a, b) = a - b — 등록일이 처리일에서 며칠 지났는지
+    if (diffDays(bought, since) > windowDays) continue;
+    counted.add(m.id);
+    count++;
+    amount += m.price || 0;
+  }
+
+  return { count, amount, windowDays };
+}
+
 // ---------- 월별 실행 추이 ----------
 
 export interface OpportunityMonthly {

@@ -10,6 +10,7 @@ import {
   CarePreference,
   Customer,
   Membership,
+  ServiceProduct,
   Staff,
   Visit,
 } from "@/lib/types";
@@ -22,8 +23,9 @@ export const seedBranches: Branch[] = [
     id: B1,
     hqId: "hq-jeongtong",
     name: "본점",
-    address: "서울특별시",
-    phone: "02-000-0000",
+    // 회사 소개자료에 적힌 실제 매장 정보
+    address: "경기도 남양주시 경춘로 951, 4층",
+    phone: "010-3900-0977",
     openHours: "10:00 - 20:00",
     createdAt: daysFromToday(-300),
   },
@@ -87,9 +89,53 @@ interface CustomerSpec {
   }>;
 }
 
-const P_BASIC = "쑥뜸 베이직 케어";
-const P_DEEP = "쑥뜸 딥 릴랙스 케어";
-const P_HALF = "반신 온열 케어";
+/*
+ * 서비스명과 이용권은 매장 가격표에 적힌 것을 그대로 쓴다.
+ * 예전 샘플에는 '베이직 / 딥 릴랙스 / 반신 온열' 처럼 없는 프로그램과
+ * 없는 금액이 들어 있었다. 실제로 파는 것은 대왕쑥뜸 하나이고
+ * 이용권은 1회 / 10회 / 30회 세 가지다.
+ */
+export const SERVICE_NAME = "대왕쑥뜸";
+
+export const seedProducts: ServiceProduct[] = [
+  {
+    id: "prod-1",
+    branchId: B1,
+    name: "대왕쑥뜸 1회",
+    serviceName: SERVICE_NAME,
+    sessionCount: 1,
+    price: 45000,
+    active: true,
+    sortOrder: 1,
+    source: "price_sheet",
+  },
+  {
+    id: "prod-10",
+    branchId: B1,
+    name: "대왕쑥뜸 10회권",
+    serviceName: SERVICE_NAME,
+    sessionCount: 10,
+    price: 400000,
+    active: true,
+    sortOrder: 2,
+    source: "price_sheet",
+  },
+  {
+    id: "prod-30",
+    branchId: B1,
+    name: "대왕쑥뜸 30회권",
+    serviceName: SERVICE_NAME,
+    sessionCount: 30,
+    price: 1100000,
+    active: true,
+    sortOrder: 3,
+    source: "price_sheet",
+  },
+];
+
+const P_BASIC = SERVICE_NAME;
+const P_DEEP = SERVICE_NAME;
+const P_HALF = SERVICE_NAME;
 
 const SPECS: CustomerSpec[] = [
   // --- 재방문 예정 (관리일 도래/경과) ---
@@ -112,7 +158,7 @@ const SPECS: CustomerSpec[] = [
       { at: -16, program: P_DEEP, parts: [{ part: "waist" }, { part: "neck_shoulder" }], reaction: "어깨 결림 완화 체감", membership: "m-01" },
     ],
     memberships: [
-      { id: "m-01", program: "딥 릴랙스 10회권", total: 10, remaining: 5, purchased: -44, price: 450000 },
+      { id: "m-01", program: "대왕쑥뜸 10회권", total: 10, remaining: 5, purchased: -44, price: 400000 },
     ],
   },
   {
@@ -133,7 +179,7 @@ const SPECS: CustomerSpec[] = [
       { at: -14, program: P_HALF, parts: [{ part: "knee" }], membership: "m-02" },
     ],
     memberships: [
-      { id: "m-02", program: "반신 온열 10회권", total: 10, remaining: 4, purchased: -84, price: 380000 },
+      { id: "m-02", program: "대왕쑥뜸 10회권", total: 10, remaining: 4, purchased: -84, price: 400000 },
     ],
   },
   {
@@ -148,7 +194,7 @@ const SPECS: CustomerSpec[] = [
       { at: -20, program: P_DEEP, parts: [{ part: "back" }], membership: "m-03" },
     ],
     memberships: [
-      { id: "m-03", program: "딥 릴랙스 10회권", total: 10, remaining: 6, purchased: -49, price: 450000 },
+      { id: "m-03", program: "대왕쑥뜸 10회권", total: 10, remaining: 6, purchased: -49, price: 400000 },
     ],
   },
 
@@ -170,7 +216,7 @@ const SPECS: CustomerSpec[] = [
       { at: -7, program: P_BASIC, parts: [{ part: "abdomen" }], membership: "m-04" },
     ],
     memberships: [
-      { id: "m-04", program: "베이직 10회권", total: 10, remaining: 2, purchased: -63, price: 350000 },
+      { id: "m-04", program: "대왕쑥뜸 10회권", total: 10, remaining: 2, purchased: -63, price: 400000 },
     ],
   },
   {
@@ -186,7 +232,7 @@ const SPECS: CustomerSpec[] = [
       { at: -12, program: P_DEEP, parts: [{ part: "neck_shoulder" }], membership: "m-05", reaction: "팔 저림이 줄었다고 함" },
     ],
     memberships: [
-      { id: "m-05", program: "딥 릴랙스 6회권", total: 6, remaining: 1, purchased: -80, price: 290000 },
+      { id: "m-05", program: "대왕쑥뜸 10회권", total: 10, remaining: 1, purchased: -80, price: 400000 },
     ],
   },
   {
@@ -206,7 +252,7 @@ const SPECS: CustomerSpec[] = [
       { at: -25, program: P_HALF, membership: "m-06", parts: [{ part: "waist" }] },
     ],
     memberships: [
-      { id: "m-06", program: "반신 온열 6회권", total: 6, remaining: 0, purchased: -100, price: 240000, status: "exhausted" },
+      { id: "m-06", program: "대왕쑥뜸 10회권", total: 10, remaining: 0, purchased: -100, price: 400000, status: "exhausted" },
     ],
   },
 
@@ -305,7 +351,7 @@ const SPECS: CustomerSpec[] = [
       { at: -10, program: P_DEEP, parts: [{ part: "neck_shoulder" }], membership: "m-15", reaction: "수면 질이 좋아졌다고 함" },
     ],
     memberships: [
-      { id: "m-15", program: "딥 릴랙스 10회권", total: 10, remaining: 6, purchased: -52, price: 450000 },
+      { id: "m-15", program: "대왕쑥뜸 10회권", total: 10, remaining: 6, purchased: -52, price: 400000 },
     ],
   },
   {
@@ -321,7 +367,7 @@ const SPECS: CustomerSpec[] = [
       { at: -1, program: P_BASIC, parts: [{ part: "waist" }], membership: "m-16" },
     ],
     memberships: [
-      { id: "m-16", program: "베이직 10회권", total: 10, remaining: 5, purchased: -60, price: 350000 },
+      { id: "m-16", program: "대왕쑥뜸 10회권", total: 10, remaining: 5, purchased: -60, price: 400000 },
     ],
   },
   {
@@ -343,7 +389,7 @@ const SPECS: CustomerSpec[] = [
       { at: -3, program: P_HALF, parts: [{ part: "abdomen" }], membership: "m-17", reaction: "몸이 전반적으로 가볍다고 만족" },
     ],
     memberships: [
-      { id: "m-17", program: "반신 온열 10회권", total: 10, remaining: 3, purchased: -87, price: 380000 },
+      { id: "m-17", program: "대왕쑥뜸 10회권", total: 10, remaining: 3, purchased: -87, price: 400000 },
     ],
   },
   {
@@ -359,7 +405,7 @@ const SPECS: CustomerSpec[] = [
       { at: -8, program: P_HALF, parts: [{ part: "leg" }], membership: "m-18" },
     ],
     memberships: [
-      { id: "m-18", program: "반신 온열 10회권", total: 10, remaining: 5, purchased: -64, price: 380000 },
+      { id: "m-18", program: "대왕쑥뜸 10회권", total: 10, remaining: 5, purchased: -64, price: 400000 },
     ],
   },
   {
@@ -375,7 +421,7 @@ const SPECS: CustomerSpec[] = [
       { at: -6, program: P_DEEP, parts: [{ part: "back" }], membership: "m-19" },
     ],
     memberships: [
-      { id: "m-19", program: "딥 릴랙스 10회권", total: 10, remaining: 5, purchased: -66, price: 450000 },
+      { id: "m-19", program: "대왕쑥뜸 10회권", total: 10, remaining: 5, purchased: -66, price: 400000 },
     ],
   },
   {
@@ -390,7 +436,7 @@ const SPECS: CustomerSpec[] = [
       { at: -5, program: P_BASIC, parts: [{ part: "neck_shoulder" }], membership: "m-20" },
     ],
     memberships: [
-      { id: "m-20", program: "베이직 10회권", total: 10, remaining: 6, purchased: -47, price: 350000 },
+      { id: "m-20", program: "대왕쑥뜸 10회권", total: 10, remaining: 6, purchased: -47, price: 400000 },
     ],
   },
 
@@ -407,7 +453,7 @@ const SPECS: CustomerSpec[] = [
       { at: 0, program: P_BASIC, parts: [{ part: "waist" }], membership: "m-21", reaction: "오늘 컨디션 좋다고 함" },
     ],
     memberships: [
-      { id: "m-21", program: "베이직 10회권", total: 10, remaining: 6, purchased: -42, price: 350000 },
+      { id: "m-21", program: "대왕쑥뜸 10회권", total: 10, remaining: 6, purchased: -42, price: 400000 },
     ],
   },
   {
@@ -431,7 +477,7 @@ const SPECS: CustomerSpec[] = [
       { at: 0, program: P_HALF, parts: [{ part: "knee" }, { part: "foot_ankle" }], membership: "m-23" },
     ],
     memberships: [
-      { id: "m-23", program: "반신 온열 10회권", total: 10, remaining: 6, purchased: -36, price: 380000 },
+      { id: "m-23", program: "대왕쑥뜸 10회권", total: 10, remaining: 6, purchased: -36, price: 400000 },
     ],
   },
   {
@@ -445,7 +491,7 @@ const SPECS: CustomerSpec[] = [
       { at: -3, program: P_DEEP, parts: [{ part: "back" }], membership: "m-24" },
     ],
     memberships: [
-      { id: "m-24", program: "딥 릴랙스 6회권", total: 6, remaining: 3, purchased: -31, price: 290000 },
+      { id: "m-24", program: "대왕쑥뜸 10회권", total: 10, remaining: 3, purchased: -31, price: 400000 },
     ],
   },
 ];

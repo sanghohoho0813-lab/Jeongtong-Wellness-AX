@@ -400,6 +400,32 @@ function DroppedRecordsBanner() {
   );
 }
 
+/**
+ * 화면 공유 모드 표시.
+ *
+ * 켜 두고 잊으면 반대 문제가 생긴다 — 원장님이 고객 이름을 못 찾는다.
+ * 지금 가려져 있다는 것과 어디서 끄는지를 항상 띠로 보여 준다.
+ */
+function PrivacyModeBanner() {
+  const { privacyMode } = useStore();
+  if (!privacyMode) return null;
+  return (
+    <div className="no-print sticky top-0 z-40 border-b border-deep-line bg-deep-800 px-4 py-2 text-white sm:px-6 lg:ml-64 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-sm font-extrabold">
+          화면 공유 모드 — 고객 이름과 연락처를 가리고 있습니다.
+        </span>
+        <Link
+          href="/settings#set-privacy"
+          className="rounded-full bg-white/15 px-3 py-1 text-sm font-extrabold ring-1 ring-white/25 hover:bg-white/25"
+        >
+          설정에서 끄기
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function AppShell({ children }: { children: ReactNode }) {
   // 경로가 바뀌면 오류 상태를 푼다 — 다른 화면까지 막아 둘 이유가 없다
   const pathname = usePathname();
@@ -480,6 +506,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       />
       <SaveFailedBanner />
       <DroppedRecordsBanner />
+      <PrivacyModeBanner />
       <main
         id="main"
         tabIndex={-1}

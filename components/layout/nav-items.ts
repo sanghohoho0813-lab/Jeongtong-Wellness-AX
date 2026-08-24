@@ -43,6 +43,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/visits", label: "방문 / 이용 기록", icon: ClipboardIcon, tone: "violet" },
   { href: "/retention", label: "재방문 관리", icon: RefreshIcon, tone: "amber" },
   { href: "/analytics", label: "AX 도입성과", icon: ChartIcon, tone: "emerald" },
+  { href: "/service", label: "서비스 표준", icon: BodyIcon, tone: "violet" },
   { href: "/branches", label: "지점 / 운영", icon: BuildingIcon, tone: "gold" },
   { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray" },
 ];

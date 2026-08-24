@@ -26,12 +26,11 @@ import { PREF_TONES } from "@/components/customers/CarePreferenceCard";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
-const PROGRAMS = [
-  "쑥뜸 베이직 케어",
-  "쑥뜸 딥 릴랙스 케어",
-  "반신 온열 케어",
-  "기타 프로그램",
-];
+/*
+ * 프로그램 목록도 매장 가격표(설정 → 서비스 · 이용권 상품)에서 읽는다.
+ * 여기 적어 두면 매장이 파는 것과 화면에 뜨는 것이 어긋난다.
+ */
+const OTHER_PROGRAM = "기타";
 
 export default function VisitForm({
   customerId: fixedCustomerId,
@@ -54,8 +53,26 @@ export default function VisitForm({
     updateVisit,
     factsById,
     visits,
+    products,
   } = useStore();
   const toast = useToast();
+  /**
+   * 고를 수 있는 프로그램 — 매장 가격표에 있는 서비스 이름들.
+   * 예전 기록에 적힌 이름(지금은 안 파는 것)도 그대로 남겨야 수정할 때
+   * 값이 멋대로 바뀌지 않는다.
+   */
+  const programOptions = useMemo(() => {
+    const names = products
+      .filter((p) => p.active)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((p) => p.serviceName);
+    const list = [...new Set([...names, OTHER_PROGRAM])];
+    if (visit?.programName && !list.includes(visit.programName)) {
+      list.unshift(visit.programName);
+    }
+    return list;
+  }, [products, visit?.programName]);
+  const defaultProgram = programOptions[0] ?? OTHER_PROGRAM;
   const editing = !!visit;
   const [customerId, setCustomerId] = useState(
     visit?.customerId ?? fixedCustomerId ?? "",
@@ -69,7 +86,7 @@ export default function VisitForm({
   );
   const [type, setType] = useState<VisitType>(visit?.type ?? "visit");
   const [programName, setProgramName] = useState(
-    visit?.programName ?? PROGRAMS[0],
+    visit?.programName ?? defaultProgram,
   );
   const [membershipId, setMembershipId] = useState(visit?.membershipId ?? "");
   const [parts, setParts] = useState<BodyPartRecord[]>(() => {
@@ -132,7 +149,7 @@ export default function VisitForm({
     if (editing || !customerId) return;
     const c = customers.find((x) => x.id === customerId);
     if (!c) return;
-    setProgramName(lastVisit?.programName ?? PROGRAMS[0]);
+    setProgramName(lastVisit?.programName ?? defaultProgram);
     setParts(
       lastVisit && lastVisit.bodyParts.length > 0
         ? lastVisit.bodyParts
@@ -269,7 +286,7 @@ export default function VisitForm({
               value={programName}
               onChange={(e) => setProgramName(e.target.value)}
             >
-              {PROGRAMS.map((p) => (
+              {programOptions.map((p) => (
                 <option key={p} value={p}>
                   {p}
                 </option>

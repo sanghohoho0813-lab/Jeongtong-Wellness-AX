@@ -10,12 +10,13 @@
 
 import Link from "next/link";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import { summarizeOpportunities } from "@/lib/scoring/opportunity";
 import { Card, OpportunityBadge, SectionTitle } from "@/components/ui";
 import { ChevronRightIcon, TrendUpIcon } from "@/components/ui/icons";
 
 export default function OpportunityCard() {
-  const { briefingTasks, customers } = useStore();
+  const { briefingTasks, customers, privacyMode } = useStore();
 
   const rows = briefingTasks
     .filter((t) => t.opportunity && t.opportunity.type !== "none")
@@ -30,7 +31,7 @@ export default function OpportunityCard() {
   const summary = summarizeOpportunities(briefingTasks);
   const open = rows.filter((t) => t.status !== "done");
   const name = (id: string) =>
-    customers.find((c) => c.id === id)?.name ?? "고객";
+    displayName(customers.find((c) => c.id === id)?.name ?? "고객", privacyMode);
 
   return (
     <Card

@@ -23,6 +23,7 @@ import {
   Customer,
   DEFAULT_SETTINGS,
   Membership,
+  ServiceProduct,
   Staff,
   CarePreference,
   PreferenceCategory,
@@ -35,6 +36,7 @@ import {
   seedBranches,
   seedCustomers,
   seedMemberships,
+  seedProducts,
   seedStaff,
   seedVisits,
 } from "@/lib/data/mock/seed";
@@ -54,6 +56,8 @@ interface PersistedState {
   customers: Customer[];
   visits: Visit[];
   memberships: Membership[];
+  /** 서비스 · 이용권 상품 (매장 가격표) */
+  products: ServiceProduct[];
   branches: Branch[];
   staff: Staff[];
   /** 브리핑 과제 상태 오버라이드 (생성은 항상 규칙 엔진이 수행) */
@@ -71,6 +75,9 @@ export interface NewCustomerInput {
   phone: string;
   gender?: "female" | "male";
   birthYear?: number;
+  ageGroup?: string;
+  /** 고객이 말한 그대로의 첫 상담 내용 (시스템이 해석하지 않는다) */
+  consultationNote?: string;
   memo?: string;
   focusBodyParts: BodyPartRecord[];
   assignedStaffId?: string;
@@ -136,6 +143,8 @@ interface StoreValue extends PersistedState {
   isManager: boolean;
   /** 연락처 원본 열람 권한 — 대표/관리자만 (직원은 마스킹) */
   canSeePhone: boolean;
+  /** 화면 공유 모드 — 고객 이름·연락처를 가려서 보여준다 */
+  privacyMode: boolean;
   setCurrentStaff: (staffId: string) => void;
   /** 케어 선호 · 특이사항 (고객 감동 포인트) */
   addPreference: (
@@ -157,6 +166,11 @@ interface StoreValue extends PersistedState {
   /** 삭제한 방문 기록을 원래대로 되살린다 (이용권 차감도 다시 적용) */
   restoreVisit: (visit: Visit) => void;
   /** 이용권 등록 (신규 구매 · 재구매) */
+  addProduct: (
+    input: Omit<ServiceProduct, "id" | "branchId" | "sortOrder" | "source">,
+  ) => ServiceProduct;
+  updateProduct: (id: string, patch: Partial<ServiceProduct>) => void;
+  removeProduct: (id: string) => void;
   addMembership: (input: NewMembershipInput) => Membership;
   updateMembership: (id: string, patch: Partial<Membership>) => void;
   /** 이용권 삭제 — 삭제한 이용권과 끊긴 방문 연결을 돌려주어 '되돌리기'에 쓴다 */
@@ -187,11 +201,24 @@ interface StoreValue extends PersistedState {
 
 const StoreContext = createContext<StoreValue | null>(null);
 
+/**
+ * 가져오기 한 줄에서 메모로 남길 내용을 만든다.
+ * 특이사항 칸과, 부위로 알아보지 못한 관리부위 표기를 함께 남긴다.
+ * (알아보지 못했다고 버리면 매장이 적어 둔 정보가 사라진다)
+ */
+function mergeMemo(row: ImportRow): string | undefined {
+  const parts = [row.memo, row.careAreasRaw ? `관리부위: ${row.careAreasRaw}` : ""]
+    .map((x) => (x ?? "").trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(" / ") : undefined;
+}
+
 function seedState(): PersistedState {
   return {
     customers: seedCustomers,
     visits: seedVisits,
     memberships: seedMemberships,
+    products: seedProducts,
     branches: seedBranches,
     staff: seedStaff,
     taskOverrides: [],
@@ -243,6 +270,19 @@ function sanitize(s: PersistedState): {
       s.memberships,
       (m) => typeof m?.id === "string" && isDate(m?.purchasedAt),
     ),
+    /*
+     * 상품 목록은 뒤늦게 들어온 항목이라 예전 백업에는 아예 없다.
+     * 비어 있으면 매장 가격표(기본값)로 되돌려 이용권 등록 화면이
+     * 빈 채로 열리지 않게 한다.
+     */
+    products:
+      Array.isArray(s.products) && s.products.length > 0
+        ? keep(
+            "product",
+            s.products,
+            (x) => typeof x?.id === "string" && typeof x?.name === "string",
+          )
+        : seedProducts,
   };
   return { state, dropped };
 }
@@ -492,7 +532,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const isManager =
     currentStaff?.role === "owner" || currentStaff?.role === "manager";
   // 연락처 원본은 대표/관리자만 열람 (직원 화면에서는 마스킹)
-  const canSeePhone = isManager;
+  /**
+   * 화면 공유 모드 — 켜져 있으면 관리자에게도 연락처를 가린다.
+   * 실제 고객자료를 넣은 채로 화면을 함께 보는 상황을 위한 것이라,
+   * 권한과 상관없이 가리는 것이 맞다.
+   */
+  const privacyMode = state.settings.privacyMode === true;
+  const canSeePhone = isManager && !privacyMode;
 
   const setCurrentStaff = useCallback((staffId: string) => {
     setState((s) => ({ ...s, currentStaffId: staffId }));
@@ -571,6 +617,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       phone: input.phone.trim(),
       gender: input.gender,
       birthYear: input.birthYear,
+      ageGroup: input.ageGroup,
+      consultationNote: input.consultationNote,
       registeredAt: todayISO(),
       assignedStaffId: input.assignedStaffId,
       memo: input.memo,
@@ -916,6 +964,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [factsById, currentStaff],
   );
 
+  // ---------- 서비스 · 이용권 상품 ----------
+
+  const addProduct = useCallback(
+    (input: Omit<ServiceProduct, "id" | "branchId" | "sortOrder" | "source">) => {
+      const branchId = state.branches[0]?.id ?? "branch-main";
+      const product: ServiceProduct = {
+        ...input,
+        id: `prod-${Date.now().toString(36)}`,
+        branchId,
+        sortOrder: state.products.length + 1,
+        source: "manual",
+      };
+      setState((s) => ({ ...s, products: [...s.products, product] }));
+      return product;
+    },
+    [state.branches, state.products.length],
+  );
+
+  const updateProduct = useCallback(
+    (id: string, patch: Partial<ServiceProduct>) => {
+      setState((s) => ({
+        ...s,
+        products: s.products.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      }));
+    },
+    [],
+  );
+
+  const removeProduct = useCallback((id: string) => {
+    setState((s) => ({ ...s, products: s.products.filter((p) => p.id !== id) }));
+  }, []);
+
   const updateSettings = useCallback((patch: Partial<AppSettings>) => {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
   }, []);
@@ -975,8 +1055,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               ...cur,
               gender: cur.gender ?? row.gender,
               birthYear: cur.birthYear ?? row.birthYear,
+              ageGroup: cur.ageGroup || row.ageGroup,
+              consultationNote: cur.consultationNote || row.consultationNote,
               nextManageDate: cur.nextManageDate ?? row.nextManageDate,
-              memo: cur.memo || row.memo,
+              memo: cur.memo || mergeMemo(row),
+              focusBodyParts:
+                cur.focusBodyParts.length > 0
+                  ? cur.focusBodyParts
+                  : (row.careAreas ?? []),
             };
             const changed = (Object.keys(patched) as Array<keyof Customer>).some(
               (k) => patched[k] !== cur[k],
@@ -993,10 +1079,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             name: row.name,
             phone: row.phone,
             gender: row.gender,
+            ageGroup: row.ageGroup,
+            consultationNote: row.consultationNote,
             birthYear: row.birthYear,
             registeredAt: row.registeredAt ?? today,
-            memo: row.memo,
-            focusBodyParts: [],
+            memo: mergeMemo(row),
+            focusBodyParts: row.careAreas ?? [],
             nextManageDate: row.nextManageDate,
           });
           added++;
@@ -1030,6 +1118,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       taskOverrides: [],
       taskFirstSeen: {},
       seededAt: undefined,
+      // 가격표는 매장 실제 자료라 샘플이 아니다 — 지우지 않는다
     }));
   }, []);
 
@@ -1046,6 +1135,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     currentStaff,
     isManager,
     canSeePhone,
+    privacyMode,
     setCurrentStaff,
     addPreference,
     togglePreferencePin,
@@ -1056,6 +1146,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateVisit,
     removeVisit,
     restoreVisit,
+    addProduct,
+    updateProduct,
+    removeProduct,
     addMembership,
     updateMembership,
     removeMembership,

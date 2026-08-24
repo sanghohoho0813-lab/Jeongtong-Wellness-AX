@@ -7,13 +7,14 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import { BodyPartRecord } from "@/lib/types";
 import { Button, SectionTitle, inputCls } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
 export default function BodyMapCard() {
-  const { customers, updateCustomer } = useStore();
+  const { customers, updateCustomer, privacyMode } = useStore();
   const toast = useToast();
   const [customerId, setCustomerId] = useState("");
   const [parts, setParts] = useState<BodyPartRecord[]>([]);
@@ -64,7 +65,7 @@ export default function BodyMapCard() {
         <option value="">고객을 선택하세요</option>
         {sorted.map((c) => (
           <option key={c.id} value={c.id}>
-            {c.name}
+            {displayName(c.name, privacyMode)}
           </option>
         ))}
       </select>

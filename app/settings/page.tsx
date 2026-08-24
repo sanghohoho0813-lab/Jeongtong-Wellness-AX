@@ -21,9 +21,10 @@ import {
   SegmentedControl,
   inputCls,
 } from "@/components/ui";
-import { DownloadIcon, PlusIcon } from "@/components/ui/icons";
+import { CheckIcon, DownloadIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import DataImport from "@/components/settings/DataImport";
+import ProductTable from "@/components/settings/ProductTable";
 import { previewRuleChange } from "@/lib/scoring/rule-preview";
 import {
   daysAgo,
@@ -203,6 +204,8 @@ export default function SettingsPage() {
             { id: "set-screen", label: "화면" },
             { id: "set-store", label: "매장" },
             { id: "set-staff", label: "직원" },
+            { id: "set-privacy", label: "화면 공유" },
+            { id: "set-product", label: "서비스 · 상품" },
             { id: "set-rules", label: "고객관리 기준" },
             { id: "set-opp", label: "매출기회 기준" },
             { id: "set-data", label: "데이터 · 백업" },
@@ -400,6 +403,66 @@ export default function SettingsPage() {
         </Card>
 
         {/* 고객관리 기준 */}
+        {/*
+          화면 공유 모드.
+
+          실제 고객자료를 넣은 채로 화면을 함께 보거나 시연하는 일이 생긴다.
+          그때 이름과 연락처가 그대로 나가면 되돌릴 수가 없다.
+          저장된 자료는 건드리지 않고 보이는 것만 가린다.
+        */}
+        <Card id="set-privacy" className="scroll-mt-36 lg:scroll-mt-6">
+          <SectionTitle>화면 공유</SectionTitle>
+          {/*
+            네모 체크박스 대신 누르는 단추로 둔다.
+            체크박스는 실제 그림이 20px 라 손끝으로 겨냥하기 어렵고,
+            이 화면의 다른 켜고 끄기와도 생김새가 달랐다.
+          */}
+          <button
+            type="button"
+            aria-pressed={settings.privacyMode === true}
+            onClick={() =>
+              updateSettings({ privacyMode: !(settings.privacyMode === true) })
+            }
+            className={`flex w-full items-start gap-3 rounded-card px-4 py-3.5 text-left ring-1 transition-colors ${
+              settings.privacyMode
+                ? "bg-aqua-50 ring-aqua-200 dark:bg-aqua-500/10"
+                : "bg-card-soft ring-stone-line hover:bg-aqua-50/60"
+            }`}
+          >
+            <span
+              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md ring-1 ${
+                settings.privacyMode
+                  ? "bg-sel text-sel-ink ring-transparent"
+                  : "bg-card ring-stone-line"
+              }`}
+            >
+              {settings.privacyMode && <CheckIcon className="h-4 w-4" />}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[0.9375rem] font-extrabold text-ink">
+                화면 공유 모드
+              </span>
+              <span className="mt-1 block text-[0.8125rem] leading-relaxed text-ink-sub">
+                고객 이름을 <b>김○희</b> 처럼 가리고 연락처를 모두 숨깁니다.
+                화면을 함께 보거나 사진을 찍어 보낼 때 켜세요. 저장된 기록은
+                그대로이며, 끄면 원래대로 보입니다.
+              </span>
+            </span>
+          </button>
+        </Card>
+
+        {/* 서비스 · 이용권 상품 (매장 가격표) */}
+        <Card id="set-product" className="scroll-mt-36 lg:scroll-mt-6">
+          <SectionTitle>서비스 · 이용권 상품</SectionTitle>
+          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
+            매장이 실제로 판매하는 것과 금액입니다. 여기 적어 둔 내용을 이용권
+            등록 화면과 방문 기록의 프로그램 목록이 그대로 읽습니다. 가격을
+            바꾸면 다음 등록부터 바로 반영되고, 이미 팔린 이용권의 금액은
+            그때 팔린 금액 그대로 남습니다.
+          </p>
+          <ProductTable />
+        </Card>
+
         <Card id="set-rules" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>고객관리 기준</SectionTitle>
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">

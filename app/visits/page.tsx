@@ -7,7 +7,7 @@ import VisitForm from "@/components/visits/VisitForm";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
 import { daysAgo, formatDateKr, formatRelative, todayISO } from "@/lib/utils/date";
-import { formatKrw } from "@/lib/utils/format";
+import { displayName, formatKrw } from "@/lib/utils/format";
 import {
   Badge,
   Button,
@@ -49,7 +49,7 @@ function programStyle(programName?: string, isConsult?: boolean) {
 }
 
 export default function VisitsPage() {
-  const { visits, customers, staff, removeVisit, restoreVisit } = useStore();
+  const { visits, customers, staff, removeVisit, restoreVisit, privacyMode } = useStore();
   const toast = useToast();
   const [openForm, setOpenForm] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | undefined>();
@@ -237,7 +237,7 @@ export default function VisitsPage() {
                   href={`/customers/${v.customerId}`}
                   className="tap-line font-bold text-ink hover:text-aqua-700"
                 >
-                  {customerName(v.customerId)}
+                  {displayName(customerName(v.customerId), privacyMode)}
                 </Link>
                 <Badge tone={st.badge} dot>
                   {v.type === "consult" ? "상담" : (v.programName ?? "방문")}

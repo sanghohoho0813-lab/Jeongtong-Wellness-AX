@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import { HeroCard } from "@/components/ui";
 import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
 import TaskCard from "@/components/briefing/TaskCard";
@@ -23,7 +24,7 @@ function PreviewRow({
   rank: number;
   onOpen: () => void;
 }) {
-  const { customers } = useStore();
+  const { customers, privacyMode } = useStore();
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
   return (
@@ -41,7 +42,7 @@ function PreviewRow({
           href={`/customers/${customer.id}`}
           className="tap-line text-[1.0625rem] font-extrabold text-white hover:text-aqua-200"
         >
-          {customer.name}
+          {displayName(customer.name, privacyMode)}
         </Link>
         <p className="line-clamp-2 text-[0.8125rem] leading-snug text-deep-sub">
           <span className="font-bold text-aqua-300">
@@ -54,7 +55,7 @@ function PreviewRow({
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`${customer.name} 처리하기`}
+        aria-label={`${displayName(customer.name, privacyMode)} 처리하기`}
         className="touch-target inline-flex shrink-0 items-center rounded-full bg-white/15 px-4 text-sm font-extrabold text-white ring-1 ring-white/20 transition-colors hover:bg-white/25"
       >
         처리

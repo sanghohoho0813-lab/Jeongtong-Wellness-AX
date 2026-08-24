@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/icons";
 import { NAV_TONE_CLASS, SIDEBAR_ITEMS, navItemsFor } from "./nav-items";
 import { buildBackupFile, downloadFile } from "@/lib/utils/export";
-import { displayPhone, phoneDigits } from "@/lib/utils/format";
+import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
 
@@ -98,8 +98,7 @@ export default function CommandPalette({
     visits,
     memberships,
     staff,
-    branches,
-  } = useStore();
+    branches, privacyMode } = useStore();
   const { startTour } = useTour();
   const toast = useToast();
 
@@ -268,13 +267,13 @@ export default function CommandPalette({
         return {
           id: `cust-${d.customer.id}`,
           group: "고객" as const,
-          label: d.customer.name,
+          label: displayName(d.customer.name, privacyMode),
           hint: `${displayPhone(d.customer.phone, canSeePhone)} · 방문 ${d.visitCount}회${
             d.lastVisitDate ? ` · 최근 ${formatRelative(d.lastVisitDate)}` : ""
           }`,
           icon: (
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-aqua-50 to-aqua-100 text-xs font-extrabold text-aqua-800 ring-1 ring-aqua-200/60">
-              {d.customer.name.slice(0, 1)}
+              {displayName(d.customer.name, privacyMode).slice(0, 1)}
             </span>
           ),
           badge: (
@@ -300,6 +299,7 @@ export default function CommandPalette({
     derivedById,
     opportunityById,
     canSeePhone,
+    privacyMode,
     go,
     onClose,
     onRecordVisit,

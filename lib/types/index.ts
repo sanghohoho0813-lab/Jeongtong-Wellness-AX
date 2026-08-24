@@ -46,6 +46,22 @@ export interface Customer {
   birthYear?: number;
   registeredAt: string; // ISO date
   assignedStaffId?: string;
+  /**
+   * 연령대 — 기존 고객차트가 생년이 아니라 "60대"처럼 대(帶)로 적혀 있다.
+   * 없는 생년을 지어내지 않기 위해 적힌 그대로 따로 보관한다.
+   * (Supabase: customers.age_group text)
+   */
+  ageGroup?: string;
+  /**
+   * 고객 원문 상담메모 — 고객이 처음 이야기한 내용을 **그대로** 옮겨 둔 것.
+   *
+   * 여기에는 고객이 쓴 신체 표현이 그대로 들어올 수 있다.
+   * 시스템은 이 글을 읽어 상태를 판정하거나 무엇을 하라고 권하지 않는다.
+   * 우선순위·매출기회 계산에 입력으로 넣지 않으며, 화면에서도 항상
+   * "고객이 말한 그대로"라는 것을 밝혀 보여준다.
+   * (Supabase: customers.consultation_note text)
+   */
+  consultationNote?: string;
   memo?: string; // 일반 특이사항
   /**
    * preferredCareAreas — 고객 프로필 기준 "주요 케어 부위".
@@ -142,6 +158,40 @@ export const BODY_PART_LABELS: Record<BodyPart, string> = {
   foot_ankle: "발/발목",
   etc: "기타",
 };
+
+// ---------- 서비스 · 상품 (가격 Master) ----------
+
+/**
+ * 매장이 실제로 판매하는 서비스·이용권 한 줄.
+ *
+ * 예전에는 프로그램명과 금액이 화면 코드 안에 흩어져 박혀 있었다.
+ * 그래서 가격이 바뀌면 개발자가 코드를 고쳐야 했고, 화면마다 값이 달라질
+ * 수 있었다. 실제 매장 가격표를 이 한 곳에 두고 이용권 등록·방문 기록이
+ * 모두 여기를 보게 한다.
+ *
+ * 매장 가격표에 없는 항목(유효기간·할인율·환불규정 등)은 만들지 않는다.
+ * (Supabase: service_products)
+ */
+export interface ServiceProduct {
+  id: string;
+  branchId: string;
+  /** 상품명 — 예: "대왕쑥뜸 10회권" */
+  name: string;
+  /** 제공 서비스명 — 방문 기록의 프로그램과 같은 값을 쓴다 */
+  serviceName: string;
+  /** 제공 횟수 (1 이면 단회 이용) */
+  sessionCount: number;
+  /** 판매가 (원) */
+  price: number;
+  active: boolean;
+  sortOrder: number;
+  /**
+   * 이 값의 출처.
+   *  price_sheet — 매장 가격표에서 그대로 옮긴 것
+   *  manual      — 운영 중에 매장이 직접 추가한 것
+   */
+  source: "price_sheet" | "manual";
+}
 
 // ---------- 이용권 ----------
 
@@ -381,6 +431,12 @@ export interface AppSettings {
   careRules: CareRuleSettings;
   /** 매출기회 판정 기준 (없으면 기본값 사용 — 기존 저장 데이터 호환) */
   opportunityRules?: OpportunityRuleSettings;
+  /**
+   * 화면 공유 모드 — 켜면 고객 이름과 연락처를 가려서 보여준다.
+   * 실제 고객자료를 넣은 채로 화면을 함께 보거나 시연할 때 쓴다.
+   * 저장된 자료 자체는 그대로이며 보이는 것만 가린다.
+   */
+  privacyMode?: boolean;
   /** 마지막으로 전체 백업 파일을 내려받은 시각 (ISO datetime) */
   lastBackupAt?: string;
 }

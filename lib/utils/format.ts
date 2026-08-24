@@ -10,6 +10,16 @@ export function formatKrw(amount: number): string {
   return `${amount.toLocaleString("ko-KR")}원`;
 }
 
+/**
+ * 금액을 원 단위 그대로 — 가격표·이용권 금액처럼 정확해야 하는 자리에 쓴다.
+ *
+ * formatKrw 는 45,000원을 "5만원"으로 반올림한다. 지표 요약에는 그 편이
+ * 읽기 좋지만, 가격표에서는 실제로 받는 돈과 화면이 달라진다.
+ */
+export function formatWon(amount: number): string {
+  return `${Math.round(amount).toLocaleString("ko-KR")}원`;
+}
+
 export function formatCount(n: number, unit = "명"): string {
   return `${n.toLocaleString("ko-KR")}${unit}`;
 }
@@ -62,6 +72,29 @@ export function maskPhone(phone: string): string {
 /** 권한에 따라 연락처를 그대로 보여주거나 마스킹한다 */
 export function displayPhone(phone: string, canSeePhone: boolean): string {
   return canSeePhone ? formatPhone(phone) : maskPhone(phone);
+}
+
+/**
+ * 고객 이름 가리기 — 화면 공유 모드에서 쓴다.
+ *
+ * 성과 마지막 글자는 남긴다. 완전히 가리면 원장님이 화면을 보며
+ * "이분" 이라고 짚을 수가 없어서 도구로 쓸 수 없기 때문이다.
+ *   김영희 → 김○희 / 최정철 → 최○철 / 김청하 → 김○하
+ *   두 글자면 → 김○ / 한 글자면 → ○
+ */
+export function maskName(name: string): string {
+  const n = name.trim();
+  if (n.length <= 1) return "○";
+  if (n.length === 2) return `${n[0]}○`;
+  return `${n[0]}${"○".repeat(n.length - 2)}${n[n.length - 1]}`;
+}
+
+/**
+ * 화면에 보일 고객 이름.
+ * 화면 공유 모드가 켜져 있으면 가려서 보여준다 (저장된 값은 그대로다).
+ */
+export function displayName(name: string, privacyMode: boolean): string {
+  return privacyMode ? maskName(name) : name;
 }
 
 /**

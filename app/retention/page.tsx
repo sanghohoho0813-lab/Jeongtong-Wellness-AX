@@ -9,7 +9,7 @@ import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
 import { CustomerDerived, SalesOpportunity } from "@/lib/types";
 import { daysAgo, formatRelative } from "@/lib/utils/date";
-import { displayPhone } from "@/lib/utils/format";
+import { displayName, displayPhone } from "@/lib/utils/format";
 import {
   Badge,
   Card,
@@ -33,11 +33,13 @@ function CustomerRow({
   derived,
   note,
   canSeePhone,
+  privacyMode,
   opportunity,
 }: {
   derived: CustomerDerived;
   note: string;
   canSeePhone: boolean;
+  privacyMode: boolean;
   opportunity?: SalesOpportunity;
 }) {
   const c = derived.customer;
@@ -58,7 +60,7 @@ function CustomerRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="shrink-0 text-[1.0625rem] font-extrabold text-ink">
-            {c.name}
+            {displayName(c.name, privacyMode)}
           </span>
           {opportunity && opportunity.type !== "none" && (
             <span className="min-w-0 overflow-hidden">
@@ -100,7 +102,7 @@ const GROUP_ACCENT: Record<string, string> = {
 };
 
 export default function RetentionPage() {
-  const { derivedById, opportunityById, settings, briefingTasks, canSeePhone } =
+  const { derivedById, opportunityById, settings, briefingTasks, canSeePhone, privacyMode } =
     useStore();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const rules = settings.careRules;
@@ -228,7 +230,7 @@ export default function RetentionPage() {
                 href={`/customers/${d.customer.id}`}
                 className="tap-line font-extrabold text-white underline decoration-aqua-400/60 underline-offset-4 hover:text-aqua-200"
               >
-                {d.customer.name}
+                {displayName(d.customer.name, privacyMode)}
               </Link>
               <Em> ({d.priorityScore})</Em>
               {i < topPriority.length - 1 ? ", " : ""}
@@ -315,6 +317,7 @@ export default function RetentionPage() {
                       derived={r.derived}
                       note={r.note}
                       canSeePhone={canSeePhone}
+                      privacyMode={privacyMode}
                       opportunity={opportunityById.get(r.derived.customer.id)}
                     />
                   ),

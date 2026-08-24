@@ -4,13 +4,14 @@
 
 import Link from "next/link";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import { daysAgo } from "@/lib/utils/date";
 import { formatRelative } from "@/lib/utils/date";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { ChevronRightIcon, RefreshIcon } from "@/components/ui/icons";
 
 export default function RevisitPreview() {
-  const { customers, settings } = useStore();
+  const { customers, settings, privacyMode } = useStore();
   const rules = settings.careRules;
 
   const due = customers
@@ -53,7 +54,7 @@ export default function RevisitPreview() {
                 className="flex items-center gap-3 py-2.5 hover:bg-card-soft"
               >
                 <span className="min-w-0 flex-1 truncate font-semibold text-ink">
-                  {c.name}
+                  {displayName(c.name, privacyMode)}
                 </span>
                 <Badge tone={over > 0 ? "danger" : "aqua"}>
                   {over > 0

@@ -22,6 +22,7 @@
  *  /analytics      ✅      ❌      성과 지표 — ADMIN 전용
  *  /branches       ✅      ❌      경영지표 — ADMIN 전용
  *  /settings       ✅      ❌      STAFF는 /more(계정)에서 화면 표시만 조정
+ *  /service        ✅      ✅      서비스 표준 (구성·제품·판매 가격)
  *  /more           ✅      ✅      모바일 보조 메뉴 / STAFF는 계정·화면 표시 전용
  *  /guide          ✅      ✅      사용 가이드 (문서)
  *  /intro          ✅      ✅      기획의도 (문서)
@@ -66,6 +67,7 @@ export function toAppRole(role: StaffRole): AppRole {
  */
 export const STAFF_ROUTES = [
   "/customers",
+  "/service", // 서비스 표준 — 직원이 우리 서비스 구성·가격을 확인하는 화면
   "/more",
   "/guide", // 사용 가이드 — 직원이 업무를 익히는 문서
   "/intro", // 기획의도 — 왜 이 시스템을 쓰는지

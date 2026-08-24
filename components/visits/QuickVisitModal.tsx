@@ -11,7 +11,7 @@
 import VisitForm from "@/components/visits/VisitForm";
 import { Modal } from "@/components/ui";
 import { useStore } from "@/lib/data/store";
-import { displayPhone } from "@/lib/utils/format";
+import { displayName, displayPhone } from "@/lib/utils/format";
 import { formatRelative } from "@/lib/utils/date";
 
 export default function QuickVisitModal({
@@ -21,14 +21,18 @@ export default function QuickVisitModal({
   customerId?: string;
   onClose: () => void;
 }) {
-  const { derivedById, canSeePhone } = useStore();
+  const { derivedById, canSeePhone, privacyMode } = useStore();
   const derived = customerId ? derivedById.get(customerId) : undefined;
 
   return (
     <Modal
       open={!!customerId && !!derived}
       onClose={onClose}
-      title={derived ? `${derived.customer.name} 님 방문 기록` : "방문 기록"}
+      title={
+        derived
+          ? `${displayName(derived.customer.name, privacyMode)} 님 방문 기록`
+          : "방문 기록"
+      }
       wide
     >
       {derived && (
@@ -36,11 +40,11 @@ export default function QuickVisitModal({
           {/* 누구의 기록인지 한 번 더 — 검색에서 바로 열었을 때의 안전장치 */}
           <div className="mb-4 flex items-center gap-3 rounded-card bg-card-soft px-3.5 py-3 ring-1 ring-black/[0.04]">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-500 to-deep-800 font-extrabold text-white">
-              {derived.customer.name.slice(0, 1)}
+              {displayName(derived.customer.name, privacyMode).slice(0, 1)}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate font-extrabold text-ink">
-                {derived.customer.name}
+                {displayName(derived.customer.name, privacyMode)}
               </p>
               <p className="tabular line-clamp-2 text-xs leading-snug text-ink-sub">
                 {displayPhone(derived.customer.phone, canSeePhone)} · 방문{" "}

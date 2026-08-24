@@ -42,6 +42,13 @@ create table if not exists customers (
   phone text not null,
   gender text check (gender in ('female','male','other')),
   birth_year int,
+  -- 연령대 ("60대") — 매장 고객차트가 생년이 아니라 대(帶)로 적혀 있다.
+  -- 없는 생년을 지어내지 않기 위해 적힌 그대로 따로 보관한다.
+  age_group text,
+  -- 고객 원문 상담메모 — 고객이 말한 그대로 옮긴 글.
+  -- 애플리케이션은 이 값을 읽어 상태를 판정하거나 실행을 권하지 않는다
+  -- (우선순위·매출기회 계산의 입력이 아니다). 표시 전용.
+  consultation_note text,
   registered_at date not null default current_date,
   assigned_staff_id uuid references staff(id),
   memo text,
@@ -55,6 +62,24 @@ create table if not exists customers (
 );
 create index if not exists idx_customers_branch on customers(branch_id);
 create index if not exists idx_customers_next_manage on customers(next_manage_date);
+
+-- 서비스 · 이용권 상품 (매장 가격표)
+-- 매장이 실제로 파는 것과 금액. 이용권 등록과 방문 기록의 프로그램 목록이
+-- 모두 이 표를 읽는다. 가격표에 없는 항목(유효기간·할인율·환불규정)은 두지 않는다.
+create table if not exists service_products (
+  id uuid primary key default gen_random_uuid(),
+  branch_id uuid not null references branches(id),
+  name text not null,            -- 상품명 ("대왕쑥뜸 10회권")
+  service_name text not null,    -- 제공 서비스명 ("대왕쑥뜸")
+  session_count int not null check (session_count >= 1),
+  price int not null check (price >= 0),
+  active boolean not null default true,
+  sort_order int not null default 0,
+  -- price_sheet: 매장 가격표에서 옮긴 것 / manual: 운영 중 직접 추가한 것
+  source text not null default 'manual' check (source in ('price_sheet','manual')),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_products_branch on service_products(branch_id, sort_order);
 
 -- 이용권
 create table if not exists memberships (
@@ -142,6 +167,8 @@ create table if not exists branch_settings (
   -- AX 매출기회 기준 (OpportunityRuleSettings)
   opportunity_rules jsonb not null default '{}',
   last_backup_at timestamptz,
+  -- 화면 공유 모드 — 켜면 고객 이름·연락처를 가려서 보여준다 (저장값은 그대로)
+  privacy_mode boolean not null default false,
   updated_at timestamptz not null default now()
 );
 
@@ -210,12 +237,21 @@ alter table branches   enable row level security;
 alter table staff      enable row level security;
 alter table customers  enable row level security;
 alter table memberships enable row level security;
+alter table service_products enable row level security;
 alter table visits     enable row level security;
 alter table customer_preferences enable row level security;
 alter table briefing_task_logs   enable row level security;
 alter table visit_applied_preferences enable row level security;
 alter table branch_settings           enable row level security;
 alter table staff_display_settings    enable row level security;
+
+-- 서비스 · 이용권 상품 : 같은 지점이면 누구나 조회(직원도 가격을 알아야 한다),
+-- 가격 변경은 ADMIN 만
+create policy products_read on service_products for select
+  using (branch_id = current_branch_id());
+create policy products_write on service_products for all
+  using (branch_id = current_branch_id() and is_admin())
+  with check (branch_id = current_branch_id() and is_admin());
 
 -- 지점 / 직원 : 조회는 같은 지점, 변경은 ADMIN 만
 create policy branches_read on branches for select

@@ -21,7 +21,7 @@ import { createPortal } from "react-dom";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatusBadge } from "@/components/ui";
 import { PlusIcon, SearchIcon, XIcon } from "@/components/ui/icons";
-import { displayPhone, phoneDigits } from "@/lib/utils/format";
+import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative, todayISO } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
 
@@ -39,7 +39,7 @@ export default function RecordSheet({
   /** 처음 오신 분 — 검색어를 이름으로 넘겨 등록 화면을 연다 */
   onNew: (name: string) => void;
 }) {
-  const { derivedById, canSeePhone } = useStore();
+  const { derivedById, canSeePhone, privacyMode } = useStore();
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -174,7 +174,7 @@ export default function RecordSheet({
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="min-w-0 truncate text-[1.0625rem] font-extrabold text-ink">
-                          {d.customer.name}
+                          {displayName(d.customer.name, privacyMode)}
                         </span>
                         {isDue && (
                           <span className="shrink-0 rounded-full bg-aqua-500 px-2 py-0.5 text-[0.6875rem] font-extrabold text-white">

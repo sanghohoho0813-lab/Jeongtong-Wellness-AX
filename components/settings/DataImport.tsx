@@ -203,6 +203,16 @@ export default function DataImport() {
             <p className="truncate text-sm text-ink-sub">
               파일: <b className="text-ink-soft">{csvFileName}</b>
             </p>
+            {/*
+              상담내역을 어떻게 다루는지 먼저 밝힌다.
+              고객이 말한 표현이 그대로 들어오는 칸이라, 시스템이 이를
+              어떤 판정에도 쓰지 않는다는 것을 옮기기 전에 알려야 한다.
+            */}
+            <p className="rounded-card bg-aqua-50 px-3.5 py-2.5 text-[0.8125rem] leading-relaxed text-aqua-800 dark:bg-aqua-500/10">
+              상담내역은 <b>고객이 말한 그대로</b> 보관합니다. 시스템이 뜻을
+              풀이하거나 관리 방법을 자동으로 정하지 않으며, 우선순위 ·
+              매출기회 계산에도 쓰지 않습니다.
+            </p>
 
             {csvPreview.fresh.length === 0 &&
             csvPreview.duplicated.length === 0 ? (
@@ -271,14 +281,30 @@ export default function DataImport() {
                   {csvPreview.fresh.slice(0, 5).map((r) => (
                     <li
                       key={r.line}
-                      className="flex items-center gap-3 bg-card-soft px-3 py-2 text-sm"
+                      className="bg-card-soft px-3 py-2 text-sm"
                     >
-                      <span className="min-w-0 flex-1 truncate font-bold text-ink">
-                        {r.name}
-                      </span>
-                      <span className="nowrap-num shrink-0 text-xs text-ink-sub">
-                        {r.phone ? formatPhone(r.phone) : "연락처 없음"}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="min-w-0 flex-1 truncate font-bold text-ink">
+                          {r.name}
+                          {r.ageGroup ? (
+                            <span className="ml-1.5 font-normal text-ink-sub">
+                              {r.ageGroup}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="nowrap-num shrink-0 text-xs text-ink-sub">
+                          {r.phone ? formatPhone(r.phone) : "연락처 없음"}
+                        </span>
+                      </div>
+                      {/*
+                        상담내역은 고객이 말한 그대로다.
+                        시스템이 뜻을 풀어 쓰지 않고 원문만 보여준다.
+                      */}
+                      {r.consultationNote && (
+                        <p className="mt-0.5 line-clamp-2 text-[0.8125rem] text-ink-sub">
+                          상담내역: {r.consultationNote}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -289,7 +315,7 @@ export default function DataImport() {
             {csvPreview.duplicated.length > 0 && (
               <div>
                 <p className="mb-1.5 text-sm font-bold text-ink">
-                  이미 등록된 연락처 {csvPreview.duplicated.length}명은
+                  이미 등록된 고객 {csvPreview.duplicated.length}명은
                   어떻게 할까요?
                 </p>
                 <SegmentedControl<"skip" | "update">

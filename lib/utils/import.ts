@@ -11,6 +11,9 @@
  */
 
 import {
+  BODY_PART_LABELS,
+  BodyPart,
+  BodyPartRecord,
   Branch,
   Customer,
   Membership,
@@ -89,6 +92,9 @@ export type ImportField =
   | "phone"
   | "gender"
   | "birthYear"
+  | "ageGroup"
+  | "consultationNote"
+  | "careAreas"
   | "registeredAt"
   | "nextManageDate"
   | "memo";
@@ -111,6 +117,18 @@ const HEADER_DICT: Array<{ field: ImportField; keys: string[] }> = [
     keys: ["다음관리예정일", "다음관리일", "다음방문예정", "예정일", "nextmanagedate"],
   },
   { field: "memo", keys: ["메모", "비고", "특이사항", "note", "memo"] },
+  /*
+   * 아래 셋은 매장이 쓰던 고객차트에 실제로 있던 칸이다.
+   *  - 연령      : 생년이 아니라 "60대"처럼 대(帶)로 적혀 있다
+   *  - 상담내역  : 고객이 처음 이야기한 내용 (원문 그대로 옮긴다)
+   *  - 관리부위  : 비어 있는 경우가 많다 — 비면 비운 채로 둔다
+   */
+  { field: "ageGroup", keys: ["연령", "연령대", "나이", "나이대", "agegroup", "age"] },
+  {
+    field: "consultationNote",
+    keys: ["상담내역", "상담내용", "상담메모", "상담", "consultation"],
+  },
+  { field: "careAreas", keys: ["관리부위", "케어부위", "부위", "careareas"] },
 ];
 
 /**
@@ -149,9 +167,16 @@ export interface ImportRow {
   phone: string;
   gender?: "female" | "male";
   birthYear?: number;
+  ageGroup?: string;
+  /** 고객이 말한 그대로 — 시스템이 해석하지 않는다 */
+  consultationNote?: string;
   registeredAt?: string;
   nextManageDate?: string;
   memo?: string;
+  /** 관리부위 칸에서 알아본 부위 (알아보지 못한 말은 careAreasRaw 로 남는다) */
+  careAreas?: BodyPartRecord[];
+  /** 부위로 알아보지 못해 그대로 남긴 말 */
+  careAreasRaw?: string;
   /** 이미 등록된 같은 연락처 고객 */
   existingId?: string;
   existingName?: string;
@@ -211,6 +236,70 @@ function normalizeGender(value: string): "female" | "male" | undefined {
   if (["여", "여성", "여자", "f", "female", "w"].includes(v)) return "female";
   if (["남", "남성", "남자", "m", "male"].includes(v)) return "male";
   return undefined;
+}
+
+/**
+ * 연령 칸 정규화 — "60대", "60", "60세" 를 모두 "60대"로 맞춘다.
+ * 대(帶)를 알아볼 수 없으면 적힌 그대로 둔다. 없는 값을 지어내지 않는다.
+ */
+export function normalizeAgeGroup(value: string): string | undefined {
+  const v = value.trim();
+  if (!v) return undefined;
+  const m = /^(\d{1,3})\s*(대|세|살)?$/.exec(v);
+  if (m) {
+    const n = Number(m[1]);
+    if (n >= 10 && n <= 100) return `${Math.floor(n / 10) * 10}대`;
+  }
+  return v;
+}
+
+/** 부위 이름 → 부위 코드 (매장이 쓰던 표기를 넉넉히 받는다) */
+const CARE_AREA_DICT: Array<{ part: BodyPart; keys: string[] }> = [
+  { part: "neck_shoulder", keys: ["목", "어깨", "목어깨", "목/어깨", "견부", "승모근"] },
+  { part: "back", keys: ["등", "배부", "견갑"] },
+  { part: "waist", keys: ["허리", "요부"] },
+  { part: "abdomen", keys: ["복부", "배", "아랫배", "윗배"] },
+  { part: "pelvis_hip", keys: ["골반", "엉덩이", "둔부", "고관절"] },
+  { part: "arm", keys: ["팔", "상지", "팔꿈치", "손"] },
+  { part: "knee", keys: ["무릎", "슬부"] },
+  { part: "leg", keys: ["다리", "하지", "허벅지", "종아리"] },
+  { part: "foot_ankle", keys: ["발", "발목", "족부"] },
+];
+
+/**
+ * 관리부위 칸을 부위 목록으로 바꾼다.
+ * 쉼표·슬래시·가운뎃점으로 나눠 읽고, 알아보지 못한 말은 버리지 않고
+ * raw 로 돌려준다 (메모로 남겨 사람이 확인할 수 있게).
+ */
+export function normalizeCareAreas(value: string): {
+  parts: BodyPartRecord[];
+  unknown: string[];
+} {
+  const v = value.trim();
+  if (!v) return { parts: [], unknown: [] };
+  const tokens = v
+    .split(/[,/·|]|\s{2,}/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const parts: BodyPartRecord[] = [];
+  const unknown: string[] = [];
+  const seen = new Set<BodyPart>();
+
+  for (const token of tokens) {
+    const norm = token.replace(/[\s()[\]{}._-]/g, "");
+    const hit = CARE_AREA_DICT.find(
+      ({ part, keys }) =>
+        keys.some((k) => norm === k || norm.includes(k)) ||
+        norm === BODY_PART_LABELS[part].replace("/", ""),
+    );
+    if (hit && !seen.has(hit.part)) {
+      seen.add(hit.part);
+      parts.push({ part: hit.part });
+    } else if (!hit) {
+      unknown.push(token);
+    }
+  }
+  return { parts, unknown };
 }
 
 function normalizeBirthYear(value: string): number | undefined {
@@ -273,9 +362,18 @@ export function parseCustomerCsv(
   }
 
   const byPhone = new Map<string, Customer>();
+  /*
+   * 연락처가 없는 고객도 겹침을 잡아야 한다.
+   * 매장 고객차트에는 연락처가 비어 있는 분이 많아서, 연락처만 보면
+   * 같은 파일을 두 번 올렸을 때 같은 분이 두 명으로 늘어난다.
+   * 연락처가 없을 때만 이름으로 한 번 더 본다 (동명이인은 사람이 확인).
+   */
+  const byName = new Map<string, Customer>();
   for (const c of existing) {
     const d = phoneDigits(c.phone);
     if (d && !byPhone.has(d)) byPhone.set(d, c);
+    const n = c.name.replace(/\s/g, "");
+    if (n && !byName.has(n)) byName.set(n, c);
   }
 
   const fresh: ImportRow[] = [];
@@ -312,18 +410,25 @@ export function parseCustomerCsv(
     }
     if (digits) seenInFile.add(digits);
 
+    const care = normalizeCareAreas(get("careAreas"));
     const row: ImportRow = {
       line,
       name,
       phone: digits,
       gender: normalizeGender(get("gender")),
       birthYear: normalizeBirthYear(get("birthYear")),
+      ageGroup: normalizeAgeGroup(get("ageGroup")),
+      consultationNote: get("consultationNote") || undefined,
       registeredAt: normalizeDate(get("registeredAt")),
       nextManageDate: normalizeDate(get("nextManageDate")),
       memo: get("memo") || undefined,
+      careAreas: care.parts.length > 0 ? care.parts : undefined,
+      careAreasRaw: care.unknown.length > 0 ? care.unknown.join(", ") : undefined,
     };
 
-    const hit = digits ? byPhone.get(digits) : undefined;
+    const hit = digits
+      ? byPhone.get(digits)
+      : byName.get(name.replace(/\s/g, ""));
     if (hit) {
       duplicated.push({ ...row, existingId: hit.id, existingName: hit.name });
     } else {
@@ -339,9 +444,9 @@ export function customerImportTemplate(): string {
   return (
     "﻿" +
     [
-      "고객명,연락처,성별,출생연도,등록일,다음관리예정일,메모",
-      "홍길동,010-1234-5678,여,1968,2024-03-05,2024-04-02,어깨 집중 관리 희망",
-      "김영수,010-2345-6789,남,1972,2024-05-11,,",
+      "고객명,연락처,연령,등록일,상담내역,관리부위,특이사항,다음관리예정일",
+      "홍길동,010-1234-5678,60대,2026-03-05,어깨가 무겁다고 이야기함,목/어깨,조용한 편을 선호,2026-04-02",
+      "김영수,010-2345-6789,50대,2026-05-11,건강관리,,,",
     ].join("\r\n")
   );
 }

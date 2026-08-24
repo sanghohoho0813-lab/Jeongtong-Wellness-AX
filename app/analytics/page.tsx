@@ -16,7 +16,7 @@ import {
   isAfter,
   localDateOf,
 } from "@/lib/utils/date";
-import { formatKrw, formatPercent } from "@/lib/utils/format";
+import { formatKrw, formatPercent, formatWon } from "@/lib/utils/format";
 import {
   Card,
   Em,
@@ -28,6 +28,7 @@ import {
 import { CheckIcon, ChevronRightIcon, TrendUpIcon } from "@/components/ui/icons";
 import {
   monthlyOpportunityResults,
+  renewalRevenueAfterHandling,
   summarizeOpportunities,
   summarizeStaffActivity,
 } from "@/lib/scoring/opportunity";
@@ -106,6 +107,14 @@ export default function AnalyticsPage() {
   // AX 매출기회 집계 — Priority 지표와 별도로 계산한다.
   // 실제 재방문은 처리 시각 이후의 방문 기록이 존재하는 경우만 센다 (추정 없음)
   // 방문 일시는 지역 시각, 처리 시각은 UTC 로 저장되므로 절대 시각으로 비교한다
+  /*
+   * 재등록 기회를 관리한 뒤, 그 고객에게 실제로 등록된 이용권 금액.
+   * 예상 매출이 아니라 이미 저장된 구매 기록만 더한다.
+   */
+  const renewalRevenue = renewalRevenueAfterHandling(
+    briefingTasks,
+    memberships,
+  );
   const opp = summarizeOpportunities(briefingTasks, (customerId, sinceIso) =>
     visits.some(
       (v) =>
@@ -524,6 +533,30 @@ export default function AnalyticsPage() {
                   </li>
                 ))}
               </ol>
+
+              {/*
+                마지막 칸 — 실제로 들어온 돈.
+                퍼널의 앞 단계는 '건수'라 여기까지 와야 이야기가 끝난다.
+                다만 관리 뒤에 등록됐다고 해서 그 관리 때문이라고 단정할 수는
+                없어서, 이름도 '관리 후 실제 등록'으로 두고 그렇게 설명한다.
+              */}
+              <div className="mt-2.5 rounded-card border border-emerald-500/25 bg-emerald-500/[0.06] px-4 py-3.5 dark:bg-emerald-400/10">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="font-extrabold text-ink">
+                    관리 후 실제 등록된 이용권
+                  </span>
+                  <span className="nowrap-num ml-auto text-xl font-extrabold tabular text-ink">
+                    {renewalRevenue.count > 0
+                      ? formatWon(renewalRevenue.amount)
+                      : "데이터 축적 중"}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-ink-sub">
+                  {renewalRevenue.count > 0
+                    ? `재등록 기회를 처리한 뒤 ${renewalRevenue.windowDays}일 안에 실제로 등록된 이용권 ${renewalRevenue.count}건의 판매금액입니다. 이미 저장된 구매 기록만 더한 값이며, 관리가 원인이라고 단정하지는 않습니다.`
+                    : `재등록 기회를 처리한 뒤 ${renewalRevenue.windowDays}일 안에 등록된 이용권이 아직 없습니다. 실제 등록이 생기면 그 금액이 여기에 쌓입니다.`}
+                </p>
+              </div>
 
               {/* 월별 실행 추이 — 처리 이력이 있을 때만 */}
               {oppMonthlyTotal > 0 && (

@@ -200,3 +200,46 @@ describe("브리핑 과제 생성", () => {
     expect(tasks[0].outcome?.contactResult).toBe("reserved");
   });
 });
+
+/**
+ * 고객 원문 상담메모는 "고객이 말한 그대로"의 기록이다.
+ * 이 글에는 몸 상태에 대한 고객의 표현이 들어 있어서, 시스템이 이를
+ * 읽고 판정에 반영하는 순간 하지 말아야 할 일을 하게 된다.
+ * 아래 두 검사는 그 선이 코드에서 실제로 지켜지는지 확인한다.
+ */
+describe("원문 상담메모는 판정에 쓰이지 않는다", () => {
+  const base = {
+    visits: visitsAgo(-40, -25, -10),
+    memberships: [] as Membership[],
+  };
+
+  it("상담메모가 있어도 우선순위 점수가 달라지지 않는다", () => {
+    const without = calculateCustomerPriority(
+      { customer: customer(), ...base },
+      DEFAULT_CARE_RULES,
+    );
+    const withNote = calculateCustomerPriority(
+      {
+        customer: customer({
+          consultationNote: "우측 하반신 시림증상 / 구안와사",
+        }),
+        ...base,
+      },
+      DEFAULT_CARE_RULES,
+    );
+    expect(withNote.score).toBe(without.score);
+    expect(withNote.reasons).toEqual(without.reasons);
+    expect(withNote.categories).toEqual(without.categories);
+  });
+
+  it("판단 근거 문장에 상담메모 내용이 새어 나오지 않는다", () => {
+    const r = calculateCustomerPriority(
+      {
+        customer: customer({ consultationNote: "상지마비 증상" }),
+        ...base,
+      },
+      DEFAULT_CARE_RULES,
+    );
+    expect(r.reasons.join(" ")).not.toContain("상지마비");
+  });
+});

@@ -10,26 +10,19 @@ import { useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { Membership } from "@/lib/types";
 import { todayISO } from "@/lib/utils/date";
-import { formatKrw } from "@/lib/utils/format";
+import { formatWon } from "@/lib/utils/format";
 import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 
 /** 자주 판매하는 이용권 구성 — 누르면 프로그램·횟수·금액이 한 번에 채워진다 */
-const PRESETS: Array<{
-  programName: string;
-  totalCount: number;
-  price: number;
-}> = [
-  { programName: "쑥뜸 베이직 케어 10회권", totalCount: 10, price: 450000 },
-  { programName: "쑥뜸 베이직 케어 5회권", totalCount: 5, price: 240000 },
-  { programName: "쑥뜸 딥 릴랙스 케어 10회권", totalCount: 10, price: 600000 },
-  { programName: "쑥뜸 딥 릴랙스 케어 5회권", totalCount: 5, price: 320000 },
-  { programName: "반신 온열 케어 10회권", totalCount: 10, price: 380000 },
-  { programName: "반신 온열 케어 6회권", totalCount: 6, price: 240000 },
-];
-
-const COUNT_OPTIONS = [3, 5, 6, 10, 12, 20];
+/*
+ * 판매 구성은 여기 적어 두지 않는다.
+ * 예전에는 프로그램명과 금액이 이 파일에 박혀 있어서, 매장이 가격을
+ * 바꾸면 개발자가 코드를 고쳐야 했다. 이제는 설정의 '서비스 · 이용권 상품'
+ * 한 곳(매장 가격표)을 읽는다.
+ */
+const COUNT_OPTIONS = [1, 3, 5, 10, 20, 30];
 
 export default function MembershipForm({
   customerId,
@@ -43,7 +36,11 @@ export default function MembershipForm({
   onSaved: () => void;
   onCancel: () => void;
 }) {
-  const { addMembership, updateMembership, customers } = useStore();
+  const { addMembership, updateMembership, customers, products } = useStore();
+  /** 매장 가격표 — 판매 중인 것만, 적어 둔 순서대로 */
+  const presets = products
+    .filter((p) => p.active)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   const toast = useToast();
   const editing = !!membership;
 
@@ -66,10 +63,10 @@ export default function MembershipForm({
   const priceNum = Number(price.replace(/\D/g, "")) || 0;
   const perVisit = totalCount > 0 ? Math.round(priceNum / totalCount) : 0;
 
-  const applyPreset = (p: (typeof PRESETS)[number]) => {
-    setProgramName(p.programName);
-    setTotalCount(p.totalCount);
-    setRemaining(p.totalCount);
+  const applyPreset = (p: (typeof presets)[number]) => {
+    setProgramName(p.name);
+    setTotalCount(p.sessionCount);
+    setRemaining(p.sessionCount);
     setPrice(String(p.price));
     setError("");
   };
@@ -107,16 +104,16 @@ export default function MembershipForm({
     <div className="space-y-4">
       {/* 1) 자주 쓰는 구성 */}
       <div>
-        <FieldLabel>자주 판매하는 구성</FieldLabel>
+        <FieldLabel>매장 가격표</FieldLabel>
         <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-          {PRESETS.map((p) => {
+          {presets.map((p) => {
             const on =
-              programName === p.programName &&
-              totalCount === p.totalCount &&
+              programName === p.name &&
+              totalCount === p.sessionCount &&
               priceNum === p.price;
             return (
               <button
-                key={p.programName}
+                key={p.id}
                 type="button"
                 onClick={() => applyPreset(p)}
                 className={`touch-target flex items-center justify-between gap-2 rounded-btn px-3.5 py-2.5 text-left text-sm font-bold transition-colors ${
@@ -125,11 +122,11 @@ export default function MembershipForm({
                     : "bg-card-soft text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
                 }`}
               >
-                <span className="min-w-0 truncate">{p.programName}</span>
+                <span className="min-w-0 truncate">{p.name}</span>
                 <span
                   className={`nowrap-num shrink-0 text-xs ${on ? "text-white/80" : "text-ink-sub"}`}
                 >
-                  {formatKrw(p.price)}
+                  {formatWon(p.price)}
                 </span>
               </button>
             );
@@ -144,7 +141,7 @@ export default function MembershipForm({
           className={inputCls}
           value={programName}
           onChange={(e) => setProgramName(e.target.value)}
-          placeholder="예: 쑥뜸 베이직 케어 10회권"
+          placeholder="예: 대왕쑥뜸 10회권"
         />
       </div>
 

@@ -106,6 +106,7 @@ export default function CareReport({ customer }: { customer: Customer }) {
               {settings.companyName} 케어 기록
             </p>
             <p className="mt-1 text-2xl font-extrabold tracking-tight text-ink">
+              {/* 이 종이는 고객 본인에게 보여 드리는 것이라 이름을 가리지 않는다 */}
               {r.customer.name} 님
             </p>
           </div>

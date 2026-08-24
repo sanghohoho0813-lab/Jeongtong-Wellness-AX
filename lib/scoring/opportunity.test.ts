@@ -10,6 +10,7 @@ import { daysFromToday, todayISO } from "@/lib/utils/date";
 import {
   detectSalesOpportunity,
   monthlyOpportunityResults,
+  renewalRevenueAfterHandling,
   summarizeOpportunities,
   summarizeStaffActivity,
 } from "./opportunity";
@@ -407,5 +408,96 @@ describe("담당자별 실행 현황", () => {
       task("s2", "hold"),
     ]);
     expect(rows.map((r) => r.staffId)).toEqual(["s2", "s1"]);
+  });
+});
+
+/**
+ * 매출기회 → 실행 → 실제 등록.
+ * 여기서 세는 것은 "일어난 일"뿐이다. 예상 매출은 만들지 않는다.
+ */
+describe("관리 후 실제 등록된 이용권", () => {
+  const task = (patch: Record<string, unknown> = {}) => ({
+    customerId: "c-1",
+    status: "done",
+    statusChangedAt: "2026-08-01T10:00:00",
+    opportunity: {
+      type: "renewal" as const,
+      level: "high" as const,
+      label: "재등록 기회",
+      reasons: [],
+      action: "",
+    },
+    ...patch,
+  });
+  const ms = (patch: Record<string, unknown> = {}) => ({
+    id: "m-1",
+    customerId: "c-1",
+    purchasedAt: "2026-08-05",
+    price: 400000,
+    ...patch,
+  });
+
+  it("관리한 뒤 등록된 이용권 금액을 그대로 더한다", () => {
+    const r = renewalRevenueAfterHandling([task()], [ms()]);
+    expect(r.count).toBe(1);
+    expect(r.amount).toBe(400000);
+  });
+
+  it("관리 전에 산 이용권은 세지 않는다", () => {
+    const r = renewalRevenueAfterHandling(
+      [task()],
+      [ms({ purchasedAt: "2026-07-20" })],
+    );
+    expect(r.count).toBe(0);
+    expect(r.amount).toBe(0);
+  });
+
+  it("정해 둔 기간을 넘겨 등록된 것은 세지 않는다", () => {
+    const r = renewalRevenueAfterHandling(
+      [task()],
+      [ms({ purchasedAt: "2026-09-20" })],
+      30,
+    );
+    expect(r.count).toBe(0);
+  });
+
+  it("재방문 기회를 관리한 것은 재등록 매출로 세지 않는다", () => {
+    const r = renewalRevenueAfterHandling(
+      [
+        task({
+          opportunity: {
+            type: "revisit",
+            level: "normal",
+            label: "재방문 기회",
+            reasons: [],
+            action: "",
+          },
+        }),
+      ],
+      [ms()],
+    );
+    expect(r.count).toBe(0);
+  });
+
+  it("아직 처리하지 않은 과제는 세지 않는다", () => {
+    const r = renewalRevenueAfterHandling([task({ status: "pending" })], [ms()]);
+    expect(r.count).toBe(0);
+  });
+
+  it("같은 이용권을 두 번 세지 않는다", () => {
+    const r = renewalRevenueAfterHandling(
+      [task(), task({ statusChangedAt: "2026-08-02T10:00:00" })],
+      [ms()],
+    );
+    expect(r.count).toBe(1);
+    expect(r.amount).toBe(400000);
+  });
+
+  it("관리한 적이 없으면 0 이다", () => {
+    expect(renewalRevenueAfterHandling([], [ms()])).toEqual({
+      count: 0,
+      amount: 0,
+      windowDays: 30,
+    });
   });
 });

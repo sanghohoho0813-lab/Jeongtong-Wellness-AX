@@ -8,7 +8,7 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
 import { formatRelative } from "@/lib/utils/date";
-import { displayPhone, phoneDigits } from "@/lib/utils/format";
+import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { matchesQuery } from "@/lib/utils/hangul";
 import {
   Button,
@@ -71,7 +71,7 @@ const AVATAR_BY_STATUS: Record<CustomerStatus, string> = {
 
 export default function CustomersPage() {
   const router = useRouter();
-  const { derivedById, opportunityById, canSeePhone } = useStore();
+  const { derivedById, opportunityById, canSeePhone, privacyMode } = useStore();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<CustomerStatus | "all">("all");
   const [sort, setSort] = useState<SortKey>("priority");
@@ -307,7 +307,7 @@ export default function CustomersPage() {
                 {/* 이름이 먼저다 — 자리가 모자라면 상태 배지 쪽이 줄어든다 */}
                 <div className="flex items-center gap-2">
                   <span className="shrink-0 text-[1.0625rem] font-extrabold text-ink">
-                    {d.customer.name}
+                    {displayName(d.customer.name, privacyMode)}
                   </span>
                   <span className="min-w-0 overflow-hidden">
                     <CustomerStatusBadge status={d.status} />
