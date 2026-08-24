@@ -26,13 +26,19 @@ export const viewport: Viewport = {
  * 앱을 열 때마다 흰 화면이 번쩍이고 글자 크기도 한 번 튄다.
  * 그래서 화면을 그리기 전에 localStorage 를 직접 읽어 먼저 붙여 둔다.
  * (읽기 실패는 그냥 넘긴다 — 원래 하던 대로 리액트가 다시 붙인다.)
+ *
+ * 고객 화면(/my)은 저장된 매장 설정을 따르지 않는다.
+ * 그 설정은 이 기기를 쓰는 **직원**이 고른 값이고, 고객 휴대폰에는 아예
+ * 없다. 고객에게는 그 폰이 쓰는 밝기를 그대로 따라가는 편이 맞다.
+ * (원장님이 자기 폰으로 고객 화면을 열어 볼 때도 같은 규칙으로 움직인다)
  */
 const PREPAINT = `(function(){try{
 var r=document.documentElement,s=JSON.parse(localStorage.getItem("jeongtong-ax-v1")||"{}").settings||{};
-var t=s.theme||"light";
+var portal=location.pathname==="/my"||location.pathname.indexOf("/my/")===0;
+var t=portal?"system":(s.theme||"light");
 r.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;
-r.dataset.fontScale=s.fontScale||"default";
-r.dataset.density=s.density||"default";
+r.dataset.fontScale=portal?"default":(s.fontScale||"default");
+r.dataset.density=portal?"default":(s.density||"default");
 }catch(e){}})()`;
 
 export default function RootLayout({

@@ -26,11 +26,13 @@
 import { FormEvent, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { Button, Card, FieldLabel, inputCls } from "@/components/ui";
-import { PortalHeader } from "./PortalShell";
+import { PortalHeader, useDeviceTheme } from "./PortalShell";
 
 function Frame({ children }: { children: React.ReactNode }) {
+  // 로그인 화면도 폰의 밝기를 따라간다 (문 안쪽만 어두우면 이상하다)
+  useDeviceTheme();
   return (
-    <div className="min-h-dvh bg-bg">
+    <div className="min-h-dvh bg-stone-bg">
       <PortalHeader />
       <main className="mx-auto max-w-lg px-4 py-6">{children}</main>
     </div>

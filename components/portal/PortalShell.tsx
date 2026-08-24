@@ -14,7 +14,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import {
   BodyIcon,
   ClipboardIcon,
@@ -39,7 +39,7 @@ function isActive(pathname: string, href: string): boolean {
 /** 상단 브랜드 — 직원 화면과 같은 표식을 쓰되 이름만 MY WELLNESS 로 */
 export function PortalHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-black/[0.05] bg-bg/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-black/[0.05] bg-stone-bg/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-lg items-center gap-3 px-4">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
           鼎
@@ -57,11 +57,31 @@ export function PortalHeader() {
   );
 }
 
+/**
+ * 고객 폰의 밝기 설정을 따라간다.
+ *
+ * 첫 그림은 layout.tsx 의 선(先)적용 스크립트가 이미 맞춰 두었고,
+ * 여기서는 화면을 열어 둔 채로 폰이 밤 모드로 넘어가는 경우를 받는다.
+ * 매장 설정(직원이 고른 테마)은 보지 않는다 — 고객 폰의 일이다.
+ */
+export function useDeviceTheme() {
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      document.documentElement.dataset.theme = media.matches ? "dark" : "light";
+    };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+}
+
 export default function PortalShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  useDeviceTheme();
 
   return (
-    <div className="min-h-dvh bg-bg">
+    <div className="min-h-dvh bg-stone-bg">
       <PortalHeader />
 
       {/*
