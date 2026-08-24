@@ -80,6 +80,37 @@ const Ctx = createContext<LinkValue | null>(null);
 /** 상태가 멎은 뒤에 한 번만 올린다 — 타이핑 한 글자마다 보내지 않게 */
 const PUSH_DELAY_MS = 2500;
 
+/**
+ * "이 기기는 이미 연결을 마쳤다" 는 표시.
+ *
+ * 이게 없으면 새로고침할 때마다 처음 연결 화면(어느 쪽을 살릴지 고르세요)이
+ * 다시 뜬다. 원장님 입장에서는 어제 연결해 뒀는데 오늘 아침에 또 고르라고
+ * 하는 셈이고, 고르기 전까지는 기록이 서버로 올라가지도 않는다.
+ * 실제로 이것 때문에 방문을 기록해도 고객 화면에 반영되지 않았다.
+ */
+const LINK_KEY = "jeongtong-ax-link";
+const readLinked = (): string | null => {
+  try {
+    return window.localStorage.getItem(LINK_KEY);
+  } catch {
+    return null;
+  }
+};
+const writeLinked = (branchId: string) => {
+  try {
+    window.localStorage.setItem(LINK_KEY, branchId);
+  } catch {
+    /* 저장 못 해도 이번 세션은 그대로 동작한다 */
+  }
+};
+const clearLinked = () => {
+  try {
+    window.localStorage.removeItem(LINK_KEY);
+  } catch {
+    /* 무시 */
+  }
+};
+
 export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
   const store = useStore();
   const { ready, customers, visits, memberships, products, staff, branches } = store;
@@ -134,7 +165,24 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
       }
       setIdentity(id);
 
-      // 서버에 이미 자료가 있는지 본다 — 첫 연결 방향을 고르기 위해
+      /*
+       * 이미 연결을 마친 기기라면 묻지 않는다.
+       * 서버 것을 받아 와 화면을 맞추고 바로 쓰던 대로 이어 간다.
+       * (연결한 뒤로는 서버가 기준이다 — 바꾼 내용은 2.5초 뒤 자동으로
+       *  서버에 반영되므로, 받아 오면서 잃어버릴 것이 없다)
+       */
+      if (readLinked() === id.branchId) {
+        setPhase("syncing");
+        const data = await pullAll(sb, id.branchId);
+        skipNextPush.current = true;
+        applyRemote(data);
+        setLastSyncedAt(new Date().toISOString());
+        setPhase("linked");
+        void loadInbox(sb, id.branchId);
+        return;
+      }
+
+      // 처음 연결하는 기기 — 서버에 이미 자료가 있는지 보여 주고 고르게 한다
       const { count } = await sb
         .from("customers")
         .select("id", { count: "exact", head: true })
@@ -144,7 +192,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
       setPhase("choosing");
       void loadInbox(sb, id.branchId);
     },
-    [loadInbox],
+    [loadInbox, applyRemote],
   );
 
   useEffect(() => {
@@ -190,6 +238,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
         } else {
           await pushAll(sb, identity.branchId, currentData());
         }
+        writeLinked(identity.branchId);
         setLastSyncedAt(new Date().toISOString());
         setPhase("linked");
         void loadInbox(sb, identity.branchId);
@@ -285,6 +334,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     const sb = sbRef.current;
+    clearLinked();
     if (sb) await sb.auth.signOut();
     setIdentity(undefined);
     setFeedback([]);

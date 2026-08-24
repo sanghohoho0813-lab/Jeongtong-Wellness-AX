@@ -108,10 +108,16 @@ export function branchFromRow(r: Row): Branch {
   };
 }
 
-export function branchToRow(b: Branch, hqId: string): Row {
+/**
+ * 지점 갱신용 행.
+ *
+ * hq_id 는 일부러 넣지 않는다. 어느 본사 소속인지는 처음 만들 때 한 번
+ * 정해지는 값이고, 기기에 저장된 값으로 덮어쓰면 서버에 없는 본사를
+ * 가리키게 되어 저장이 통째로 막힌다.
+ */
+export function branchToRow(b: Branch): Row {
   return {
     id: toUuid(b.id),
-    hq_id: toUuid(hqId),
     name: b.name,
     address: b.address ?? null,
     phone: b.phone ?? null,

@@ -218,19 +218,22 @@ export async function pushAll(
   data: SyncData,
 ): Promise<void> {
   const bid = toUuid(branchId);
-  const hqId = data.branches[0]?.hqId ?? "hq-1";
 
-  // 본사 — 지점이 가리키고 있어 없으면 지점부터 막힌다
-  await sb.from("hqs").upsert(
-    [{ id: toUuid(hqId), name: "정통대왕쑥뜸원" }],
-    { onConflict: "id" },
-  );
-
-  await upsertChunked(
-    sb,
-    "branches",
-    data.branches.map((b) => branchToRow(b, hqId)),
-  );
+  /*
+   * 지점은 upsert 가 아니라 update 다.
+   *
+   * 지점 행은 이미 서버에 있다 — 없으면 직원 계정이 그 지점을 가리킬 수
+   * 없어 로그인 단계에서 걸린다. 그런데 upsert 는 결국 INSERT 문이라,
+   * 소속 본사(hq_id)를 빼고 보내면 "hq_id 가 비었다" 며 통째로 거부된다.
+   * 그렇다고 기기에 있는 값을 보내면 서버에 없는 본사를 가리키게 된다.
+   * 어느 쪽도 맞지 않아서, 있는 행의 이름·주소·연락처만 고친다.
+   */
+  for (const b of data.branches) {
+    const { id: _id, ...patch } = branchToRow(b);
+    void _id;
+    const { error } = await sb.from("branches").update(patch).eq("id", toUuid(b.id));
+    if (error) throw error;
+  }
   await upsertChunked(sb, "staff", data.staff.map(staffToRow));
   await upsertChunked(sb, "customers", data.customers.map(customerToRow));
   await upsertChunked(
