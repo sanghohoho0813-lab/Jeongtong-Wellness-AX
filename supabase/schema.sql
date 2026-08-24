@@ -343,3 +343,26 @@ select branch_id, date_trunc('month', purchased_at) as month, sum(price) as reve
 from memberships
 where is_admin()
 group by 1, 2;
+
+-- ---------------------------------------------------------
+-- 권한 (GRANT)
+--
+-- Postgres 는 두 겹으로 막는다. 위의 RLS 는 "어느 행인가"만 정하고,
+-- 그 앞에 "이 역할이 이 테이블에 닿을 수 있는가"가 따로 있다.
+-- 이 블록이 없으면 정책을 아무리 잘 써도 42501 permission denied 가 난다.
+--
+-- 익명(anon)에게는 아무것도 주지 않는다 — 직원도 고객도 로그인 후에만 본다.
+-- ---------------------------------------------------------
+grant usage on schema public to authenticated;
+
+grant select, insert, update, delete on
+  branches, staff, customers, service_products, memberships, visits,
+  customer_preferences, briefing_task_logs, visit_applied_preferences,
+  branch_settings, staff_display_settings
+to authenticated;
+
+grant select on hqs to authenticated;
+grant select on customers_view, branch_revenue_view to authenticated;
+
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;

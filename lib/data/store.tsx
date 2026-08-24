@@ -189,6 +189,21 @@ interface StoreValue extends PersistedState {
   /** 전체 백업 파일로 되돌리기 — 현재 데이터를 백업 시점 상태로 교체한다 */
   restoreBackup: (payload: BackupPayload) => void;
   /**
+   * 서버에서 내려받은 지점 자료로 통째로 바꾼다.
+   *
+   * 매장 계정을 연결한 직후, 그리고 다른 기기에서 바뀐 내용을 받아 올 때
+   * 쓴다. 백업 복원(restoreBackup)과 달리 상품 가격표까지 함께 바꾸고,
+   * 설정은 건드리지 않는다 — 글자 크기·테마는 기기마다 다른 값이다.
+   */
+  applyRemote: (data: {
+    customers: Customer[];
+    visits: Visit[];
+    memberships: Membership[];
+    products: ServiceProduct[];
+    staff: Staff[];
+    branches: Branch[];
+  }) => void;
+  /**
    * 고객 명부 일괄 등록.
    * mode "skip" 은 이미 있는 연락처를 건너뛰고, "update" 는 비어 있던 항목만 채운다.
    */
@@ -1012,6 +1027,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
    * 화면 표시 설정처럼 이 기기에서 쓰던 값은 백업에 있을 때만 덮어쓴다.
    * 브리핑 과제 상태는 기록이 통째로 바뀌면 의미가 없으므로 비운다.
    */
+  const applyRemote = useCallback<StoreValue["applyRemote"]>((data) => {
+    setState((s) => ({
+      ...s,
+      customers: data.customers,
+      visits: data.visits,
+      memberships: data.memberships,
+      products: data.products.length ? data.products : s.products,
+      staff: data.staff.length ? data.staff : s.staff,
+      branches: data.branches.length ? data.branches : s.branches,
+      // 과제 상태는 날짜별 계산 결과라 자료가 바뀌면 다시 세운다
+      taskOverrides: [],
+      taskFirstSeen: {},
+    }));
+  }, []);
+
   const restoreBackup = useCallback((payload: BackupPayload) => {
     setState((s) => ({
       ...s,
@@ -1157,6 +1187,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateSettings,
     updateStaff,
     restoreBackup,
+    applyRemote,
     importCustomers,
     startFresh,
     resetData,

@@ -25,6 +25,7 @@ import { CheckIcon, DownloadIcon, PlusIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import DataImport from "@/components/settings/DataImport";
 import ProductTable from "@/components/settings/ProductTable";
+import SupabaseLinkCard from "@/components/settings/SupabaseLinkCard";
 import { previewRuleChange } from "@/lib/scoring/rule-preview";
 import {
   daysAgo,
@@ -206,6 +207,7 @@ export default function SettingsPage() {
             { id: "set-staff", label: "직원" },
             { id: "set-privacy", label: "화면 공유" },
             { id: "set-product", label: "서비스 · 상품" },
+            { id: "set-link", label: "매장 계정 연결" },
             { id: "set-rules", label: "고객관리 기준" },
             { id: "set-opp", label: "매출기회 기준" },
             { id: "set-data", label: "데이터 · 백업" },
@@ -462,6 +464,15 @@ export default function SettingsPage() {
           </p>
           <ProductTable />
         </Card>
+
+        {/*
+          매장 계정 연결 — 여러 기기가 같은 기록을 보게 하고, 고객 화면
+          (MY WELLNESS)을 여는 스위치다. 연결하지 않으면 지금까지처럼
+          이 기기 안에서만 저장된다.
+        */}
+        <div className="scroll-mt-36 lg:scroll-mt-6">
+          <SupabaseLinkCard />
+        </div>
 
         <Card id="set-rules" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>고객관리 기준</SectionTitle>

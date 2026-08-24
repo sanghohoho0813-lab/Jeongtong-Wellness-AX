@@ -42,6 +42,7 @@ import CarePreferenceCard from "@/components/customers/CarePreferenceCard";
 import CustomerForm from "@/components/customers/CustomerForm";
 import MembershipForm from "@/components/customers/MembershipForm";
 import CareReport from "@/components/customers/CareReport";
+import CustomerVoiceCard from "@/components/customers/CustomerVoiceCard";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
 export default function CustomerDetailPage() {
@@ -552,6 +553,9 @@ export default function CustomerDetailPage() {
         </div>
 
         {/* 케어 선호 · 특이사항 (고객 감동 포인트) */}
+        {/* 고객이 MY WELLNESS 에서 남긴 것 — 매장 계정 연결 시에만 나온다 */}
+        <CustomerVoiceCard customerId={c.id} customerName={c.name} />
+
         <CarePreferenceCard
           customerId={c.id}
           preferences={c.preferences ?? []}

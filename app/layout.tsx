@@ -1,9 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { AppProvider } from "@/lib/data/store";
-import AppShell from "@/components/layout/AppShell";
-import { ToastProvider } from "@/components/ui/toast";
-import { TourProvider } from "@/components/docs/Tour";
 import RootBoundary from "@/components/layout/RootBoundary";
 
 export const metadata: Metadata = {
@@ -48,16 +44,13 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: PREPAINT }} />
       </head>
       <body>
-        {/* 스토어보다 바깥 — 데이터를 읽다 생긴 오류까지 여기서 받는다 */}
-        <RootBoundary>
-          <AppProvider>
-            <ToastProvider>
-              <TourProvider>
-                <AppShell>{children}</AppShell>
-              </TourProvider>
-            </ToastProvider>
-          </AppProvider>
-        </RootBoundary>
+        {/*
+          여기는 화면 껍데기를 두지 않는다.
+          직원 화면은 app/(staff)/layout.tsx 가, 고객 포털은
+          app/(portal)/my/layout.tsx 가 각자의 껍데기를 붙인다.
+          두 쪽은 네비게이션도 데이터 출처도 다르다.
+        */}
+        <RootBoundary>{children}</RootBoundary>
       </body>
     </html>
   );
