@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { useDocumentTitle } from "@/lib/utils/title";
 
 export default function PageHeader({
   title,
@@ -11,6 +12,9 @@ export default function PageHeader({
   description?: string;
   action?: ReactNode;
 }) {
+  // 화면 제목이 곧 탭 이름이다 — 탭을 여러 개 열어 두면 여기서 구분한다
+  useDocumentTitle(title);
+
   /**
    * 제목과 단추를 **한 줄에** 둔다.
    *

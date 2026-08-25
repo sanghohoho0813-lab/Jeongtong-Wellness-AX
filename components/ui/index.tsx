@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CustomerStatus, SalesOpportunity, TaskStatus } from "@/lib/types";
 import { SparkIcon, XIcon } from "./icons";
@@ -611,9 +611,60 @@ export function ProgressBar({
   );
 }
 
-export function FieldLabel({ children }: { children: ReactNode }) {
+/**
+ * 입력칸 이름표 — 그리고 그 이름을 **칸에 실제로 이어 준다**.
+ *
+ * 무엇이 문제였나
+ * ---------------
+ * 눈에는 "고객명 *" 이 보이는데, 그 글자와 아래 입력칸이 아무 관계도
+ * 아니었다. 그래서
+ *   · 화면 낭독기는 그냥 "편집" 이라고만 읽는다 — 무엇을 적는 칸인지 모른다
+ *   · 음성으로 "고객명 칸" 이라고 지목할 수 없다
+ *   · 이름표를 눌러도 칸으로 커서가 가지 않는다 (손이 떨리는 분께는 큰 차이)
+ * 실제로 세어 보니 화면 전체에서 이름 없는 칸이 서른 곳이었다.
+ *
+ * 왜 여기서 잇는가
+ * ----------------
+ * 이름표는 앱 곳곳에 예순아홉 번 쓰인다. 호출하는 쪽을 예순아홉 번 고치면
+ * 그중 하나는 반드시 빠뜨리고, 앞으로 만들 폼도 또 빠뜨린다.
+ * 이름표와 칸은 언제나 같은 상자 안에 나란히 있으므로, 이름표가 스스로
+ * 옆의 칸을 찾아 이어 준다. 한 곳만 맞으면 전부 맞는다.
+ *
+ * 이미 이름이 붙어 있는 칸(aria-label 을 직접 준 경우)이나, 칸이 아니라
+ * 단추 묶음이 오는 자리(날짜 선택·부위 선택)는 건드리지 않는다.
+ */
+export function FieldLabel({
+  children,
+  htmlFor,
+}: {
+  children: ReactNode;
+  /** 이을 칸을 직접 지정하고 싶을 때 (대개는 비워 두면 알아서 찾는다) */
+  htmlFor?: string;
+}) {
+  const ref = useRef<HTMLLabelElement>(null);
+  const autoId = useId();
+
+  useEffect(() => {
+    if (htmlFor) return;
+    const label = ref.current;
+    const box = label?.parentElement;
+    if (!label || !box) return;
+
+    const field = box.querySelector<HTMLElement>("input, select, textarea");
+    if (!field) return; // 날짜 선택기·부위 칩처럼 칸이 아닌 것은 그대로 둔다
+    if (field.getAttribute("aria-label") || field.getAttribute("aria-labelledby")) {
+      return; // 이미 이름이 있다
+    }
+    if (!field.id) field.id = autoId;
+    label.setAttribute("for", field.id);
+  });
+
   return (
-    <label className="mb-1.5 block text-sm font-bold text-ink-soft">
+    <label
+      ref={ref}
+      htmlFor={htmlFor}
+      className="mb-1.5 block text-sm font-bold text-ink-soft"
+    >
       {children}
     </label>
   );

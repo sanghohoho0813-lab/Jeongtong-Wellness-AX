@@ -59,11 +59,12 @@ function CustomerRow({
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-[1.0625rem] font-extrabold text-ink">
+          {/* 긴 이름이 들어와도 배지가 화면 밖으로 밀리지 않게 — 고객 목록과 같은 규칙 */}
+          <span className="min-w-0 break-words text-[1.0625rem] font-extrabold text-ink">
             {displayName(c.name, privacyMode)}
           </span>
           {opportunity && opportunity.type !== "none" && (
-            <span className="min-w-0 overflow-hidden">
+            <span className="shrink-0">
               <OpportunityBadge opportunity={opportunity} size="sm" />
             </span>
           )}

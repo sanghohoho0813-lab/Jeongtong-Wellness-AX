@@ -114,7 +114,8 @@ export default function OpportunityCard() {
                 >
                   <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
                     <span className="flex min-w-0 items-center gap-2">
-                      <span className="shrink-0 font-extrabold text-ink">
+                      {/* 긴 이름이 배지를 화면 밖으로 밀지 않게 — 이름은 접히고 배지는 남는다 */}
+                      <span className="min-w-0 break-words font-extrabold text-ink">
                         {name(t.customerId)}
                       </span>
                       <OpportunityBadge opportunity={t.opportunity!} size="sm" />

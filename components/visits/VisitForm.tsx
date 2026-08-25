@@ -2,7 +2,7 @@
 
 /** 방문/상담 기록 폼 — 이용권 차감, 신체부위 기록, 다음 관리일 지정 포함 */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useStore } from "@/lib/data/store";
 import {
   BodyPartRecord,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/utils/date";
 import { recommendNextManageDate } from "@/lib/scoring/insight";
 import { Badge, Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
+import { useFormError } from "@/lib/utils/form";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { CheckIcon } from "@/components/ui/icons";
 import { PREF_TONES } from "@/components/customers/CarePreferenceCard";
@@ -112,7 +113,8 @@ export default function VisitForm({
   const [appliedPrefs, setAppliedPrefs] = useState<string[]>(
     visit?.appliedPreferenceIds ?? [],
   );
-  const [error, setError] = useState("");
+  const { error, fail, clear } = useFormError();
+  const customerRef = useRef<HTMLSelectElement>(null);
 
   const sortedCustomers = useMemo(
     () => [...customers].sort((a, b) => a.name.localeCompare(b.name, "ko")),
@@ -183,10 +185,12 @@ export default function VisitForm({
   };
 
   const submit = () => {
-    if (!customerId) return setError("고객을 선택하세요.");
-    if (!visitDate) return setError("방문 일시를 선택하세요.");
+    if (!customerId) return fail("고객을 선택하세요.", customerRef);
+    // 방문 일시는 날짜 선택기라 데려갈 칸이 없다 — 문장만 띄운다
+    if (!visitDate) return fail("방문 일시를 선택하세요.");
     if (visitDate > todayISO())
-      return setError("앞으로의 날짜는 방문 기록으로 저장할 수 없습니다.");
+      return fail("앞으로의 날짜는 방문 기록으로 저장할 수 없습니다.");
+    clear();
     const payload = {
       customerId,
       visitedAt: toIsoDateTime(visitDate, visitTime),
@@ -219,6 +223,7 @@ export default function VisitForm({
         <div>
           <FieldLabel>고객 *</FieldLabel>
           <select
+            ref={customerRef}
             className={inputCls}
             value={customerId}
             onChange={(e) => selectCustomer(e.target.value)}

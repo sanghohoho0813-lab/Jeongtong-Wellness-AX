@@ -2,7 +2,7 @@
 
 /** 고객 등록 · 정보 수정 폼 (모달 내부) */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { BodyPartRecord, Customer } from "@/lib/types";
 import { daysFromToday } from "@/lib/utils/date";
@@ -12,6 +12,7 @@ import {
   phoneDigits,
 } from "@/lib/utils/format";
 import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
+import { useFormError } from "@/lib/utils/form";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
@@ -64,7 +65,10 @@ export default function CustomerForm({
   const [nextManageTime, setNextManageTime] = useState<string | undefined>(
     customer?.nextManageTime,
   );
-  const [error, setError] = useState("");
+  const { error, fail, clear } = useFormError();
+  /* 잘못 적은 칸으로 데려가려면 그 칸을 붙잡고 있어야 한다 */
+  const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
 
   /** 같은 연락처가 이미 등록되어 있으면 미리 알려 준다 (저장은 막지 않음) */
   const duplicate = (() => {
@@ -76,10 +80,11 @@ export default function CustomerForm({
   })();
 
   const submit = () => {
-    if (!name.trim()) return setError("고객명을 입력하세요.");
-    if (!phone.trim()) return setError("연락처를 입력하세요.");
+    if (!name.trim()) return fail("고객명을 입력하세요.", nameRef);
+    if (!phone.trim()) return fail("연락처를 입력하세요.", phoneRef);
     if (!isValidPhone(phone))
-      return setError("연락처를 확인해 주세요. 예: 010-1234-5678");
+      return fail("연락처를 확인해 주세요. 예: 010-1234-5678", phoneRef);
+    clear();
 
     if (customer) {
       updateCustomer(customer.id, {
@@ -123,6 +128,7 @@ export default function CustomerForm({
         <div>
           <FieldLabel>고객명 *</FieldLabel>
           <input
+            ref={nameRef}
             className={inputCls}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -132,6 +138,7 @@ export default function CustomerForm({
         <div>
           <FieldLabel>연락처 *</FieldLabel>
           <input
+            ref={phoneRef}
             className={inputCls}
             value={phone}
             onChange={(e) => setPhone(formatPhoneInput(e.target.value))}

@@ -7,7 +7,7 @@
  */
 
 import Link from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { ChevronRightIcon } from "@/components/ui/icons";
 
 export type DocTone = "aqua" | "teal" | "sky" | "violet" | "amber" | "emerald" | "gold";
@@ -115,15 +115,23 @@ export function DocHero({
 export function DocToc({
   items,
   flow,
+  phoneHint,
 }: {
   items: Array<{ no: string; label: string; href: string }>;
   flow?: string;
+  /** 폰에서만 보이는 안내 — 본문이 접혀 있다는 사실을 미리 알려 준다 */
+  phoneHint?: string;
 }) {
   return (
     <nav className="card rise-in !py-5" aria-label="차례">
       <p className="mb-3 text-sm font-extrabold uppercase tracking-wider text-aqua-700">
         차례
       </p>
+      {phoneHint && (
+        <p className="mb-3 rounded-btn bg-aqua-50 px-3.5 py-2.5 text-[0.9375rem] font-semibold leading-relaxed text-aqua-800 ring-1 ring-aqua-100 md:hidden">
+          {phoneHint}
+        </p>
+      )}
       <ol className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((i) => (
           <li key={i.href}>
@@ -150,6 +158,41 @@ export function DocToc({
   );
 }
 
+/**
+ * 폰에서만 접힌다.
+ *
+ * 사용 가이드는 18개 절을 전부 펼쳐 두었더니 390px 화면에서 62화면 길이가
+ * 되었다. 원장님이 "이용권 어떻게 넣더라" 하나를 확인하려고 들어와서
+ * 스크롤을 예순 번 굴려야 하는 문서는 아무도 두 번 열지 않는다.
+ *
+ * PC에서는 그대로 펼쳐 둔다 — 넓은 화면에서는 훑어 읽는 것이 더 빠르고,
+ * Ctrl+F 로 찾는 사람의 길도 막지 않아야 한다.
+ * 차례에서 한 항목을 누르면(해시가 바뀌면) 그 절만 열린다.
+ */
+function useSectionOpen(id: string, collapsible: boolean) {
+  /** 서버·첫 그림에서는 늘 펼친 상태 — 폰 여부는 그려진 뒤에야 알 수 있다 */
+  const [phone, setPhone] = useState(false);
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (!collapsible) return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => {
+      setPhone(mq.matches);
+      setOpen(!mq.matches || window.location.hash === `#${id}`);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    window.addEventListener("hashchange", sync);
+    return () => {
+      mq.removeEventListener("change", sync);
+      window.removeEventListener("hashchange", sync);
+    };
+  }, [collapsible, id]);
+
+  return { folded: collapsible && phone, open, setOpen };
+}
+
 /** 본문 한 절 */
 export function DocSection({
   id,
@@ -157,6 +200,7 @@ export function DocSection({
   kicker,
   title,
   tone = "aqua",
+  collapsible = false,
   children,
 }: {
   id: string;
@@ -164,8 +208,39 @@ export function DocSection({
   kicker: string;
   title: string;
   tone?: DocTone;
+  /** 폰에서 접을 수 있게 한다 (기본은 끔 — 기획의도 화면은 그대로 둔다) */
+  collapsible?: boolean;
   children: ReactNode;
 }) {
+  const { folded, open, setOpen } = useSectionOpen(id, collapsible);
+
+  const head = (
+    <div className="flex items-start gap-3.5">
+      <span
+        className={`nowrap-num flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-extrabold shadow-sm ${TONE_BADGE[tone]}`}
+      >
+        {no}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p
+          className={`text-[0.8125rem] font-extrabold uppercase tracking-wider ${TONE_TEXT[tone]}`}
+        >
+          {kicker}
+        </p>
+        <h2 className="mt-1 text-[1.375rem] font-extrabold leading-snug text-ink sm:text-[1.625rem]">
+          {title}
+        </h2>
+      </div>
+      {folded && (
+        <ChevronRightIcon
+          className={`mt-2 h-5 w-5 shrink-0 text-ink-faint transition-transform ${
+            open ? "rotate-90" : ""
+          }`}
+        />
+      )}
+    </div>
+  );
+
   return (
     <section
       id={id}
@@ -174,24 +249,24 @@ export function DocSection({
       <span
         className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${TONE_BAR[tone]}`}
       />
-      <div className="flex items-start gap-3.5">
-        <span
-          className={`nowrap-num flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-extrabold shadow-sm ${TONE_BADGE[tone]}`}
+      {folded ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls={`${id}-body`}
+          className="-mx-1 block w-[calc(100%+0.5rem)] rounded-btn px-1 text-left"
         >
-          {no}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p
-            className={`text-[0.8125rem] font-extrabold uppercase tracking-wider ${TONE_TEXT[tone]}`}
-          >
-            {kicker}
-          </p>
-          <h2 className="mt-1 text-[1.375rem] font-extrabold leading-snug text-ink sm:text-[1.625rem]">
-            {title}
-          </h2>
-        </div>
-      </div>
-      <div className="mt-5 space-y-4 text-[1.0625rem] leading-[1.85] text-ink-soft">
+          {head}
+        </button>
+      ) : (
+        head
+      )}
+      <div
+        id={`${id}-body`}
+        hidden={folded && !open}
+        className="mt-5 space-y-4 text-[1.0625rem] leading-[1.85] text-ink-soft"
+      >
         {children}
       </div>
     </section>

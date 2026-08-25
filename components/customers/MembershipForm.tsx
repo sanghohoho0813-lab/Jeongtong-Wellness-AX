@@ -6,12 +6,13 @@
  * 자주 쓰는 구성은 프리셋으로 두어 타자 없이 등록할 수 있게 했다.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { Membership } from "@/lib/types";
 import { todayISO } from "@/lib/utils/date";
 import { formatWon } from "@/lib/utils/format";
 import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
+import { useFormError } from "@/lib/utils/form";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 
@@ -56,7 +57,8 @@ export default function MembershipForm({
     membership?.purchasedAt ?? todayISO(),
   );
   const [expiresAt, setExpiresAt] = useState(membership?.expiresAt ?? "");
-  const [error, setError] = useState("");
+  const { error, fail, clear } = useFormError();
+  const programRef = useRef<HTMLInputElement>(null);
 
   const customerName =
     customers.find((c) => c.id === customerId)?.name ?? "고객";
@@ -68,12 +70,15 @@ export default function MembershipForm({
     setTotalCount(p.sessionCount);
     setRemaining(p.sessionCount);
     setPrice(String(p.price));
-    setError("");
+    clear();
   };
 
   const submit = () => {
-    if (!programName.trim()) return setError("이용권 이름을 선택하거나 입력하세요.");
-    if (totalCount <= 0) return setError("총 횟수를 선택하세요.");
+    if (!programName.trim())
+      return fail("이용권 이름을 선택하거나 입력하세요.", programRef);
+    // 총 횟수는 단추로 고른다 — 데려갈 칸이 없어 문장만 띄운다
+    if (totalCount <= 0) return fail("총 횟수를 선택하세요.");
+    clear();
 
     if (membership) {
       updateMembership(membership.id, {
@@ -138,6 +143,7 @@ export default function MembershipForm({
       <div>
         <FieldLabel>이용권 이름 *</FieldLabel>
         <input
+          ref={programRef}
           className={inputCls}
           value={programName}
           onChange={(e) => setProgramName(e.target.value)}

@@ -62,18 +62,32 @@ function RuleField({
   unit: string;
   onChange: (n: number) => void;
 }) {
+  /**
+   * 숫자를 고칠 때 사람들은 대개 전부 지우고 다시 친다.
+   * 그런데 빈 칸을 부모로 올릴 수가 없다 — 관리 기준이 0일이 될 수는 없으니까.
+   * 그래서 예전에는 `if (n > 0)` 로 막아 두었고, 지우는 순간 화면이 옛 숫자로
+   * 되돌아와 커서까지 튀었다. 결국 "아무리 쳐도 안 바뀌는 칸" 이 되었다.
+   *
+   * 지우는 동안만 이 칸이 스스로 문자열을 들고 있는다. 칸을 떠날 때
+   * 비어 있으면 원래 값으로 조용히 되돌린다.
+   */
+  const [draft, setDraft] = useState<string | null>(null);
+
   return (
     <div>
       <FieldLabel>{label}</FieldLabel>
       <div className="flex items-center gap-2">
         <input
           className={`${inputCls} max-w-28`}
-          value={value}
+          value={draft ?? String(value)}
           inputMode="numeric"
           onChange={(e) => {
-            const n = Number(e.target.value.replace(/\D/g, ""));
-            if (n > 0) onChange(n);
+            const digits = e.target.value.replace(/\D/g, "");
+            setDraft(digits);
+            const n = Number(digits);
+            if (digits !== "" && n > 0) onChange(n);
           }}
+          onBlur={() => setDraft(null)}
         />
         <span className="text-sm text-ink-sub">{unit}</span>
       </div>
@@ -328,14 +342,6 @@ export default function SettingsPage() {
                 onChange={(e) => updateSettings({ openHours: e.target.value })}
               />
             </div>
-            <div>
-              <RuleField
-                label="기본 관리주기"
-                value={settings.careRules.defaultCycleDays}
-                unit="일 (방문 이력이 적은 고객에게 적용)"
-                onChange={(n) => setRule({ defaultCycleDays: n })}
-              />
-            </div>
           </div>
         </Card>
 
@@ -364,6 +370,8 @@ export default function SettingsPage() {
                 <span className="font-semibold text-ink">{s.name}</span>
                 <select
                   className={`${inputCls} touch-target !w-auto !py-1.5 text-sm`}
+                  // 줄 안에 있는 칸이라 이름표가 따로 없다 — 누구의 권한인지 함께 읽히게
+                  aria-label={`${s.name} 권한`}
                   value={s.role}
                   onChange={(e) =>
                     updateStaff(
@@ -485,6 +493,19 @@ export default function SettingsPage() {
             보여 드립니다.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/*
+              기본 관리주기는 원래 '매장 정보' 카드에 있었다. 그런데 값은
+              settings.careRules 에서 읽고 쓰기는 초안(draftRules)으로 했던 탓에
+              무엇을 쳐도 화면 숫자가 되돌아왔다 — 고칠 수 없는 칸이었다.
+              같은 초안을 쓰는 나머지 기준들 옆, '적용' 단추가 있는 이 자리로
+              옮긴다. 성격도 여기가 맞다 — 매장 정보가 아니라 관리 기준이다.
+            */}
+            <RuleField
+              label="기본 관리주기"
+              value={draftRules.defaultCycleDays}
+              unit="일 (방문 이력이 적은 고객에게 적용)"
+              onChange={(n) => setRule({ defaultCycleDays: n })}
+            />
             <RuleField
               label="장기 미방문 판단 기준"
               value={draftRules.dormantDays}

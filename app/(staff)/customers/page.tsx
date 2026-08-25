@@ -210,6 +210,7 @@ export default function CustomersPage() {
           <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
           <input
             className={`${inputCls} pl-11`}
+            aria-label="고객 검색"
             placeholder="고객명 · 초성 · 연락처 검색"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -304,12 +305,18 @@ export default function CustomersPage() {
                 번호를 읽는 게 아니라 사람을 고르는 것이다.
               */}
               <div className="min-w-0 flex-1">
-                {/* 이름이 먼저다 — 자리가 모자라면 상태 배지 쪽이 줄어든다 */}
+                {/*
+                  이름이 먼저다. 다만 이름 쪽을 shrink-0 으로 못 박아 두었더니
+                  아주 긴 이름에서는 상태 배지가 화면 밖으로 밀려 아예 보이지
+                  않았다 — 이름을 지키려다 '이 사람이 어떤 상태인지'를 잃은 셈.
+                  이름은 줄바꿈으로 온전히 남기고(자르지 않는다), 배지는
+                  줄어들지 않게 둔다. 두 정보 다 살아남는다.
+                */}
                 <div className="flex items-center gap-2">
-                  <span className="shrink-0 text-[1.0625rem] font-extrabold text-ink">
+                  <span className="min-w-0 break-words text-[1.0625rem] font-extrabold text-ink">
                     {displayName(d.customer.name, privacyMode)}
                   </span>
-                  <span className="min-w-0 overflow-hidden">
+                  <span className="shrink-0">
                     <CustomerStatusBadge status={d.status} />
                   </span>
                 </div>

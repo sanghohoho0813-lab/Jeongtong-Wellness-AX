@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import VisitForm from "@/components/visits/VisitForm";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
@@ -48,6 +48,9 @@ function programStyle(programName?: string, isConsult?: boolean) {
   return { strip: "from-emerald-400 to-emerald-600", badge: "positive" as const };
 }
 
+/** 한 번에 그리는 기록 수 — 나머지는 [더 보기] 로 이어 그린다 */
+const PAGE_SIZE = 60;
+
 export default function VisitsPage() {
   const { visits, customers, staff, removeVisit, restoreVisit, privacyMode } = useStore();
   const toast = useToast();
@@ -64,6 +67,15 @@ export default function VisitsPage() {
   const staffName = (id?: string) =>
     staff.find((s) => s.id === id)?.name ?? "미지정";
 
+  /*
+    조건에 맞는 **전부**를 먼저 센다.
+
+    예전에는 여기서 바로 80건으로 잘라 놓고, 화면에는 그 자른 수를
+    "N건" 이라고 적었다. 기록이 500건이어도 화면은 "80건" 이라고 말한 셈이다.
+    자르는 것 자체는 화면이 무거워지지 않게 하려는 것이라 맞지만, 자른
+    사실을 숨기면 그 숫자를 믿고 판단하게 된다.
+    그래서 전체 수는 그대로 세고, 그리는 것만 끊는다.
+  */
   const rows = useMemo(() => {
     const q = query.trim();
     return [...visits]
@@ -76,10 +88,14 @@ export default function VisitsPage() {
         if (!q) return true;
         return customerName(v.customerId).includes(q);
       })
-      .sort((a, b) => b.visitedAt.localeCompare(a.visitedAt))
-      .slice(0, 80);
+      .sort((a, b) => b.visitedAt.localeCompare(a.visitedAt));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visits, customers, query, type, period, staffFilter]);
+
+  /** 한 번에 그리는 줄 수 — 나머지는 [더 보기] 로 이어 그린다 */
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  useEffect(() => setLimit(PAGE_SIZE), [query, type, period, staffFilter]);
+  const visibleRows = rows.slice(0, limit);
 
   return (
     <div>
@@ -134,6 +150,7 @@ export default function VisitsPage() {
             <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
             <input
               className={`${inputCls} pl-11`}
+              aria-label="고객명으로 기록 찾기"
               placeholder="고객명 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -225,7 +242,7 @@ export default function VisitsPage() {
         )
       ) : (
         <div className="rise-stagger space-y-2.5">
-          {rows.map((v) => {
+          {visibleRows.map((v) => {
             const st = programStyle(v.programName, v.type === "consult");
             return (
             <Card key={v.id} className="relative overflow-hidden !py-4 !pl-5">
@@ -288,6 +305,23 @@ export default function VisitsPage() {
             </Card>
             );
           })}
+
+          {rows.length > visibleRows.length && (
+            <div className="pt-1 text-center">
+              <p className="mb-2 text-sm leading-relaxed text-ink-sub">
+                <span className="nowrap-num">
+                  {rows.length}건 중 {visibleRows.length}건
+                </span>{" "}
+                표시 중
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => setLimit((n) => n + PAGE_SIZE)}
+              >
+                더 보기 ({Math.min(PAGE_SIZE, rows.length - visibleRows.length)}건)
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

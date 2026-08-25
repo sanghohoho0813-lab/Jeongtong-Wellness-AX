@@ -38,11 +38,19 @@ function PreviewRow({
           관리 유형은 자리가 모자라면 줄고, 할 일은 두 줄까지 접어서
           '안부 연락 후 방문 …' 처럼 끊기지 않게 한다.
         */}
+        {/*
+          .tap-line 은 손가락이 닿을 높이(44px)를 만들려고 inline-flex 다.
+          inline-flex 상자는 글자 길이만큼 늘어나므로, 긴 이름이 들어오면
+          줄바꿈 없이 카드 밖으로 나갔다. max-w-full 로 상자를 가두고,
+          안쪽 span 에 min-w-0 을 줘서 그 안에서 줄이 접히게 한다.
+        */}
         <Link
           href={`/customers/${customer.id}`}
-          className="tap-line text-[1.0625rem] font-extrabold text-white hover:text-aqua-200"
+          className="tap-line max-w-full text-[1.0625rem] font-extrabold text-white hover:text-aqua-200"
         >
-          {displayName(customer.name, privacyMode)}
+          <span className="min-w-0 break-words">
+            {displayName(customer.name, privacyMode)}
+          </span>
         </Link>
         <p className="line-clamp-2 text-[0.8125rem] leading-snug text-deep-sub">
           <span className="font-bold text-aqua-300">

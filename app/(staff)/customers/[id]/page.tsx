@@ -36,6 +36,7 @@ import {
 import TaskCard from "@/components/briefing/TaskCard";
 import { DateTimePanel } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
+import { useDocumentTitle } from "@/lib/utils/title";
 import {
   buildCustomerInsight,
   recommendNextManageDate,
@@ -83,6 +84,15 @@ export default function CustomerDetailPage() {
   const derived = derivedById.get(params.id);
   const facts = factsById.get(params.id);
 
+  /*
+    탭 이름에도 고객 이름을 쓴다 — 여러 명을 탭으로 벌려 놓고 보는 일이 잦다.
+    화면 공유 모드에서는 화면과 같은 규칙으로 가린다. 탭 줄만 실명으로
+    남으면 화면을 가린 의미가 없다.
+  */
+  useDocumentTitle(
+    derived ? displayName(derived.customer.name, privacyMode) : "고객",
+  );
+
   if (!derived || !facts) {
     return (
       <EmptyState
@@ -127,7 +137,13 @@ export default function CustomerDetailPage() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-page-title text-ink">
+              {/*
+                min-w-0 이 없으면 이 h1 은 flex 항목의 기본값(min-width:auto)
+                때문에 이름 길이만큼 늘어난다. 띄어쓰기 없는 긴 이름이 들어오면
+                줄바꿈이 일어나지 않고 화면 전체가 가로로 100px 넘게 밀렸다.
+                min-w-0 을 주면 상자가 줄어들고, 그제서야 break-words 가 먹는다.
+              */}
+              <h1 className="text-page-title min-w-0 break-words text-ink">
                 {displayName(c.name, privacyMode)}
               </h1>
               <CustomerStatusBadge status={derived.status} />

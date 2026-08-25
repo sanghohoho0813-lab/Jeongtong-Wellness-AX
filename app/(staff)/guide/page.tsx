@@ -104,10 +104,11 @@ export default function GuidePage() {
         <DocToc
           items={TOC}
           flow="아침에 브리핑 확인 → 고객이 오시면 방문 기록 → 다음 관리 예정일 지정 → 마감 전에 재방문 관리 정리"
+          phoneHint="폰에서는 아래 항목이 접혀 있습니다. 차례에서 고르시거나 제목을 누르시면 그 부분만 펼쳐집니다."
         />
 
         {/* 1 */}
-        <DocSection id="g1" no="1" kicker="시작하기" title="하루는 이 순서로 씁니다" tone="aqua">
+        <DocSection id="g1" no="1" kicker="시작하기" title="하루는 이 순서로 씁니다" tone="aqua" collapsible>
           <p>
             기능이 많아 보여도 매일 쓰는 흐름은 세 번뿐입니다. 아래 세 가지만
             익히시면 나머지는 필요할 때 찾아보셔도 됩니다.
@@ -135,7 +136,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 2 */}
-        <DocSection id="g2" no="2" kicker="계정" title="계정과 권한" tone="teal">
+        <DocSection id="g2" no="2" kicker="계정" title="계정과 권한" tone="teal" collapsible>
           <p>
             계정은 두 종류입니다. 지금 누구로 접속해 있는지는 PC에서는 왼쪽 아래,
             폰에서는 <Ui>더보기</Ui> 또는 <Ui>계정</Ui> 화면에서 확인할 수 있습니다.
@@ -182,7 +183,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 3 */}
-        <DocSection id="g3" no="3" kicker="화면" title="화면 구조" tone="sky">
+        <DocSection id="g3" no="3" kicker="화면" title="화면 구조" tone="sky" collapsible>
           <DocSteps
             steps={[
               {
@@ -265,7 +266,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 4 */}
-        <DocSection id="g4" no="4" kicker="기본 업무" title="고객 등록하기" tone="violet">
+        <DocSection id="g4" no="4" kicker="기본 업무" title="고객 등록하기" tone="violet" collapsible>
           <DocSteps
             steps={[
               {
@@ -310,7 +311,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 5 */}
-        <DocSection id="g5" no="5" kicker="기본 업무" title="방문 · 상담 기록하기" tone="violet">
+        <DocSection id="g5" no="5" kicker="기본 업무" title="방문 · 상담 기록하기" tone="violet" collapsible>
           <p>
             가장 자주 쓰는 기능입니다. 시작하는 길은 세 가지이고, 어느 길로 가도
             나오는 화면은 같습니다.
@@ -436,6 +437,7 @@ export default function GuidePage() {
           kicker="매출 관리"
           title="이용권 등록 · 관리하기"
           tone="gold"
+          collapsible
         >
           <p>
             이용권은 고객 상세의 <Ui>이용권 현황</Ui> 카드에서 관리합니다. 방문
@@ -499,7 +501,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 6 */}
-        <DocSection id="g7" no="7" kicker="읽는 법" title="고객 상세 화면 읽는 법" tone="sky">
+        <DocSection id="g7" no="7" kicker="읽는 법" title="고객 상세 화면 읽는 법" tone="sky" collapsible>
           <p>
             고객 이름을 누르면 열리는 화면입니다. 위에서부터 아래로 읽으면 이 고객의
             현재 상태를 3초 안에 파악할 수 있게 배치했습니다.
@@ -556,7 +558,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 7 */}
-        <DocSection id="g8" no="8" kicker="핵심 기능" title="케어 선호 · 특이사항 기록하기" tone="gold">
+        <DocSection id="g8" no="8" kicker="핵심 기능" title="케어 선호 · 특이사항 기록하기" tone="gold" collapsible>
           <p>
             고객이 좋아하시는 방식과 기억해야 할 점을 남겨 두는 곳입니다. 담당 직원이
             바뀌어도 같은 응대를 할 수 있게 해 주는, 이 시스템에서 가장 중요한
@@ -626,7 +628,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 8 */}
-        <DocSection id="g9" no="9" kicker="핵심 기능" title="다음 관리 예정일 지정하기" tone="aqua">
+        <DocSection id="g9" no="9" kicker="핵심 기능" title="다음 관리 예정일 지정하기" tone="aqua" collapsible>
           <p>
             날짜와 시간을 모두 눌러서 고릅니다. 키보드로 칠 일이 없습니다. 고객 상세의{" "}
             <Ui>날짜 · 시간 선택</Ui>, 방문 기록 폼, 재방문 처리 결과에서 모두 같은
@@ -682,7 +684,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 9 */}
-        <DocSection id="g10" no="10" kicker="관리 업무" title="오늘의 실행 브리핑" tone="teal">
+        <DocSection id="g10" no="10" kicker="관리 업무" title="오늘의 실행 브리핑" tone="teal" collapsible>
           <p>
             오늘 누구에게 무엇을 해야 하는지를 우선순위대로 보여 주는 화면입니다.
             사람이 기억해서 챙기던 일을 시스템이 먼저 꺼내 놓는 자리입니다.
@@ -738,7 +740,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 10 */}
-        <DocSection id="g11" no="11" kicker="관리 업무" title="재방문 관리" tone="amber">
+        <DocSection id="g11" no="11" kicker="관리 업무" title="재방문 관리" tone="amber" collapsible>
           <p>
             브리핑이 &lsquo;오늘 할 일&rsquo;이라면, 재방문 관리는 &lsquo;고객을 상태별로 나눠
             보는 화면&rsquo;입니다. 마감 전에 한 번 정리하는 용도로 쓰시면 됩니다.
@@ -760,7 +762,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 11 */}
-        <DocSection id="g12" no="12" kicker="확인 업무" title="AX 도입성과" tone="emerald">
+        <DocSection id="g12" no="12" kicker="확인 업무" title="AX 도입성과" tone="emerald" collapsible>
           <p>
             도입 전후로 무엇이 달라졌는지 보는 화면입니다. 모든 숫자는 저장된 실제
             기록에서만 계산되며, 임의로 만든 수치는 없습니다.
@@ -803,7 +805,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 12 */}
-        <DocSection id="g13" no="13" kicker="관리자용" title="지점 / 운영 · 설정" tone="gold">
+        <DocSection id="g13" no="13" kicker="관리자용" title="지점 / 운영 · 설정" tone="gold" collapsible>
           <DocSteps
             steps={[
               {
@@ -868,6 +870,7 @@ export default function GuidePage() {
           kicker="도입"
           title="처음 도입할 때 — 명부 옮기기와 운영 시작"
           tone="aqua"
+          collapsible
         >
           <p>
             지금 화면에 보이는 고객은 연습용 샘플입니다. 실제로 쓰기 시작할 때는
@@ -913,6 +916,7 @@ export default function GuidePage() {
           kicker="안전장치"
           title="실수했을 때 되돌리기와 백업"
           tone="amber"
+          collapsible
         >
           <p>
             기록을 다루다 보면 잘못 누르는 일이 생깁니다. 세 단계로 대비되어
@@ -971,6 +975,7 @@ export default function GuidePage() {
           kicker="상담"
           title="고객 케어 리포트 — 함께 보며 이야기하기"
           tone="gold"
+          collapsible
         >
           <p>
             고객 상세 위쪽의 <Ui>케어 리포트</Ui>를 누르면 그 고객의 기록이 한 장으로
@@ -1001,7 +1006,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 17 */}
-        <DocSection id="g17" no="17" kicker="현장" title="폰에서 쓰기" tone="violet">
+        <DocSection id="g17" no="17" kicker="현장" title="폰에서 쓰기" tone="violet" collapsible>
           <p>
             현장에서는 폰으로 쓰는 경우가 많습니다. PC와 같은 기능이고 배치만
             다릅니다.
@@ -1024,7 +1029,7 @@ export default function GuidePage() {
         </DocSection>
 
         {/* 14 */}
-        <DocSection id="g18" no="18" kicker="도움말" title="자주 묻는 질문" tone="sky">
+        <DocSection id="g18" no="18" kicker="도움말" title="자주 묻는 질문" tone="sky" collapsible>
           <DocFaq
             items={[
               {
