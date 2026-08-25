@@ -26,7 +26,7 @@ p.on("console", (m) => {
 let t;
 
 // ── 1. 명령 팔레트 — 이름 몇 글자로 고객까지 간다
-await go(p, "/", 2200);
+await go(p, "/dashboard", 2200);
 await p.keyboard.press("Control+k");
 await p.waitForTimeout(700);
 t = await bodyText(p);

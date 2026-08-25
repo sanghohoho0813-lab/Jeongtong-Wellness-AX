@@ -30,7 +30,7 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import { Modal } from "@/components/ui";
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
+  if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -38,7 +38,7 @@ function Logo() {
   const { isManager } = useStore();
   return (
     <Link
-      href={isManager ? "/" : STAFF_HOME}
+      href={isManager ? "/dashboard" : STAFF_HOME}
       className="flex min-w-0 items-center gap-2.5"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">

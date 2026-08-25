@@ -30,6 +30,7 @@ import {
   BookIcon,
   CalendarIcon,
   ChevronLeftIcon,
+  ChevronRightIcon,
   PlusIcon,
   SparkIcon,
 } from "@/components/ui/icons";
@@ -197,6 +198,18 @@ export default function CustomerDetailPage() {
                 정보 수정
               </Button>
             </div>
+            {/*
+              이 고객에게 우리 화면이 어떻게 보이는지.
+              고객으로 로그인하는 것이 아니라, 지금 보고 있는 자료를 고객 쪽
+              배치로 다시 그려 보는 것이다 — 자세한 이유는 미리보기 화면에.
+            */}
+            <Link
+              href={`/customers/${c.id}/preview`}
+              className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-btn px-4 text-sm font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800 sm:w-auto"
+            >
+              고객 화면 미리보기
+              <ChevronRightIcon className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </Card>

@@ -69,6 +69,13 @@ const config: Config = {
         },
         gold: {
           DEFAULT: "#C9A86A",
+          /*
+            늘 어두운 면(공개 화면 머리글·히어로·강조 가격 카드) 위에 얹는 금색.
+            gold-soft / gold-deep 는 테마 변수라 다크 모드에서 뒤집힌다 —
+            바탕이 함께 뒤집히는 카드에서는 그게 맞지만, 테마와 무관하게
+            늘 딥그린인 면에서는 글자만 까매져 안 보이게 된다. 그래서 고정값.
+          */
+          lite: "#E6D3A3",
           deep: v("--c-gold-deep"),
           soft: v("--c-gold-soft"),
         },

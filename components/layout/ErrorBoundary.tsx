@@ -126,7 +126,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <button
               onClick={() => {
                 window.localStorage.removeItem(STORAGE_KEY);
-                window.location.href = "/";
+                window.location.href = "/dashboard";
               }}
               className="touch-target mt-2.5 inline-flex items-center rounded-btn bg-danger px-4 py-2.5 text-[0.9375rem] font-bold text-white"
             >

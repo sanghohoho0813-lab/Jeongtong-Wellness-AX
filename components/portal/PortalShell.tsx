@@ -16,19 +16,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import {
-  BodyIcon,
+  CalendarIcon,
   ClipboardIcon,
   HomeIcon,
-  LeafIcon,
-  MoreIcon,
+  TicketIcon,
+  UsersIcon,
 } from "@/components/ui/icons";
 
+/**
+ * 하단 다섯 칸.
+ *
+ * 예전에는 홈 · 이용기록 · 웰니스 · 콘텐츠 · 더보기 였다. 그런데 고객이
+ * 이 앱을 여는 이유를 순서대로 적어 보면 다르다.
+ *
+ *   "다음에 언제 가지"     → 예약
+ *   "몇 번 남았지"          → 이용권
+ *   "저번에 어디 봐줬더라"  → 케어기록
+ *
+ * 웰니스·콘텐츠는 그 다음이다. 궁금해서 들어오는 것이지, 이걸 하러
+ * 들어오지는 않는다. 그래서 다섯 칸을 '하러 오는 일' 로 다시 채우고,
+ * 웰니스·콘텐츠·서비스 소개는 홈과 케어기록에서 이어 준다.
+ */
 const NAV = [
   { href: "/my", label: "홈", icon: HomeIcon },
-  { href: "/my/visits", label: "이용기록", icon: ClipboardIcon },
-  { href: "/my/wellness", label: "웰니스", icon: BodyIcon },
-  { href: "/my/content", label: "콘텐츠", icon: LeafIcon },
-  { href: "/my/more", label: "더보기", icon: MoreIcon },
+  { href: "/my/booking", label: "예약", icon: CalendarIcon },
+  { href: "/my/passes", label: "이용권", icon: TicketIcon },
+  { href: "/my/care", label: "케어기록", icon: ClipboardIcon },
+  { href: "/my/account", label: "마이페이지", icon: UsersIcon },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -91,6 +105,23 @@ export default function PortalShell({ children }: { children: ReactNode }) {
       */}
       <main className="mx-auto max-w-lg px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4">
         {children}
+
+        {/*
+          직원이 고객 화면을 열어 본 뒤 돌아갈 길.
+
+          누구에게나 보이지만 아무것도 새어 나가지 않는다 — 이 링크가 가리키는
+          /dashboard 는 직원 로그인 게이트 뒤에 있어서, 고객이 눌러도 로그인
+          화면에서 멈춘다. 링크 하나로 권한이 생기지는 않는다.
+        */}
+        <p className="mt-8 text-center text-[0.8125rem] text-ink-faint">
+          매장 직원이신가요?{" "}
+          <Link
+            href="/dashboard"
+            className="tap-line font-bold text-ink-sub underline-offset-4 hover:text-aqua-700 hover:underline"
+          >
+            내부 화면으로
+          </Link>
+        </p>
       </main>
 
       <nav

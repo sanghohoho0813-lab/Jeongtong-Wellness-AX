@@ -15,7 +15,7 @@ const p = await (await browser.newContext({ viewport: { width: 1440, height: 100
 const errs = [];
 p.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
 
-await go(p, "/", 2500);
+await go(p, "/dashboard", 2500);
 
 const seeded = await p.evaluate(() => {
   const raw = localStorage.getItem("jeongtong-ax-v1");
@@ -74,7 +74,7 @@ console.log(`   심은 자료 — 고객 ${seeded.c}명 · 방문 ${seeded.v}건
 const BUDGET_MS = 4000;
 
 for (const [path, label] of [
-  ["/", "대시보드"],
+  ["/dashboard", "대시보드"],
   ["/customers", "고객목록"],
   ["/briefing", "브리핑"],
   ["/retention", "재방문"],

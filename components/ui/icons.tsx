@@ -188,6 +188,32 @@ export const LeafIcon = (p: IconProps) => (
   </svg>
 );
 
+/** 이용권 — 가운데가 잘록한 표 모양 */
+export const TicketIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M3 8.5V6.5h18v2a2.2 2.2 0 0 0 0 4.4v2A2.2 2.2 0 0 0 21 17.5v2H3v-2a2.2 2.2 0 0 0 0-4.4v-2a2.2 2.2 0 0 0 0-4.4Z" />
+    <path d="M9.5 9.5v5M14.5 9.5v5" />
+  </svg>
+);
+
+/** 상담 — 말풍선 */
+export const ChatIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M20.5 12.2c0 3.9-3.8 7-8.5 7-1 0-2-.15-2.9-.42L4 20.5l1.5-3.6A6.6 6.6 0 0 1 3.5 12.2c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7Z" />
+    <path d="M8.6 12h.01M12 12h.01M15.4 12h.01" strokeWidth={2.4} />
+  </svg>
+);
+
+/** 친구 추천 — 선물 상자 */
+export const GiftIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M3.5 11.5h17v8.5a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-8.5Z" />
+    <path d="M2.8 7.8h18.4v3.7H2.8z" />
+    <path d="M12 7.8v13.2" />
+    <path d="M12 7.8S10.8 3 8.4 3a2.4 2.4 0 0 0 0 4.8H12Zm0 0s1.2-4.8 3.6-4.8a2.4 2.4 0 0 1 0 4.8H12Z" />
+  </svg>
+);
+
 export const BodyIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="12" cy="4.6" r="2.1" />

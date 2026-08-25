@@ -127,7 +127,7 @@ export default function GlobalError({ reset }: { reset: () => void }) {
                 type="button"
                 onClick={() => {
                   window.localStorage.removeItem(STORAGE_KEY);
-                  window.location.href = "/";
+                  window.location.href = "/dashboard";
                 }}
                 style={{
                   minHeight: 44,

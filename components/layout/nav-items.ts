@@ -37,7 +37,7 @@ export interface NavItem {
 
 /** Desktop 사이드바 메뉴 */
 export const SIDEBAR_ITEMS: NavItem[] = [
-  { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua" },
+  { href: "/dashboard", label: "대시보드", icon: HomeIcon, tone: "aqua" },
   { href: "/briefing", label: "오늘의 실행 브리핑", icon: SparkIcon, tone: "teal" },
   { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky" },
   { href: "/visits", label: "방문 / 이용 기록", icon: ClipboardIcon, tone: "violet" },
@@ -60,7 +60,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
  *  현장에서 급한 쪽은 언제나 '기록하기'다.)
  */
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua" },
+  { href: "/dashboard", label: "대시보드", icon: HomeIcon, tone: "aqua" },
   { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky" },
   { href: "/analytics", label: "분석", icon: ChartIcon, tone: "emerald" },
   { href: "/more", label: "더보기", icon: MoreIcon, tone: "gray" },

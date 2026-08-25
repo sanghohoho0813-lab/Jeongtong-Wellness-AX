@@ -1,20 +1,21 @@
 "use client";
 
 /**
- * 더보기 — 이용권 · 서비스 · 매장 · 계정
+ * 서비스 알아보기 — 우리가 무엇을 어떻게 하는가
  *
- * 하단 네비를 다섯 칸으로 묶었으니 나머지는 여기 모은다.
- * 어르신이 한 화면에서 위에서 아래로 훑을 수 있게 순서를 정했다:
- * 내 것(이용권) → 우리가 파는 것(서비스) → 매장 → 내 계정.
+ * 하단 다섯 칸을 '하러 오는 일'(홈·예약·이용권·케어기록·마이페이지)로
+ * 다시 채우면서, 이 화면은 소개 전용이 되었다.
+ *   내 이용권 → /my/passes
+ *   내 계정   → /my/account
+ * 같은 사실을 세 군데에 늘어놓지 않는다. 여기 남은 건 시술 구성과 가격,
+ * 그리고 매장 정보뿐이다. (마이페이지에서 이어진다)
  */
 
 import Image from "next/image";
 import { usePortal } from "@/lib/portal/store";
-import { summarizePasses } from "@/lib/portal/wellness";
-import { Badge, Button, Card, ProgressBar } from "@/components/ui";
+import { Badge, Card } from "@/components/ui";
 import { PhoneIcon } from "@/components/ui/icons";
 import { formatWon } from "@/lib/utils/format";
-import { formatDateKr } from "@/lib/utils/date";
 
 /** 실제 제품자료에서 옮긴 사진 — 홍보 페이지를 만들지는 않는다 */
 const LAYERS = [
@@ -24,76 +25,14 @@ const LAYERS = [
 ];
 
 export default function MyMore() {
-  const { customer, memberships, products, branch, email, signOut } = usePortal();
-  const pass = summarizePasses(memberships);
+  const { products, branch } = usePortal();
   const sold = products.filter((p) => p.active);
 
   return (
     <div className="space-y-4">
       <div className="px-1">
-        <h1 className="text-[1.375rem] font-extrabold text-ink">더보기</h1>
+        <h1 className="text-[1.375rem] font-extrabold text-ink">서비스 알아보기</h1>
       </div>
-
-      {/* 나의 이용권 */}
-      <Card>
-        <h2 className="mb-3 text-[1.0625rem] font-extrabold text-ink">
-          나의 이용권
-        </h2>
-
-        {memberships.length === 0 ? (
-          <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-6 text-center text-sm text-ink-sub">
-            보유하신 이용권이 없습니다.
-          </p>
-        ) : (
-          <ul className="space-y-2.5">
-            {memberships.map((m) => {
-              const used = m.totalCount - m.remainingCount;
-              const active = m.status === "active" && m.remainingCount > 0;
-              return (
-                <li
-                  key={m.id}
-                  className="rounded-card bg-card-soft px-4 py-3.5 ring-1 ring-stone-line"
-                >
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="font-extrabold text-ink">{m.programName}</span>
-                    {active ? (
-                      <Badge tone="positive">이용 중</Badge>
-                    ) : (
-                      <Badge tone="gray">사용 완료</Badge>
-                    )}
-                    <span className="nowrap-num ml-auto text-[1.0625rem] font-extrabold tabular text-ink">
-                      {m.remainingCount}/{m.totalCount}회
-                    </span>
-                  </div>
-
-                  <div className="mt-2">
-                    <ProgressBar
-                      ratio={m.totalCount > 0 ? used / m.totalCount : 0}
-                      tone={active && m.remainingCount <= 2 ? "warn" : "aqua"}
-                    />
-                  </div>
-
-                  <p className="nowrap-num mt-2 text-[0.8125rem] tabular text-ink-sub">
-                    {used}회 사용 · {m.remainingCount}회 남음 · 등록{" "}
-                    {formatDateKr(m.purchasedAt)}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {pass.totalRemaining > 0 && (
-          <p className="nowrap-num mt-3 text-center text-[0.9375rem] font-bold tabular text-aqua-700">
-            남은 이용 횟수 모두 합쳐 {pass.totalRemaining}회
-          </p>
-        )}
-
-        <p className="mt-3 text-[0.75rem] leading-relaxed text-ink-faint">
-          이용권 유효기간이나 환불 규정은 매장에서 정한 내용이 없어 표시하지
-          않습니다. 궁금하신 점은 매장에 문의해 주세요.
-        </p>
-      </Card>
 
       {/* 서비스 알아보기 */}
       <Card>
@@ -226,21 +165,6 @@ export default function MyMore() {
             </div>
           ))}
         </dl>
-      </Card>
-
-      {/* 계정 */}
-      <Card>
-        <h2 className="mb-2 text-[1.0625rem] font-extrabold text-ink">내 계정</h2>
-        <p className="text-[0.8125rem] leading-relaxed text-ink-sub">
-          {customer?.name}님 · {email}
-        </p>
-        <Button
-          variant="ghost"
-          className="mt-3 w-full"
-          onClick={() => void signOut()}
-        >
-          로그아웃
-        </Button>
       </Card>
 
       <p className="px-1 pb-2 text-[0.75rem] leading-relaxed text-ink-faint">

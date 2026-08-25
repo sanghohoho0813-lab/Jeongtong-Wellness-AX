@@ -105,7 +105,7 @@ export function canAccessRoute(role: AppRole, pathname: string): boolean {
 
 /** ADMIN 전용 페이지 경로 — 화면 가드·RLS 설계의 단일 기준 */
 export const ADMIN_ONLY_ROUTES = [
-  "/",
+  "/dashboard",
   "/briefing",
   "/visits",
   "/retention",

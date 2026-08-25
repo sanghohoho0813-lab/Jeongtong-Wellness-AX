@@ -60,7 +60,7 @@ export default function StaffGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (open) return;
     if (phase === "signed_out") {
-      const next = encodeURIComponent(pathname || "/");
+      const next = encodeURIComponent(pathname || "/dashboard");
       router.replace(`/login?next=${next}`);
     }
   }, [open, phase, router, pathname]);

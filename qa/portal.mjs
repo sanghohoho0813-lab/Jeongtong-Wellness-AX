@@ -86,11 +86,15 @@ const BANNED = /치료|치유|환자|질환|진단|처방|효능/;
 
 for (const [path, label] of [
   ["/my", "홈"],
+  ["/my/booking", "예약"],
+  ["/my/passes", "이용권"],
+  ["/my/care", "케어기록"],
+  ["/my/account", "마이페이지"],
   ["/my/wellness", "웰니스"],
   ["/my/visits", "이용기록"],
   ["/my/content", "콘텐츠"],
   ["/my/request", "문의"],
-  ["/my/more", "더보기"],
+  ["/my/more", "서비스소개"],
 ]) {
   await go(p, path, 2200);
   const r = await p.evaluate(() => {

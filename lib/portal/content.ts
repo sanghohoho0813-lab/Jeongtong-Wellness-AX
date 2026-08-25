@@ -147,3 +147,29 @@ export function rankContents(args: {
 export function findContent(id: string): WellnessContent | undefined {
   return CONTENTS.find((c) => c.id === id);
 }
+
+/**
+ * 홈 화면에 한 줄로 얹는 홈케어 한마디.
+ *
+ * 콘텐츠 목록(CONTENTS)과 같은 규칙을 따른다 — 증상도, 효능도, "~에 좋다"도
+ * 쓰지 않는다. 누구에게나 해당하는 생활 습관 이야기만 남긴다.
+ * 유형에 따라 문장이 바뀌지만, 그건 판정이 아니라 이용 방식에 맞춘 인사말이다.
+ */
+const HOMECARE_TIP: Record<WellnessTypeKey, string> = {
+  accumulating:
+    "따뜻한 물을 자주 드시고, 방문하실 때 편한 옷차림으로 오시면 좋습니다.",
+  steady:
+    "따뜻한 물을 자주 마셔 주세요. 지금처럼 일정한 간격으로 오시는 것이 가장 편하십니다.",
+  intensive:
+    "관리와 관리 사이에는 충분히 쉬어 주세요. 따뜻한 물과 가벼운 스트레칭을 곁들이시면 좋습니다.",
+  homecare:
+    "집에서는 몸을 따뜻하게 유지하고, 같은 자세로 오래 있지 않도록 자주 움직여 주세요.",
+  dormant:
+    "오랜만에 오실 때는 무리하지 마시고, 편하신 시간대로 알려 주시면 맞춰 드리겠습니다.",
+  renewal:
+    "따뜻한 물을 자주 드세요. 이용권 관련해 궁금하신 점은 매장에 편히 물어봐 주세요.",
+};
+
+export function homecareTip(type: WellnessTypeKey): string {
+  return HOMECARE_TIP[type];
+}

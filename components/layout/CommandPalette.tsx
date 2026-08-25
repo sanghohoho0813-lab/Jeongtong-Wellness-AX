@@ -45,7 +45,7 @@ const MAX_CUSTOMERS = 6;
  * 검색창을 한 번 헛치고는 다시 안 쓰게 된다.
  */
 const NAV_KEYWORDS: Record<string, string> = {
-  "/": "홈 대시보드 오늘 현황 첫화면",
+  "/dashboard": "홈 대시보드 오늘 현황 첫화면",
   "/briefing": "할일 오늘할일 과제 브리핑 관리대상 실행",
   "/customers": "명부 회원 손님 고객목록 등록",
   "/visits": "방문기록 이용기록 이력 상담",
