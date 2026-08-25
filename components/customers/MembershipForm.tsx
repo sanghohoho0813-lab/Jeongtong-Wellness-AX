@@ -226,10 +226,12 @@ export default function MembershipForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <FieldLabel>구매일</FieldLabel>
+          {/* 구매일도 오늘이거나 지난 날이다 — 사용 기한만 앞을 가리킨다 */}
           <DateTimeField
             date={purchasedAt}
             withTime={false}
             ariaLabel="구매일"
+            direction="past"
             onChange={(d) => setPurchasedAt(d)}
           />
         </div>

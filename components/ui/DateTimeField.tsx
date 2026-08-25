@@ -30,12 +30,32 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MINUTES = ["00", "10", "20", "30", "40", "50"];
 const HOURS_12 = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
-const QUICK = [
+/**
+ * 빠른 선택은 방향이 있다.
+ *
+ * 이 패널은 원래 '다음 관리 예정일' 용으로 만들었다. 그래서 칩이 전부
+ * 내일 · 1주 뒤 처럼 앞을 가리킨다. 그런데 같은 패널을 '방문 일시' 에도
+ * 쓰고 있었다 — 방문은 대개 오늘이거나 지난 일이다. 어제 오신 분을
+ * 오늘 적으려면 칩 다섯 개가 전부 쓸모없고 달력을 직접 뒤져야 했다.
+ *
+ * 게다가 방문에 앞선 날짜가 들어가면 조용히 망가진다. 2030년 방문이
+ * 하나 있으면 그 고객의 '최근 방문' 이 2030년이 되어, 재방문 목록에서
+ * 영원히 빠진다. 그래서 과거 방향일 때는 앞날을 아예 고를 수 없게 한다.
+ */
+const QUICK_FUTURE = [
   { label: "내일", days: 1 },
   { label: "3일 뒤", days: 3 },
   { label: "1주 뒤", days: 7 },
   { label: "2주 뒤", days: 14 },
   { label: "4주 뒤", days: 28 },
+];
+
+const QUICK_PAST = [
+  { label: "오늘", days: 0 },
+  { label: "어제", days: -1 },
+  { label: "2일 전", days: -2 },
+  { label: "3일 전", days: -3 },
+  { label: "1주 전", days: -7 },
 ];
 
 function chipCls(active: boolean): string {
@@ -65,6 +85,12 @@ export interface DateTimeValueProps {
   /** AI 추천 관리일 — 있으면 빠른 선택 맨 앞에 노출 */
   recommended?: { date: string; label?: string };
   withTime?: boolean;
+  /**
+   * 어느 쪽을 고르는 칸인가.
+   *   future — 앞으로 잡을 날 (다음 관리 예정일). 기본값.
+   *   past   — 이미 있었던 일 (방문 일시). 앞날은 고를 수 없다.
+   */
+  direction?: "future" | "past";
 }
 
 /** 선택 패널 — 빠른 선택 / 달력 / 오전·오후·시·분 */
@@ -74,11 +100,14 @@ export function DateTimePanel({
   onChange,
   recommended,
   withTime = true,
+  direction = "future",
   onDone,
 }: DateTimeValueProps & { onDone?: () => void }) {
   const [view, setView] = useState(() => monthKey(date || todayISO()));
   const cells = useMemo(() => monthMatrix(view), [view]);
   const today = todayISO();
+  const backward = direction === "past";
+  const QUICK = backward ? QUICK_PAST : QUICK_FUTURE;
   const parsed = splitTime(time);
   const meridiem: "am" | "pm" | null = parsed
     ? parsed.h < 12
@@ -185,20 +214,26 @@ export function DateTimePanel({
             const selected = d === date;
             const isToday = d === today;
             const past = d < today;
+            // 이미 있었던 일을 적는 칸이면 앞날은 고를 수 없다
+            const blocked = backward && d > today;
             return (
               <button
                 key={d}
                 type="button"
                 aria-label={d}
+                disabled={blocked}
+                title={blocked ? "아직 오지 않은 날입니다" : undefined}
                 onClick={() => pickDate(d)}
                 className={`nowrap-num flex h-9 items-center justify-center rounded-lg text-sm font-bold transition-colors ${
-                  selected
-                    ? "bg-gradient-to-br from-aqua-650 to-deep-700 text-white shadow-sm"
-                    : isToday
-                      ? "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-100"
-                      : past
-                        ? "text-ink-faint hover:bg-stone-bg"
-                        : "text-ink-soft hover:bg-aqua-50 hover:text-aqua-800"
+                  blocked
+                    ? "cursor-not-allowed text-ink-faint/40"
+                    : selected
+                      ? "bg-gradient-to-br from-aqua-650 to-deep-700 text-white shadow-sm"
+                      : isToday
+                        ? "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-100"
+                        : past
+                          ? "text-ink-faint hover:bg-stone-bg"
+                          : "text-ink-soft hover:bg-aqua-50 hover:text-aqua-800"
                 }`}
               >
                 {Number(d.slice(8))}
@@ -308,6 +343,7 @@ export function DateTimeField({
   onChange,
   recommended,
   withTime = true,
+  direction = "future",
   disabled = false,
   ariaLabel = "다음 관리 예정일",
   defaultOpen = false,
@@ -368,6 +404,7 @@ export function DateTimeField({
             onChange={onChange}
             recommended={recommended}
             withTime={withTime}
+            direction={direction}
             onDone={() => setOpen(false)}
           />
         </div>

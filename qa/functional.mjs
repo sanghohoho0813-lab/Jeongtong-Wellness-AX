@@ -87,6 +87,66 @@ if ((await delBtn.count()) > 0) {
   }
 } else log("방문 삭제 단추가 있다", false);
 
+// ── 3-2. 날짜 선택기가 옳은 쪽을 가리키는가
+//   방문은 이미 있었던 일, 다음 관리는 앞으로 잡을 일 — 빠른 선택이 서로 반대여야 한다
+await go(p, "/customers/c-01");
+await p.getByRole("button", { name: /방문 · 상담 기록/ }).first().click();
+await p.waitForTimeout(1200);
+{
+  const d = p.locator('[role="dialog"]').last();
+  await d.getByRole("button", { name: "방문 일시" }).click();
+  await p.waitForTimeout(800);
+  const chips = await p.evaluate(() =>
+    [...document.querySelectorAll('[role="dialog"] button')]
+      .map((b) => b.textContent.trim())
+      .filter((s) => /^(오늘|어제|\d+일 전|\d+주 전|내일|\d+일 뒤|\d+주 뒤)$/.test(s)),
+  );
+  log("방문 일시 — 빠른 선택이 지난 쪽을 가리킨다",
+      chips.includes("어제") && !chips.some((c) => /뒤$/.test(c)), chips.join(" · "));
+
+  const future = await p.evaluate(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return [...document.querySelectorAll('[role="dialog"] button[aria-label]')]
+      .map((b) => ({ d: b.getAttribute("aria-label"), off: b.disabled }))
+      .filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && x.d > today);
+  });
+  log("방문 일시 — 아직 오지 않은 날은 고를 수 없다",
+      future.length > 0 && future.every((x) => x.off), `앞날 ${future.length}칸 중 잠김 ${future.filter((x) => x.off).length}칸`);
+
+  await p.getByRole("button", { name: "어제", exact: true }).click();
+  await p.waitForTimeout(700);
+  const shown = await d.getByRole("button", { name: "방문 일시" }).innerText();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10).replace(/-/g, ".");
+  log("'어제' 를 누르면 어제 날짜가 들어간다", shown.includes(yesterday), shown.replace(/\n/g, " "));
+}
+await p.keyboard.press("Escape");
+await p.waitForTimeout(500);
+await p.keyboard.press("Escape");
+await p.waitForTimeout(700);
+await p.getByRole("button", { name: "그냥 닫기" }).click().catch(() => {});
+await p.waitForTimeout(700);
+
+await go(p, "/customers");
+await p.getByRole("button", { name: /고객 등록/ }).first().click();
+await p.waitForTimeout(1100);
+{
+  await p.locator('[role="dialog"]').last().getByRole("button", { name: "다음 관리 예정일" }).click();
+  await p.waitForTimeout(800);
+  const chips = await p.evaluate(() =>
+    [...document.querySelectorAll('[role="dialog"] button')]
+      .map((b) => b.textContent.trim())
+      .filter((s) => /^(오늘|어제|\d+일 전|\d+주 전|내일|\d+일 뒤|\d+주 뒤)$/.test(s)),
+  );
+  log("다음 관리 예정일 — 빠른 선택이 앞쪽을 가리킨다",
+      chips.includes("내일") && !chips.some((c) => /전$/.test(c)), chips.join(" · "));
+}
+await p.keyboard.press("Escape");
+await p.waitForTimeout(500);
+await p.keyboard.press("Escape");
+await p.waitForTimeout(700);
+await p.getByRole("button", { name: "그냥 닫기" }).click().catch(() => {});
+await p.waitForTimeout(600);
+
 // ── 4. 이용권 — 실제 가격표가 붙어 있는가
 await go(p, "/customers/c-01");
 const memBtn = p.getByRole("button", { name: /이용권 등록|이용권 추가/ });

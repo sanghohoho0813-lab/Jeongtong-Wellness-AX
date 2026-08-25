@@ -241,10 +241,17 @@ export default function VisitForm({
       {/* 방문 일시 — 지난 방문도 정확한 날짜로 남길 수 있어야 주기 계산이 맞는다 */}
       <div>
         <FieldLabel>방문 일시</FieldLabel>
+        {/*
+          방문은 대개 오늘이거나 지난 일이다. 빠른 선택이 내일·1주 뒤를
+          가리키고 있어 어제 오신 분을 적으려면 달력을 직접 뒤져야 했다.
+          이 칸만 뒤쪽(오늘·어제·2일 전…)을 가리키게 하고, 앞날은 아예
+          고를 수 없게 한다.
+        */}
         <DateTimeField
           date={visitDate}
           time={visitTime}
           ariaLabel="방문 일시"
+          direction="past"
           onChange={(d, t) => {
             setVisitDate(d);
             setVisitTime(t);
