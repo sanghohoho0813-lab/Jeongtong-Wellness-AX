@@ -22,6 +22,7 @@ const BASE = process.env.QA_BASE || "http://localhost:4402";
 const SUITES = [
   ["기능 회귀", "functional.mjs", []],
   ["키보드 · 초점", "keyboard.mjs", []],
+  ["사람이 하는 실수", "mistakes.mjs", []],
   ["화면 무너짐 (기본 글씨)", "layout.mjs", []],
   ["화면 무너짐 (큰 글씨 · 어두움)", "layout.mjs", ["--big", "--dark"]],
   ["손가락 · 눈 (밝음)", "reach.mjs", []],

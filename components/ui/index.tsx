@@ -812,6 +812,46 @@ export function Modal({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  /**
+   * 적다 만 것을 지키는 문지기
+   * ==========================
+   *
+   * 방문 기록에 상담 내용을 한참 적다가 창 바깥을 스치듯 눌렀다. 창이 닫히고
+   * 적은 것은 전부 사라졌다. 다시 열면 빈 칸이다. 아무 말도 없었다.
+   *
+   * 그래서 **사람이 실제로 손댄 칸이 있는지**를 본다. 판단은 입력값 비교가
+   * 아니라 input · change 이벤트로 한다 — 리액트가 값을 채워 넣는 것은 이
+   * 이벤트를 쏘지 않으므로, 기본값이나 자동 채움을 사람이 친 것으로 오해하지
+   * 않는다. 손댄 적이 없으면 지금까지처럼 조용히 닫힌다.
+   *
+   * 저장 후 닫는 길은 여기를 지나지 않는다 (페이지가 자기 상태를 직접 내린다).
+   */
+  const touchedRef = useRef(false);
+  const [asking, setAsking] = useState(false);
+  const askingRef = useRef(false);
+  askingRef.current = asking;
+
+  const tryClose = () => {
+    if (touchedRef.current) setAsking(true);
+    else onClose();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    touchedRef.current = false;
+    setAsking(false);
+    const panel = panelRef.current;
+    const mark = () => {
+      touchedRef.current = true;
+    };
+    panel?.addEventListener("input", mark);
+    panel?.addEventListener("change", mark);
+    return () => {
+      panel?.removeEventListener("input", mark);
+      panel?.removeEventListener("change", mark);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
 
@@ -831,7 +871,13 @@ export function Modal({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
-        closeRef.current();
+        // 확인 중이면 ESC 는 '계속 작성' 이다 — 여기서 또 닫으면 물어본 뜻이 없다
+        if (askingRef.current) {
+          setAsking(false);
+          return;
+        }
+        if (touchedRef.current) setAsking(true);
+        else closeRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -873,7 +919,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
         className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
-        onClick={onClose}
+        onClick={tryClose}
       />
       <div
         ref={panelRef}
@@ -886,7 +932,7 @@ export function Modal({
         <div className="modal-header flex items-center justify-between gap-3 border-b border-stone-line px-5 py-4">
           <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
           <button
-            onClick={onClose}
+            onClick={tryClose}
             aria-label="닫기"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub hover:bg-stone-bg-deep"
           >
@@ -894,6 +940,47 @@ export function Modal({
           </button>
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
+
+        {asking && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-t-card-lg bg-deep-950/55 p-5 sm:rounded-card-lg">
+            {/*
+              물어보는 동안에는 초점을 여기로 데려온다. 그러지 않으면 초점이
+              가림막 뒤 입력칸에 남아, Tab 이 보이지도 않는 칸들을 훑는다.
+            */}
+            <div
+              ref={(el) => el?.querySelector<HTMLElement>("button")?.focus()}
+              role="alertdialog"
+              aria-label="저장하지 않고 닫기"
+              className="w-full max-w-xs rounded-card bg-card p-5 shadow-float"
+            >
+              <p className="text-[1.0625rem] font-extrabold text-ink">
+                적으신 내용이 사라집니다
+              </p>
+              <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
+                저장하지 않고 닫으면 지금까지 입력하신 내용은 남지 않습니다.
+              </p>
+              <div className="mt-4 flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setAsking(false)}
+                >
+                  계속 작성
+                </Button>
+                <Button
+                  variant="danger"
+                  className="flex-1"
+                  onClick={() => {
+                    setAsking(false);
+                    onClose();
+                  }}
+                >
+                  그냥 닫기
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>,
     document.body,

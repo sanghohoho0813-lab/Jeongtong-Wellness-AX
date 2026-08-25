@@ -919,13 +919,24 @@ export default function GuidePage() {
           collapsible
         >
           <p>
-            기록을 다루다 보면 잘못 누르는 일이 생깁니다. 세 단계로 대비되어
+            기록을 다루다 보면 잘못 누르는 일이 생깁니다. 네 단계로 대비되어
             있습니다.
           </p>
           <DocSteps
             steps={[
               {
-                title: "① 바로 되돌리기",
+                title: "① 적다 만 것은 그냥 사라지지 않습니다",
+                body: (
+                  <>
+                    상담 내용을 적는 중에 창 바깥을 잘못 누르거나 <Ui>ESC</Ui>를
+                    눌러도 바로 닫히지 않습니다. <b>&ldquo;적으신 내용이
+                    사라집니다&rdquo;</b>라고 먼저 여쭤 봅니다.{" "}
+                    <Ui>계속 작성</Ui>을 누르시면 적던 내용 그대로 돌아갑니다.
+                  </>
+                ),
+              },
+              {
+                title: "② 바로 되돌리기",
                 body: (
                   <>
                     방문 기록이나 이용권을 지우면 화면 아래에 <Ui>되돌리기</Ui>
@@ -935,7 +946,7 @@ export default function GuidePage() {
                 ),
               },
               {
-                title: "② 수정하기",
+                title: "③ 수정하기",
                 body: (
                   <>
                     되돌리기 버튼이 사라졌더라도 대부분은 고칠 수 있습니다. 방문
@@ -945,7 +956,7 @@ export default function GuidePage() {
                 ),
               },
               {
-                title: "③ 백업으로 되돌리기",
+                title: "④ 백업으로 되돌리기",
                 body: (
                   <>
                     많은 기록이 한꺼번에 잘못됐다면 <Ui>백업으로 되돌리기</Ui>로 받아
