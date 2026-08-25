@@ -31,7 +31,9 @@ import {
   CalendarIcon,
   ChevronLeftIcon,
   PlusIcon,
+  SparkIcon,
 } from "@/components/ui/icons";
+import TaskCard from "@/components/briefing/TaskCard";
 import { DateTimePanel } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -75,6 +77,8 @@ export default function CustomerDetailPage() {
   const [confirmDeleteM, setConfirmDeleteM] = useState<string | undefined>();
   const [editingParts, setEditingParts] = useState(false);
   const [draftParts, setDraftParts] = useState<BodyPartRecord[]>([]);
+  /** AX Insight 판단 근거를 다 펼쳤는지 (기본은 핵심 3개만) */
+  const [reasonsOpen, setReasonsOpen] = useState(false);
 
   const derived = derivedById.get(params.id);
   const facts = factsById.get(params.id);
@@ -294,21 +298,41 @@ export default function CustomerDetailPage() {
             </div>
           </div>
 
-          {/* 관리상태 — 지금 챙겨야 하는 이유 (Priority 기준) */}
+          {/*
+            관리상태 — 지금 챙겨야 하는 이유 (Priority 기준).
+
+            근거를 전부 펼쳐 두면 무엇이 핵심인지 흐려진다. 판단을 뒤집을
+            만한 것은 대개 위의 두세 줄이고, 나머지는 확인하고 싶을 때만
+            본다. 그래서 셋까지만 펼치고 나머지는 눌러서 편다.
+          */}
           <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
             관리상태
           </p>
           <ul className="mt-1 space-y-1">
-            {insight.reasons.map((r, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
-              >
-                <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
-                {r}
-              </li>
-            ))}
+            {(reasonsOpen ? insight.reasons : insight.reasons.slice(0, 3)).map(
+              (r, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                >
+                  <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
+                  {r}
+                </li>
+              ),
+            )}
           </ul>
+          {insight.reasons.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setReasonsOpen((v) => !v)}
+              aria-expanded={reasonsOpen}
+              className="tap-line mt-1 text-[0.8125rem] font-bold text-aqua-700"
+            >
+              {reasonsOpen
+                ? "판단 근거 접기"
+                : `판단 근거 ${insight.reasons.length - 3}개 더 보기`}
+            </button>
+          )}
 
           {/* 매출기회 — 관리하면 기존 매출로 이어질 수 있는 근거 */}
           {opportunity && opportunity.type !== "none" && (
@@ -343,6 +367,36 @@ export default function CustomerDetailPage() {
             </p>
           )}
         </div>
+
+        {/*
+          지금 이 고객에게 할 일.
+
+          여태 이 화면은 브리핑이 만든 과제를 찾아 두고도 그 문장만 위
+          AX Insight 에 빌려 쓰고, 정작 처리는 브리핑 화면으로 나가야 했다.
+          한 고객을 열어 놓고 "그래서 지금 뭘 하지" 를 묻는 자리가 바로
+          여기인데, 답은 다른 화면에 있었던 셈이다.
+
+          브리핑과 **같은 카드**를 그대로 가져다 쓴다. 그래야 어느 쪽에서
+          처리하든 남는 기록이 하나고, 두 화면이 서로 다른 말을 하지 않는다.
+        */}
+        {task && (
+          <Card>
+            <SectionTitle
+              icon={<SparkIcon className="h-4 w-4" />}
+              action={
+                <Link
+                  href="/briefing"
+                  className="tap-line whitespace-nowrap text-sm font-bold text-aqua-700"
+                >
+                  전체 브리핑
+                </Link>
+              }
+            >
+              지금 할 일
+            </SectionTitle>
+            <TaskCard task={task} compact />
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
           {/* 집중 케어 부위 — 주요 기능 */}
@@ -620,8 +674,9 @@ export default function CustomerDetailPage() {
         <Card>
           <SectionTitle>방문 · 이용 이력</SectionTitle>
           {visits.length === 0 ? (
-            <p className="rounded-card bg-card-soft py-8 text-center text-sm text-ink-sub">
-              아직 방문 기록이 없습니다.
+            <p className="rounded-card bg-card-soft px-4 py-8 text-center text-sm leading-relaxed text-ink-sub">
+              아직 방문 기록이 없습니다. 위의 <b>방문 · 상담 기록</b>으로 첫
+              기록을 남기면 이용주기와 관리 판단이 여기서부터 쌓입니다.
             </p>
           ) : (
             <ol className="relative space-y-4 border-l-2 border-aqua-100 pl-5">

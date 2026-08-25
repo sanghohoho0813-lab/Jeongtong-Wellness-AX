@@ -7,7 +7,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
-import { formatRelative } from "@/lib/utils/date";
+import { daysAgo, formatRelative } from "@/lib/utils/date";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { matchesQuery } from "@/lib/utils/hangul";
 import {
@@ -315,10 +315,44 @@ export default function CustomersPage() {
                 </div>
                 <p className="tabular mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub">
                   방문 {d.visitCount}회 · 최근 {formatRelative(d.lastVisitDate)}
-                  {/* 잔여 회차는 넓은 화면에서 오른쪽에 따로 나오므로 여기선 뺀다 */}
                   <span className="hidden sm:inline">
                     {" · "}
                     {displayPhone(d.customer.phone, canSeePhone)}
+                  </span>
+                </p>
+                {/*
+                  이용권 잔여 · 다음 관리 예정일.
+
+                  이 둘은 "누구를 먼저 챙기지" 를 정하는 데 실제로 쓰는 값인데,
+                  잔여는 넓은 화면에만 있었고 예정일은 어느 폭에서도 없었다.
+                  목록에서 못 보면 한 명씩 열어 보게 된다. 글자를 늘리지 않도록
+                  라벨 없이 값만, 한 줄로 둔다.
+                */}
+                <p className="tabular mt-0.5 text-[0.875rem] font-bold leading-snug">
+                  <span
+                    className={
+                      d.activeMembership && d.activeMembership.remainingCount <= 2
+                        ? "text-gold-deep"
+                        : "text-ink-soft"
+                    }
+                  >
+                    {d.activeMembership
+                      ? `이용권 ${d.activeMembership.remainingCount}/${d.activeMembership.totalCount}회`
+                      : "이용권 없음"}
+                  </span>
+                  <span className="text-ink-faint"> · </span>
+                  <span
+                    className={
+                      d.customer.nextManageDate &&
+                      daysAgo(d.customer.nextManageDate) >= 0
+                        ? "text-danger-text"
+                        : "text-ink-soft"
+                    }
+                  >
+                    {/* 목록에서는 연도까지 필요 없다 — 줄을 하나로 유지한다 */}
+                    {d.customer.nextManageDate
+                      ? `예정일 ${d.customer.nextManageDate.slice(5).replace("-", ".")}`
+                      : "예정일 미정"}
                   </span>
                 </p>
                 {(() => {
@@ -354,20 +388,12 @@ export default function CustomersPage() {
                   );
                 })()}
               </div>
-              <div className="hidden shrink-0 text-right sm:block">
-                {d.activeMembership ? (
-                  <>
-                    <p className="nowrap-num text-sm font-bold text-ink-soft">
-                      잔여 {d.activeMembership.remainingCount}회
-                    </p>
-                    <p className="max-w-36 truncate text-xs text-ink-sub">
-                      {d.activeMembership.programName}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-xs text-ink-faint">이용권 없음</p>
-                )}
-              </div>
+              {/* 잔여 회차는 이제 왼쪽 줄에 늘 나오므로, 여기는 어떤 이용권인지만 */}
+              {d.activeMembership && (
+                <p className="hidden max-w-36 shrink-0 truncate text-right text-xs text-ink-sub sm:block">
+                  {d.activeMembership.programName}
+                </p>
+              )}
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
             </Link>
           ))}

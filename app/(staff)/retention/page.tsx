@@ -305,8 +305,9 @@ export default function RetentionPage() {
             </SectionTitle>
             <p className="-mt-2 mb-3 text-sm text-ink-sub">{g.description}</p>
             {g.rows.length === 0 ? (
-              <p className="rounded-card bg-card-soft py-6 text-center text-sm text-ink-sub">
-                해당 고객이 없습니다.
+              <p className="rounded-card bg-card-soft px-4 py-6 text-center text-sm leading-relaxed text-ink-sub">
+                지금 이 구간에 해당하는 고객이 없습니다. 잘못된 것이 아니라
+                챙길 것이 없다는 뜻입니다.
               </p>
             ) : (
               <div className="space-y-2">

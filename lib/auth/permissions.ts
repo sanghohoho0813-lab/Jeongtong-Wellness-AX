@@ -16,7 +16,7 @@
  *  /               ✅      ❌      대시보드(운영 현황) — ADMIN 전용
  *  /briefing       ✅      ❌      실행 브리핑 — ADMIN 전용
  *  /customers      ✅      ✅      STAFF의 유일한 업무 화면 (검색/조회/등록/수정)
- *  /customers/[id] ✅      ✅      케어 부위·다음 관리일·케어 선호 기록 포함
+ *  /customers/[id] ✅      ✅      케어 부위·다음 관리 예정일·케어 선호 기록 포함
  *  /visits         ✅      ❌      방문/이용 기록은 고객 상세에서 입력
  *  /retention      ✅      ❌      재방문 업무 배분 — ADMIN 전용
  *  /analytics      ✅      ❌      성과 지표 — ADMIN 전용

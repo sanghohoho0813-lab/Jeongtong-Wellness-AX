@@ -462,7 +462,7 @@ export default function VisitForm({
           {/* AX 추천 다음 관리일 — 기존 방문주기 데이터 기반 (예측 모델 아님) */}
           <div className="mt-2 rounded-btn bg-card-soft px-3 py-2 ring-1 ring-stone-line">
             <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-              AX 추천 다음 관리일
+              AI 추천일
             </p>
             {recommendation.date ? (
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">

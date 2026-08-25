@@ -498,7 +498,7 @@ export default function TaskCard({
                 </div>
                 <div className="min-w-40 flex-1">
                   <p className={`text-xs font-bold ${hero ? "text-deep-sub" : "text-ink-sub"}`}>
-                    다음 관리일
+                    다음 관리 예정일
                   </p>
                   {/* 날짜 · 시간 모두 클릭으로 지정 (타자 입력 불필요) */}
                   <div className="mt-1">

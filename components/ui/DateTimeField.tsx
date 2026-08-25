@@ -309,7 +309,7 @@ export function DateTimeField({
   recommended,
   withTime = true,
   disabled = false,
-  ariaLabel = "다음 관리일",
+  ariaLabel = "다음 관리 예정일",
   defaultOpen = false,
 }: DateTimeValueProps & {
   disabled?: boolean;

@@ -265,7 +265,7 @@ export default function VisitsPage() {
                 {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
                 {v.membershipId ? " · 이용권 차감" : ""}
                 {v.nextManageDate
-                  ? ` · 다음 관리일 ${formatDateKr(v.nextManageDate)}`
+                  ? ` · 다음 관리 예정일 ${formatDateKr(v.nextManageDate)}`
                   : ""}
               </p>
               <div className="-mb-1.5 mt-0.5 flex items-center justify-end gap-1.5">
