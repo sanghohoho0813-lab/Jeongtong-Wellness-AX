@@ -26,6 +26,7 @@ import { useToast } from "@/components/ui/toast";
 import DataImport from "@/components/settings/DataImport";
 import ProductTable from "@/components/settings/ProductTable";
 import SupabaseLinkCard from "@/components/settings/SupabaseLinkCard";
+import StaffAccountRow from "@/components/settings/StaffAccountRow";
 import { previewRuleChange } from "@/lib/scoring/rule-preview";
 import {
   daysAgo,
@@ -399,6 +400,8 @@ export default function SettingsPage() {
                 >
                   {s.active ? "재직 중" : "비활성"}
                 </button>
+                {/* 로그인 계정 잇기 — 이 줄이 곧 권한 부여다 */}
+                <StaffAccountRow staffId={s.id} staffName={s.name} />
               </li>
             ))}
           </ul>

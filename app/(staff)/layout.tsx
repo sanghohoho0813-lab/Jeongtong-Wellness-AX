@@ -9,6 +9,7 @@
 import { AppProvider } from "@/lib/data/store";
 import { StaffLinkProvider } from "@/lib/supabase/StaffLink";
 import AppShell from "@/components/layout/AppShell";
+import StaffGate from "@/components/layout/StaffGate";
 import { ToastProvider } from "@/components/ui/toast";
 import { TourProvider } from "@/components/docs/Tour";
 
@@ -21,7 +22,10 @@ export default function StaffLayout({
       <StaffLinkProvider>
         <ToastProvider>
           <TourProvider>
-            <AppShell>{children}</AppShell>
+            {/* 로그인하지 않았으면 여기서 멈춘다 (Demo 는 지나간다) */}
+            <StaffGate>
+              <AppShell>{children}</AppShell>
+            </StaffGate>
           </TourProvider>
         </ToastProvider>
       </StaffLinkProvider>

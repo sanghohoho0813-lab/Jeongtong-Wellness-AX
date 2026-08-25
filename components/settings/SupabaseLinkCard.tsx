@@ -60,6 +60,12 @@ export default function SupabaseLinkCard() {
         매장 계정 연결
       </SectionTitle>
 
+      {phase === "checking" && (
+        <p className="-mt-2 text-sm leading-relaxed text-ink-sub">
+          연결 상태를 확인하고 있습니다…
+        </p>
+      )}
+
       {phase === "off" && (
         <p className="-mt-2 text-sm leading-relaxed text-ink-sub">
           이 빌드에는 서버 연결 설정이 들어 있지 않습니다. 지금은 이 기기

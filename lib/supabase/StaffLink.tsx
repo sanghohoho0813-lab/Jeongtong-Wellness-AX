@@ -46,6 +46,7 @@ import {
 
 export type LinkPhase =
   | "off" // 설정 없음 — 이 빌드는 서버를 모른다
+  | "checking" // 세션을 확인하는 중 — 아직 아무것도 단정하지 않는다
   | "signed_out" // 설정은 있고 로그인 안 함
   | "no_staff" // 로그인은 됐는데 직원 레코드에 이어지지 않음
   | "choosing" // 첫 연결 — 어느 쪽을 살릴지 고르는 중
@@ -115,9 +116,16 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
   const store = useStore();
   const { ready, customers, visits, memberships, products, staff, branches } = store;
   const applyRemote = store.applyRemote;
+  const setAuthStaff = store.setAuthStaff;
 
+  /*
+    처음에는 "로그인 안 함" 이 아니라 "아직 모른다(checking)" 로 시작한다.
+    세션 확인은 비동기라 첫 렌더에서는 답이 없는데, 그 찰나를 로그인 안 함
+    으로 단정하면 로그인해 둔 사람도 새로고침할 때마다 로그인 화면으로
+    튕겨 나간다.
+  */
   const [phase, setPhase] = useState<LinkPhase>(
-    supabaseConfigured ? "signed_out" : "off",
+    supabaseConfigured ? "checking" : "off",
   );
   const [identity, setIdentity] = useState<StaffIdentity | undefined>();
   const [error, setError] = useState("");
@@ -160,10 +168,19 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
       const id = await loadStaffIdentity(sb);
       if (!id) {
         const { data } = await sb.auth.getSession();
+        setAuthStaff(undefined);
         setPhase(data.session ? "no_staff" : "signed_out");
         return;
       }
       setIdentity(id);
+      /*
+        여기가 권한의 출발점이다.
+
+        role 은 화면이 고른 값이 아니라 서버가 auth.uid() 로 찾아 준
+        staff 레코드의 값이다. 이걸 저장소에 넘겨 주면 그때부터 화면의
+        관리자 판정은 전부 여기서 나온다.
+      */
+      setAuthStaff({ staffId: id.staffId, name: id.staffName, role: id.role });
 
       /*
        * 이미 연결을 마친 기기라면 묻지 않는다.
@@ -192,7 +209,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
       setPhase("choosing");
       void loadInbox(sb, id.branchId);
     },
-    [loadInbox, applyRemote],
+    [loadInbox, applyRemote, setAuthStaff],
   );
 
   useEffect(() => {
@@ -340,11 +357,13 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     clearLinked();
     if (sb) await sb.auth.signOut();
     setIdentity(undefined);
+    // 권한도 함께 내려놓는다 — 세션만 지우고 role 을 남겨 두면 안 된다
+    setAuthStaff(undefined);
     setFeedback([]);
     setRequests([]);
     setLastSyncedAt(undefined);
     setPhase(supabaseConfigured ? "signed_out" : "off");
-  }, []);
+  }, [setAuthStaff]);
 
   // ---------- 고객 연결코드 · 수신함 처리 ----------
 

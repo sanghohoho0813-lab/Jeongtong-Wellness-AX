@@ -124,7 +124,7 @@ export async function pullAll(
     await Promise.all([
       sb.from("branches").select("*").eq("id", bid),
       sb.from("staff").select("*").eq("branch_id", bid),
-      sb.from("customers").select("*").eq("branch_id", bid),
+      pullCustomers(sb, bid),
       sb.from("customer_preferences").select("*").eq("branch_id", bid),
       sb.from("memberships").select("*").eq("branch_id", bid),
       sb.from("service_products").select("*").eq("branch_id", bid),
@@ -162,6 +162,23 @@ export async function pullAll(
     visits,
     products: (products.data ?? []).map(productFromRow),
   };
+}
+
+/**
+ * 고객은 테이블이 아니라 뷰에서 읽는다.
+ *
+ * customers.phone 은 컬럼 단위로 읽기 권한을 회수해 둔다
+ * (supabase/auth-hardening.sql). 원문은 ADMIN 에게만, 직원에게는 가린
+ * 값이 이 뷰를 통해서만 나온다.
+ *
+ * 아직 그 SQL 을 돌리지 않은 서버도 있다. 그때는 뷰가 없거나 모양이
+ * 달라 실패하는데, 그것 때문에 매장 화면 전체가 멎으면 안 된다.
+ * 실패하면 테이블로 되돌아간다 — 지점 범위는 어느 쪽이든 RLS 가 잡는다.
+ */
+async function pullCustomers(sb: SupabaseClient, bid: string) {
+  const v = await sb.from("customers_view").select("*").eq("branch_id", bid);
+  if (!v.error) return v;
+  return sb.from("customers").select("*").eq("branch_id", bid);
 }
 
 const PAGE = 1000;
@@ -235,7 +252,24 @@ export async function pushAll(
     if (error) throw error;
   }
   await upsertChunked(sb, "staff", data.staff.map(staffToRow));
-  await upsertChunked(sb, "customers", data.customers.map(customerToRow));
+  /*
+   * 고객은 두 묶음으로 나눠 올린다.
+   *
+   * 직원 세션이 들고 있는 연락처는 가려진 문자열이다. 그걸 그대로 올리면
+   * 서버의 원본 번호가 별표로 덮여 영영 사라진다. 그래서 가려진 줄에서는
+   * 연락처 칸을 아예 빼고 보낸다 — 서버는 없는 칸을 건드리지 않는다.
+   *
+   * 한 번에 못 보내고 나누는 이유는 PostgREST 가 묶음 안의 모든 줄이
+   * 같은 칸 구성을 갖기를 요구하기 때문이다.
+   */
+  const maskedPhone = data.customers.filter((c) => c.phoneMasked === true);
+  const knownPhone = data.customers.filter((c) => c.phoneMasked !== true);
+  await upsertChunked(sb, "customers", knownPhone.map((c) => customerToRow(c)));
+  await upsertChunked(
+    sb,
+    "customers",
+    maskedPhone.map((c) => customerToRow(c, false)),
+  );
   await upsertChunked(
     sb,
     "service_products",

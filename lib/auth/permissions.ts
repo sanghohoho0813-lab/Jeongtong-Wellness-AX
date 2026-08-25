@@ -1,15 +1,27 @@
 /**
- * 사용자 권한 정의 — Supabase Auth / RLS 설계 기준 문서
- * =====================================================
+ * 사용자 권한 정의
+ * =================
  *
- * 이 파일은 아직 실행 로직이 아니다.
- * 현재 화면·기능 기준으로 ADMIN / STAFF 역할의 접근 범위를 고정해 두어,
- * Supabase 연동 시 RLS 정책과 화면 가드를 이 정의대로 구현한다.
+ * 여기 적힌 것은 **화면을 어디까지 열어 줄지**다. 실제 방어가 아니다.
  *
- * 현재 프론트 구현과의 매핑:
+ * 실제 방어는 Supabase 의 RLS 와 컬럼 권한이 한다 (supabase/schema.sql ·
+ * portal.sql · auth-hardening.sql). 브라우저에서 이 파일을 통째로 지워도
+ * 서버는 여전히 남의 자료를 내주지 않는다. 반대로 말하면, 이 파일만
+ * 손보고 RLS 를 빼먹으면 아무것도 막은 게 아니다.
+ *
+ * 누가 나인가 — 서버가 정한다
+ * ---------------------------
+ *   auth.uid()  →  staff.auth_user_id  →  staff.role  →  branch_id
+ *
+ * 로그인해서 들어왔다면 useStore().isManager 는 위 경로로 받은 role 에서만
+ * 나온다 (lib/supabase/StaffLink.tsx → store.setAuthStaff). 화면에서 직원을
+ * 골라 바꾸는 일은 Demo(NEXT_PUBLIC_DEMO_MODE=1) 에서만 가능하고,
+ * 로그인 상태에서는 setCurrentStaff 자체가 아무 일도 하지 않는다.
+ *
+ * 역할 매핑
  *  - Staff.role: "owner" | "manager"  → ADMIN
  *  - Staff.role: "staff"              → STAFF
- *  - useStore().isManager             → role === ADMIN 판정 (화면 분기에 이미 사용 중)
+ *  - customer_accounts.auth_user_id   → CUSTOMER (MY WELLNESS, 본인 한 행만)
  *
  * ── 페이지 접근 ──────────────────────────────────────
  *  경로            ADMIN  STAFF   비고
@@ -45,10 +57,17 @@
  *  사용자는 staff.auth_user_id = auth.uid() 로 자기 지점을 판별한다.
  *
  *  ── 연락처(phone) 처리 ──
- *  직원에게는 고객 연락처를 노출하지 않는다 (010-****-1234 로 마스킹).
- *  RLS 는 행 단위이므로 컬럼 차단은 customers_view 에서 처리하며,
- *  프론트는 displayPhone(phone, canSeePhone) 으로 동일 규칙을 적용한다.
- *  → useStore().canSeePhone === isManager
+ *  직원에게는 고객 연락처를 노출하지 않는다 (010-****-5678 로 마스킹).
+ *
+ *  RLS 는 행 단위라 컬럼은 못 막는다. 그래서 두 겹으로 한다.
+ *    1) customers.phone 의 SELECT 권한 자체를 회수한다 (컬럼 단위 GRANT).
+ *       이제 누가 API 로 phone 을 읽으려 해도 42501 이다.
+ *    2) 읽기는 customers_view 로만 한다. 뷰가 is_admin() / 본인 여부를 보고
+ *       원문 또는 가린 값을 준다.
+ *  앱은 가려진 값을 들고 있을 때 그 칸을 서버로 되돌려 쓰지 않는다
+ *  (Customer.phoneMasked → customerToRow(c, false)). 안 그러면 원본 번호가
+ *  별표로 덮인다.
+ *  → useStore().canSeePhone === isManager (화면 표시 규칙)
  */
 
 import type { StaffRole } from "@/lib/types";

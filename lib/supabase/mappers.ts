@@ -157,6 +157,8 @@ export function customerFromRow(r: Row, preferences: CarePreference[] = []): Cus
     branchId: r.branch_id,
     name: r.name ?? "",
     phone: asText(r.phone) ?? "",
+    // customers_view 로 읽을 때만 온다. 테이블을 직접 읽으면 undefined
+    phoneMasked: r.phone_masked === true ? true : undefined,
     gender: r.gender ?? undefined,
     birthYear: typeof r.birth_year === "number" ? r.birth_year : undefined,
     ageGroup: asText(r.age_group),
@@ -173,12 +175,19 @@ export function customerFromRow(r: Row, preferences: CarePreference[] = []): Cus
   };
 }
 
-export function customerToRow(c: Customer): Row {
+/**
+ * 고객 한 줄을 DB 모양으로.
+ *
+ * withPhone=false 면 연락처 칸을 아예 빼고 보낸다. 직원 세션에서 화면이
+ * 들고 있는 값은 가려진 문자열(`010-****-5678`)이라, 그대로 올리면
+ * 서버의 원본 번호가 별표로 덮인다. 없는 칸은 서버에서 건드리지 않는다.
+ */
+export function customerToRow(c: Customer, withPhone = true): Row {
   return {
     id: toUuid(c.id),
     branch_id: toUuid(c.branchId),
     name: c.name,
-    phone: c.phone ?? "",
+    ...(withPhone ? { phone: c.phone ?? "" } : {}),
     gender: c.gender ?? null,
     birth_year: c.birthYear ?? null,
     age_group: c.ageGroup ?? null,

@@ -62,6 +62,9 @@ export function phoneDigits(value: string): string {
  * 010-****-1234 형태로 뒷자리만 남겨 고객 식별은 가능하게 한다.
  */
 export function maskPhone(phone: string): string {
+  // 서버가 이미 가려서 보낸 값(010-****-5678)은 그대로 둔다.
+  // 다시 가리면 별표까지 숫자로 세어 '***-****-5678' 처럼 모양이 달라진다.
+  if (phone.includes("*")) return phone;
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 11)
     return `${digits.slice(0, 3)}-****-${digits.slice(7)}`;

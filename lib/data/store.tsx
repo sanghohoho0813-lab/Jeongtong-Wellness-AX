@@ -25,6 +25,7 @@ import {
   Membership,
   ServiceProduct,
   Staff,
+  StaffRole,
   CarePreference,
   PreferenceCategory,
   SalesOpportunity,
@@ -146,6 +147,18 @@ interface StoreValue extends PersistedState {
   /** 화면 공유 모드 — 고객 이름·연락처를 가려서 보여준다 */
   privacyMode: boolean;
   setCurrentStaff: (staffId: string) => void;
+  /**
+   * 서버가 정한 나 — 로그인한 계정에 이어진 직원 레코드.
+   *
+   * 이 값이 있으면 화면의 권한은 전적으로 여기서 나온다. 사이드바에서
+   * 직원을 바꿔도 권한은 따라 바뀌지 않는다(애초에 바꿀 수 없게 막는다).
+   * 없는 경우는 Demo — 이 기기 안 가상 자료로만 도는 상태다.
+   */
+  authStaff?: { staffId: string; name: string; role: StaffRole };
+  /** StaffLink 가 로그인 결과를 알려 주는 통로 (다른 곳에서 부르지 않는다) */
+  setAuthStaff: (
+    v: { staffId: string; name: string; role: StaffRole } | undefined,
+  ) => void;
   /** 케어 선호 · 특이사항 (고객 감동 포인트) */
   addPreference: (
     customerId: string,
@@ -532,8 +545,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [ready, briefingTasks]);
 
+  /**
+   * 서버가 정한 나.
+   *
+   * 이 값은 저장하지 않는다(localStorage 에 넣지 않는다). 저장해 두면
+   * 브라우저 개발자도구에서 role 을 owner 로 고쳐 넣는 순간 관리자
+   * 화면이 열린다. 매번 로그인 세션에서 새로 받아 온다.
+   */
+  const [authStaff, setAuthStaff] = useState<
+    { staffId: string; name: string; role: StaffRole } | undefined
+  >();
+
   // 현재 사용자 — 지정되지 않았거나 비활성이면 첫 owner(없으면 첫 직원)
   const currentStaff = useMemo(() => {
+    // 로그인한 계정이 있으면 그 사람이다. 고를 여지가 없다
+    if (authStaff) {
+      const mine = state.staff.find((s) => s.id === authStaff.staffId);
+      if (mine) return mine;
+      // 아직 지점 자료를 못 받아 온 찰나 — 서버가 알려 준 것만으로 세운다
+      return {
+        id: authStaff.staffId,
+        branchId: "",
+        name: authStaff.name,
+        role: authStaff.role,
+        active: true,
+      } as Staff;
+    }
     const found = state.staff.find(
       (s) => s.id === state.currentStaffId && s.active,
     );
@@ -542,10 +579,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       state.staff.find((s) => s.role === "owner" && s.active) ??
       state.staff[0]
     );
-  }, [state.staff, state.currentStaffId]);
+  }, [state.staff, state.currentStaffId, authStaff]);
 
-  const isManager =
-    currentStaff?.role === "owner" || currentStaff?.role === "manager";
+  /**
+   * 관리자인가.
+   *
+   * 로그인해서 들어왔다면 **서버가 준 role 만** 본다. 화면에서 고른
+   * 직원이 아니라 auth.uid() 에 이어진 staff.role 이 기준이다.
+   * (진짜 방어는 RLS 다. 이 값은 메뉴를 감추는 데 쓴다)
+   */
+  const isManager = authStaff
+    ? authStaff.role === "owner" || authStaff.role === "manager"
+    : currentStaff?.role === "owner" || currentStaff?.role === "manager";
   // 연락처 원본은 대표/관리자만 열람 (직원 화면에서는 마스킹)
   /**
    * 화면 공유 모드 — 켜져 있으면 관리자에게도 연락처를 가린다.
@@ -555,9 +600,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const privacyMode = state.settings.privacyMode === true;
   const canSeePhone = isManager && !privacyMode;
 
-  const setCurrentStaff = useCallback((staffId: string) => {
-    setState((s) => ({ ...s, currentStaffId: staffId }));
-  }, []);
+  /**
+   * 직원 바꾸기 — 로그인 상태에서는 아무 일도 하지 않는다.
+   *
+   * 화면에서 단추를 숨기는 것만으로는 부족하다. 콘솔에서 이 함수를
+   * 부르면 그만이기 때문이다. 로그인해서 들어왔다면 나는 서버가 정한
+   * 그 사람 하나뿐이다.
+   */
+  const setCurrentStaff = useCallback(
+    (staffId: string) => {
+      if (authStaff) return;
+      setState((s) => ({ ...s, currentStaffId: staffId }));
+    },
+    [authStaff],
+  );
 
   // ---------- 케어 선호 · 특이사항 ----------
 
@@ -1167,6 +1223,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     canSeePhone,
     privacyMode,
     setCurrentStaff,
+    authStaff,
+    setAuthStaff,
     addPreference,
     togglePreferencePin,
     removePreference,

@@ -42,6 +42,15 @@ export interface Customer {
   branchId: string;
   name: string;
   phone: string;
+  /**
+   * 서버가 이 연락처를 가려서 내려 줬는가.
+   *
+   * 직원(STAFF) 세션에서는 원문 대신 `010-****-5678` 이 온다. 이 표시가
+   * 있으면 앱은 그 값을 **절대 서버로 되돌려 쓰지 않는다** — 가린 값을
+   * 그대로 밀어 넣으면 원본 번호가 별표로 덮여 사라지기 때문이다.
+   * (Supabase: customers_view.phone_masked)
+   */
+  phoneMasked?: boolean;
   gender?: "female" | "male" | "other";
   birthYear?: number;
   registeredAt: string; // ISO date

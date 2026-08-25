@@ -171,11 +171,27 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
     const sb = sbRef.current;
     if (!sb) return;
 
-    const { data: me, error: meErr } = await sb
-      .from("customers")
-      .select("*")
-      .limit(1)
-      .maybeSingle();
+    /*
+      본인 한 행을 읽는다.
+
+      customers_view 를 먼저 본다 — 연락처를 컬럼 단위로 잠근 뒤에는
+      본인 번호가 이 뷰로만 온다(auth-hardening.sql). 아직 그 SQL 을
+      돌리지 않은 서버에서는 뷰가 직원 범위로만 좁혀져 있어 0행이 되므로,
+      그때는 테이블로 되돌아간다. 어느 쪽이든 RLS 가 "본인 한 행" 을
+      보장하므로 남의 자료가 나올 길은 없다.
+    */
+    let me: Record<string, unknown> | null = null;
+    let meErr: unknown = null;
+    {
+      const v = await sb.from("customers_view").select("*").limit(1).maybeSingle();
+      if (v.data) {
+        me = v.data;
+      } else {
+        const t = await sb.from("customers").select("*").limit(1).maybeSingle();
+        me = t.data;
+        meErr = t.error ?? (v.error && !t.data ? v.error : null);
+      }
+    }
 
     if (meErr) throw meErr;
     if (!me) {
