@@ -14,7 +14,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePortal } from "@/lib/portal/store";
 import { Badge, Button, Card, FieldLabel, inputCls } from "@/components/ui";
-import { CheckIcon, ChevronLeftIcon } from "@/components/ui/icons";
+import { CheckIcon, ChevronLeftIcon, PhoneIcon } from "@/components/ui/icons";
 import { formatDateKr, todayISO } from "@/lib/utils/date";
 
 const SLOTS = [
@@ -192,15 +192,20 @@ export default function MyRequest() {
         </Button>
 
         {branch?.phone && (
-          <p className="mt-3 text-center text-[0.8125rem] text-ink-sub">
-            급하시면 매장으로 바로 전화 주세요 —{" "}
+          /* 글자 속 링크라 손가락 과녁이 너무 작았다 — 누르는 것으로 보이게 둔다 */
+          <div className="mt-3 text-center">
+            <p className="text-[0.8125rem] text-ink-sub">
+              급하시면 매장으로 바로 전화 주세요
+            </p>
             <a
               href={`tel:${branch.phone.replace(/[^0-9+]/g, "")}`}
-              className="font-bold text-aqua-700"
+              aria-label={`매장에 전화 걸기 ${branch.phone}`}
+              className="touch-target mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-aqua-50 px-4 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100"
             >
+              <PhoneIcon className="h-4 w-4 shrink-0" />
               {branch.phone}
             </a>
-          </p>
+          </div>
         )}
       </Card>
 

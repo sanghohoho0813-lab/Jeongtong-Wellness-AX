@@ -12,6 +12,7 @@ import Image from "next/image";
 import { usePortal } from "@/lib/portal/store";
 import { summarizePasses } from "@/lib/portal/wellness";
 import { Badge, Button, Card, ProgressBar } from "@/components/ui";
+import { PhoneIcon } from "@/components/ui/icons";
 import { formatWon } from "@/lib/utils/format";
 import { formatDateKr } from "@/lib/utils/date";
 
@@ -205,10 +206,17 @@ export default function MyMore() {
               </dt>
               <dd className="min-w-0 flex-1 text-[0.9375rem] text-ink-soft">
                 {row.k === "연락처" && row.v ? (
+                  /*
+                    매장에 전화 거는 것은 이 화면에서 고객이 하는 가장 중요한
+                    동작이다. 그런데 글자 링크라 손가락 과녁이 128×20 이었다.
+                    누르는 것으로 보이게, 그리고 닿는 크기로 둔다.
+                  */
                   <a
                     href={`tel:${row.v.replace(/[^0-9+]/g, "")}`}
-                    className="font-bold text-aqua-700"
+                    aria-label={`매장에 전화 걸기 ${row.v}`}
+                    className="touch-target -my-1 inline-flex items-center gap-1.5 rounded-full bg-aqua-50 px-3.5 font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100"
                   >
+                    <PhoneIcon className="h-4 w-4 shrink-0" />
                     {row.v}
                   </a>
                 ) : (
