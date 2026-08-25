@@ -21,6 +21,7 @@ import {
 } from "@/lib/utils/date";
 import { Button } from "@/components/ui";
 import { PrinterIcon } from "@/components/ui/icons";
+import { printRegion } from "@/lib/utils/print";
 
 function Tile({
   label,
@@ -67,33 +68,8 @@ export default function CareReport({ customer }: { customer: Customer }) {
   const maxMonthly = Math.max(...r.monthlyVisits.map((m) => m.count), 1);
   const hasFlow = r.monthlyVisits.some((m) => m.count > 0);
 
-  /**
-   * 리포트만 인쇄한다.
-   *
-   * 리포트는 모달 안에 있고 모달은 body 바로 아래에 그려진다.
-   * 그래서 인쇄 직전에 "리포트를 담고 있는 body 의 직계 자식"을 찾아 표시해 두면,
-   * 인쇄용 규칙이 그 하나만 남기고 나머지를 걷어낼 수 있다.
-   */
-  const print = () => {
-    const root = (() => {
-      let el: HTMLElement | null = regionRef.current;
-      while (el && el.parentElement !== document.body) el = el.parentElement;
-      return el;
-    })();
-
-    document.body.classList.add("print-report");
-    root?.classList.add("print-root");
-
-    const cleanup = () => {
-      document.body.classList.remove("print-report");
-      root?.classList.remove("print-root");
-      window.removeEventListener("afterprint", cleanup);
-    };
-    window.addEventListener("afterprint", cleanup);
-    window.print();
-    // afterprint 를 주지 않는 브라우저를 대비한 보험
-    window.setTimeout(cleanup, 3000);
-  };
+  /** 리포트만 인쇄한다 — 뒤 화면을 걷어내는 방법은 printRegion 에 적어 두었다 */
+  const print = () => printRegion(regionRef.current);
 
   return (
     <div>

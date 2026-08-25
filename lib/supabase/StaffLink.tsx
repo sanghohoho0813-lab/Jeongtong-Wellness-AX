@@ -256,6 +256,9 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     try {
       await pushAll(sb, identity.branchId, currentData());
       setLastSyncedAt(new Date().toISOString());
+      // 올라갔으면 경고를 거둔다. 안 거두면 "다시 시도" 를 눌러 성공해도
+      // 화면은 계속 빨간 채로 남아, 원장님은 아직 고장 났다고 읽는다.
+      setError("");
       await loadInbox(sb, identity.branchId);
     } catch (e) {
       setError(humanError(e));

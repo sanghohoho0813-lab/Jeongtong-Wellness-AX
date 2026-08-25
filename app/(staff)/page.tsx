@@ -4,6 +4,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import KpiRow from "@/components/dashboard/KpiRow";
 import FirstRunCard from "@/components/dashboard/FirstRunCard";
 import BriefingPreview from "@/components/dashboard/BriefingPreview";
+import CustomerInboxCard from "@/components/dashboard/CustomerInboxCard";
 import OpportunityCard from "@/components/dashboard/OpportunityCard";
 import BodyMapCard from "@/components/dashboard/BodyMapCard";
 import SegmentCard from "@/components/dashboard/SegmentCard";
@@ -36,6 +37,11 @@ export default function DashboardPage() {
         <div data-tour="dash-kpi">
           <KpiRow />
         </div>
+        {/*
+          고객이 남긴 것 — 밖에서 들어온 일이라 오늘 안에 답해야 한다.
+          남길 것이 없으면 스스로 숨으므로 자리를 차지하지 않는다.
+        */}
+        <CustomerInboxCard />
         {!justStarted && (
           <>
             <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">

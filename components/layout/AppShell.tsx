@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { useStore } from "@/lib/data/store";
+import { useStaffLink } from "@/lib/supabase/StaffLink";
+import { formatDateTimeKr } from "@/lib/utils/date";
 import { canAccessRoute, STAFF_HOME } from "@/lib/auth/permissions";
 import {
   BellIcon,
@@ -349,6 +351,54 @@ function SaveFailedBanner() {
 }
 
 /**
+ * 서버에 반영되지 않고 있을 때.
+ *
+ * 예전에는 이 사실이 설정 화면 안에만 적혔다. 현장에서 설정을 열어 볼 일은
+ * 없으니, 인터넷이 끊긴 채로 하루치를 기록해도 아무도 모른다. 그 기록은
+ * 이 기기에만 남고, 고객 화면에도 다른 기기에도 오지 않는다.
+ * 저장 실패와 같은 무게의 일이므로 같은 자리에 같은 방식으로 알린다.
+ */
+function SyncFailedBanner() {
+  const { phase, error, lastSyncedAt, syncNow } = useStaffLink();
+  const [retrying, setRetrying] = useState(false);
+  if (phase !== "linked" || !error) return null;
+
+  const since = lastSyncedAt
+    ? formatDateTimeKr(lastSyncedAt.slice(0, 10), lastSyncedAt.slice(11, 16))
+    : null;
+
+  return (
+    <div className="no-print sticky top-0 z-40 border-b border-warn/40 bg-warn px-4 py-2.5 text-white sm:px-6 lg:ml-64 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-sm font-extrabold">
+          기록이 서버에 반영되지 않고 있습니다.
+        </span>
+        <span className="text-sm">
+          {since ? `마지막 반영 ${since}. ` : ""}
+          지금 적은 내용은 이 기기에만 있고, 고객 화면에는 아직 가지 않았습니다.
+          — {error}
+        </span>
+        <button
+          type="button"
+          disabled={retrying}
+          onClick={async () => {
+            setRetrying(true);
+            try {
+              await syncNow();
+            } finally {
+              setRetrying(false);
+            }
+          }}
+          className="inline-flex min-h-[40px] items-center rounded-full bg-white/20 px-4 text-sm font-extrabold ring-1 ring-white/30 hover:bg-white/30 disabled:opacity-70"
+        >
+          {retrying ? "보내는 중…" : "다시 시도"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * 읽다가 건너뛴 기록 안내.
  *
  * 백업 파일이 중간에 잘렸거나 옮기다 깨지면 날짜가 빈 줄이 섞여 들어온다.
@@ -505,6 +555,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setRecordFor(undefined)}
       />
       <SaveFailedBanner />
+      <SyncFailedBanner />
       <DroppedRecordsBanner />
       <PrivacyModeBanner />
       <main

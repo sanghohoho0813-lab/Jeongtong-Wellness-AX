@@ -20,9 +20,10 @@
 
 import { useState } from "react";
 import { useStaffLink } from "@/lib/supabase/StaffLink";
-import { Badge, Button, Card, SectionTitle } from "@/components/ui";
-import { CheckIcon, PhoneIcon } from "@/components/ui/icons";
+import { Badge, Button, Card, Modal, SectionTitle } from "@/components/ui";
+import { CheckIcon, PhoneIcon, PrinterIcon } from "@/components/ui/icons";
 import { formatDateKr, formatRelative } from "@/lib/utils/date";
+import LinkCodeSlip from "./LinkCodeSlip";
 
 const INTENT_LABEL: Record<string, string> = {
   yes: "또 방문 예정",
@@ -59,6 +60,7 @@ export default function CustomerVoiceCard({
   const [code, setCode] = useState<{ code: string; expiresAt: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [openSlip, setOpenSlip] = useState(false);
 
   // 연결 전에는 아예 그리지 않는다. 빈 카드를 두면 "고장 났나" 로 읽힌다
   if (phase !== "linked") return null;
@@ -213,6 +215,15 @@ export default function CustomerVoiceCard({
             <p className="nowrap-num mt-1 text-[0.8125rem] tabular text-ink-faint">
               {formatDateKr(code.expiresAt.slice(0, 10))}까지 사용 가능 · 1회용
             </p>
+            {/* 여섯 자리를 말로 불러 드리면 잘 안 남는다 — 적어서 손에 쥐어 드린다 */}
+            <Button
+              variant="secondary"
+              className="mt-3"
+              onClick={() => setOpenSlip(true)}
+            >
+              <PrinterIcon className="h-4 w-4" />
+              안내문 인쇄
+            </Button>
           </div>
         ) : (
           <>
@@ -236,6 +247,21 @@ export default function CustomerVoiceCard({
           </>
         )}
       </div>
+
+      {/* 고객에게 드릴 한 장 */}
+      <Modal
+        open={openSlip && !!code}
+        onClose={() => setOpenSlip(false)}
+        title={`${customerName} 님 연결 안내문`}
+      >
+        {code && (
+          <LinkCodeSlip
+            customerName={customerName}
+            code={code.code}
+            expiresAt={code.expiresAt}
+          />
+        )}
+      </Modal>
     </Card>
   );
 }
