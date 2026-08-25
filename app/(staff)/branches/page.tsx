@@ -26,7 +26,7 @@ export default function BranchesPage() {
     visits,
     memberships,
     factsById,
-    briefingTasks,
+    taskLedger,
     settings,
     isManager,
   } = useStore();
@@ -52,7 +52,7 @@ export default function BranchesPage() {
           const branchFacts = [...factsById.values()].filter(
             (f) => f.customer.branchId === branch.id,
           );
-          const branchTasks = briefingTasks.filter(
+          const branchTasks = taskLedger.filter(
             (t) => t.branchId === branch.id,
           );
           const summary = calcAxSummary(

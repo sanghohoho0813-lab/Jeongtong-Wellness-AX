@@ -85,6 +85,7 @@ export default function AnalyticsPage() {
   const {
     factsById,
     briefingTasks,
+    taskLedger,
     settings,
     customers,
     visits,
@@ -95,7 +96,7 @@ export default function AnalyticsPage() {
   } = useStore();
   const summary = calcAxSummary(
     [...factsById.values()],
-    briefingTasks,
+    taskLedger,
     settings.careRules,
   );
   const [months, setMonths] = useState<3 | 6 | 12>(6);

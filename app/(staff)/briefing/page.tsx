@@ -43,7 +43,7 @@ const STATUS_FILTERS: Array<TaskStatus | "open" | "all"> = [
 ];
 
 export default function BriefingPage() {
-  const { briefingTasks } = useStore();
+  const { briefingTasks, todayHandled } = useStore();
   const [category, setCategory] = useState<TaskCategory | "all">("all");
   const [status, setStatus] = useState<TaskStatus | "open" | "all">("open");
   const [onlyOpportunity, setOnlyOpportunity] = useState(false);
@@ -71,9 +71,22 @@ export default function BriefingPage() {
   const openTasks = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
   );
-  const doneCount = briefingTasks.filter((t) => t.status === "done").length;
+  /*
+    오늘 처리한 건수는 **이력**에서 센다.
+
+    이 목록은 "지금 챙길 사람" 이라 매번 새로 계산된다. 아침에 처리한
+    고객이 오후에 방문하면 우선순위가 0이 되어 목록에서 내려가는데,
+    건수까지 목록에서 세면 고객이 올수록 오늘 한 일이 거꾸로 줄어든다.
+
+    그래서 목록에 남아 있는 건과 이력의 건수가 다를 수 있다. 그 차이는
+    "방문으로 마무리된 건" 이고, 아래에 그대로 적어 둔다 — 숫자가 안 맞아
+    보이는 채로 두면 원장님이 무엇을 믿어야 할지 알 수 없다.
+  */
+  const doneCount = todayHandled.length;
+  const listedDone = briefingTasks.filter((t) => t.status === "done").length;
+  const closedByVisit = Math.max(0, doneCount - listedDone);
   const holdCount = briefingTasks.filter((t) => t.status === "hold").length;
-  const total = briefingTasks.length;
+  const total = briefingTasks.length + closedByVisit;
   const progress = total > 0 ? doneCount / total : 0;
 
   // 카테고리별 미처리 분포 (많은 순)
@@ -127,6 +140,12 @@ export default function BriefingPage() {
               {doneCount}
               <span className="ml-0.5 text-base font-bold text-deep-sub">건</span>
             </p>
+            {/* 목록에 없는 건이 섞여 있으면 왜 그런지 그 자리에서 밝힌다 */}
+            {closedByVisit > 0 && (
+              <p className="nowrap-num mt-0.5 text-[0.75rem] font-bold text-deep-sub">
+                방문으로 마무리 {closedByVisit}건 포함
+              </p>
+            )}
           </div>
           {holdCount > 0 && (
             <div>

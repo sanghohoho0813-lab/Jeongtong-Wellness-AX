@@ -15,8 +15,15 @@ import {
 } from "@/components/ui/icons";
 
 export default function KpiRow() {
-  const { customers, visits, memberships, settings, isManager, briefingTasks } =
-    useStore();
+  const {
+    customers,
+    visits,
+    memberships,
+    settings,
+    isManager,
+    briefingTasks,
+    todayHandled,
+  } = useStore();
   const kpis = calcDashboardKpis(
     customers,
     visits,
@@ -38,7 +45,8 @@ export default function KpiRow() {
   const openTasks = briefingTasks.filter(
     (t) => t.status === "pending" || t.status === "confirmed",
   ).length;
-  const doneTasks = briefingTasks.filter((t) => t.status === "done").length;
+  // 처리 건수는 이력에서 센다 — 고객이 방문했다고 오늘 한 일이 줄면 안 된다
+  const doneTasks = todayHandled.length;
 
   return (
     <div className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">

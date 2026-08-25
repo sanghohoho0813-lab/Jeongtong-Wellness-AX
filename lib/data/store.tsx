@@ -48,7 +48,7 @@ import {
 } from "@/lib/scoring/priority";
 import { detectSalesOpportunity } from "@/lib/scoring/opportunity";
 import type { BackupPayload, ImportRow } from "@/lib/utils/import";
-import { todayISO } from "@/lib/utils/date";
+import { localDateOf, todayISO } from "@/lib/utils/date";
 import { StorageUsage, measureStorage } from "@/lib/utils/storage";
 
 const STORAGE_KEY = "jeongtong-ax-v1";
@@ -134,6 +134,24 @@ interface StoreValue extends PersistedState {
   /** 이 기기 저장 공간 사용량 — 한도에 닿기 전에 미리 알리는 데 쓴다 */
   storage: StorageUsage;
   briefingTasks: BriefingTask[];
+  /**
+   * 오늘 처리완료로 기록한 과제 — **이력**이다.
+   *
+   * briefingTasks 는 "지금 챙겨야 할 사람" 이라 매번 새로 계산된다.
+   * 아침에 처리완료로 정리한 고객이 오후에 방문하면 우선순위가 0이 되어
+   * 그 목록에서 내려간다. 그건 맞는 동작이다 — 챙길 일이 끝났으니까.
+   *
+   * 그런데 '오늘 몇 건 처리했나' 까지 그 목록에서 세면, 고객이 올수록
+   * 처리 건수가 **거꾸로 줄어든다**. 원장님이 보는 성과가 뒤로 가는 셈이다.
+   *
+   * 그래서 건수는 여기서 센다. 처리했다는 사실은 지워지지 않는다.
+   */
+  todayHandled: BriefingTask[];
+  /**
+   * 처리율을 셀 때 쓰는 장부 — 오늘의 과제 + 오늘 처리해서 목록에서 내려간 것.
+   * 분모와 분자가 같은 바탕 위에 있어야 비율이 뒤로 가지 않는다.
+   */
+  taskLedger: BriefingTask[];
   factsById: Map<string, CustomerFacts>;
   derivedById: Map<string, ReturnType<typeof deriveCustomer>>;
   /** AX 매출기회 — 고객별 파생 판정 (Priority Score 와 별개) */
@@ -522,6 +540,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       opportunityById,
     ],
   );
+
+  /** 오늘 처리한 것 — 우선순위 목록과 무관하게 이력에서 센다 */
+  const todayHandled = useMemo(() => {
+    const today = todayISO();
+    return state.taskOverrides.filter(
+      (t) =>
+        t.status === "done" &&
+        t.statusChangedAt &&
+        localDateOf(t.statusChangedAt) === today,
+    );
+  }, [state.taskOverrides]);
+
+  const taskLedger = useMemo(() => {
+    const listed = new Set(briefingTasks.map((t) => t.id));
+    return [...briefingTasks, ...todayHandled.filter((t) => !listed.has(t.id))];
+  }, [briefingTasks, todayHandled]);
 
   /**
    * 미처리 경과 추적 — 오늘 처음 미처리로 올라온 고객은 오늘 날짜로 기록하고,
@@ -1227,6 +1261,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     droppedRecords,
     storage,
     briefingTasks,
+    todayHandled,
+    taskLedger,
     factsById,
     derivedById,
     opportunityById,

@@ -10,11 +10,11 @@ import { Card, SectionTitle } from "@/components/ui";
 import { BuildingIcon, ChevronRightIcon } from "@/components/ui/icons";
 
 export default function BranchSummaryCard() {
-  const { branches, staff, factsById, briefingTasks, settings, isManager } =
+  const { branches, staff, factsById, taskLedger, settings, isManager } =
     useStore();
   const summary = calcAxSummary(
     [...factsById.values()],
-    briefingTasks,
+    taskLedger,
     settings.careRules,
   );
   const branch = branches[0];

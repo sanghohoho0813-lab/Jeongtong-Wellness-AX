@@ -65,7 +65,7 @@ function PreviewRow({
 }
 
 export default function BriefingPreview() {
-  const { briefingTasks } = useStore();
+  const { briefingTasks, todayHandled } = useStore();
   /**
    * 펼쳐 놓은 과제.
    *
@@ -80,7 +80,14 @@ export default function BriefingPreview() {
     (t) => t.status === "pending" || t.status === "confirmed",
   );
   const top3 = open.slice(0, 3);
-  const doneToday = briefingTasks.filter((t) => t.status === "done").length;
+  /*
+    오늘 처리한 건수는 **이력**에서 센다.
+
+    위 목록(briefingTasks)은 "지금 챙길 사람" 이라 매번 새로 계산된다.
+    아침에 처리한 고객이 오후에 방문하면 그 목록에서 내려가는데, 건수까지
+    거기서 세면 고객이 올수록 처리 건수가 거꾸로 줄어든다.
+  */
+  const doneToday = todayHandled.length;
   const total = open.length + doneToday;
   const progress = total > 0 ? doneToday / total : 0;
 
