@@ -146,6 +146,9 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
   const skipNextPush = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** 서버가 준 역할로 판단한다 — 화면에서 고른 값이 아니다 */
+  const isAdmin = identity?.role === "owner" || identity?.role === "manager";
+
   const currentData = useCallback(
     () => ({ customers, visits, memberships, products, staff, branches }),
     [customers, visits, memberships, products, staff, branches],
@@ -253,7 +256,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
           skipNextPush.current = true;
           applyRemote(data);
         } else {
-          await pushAll(sb, identity.branchId, currentData());
+          await pushAll(sb, identity.branchId, currentData(), { isAdmin });
         }
         writeLinked(identity.branchId);
         setLastSyncedAt(new Date().toISOString());
@@ -264,14 +267,14 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
         setPhase("error");
       }
     },
-    [identity, applyRemote, currentData, loadInbox],
+    [identity, isAdmin, applyRemote, currentData, loadInbox],
   );
 
   const syncNow = useCallback(async () => {
     const sb = sbRef.current;
     if (!sb || !identity || phase !== "linked") return;
     try {
-      await pushAll(sb, identity.branchId, currentData());
+      await pushAll(sb, identity.branchId, currentData(), { isAdmin });
       setLastSyncedAt(new Date().toISOString());
       // 올라갔으면 경고를 거둔다. 안 거두면 "다시 시도" 를 눌러 성공해도
       // 화면은 계속 빨간 채로 남아, 원장님은 아직 고장 났다고 읽는다.
@@ -280,7 +283,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       setError(humanError(e));
     }
-  }, [identity, phase, currentData, loadInbox]);
+  }, [identity, isAdmin, phase, currentData, loadInbox]);
 
   // ---------- 바뀌면 잠시 뒤 올린다 ----------
 
@@ -295,14 +298,12 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
 
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(() => {
-      pushAll(sb, identity.branchId, {
-        customers,
-        visits,
-        memberships,
-        products,
-        staff,
-        branches,
-      })
+      pushAll(
+        sb,
+        identity.branchId,
+        { customers, visits, memberships, products, staff, branches },
+        { isAdmin },
+      )
         .then(() => {
           setLastSyncedAt(new Date().toISOString());
           setError("");
@@ -317,6 +318,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     ready,
     phase,
     identity,
+    isAdmin,
     customers,
     visits,
     memberships,

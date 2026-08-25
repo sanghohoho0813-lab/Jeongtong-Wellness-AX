@@ -704,7 +704,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateCustomer = useCallback((id: string, patch: Partial<Customer>) => {
     setState((s) => ({
       ...s,
-      customers: s.customers.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+      customers: s.customers.map((c) => {
+        if (c.id !== id) return c;
+        const next = { ...c, ...patch };
+        /*
+          연락처를 직접 고쳤다면 그 값은 더 이상 '가려진 값' 이 아니다.
+          이 표시를 안 지우면 직원이 새 번호를 적어도 서버로 안 올라간다
+          (서버는 가려진 줄의 연락처를 무시하도록 되어 있다).
+        */
+        if (patch.phone !== undefined && patch.phone !== c.phone) {
+          next.phoneMasked = undefined;
+        }
+        return next;
+      }),
     }));
   }, []);
 

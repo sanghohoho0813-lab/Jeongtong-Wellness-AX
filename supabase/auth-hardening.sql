@@ -216,3 +216,221 @@ end $$;
 
 revoke all on function unlink_staff_account(uuid) from public, anon;
 grant execute on function unlink_staff_account(uuid) to authenticated;
+
+
+-- =========================================================
+-- 6. 실제로 붙여 보고 나서 고친 것 두 가지
+--    (이 파일을 한 번 더 실행하면 반영된다 — 여러 번 돌려도 안전하다)
+-- =========================================================
+
+-- ---------------------------------------------------------
+-- 6-1. phone_masked 가 true 가 아니라 null 로 나갔다
+--
+-- 직원 세션에서는 current_customer_id() 가 null 이다.
+--   null = c.id            → null
+--   false or null          → null
+--   not null               → null
+-- 그래서 "가려진 값이다" 라는 표시가 null 로 나갔고, 앱은 그것을
+-- "안 가려졌다" 로 읽는다. 그 상태로 저장하면 별표가 원본 번호를 덮는다.
+-- 세 값 논리를 coalesce 로 닫는다.
+-- ---------------------------------------------------------
+create or replace view customers_view as
+select
+  c.id, c.branch_id, c.name,
+  case
+    when is_admin() then c.phone
+    when current_customer_id() = c.id then c.phone
+    else mask_phone(c.phone)
+  end as phone,
+  not coalesce(is_admin() or current_customer_id() = c.id, false) as phone_masked,
+  c.age_group, c.gender, c.birth_year, c.registered_at, c.assigned_staff_id,
+  c.consultation_note,
+  c.memo, c.focus_body_parts, c.next_manage_date, c.next_manage_time,
+  c.last_contact_date,
+  c.tags, c.created_at
+from customers c
+where
+  (current_branch_id() is not null and c.branch_id = current_branch_id())
+  or (current_customer_id() = c.id);
+
+alter view customers_view owner to postgres;
+grant select on customers_view to authenticated;
+
+
+-- ---------------------------------------------------------
+-- 6-2. 고객 저장 통로 — upsert 가 막혀서 함수로 바꾼다
+--
+-- 컬럼 단위로 권한을 준 뒤부터 PostgREST 의 upsert(on conflict) 가
+-- 테이블 전체 select 를 요구하며 42501 로 막힌다. 실제로 확인했다.
+--   · select id            → 된다
+--   · update / insert      → 된다
+--   · upsert(on conflict)  → 42501
+--
+-- 그래서 고객 저장만 이 함수로 모은다. 한 번에 통째로 넘기므로 요청 수도
+-- 그대로다. 함수가 security definer 라 클라이언트에게 테이블 select 권한을
+-- 되돌려 줄 필요가 없다.
+--
+-- 연락처 규칙 — 여기서 정한다
+--   보낸 값이 null 이면 "나는 이 번호를 모른다" 는 뜻이고, 그때는
+--   서버에 있는 값을 그대로 둔다. 직원 화면은 가려진 값을 들고 있으므로
+--   null 을 보내고, 원본은 건드려지지 않는다.
+--   새 고객은 보낸 값을 그대로 넣는다 (직원도 새 고객 번호는 적는다).
+--
+-- 범위 — id 는 클라이언트가 보내는 값이라 믿지 않는다.
+--   넣을 때는 지점을 서버 값으로 덮고, 고칠 때는 우리 지점 행만 고친다.
+-- ---------------------------------------------------------
+create or replace function save_customers(p_rows jsonb)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_branch uuid := current_branch_id();
+  n integer := 0;
+begin
+  if v_branch is null then
+    raise exception '직원 계정이 아닙니다.';
+  end if;
+  if p_rows is null or jsonb_typeof(p_rows) <> 'array' then
+    return 0;
+  end if;
+
+  insert into customers as c (
+    id, branch_id, name, phone, gender, birth_year, age_group,
+    consultation_note, registered_at, assigned_staff_id, memo,
+    focus_body_parts, next_manage_date, next_manage_time,
+    last_contact_date, tags
+  )
+  select
+    r.id,
+    v_branch,                                  -- 지점은 서버가 정한다
+    r.name,
+    coalesce(r.phone, ''),                     -- 새 고객인데 모르면 빈 값
+    r.gender, r.birth_year, r.age_group,
+    r.consultation_note,
+    coalesce(r.registered_at, current_date),
+    r.assigned_staff_id, r.memo,
+    coalesce(r.focus_body_parts, '[]'::jsonb),
+    r.next_manage_date, r.next_manage_time,
+    r.last_contact_date,
+    coalesce(r.tags, '{}')
+  from jsonb_to_recordset(p_rows) as r(
+    id uuid, name text, phone text,
+    gender text, birth_year int, age_group text, consultation_note text,
+    registered_at date, assigned_staff_id uuid, memo text,
+    focus_body_parts jsonb, next_manage_date date, next_manage_time time,
+    last_contact_date date, tags text[]
+  )
+  on conflict (id) do update set
+    name              = excluded.name,
+    -- null 이면 "모른다" — 서버 값을 지킨다
+    phone             = coalesce(nullif(excluded.phone, ''), c.phone),
+    gender            = excluded.gender,
+    birth_year        = excluded.birth_year,
+    age_group         = excluded.age_group,
+    consultation_note = excluded.consultation_note,
+    registered_at     = excluded.registered_at,
+    assigned_staff_id = excluded.assigned_staff_id,
+    memo              = excluded.memo,
+    focus_body_parts  = excluded.focus_body_parts,
+    next_manage_date  = excluded.next_manage_date,
+    next_manage_time  = excluded.next_manage_time,
+    last_contact_date = excluded.last_contact_date,
+    tags              = excluded.tags
+  where c.branch_id = v_branch;                -- 남의 지점 행은 안 고친다
+
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+revoke all on function save_customers(jsonb) from public, anon;
+grant execute on function save_customers(jsonb) to authenticated;
+
+
+-- ---------------------------------------------------------
+-- 6-3. 확인
+-- ---------------------------------------------------------
+select
+  case when (select phone_masked from customers_view limit 1) is not null
+       then 'PASS' else 'FAIL' end as t5_가림표시가_null이_아님;
+
+select
+  case when to_regprocedure('public.save_customers(jsonb)') is not null
+       then 'PASS' else 'FAIL' end as t6_고객저장_함수_있음;
+
+
+-- ---------------------------------------------------------
+-- 6-4. 한 계정이 직원이면서 동시에 고객일 수는 없다
+--
+-- 검증 중에 실제로 만들어 본 상태다. 직원 계정을 고객으로도 이어 두면
+-- RLS 두 갈래가 OR 로 합쳐져, 고객 화면에서 지점 전체가 보인다.
+-- (customers_view 의 where 도 "직원이거나 본인" 이라 마찬가지다)
+--
+-- 연결코드를 넣는 문 앞에서 막는다. 이미 어긋난 자료가 있으면 아래
+-- 확인 질의가 알려 준다.
+-- ---------------------------------------------------------
+create or replace function redeem_customer_link_code(p_code text)
+returns table (customer_id uuid, customer_name text, branch_id uuid)
+language plpgsql volatile security definer set search_path = public as $$
+declare
+  v_row customer_link_codes%rowtype;
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.' using errcode = '28000';
+  end if;
+
+  -- 직원 계정은 고객으로 이을 수 없다 (권한 두 개가 겹치면 범위가 넓어진다)
+  if exists (select 1 from staff where auth_user_id = v_uid and active) then
+    raise exception '직원 계정으로는 고객 화면을 연결할 수 없습니다. 개인 이메일로 다시 시도해 주세요.'
+      using errcode = 'P0001';
+  end if;
+
+  -- 이미 연결된 계정이면 그대로 돌려준다 (코드를 두 번 넣어도 탈 없이)
+  select ca.customer_id into v_row.customer_id
+  from customer_accounts ca where ca.auth_user_id = v_uid and ca.active;
+  if found then
+    return query
+      select c.id, c.name, c.branch_id from customers c where c.id = v_row.customer_id;
+    return;
+  end if;
+
+  select * into v_row from customer_link_codes
+  where code = upper(btrim(p_code))
+    and used_at is null
+    and expires_at > now()
+  for update;
+
+  if not found then
+    raise exception '연결코드가 맞지 않거나 사용 기한이 지났습니다. 매장에 다시 요청해 주세요.'
+      using errcode = 'P0002';
+  end if;
+
+  update customer_link_codes
+     set used_at = now(), used_by_auth_user_id = v_uid
+   where code = v_row.code;
+
+  insert into customer_accounts (auth_user_id, customer_id, branch_id)
+  values (v_uid, v_row.customer_id, v_row.branch_id)
+  on conflict (auth_user_id) do update
+    set customer_id = excluded.customer_id,
+        branch_id   = excluded.branch_id,
+        active      = true,
+        linked_at   = now();
+
+  return query
+    select c.id, c.name, c.branch_id from customers c where c.id = v_row.customer_id;
+end $$;
+
+revoke all on function redeem_customer_link_code(text) from public, anon;
+grant execute on function redeem_customer_link_code(text) to authenticated;
+
+-- 이미 겹쳐 있는 계정이 있는지 — 있으면 손으로 정리해야 한다
+select
+  case when count(*) = 0 then 'PASS' else 'FAIL — 아래 계정이 직원이자 고객이다' end
+    as t7_직원_고객_겹침_없음,
+  coalesce(string_agg(ca.auth_user_id::text, ', '), '(없음)') as 겹친_계정
+from customer_accounts ca
+join staff s on s.auth_user_id = ca.auth_user_id and s.active
+where ca.active;
