@@ -220,8 +220,15 @@ body {
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /*
+    손가락이 닿는 최소 크기.
+    높이만 44px 로 잡아 두었더니 '삭제' 처럼 두 글자짜리 단추가 35px 폭으로
+    남았다 — 세로로만 넉넉하고 가로로는 좁은, 실제로는 빗나가기 쉬운 과녁이다.
+    양쪽 다 잡는다.
+  */
   .touch-target {
     min-height: 44px;
+    min-width: 44px;
   }
   /*
    * 글줄 안에 있는 링크(고객 이름 등)를 손가락으로 누를 수 있게.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
@@ -43,11 +44,14 @@ const STATUS_FILTERS: Array<TaskStatus | "open" | "all"> = [
 ];
 
 export default function BriefingPage() {
-  const { briefingTasks, todayHandled } = useStore();
+  const { briefingTasks, todayHandled, customers } = useStore();
   const [category, setCategory] = useState<TaskCategory | "all">("all");
   const [status, setStatus] = useState<TaskStatus | "open" | "all">("open");
   const [onlyOpportunity, setOnlyOpportunity] = useState(false);
   const [limit, setLimit] = useState(PAGE_SIZE);
+
+  /** 조건을 좁혀 둔 상태인가 — 비어 있을 때 무슨 말을 할지가 여기서 갈린다 */
+  const narrowed = category !== "all" || status !== "open" || onlyOpportunity;
 
   /** 매출기회 과제 수 — 필터 칩 라벨과 동일 기준 */
   const opportunityTotal = briefingTasks.filter(
@@ -254,14 +258,54 @@ export default function BriefingPage() {
       </Card>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          title={
-            onlyOpportunity
-              ? "해당 조건의 매출기회 과제가 없습니다"
-              : "해당 조건의 실행 과제가 없습니다"
-          }
-          description="필터를 변경하거나, 오늘의 관리 과제를 모두 완료한 상태입니다."
-        />
+        /*
+          비어 있는 이유가 세 가지인데 한 문장으로 뭉뚱그려 두었었다.
+          "필터를 변경하거나, 오늘의 관리 과제를 모두 완료한 상태입니다."
+          — 고객이 한 명도 없는 개업 첫날 원장님에게는 사실이 아닌 말이다.
+          완료한 것이 없는데 완료했다고 하면 화면을 못 믿게 된다.
+          셋을 갈라 놓는다.
+        */
+        customers.length === 0 ? (
+          <EmptyState
+            title="아직 등록된 고객이 없습니다"
+            description="고객을 등록하시면 그날 챙길 분들을 여기에 우선순위대로 정리해 드립니다."
+            action={
+              <Link href="/customers">
+                <Button>고객 등록하러 가기</Button>
+              </Link>
+            }
+          />
+        ) : narrowed ? (
+          <EmptyState
+            title={
+              onlyOpportunity
+                ? "이 조건의 매출기회 과제가 없습니다"
+                : "이 조건의 실행 과제가 없습니다"
+            }
+            description={`고른 조건에 걸리는 과제가 없습니다. 오늘 전체 과제는 ${briefingTasks.length}건입니다.`}
+            action={
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setCategory("all");
+                  setStatus("open");
+                  setOnlyOpportunity(false);
+                }}
+              >
+                조건 없이 전체 보기
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            title="오늘 챙길 고객이 없습니다"
+            description={
+              todayHandled.length > 0
+                ? `오늘 ${todayHandled.length}건을 모두 처리하셨습니다. 수고하셨습니다.`
+                : "지금 기준으로 관리가 필요한 고객이 없습니다."
+            }
+          />
+        )
       ) : (
         <div className="rise-stagger space-y-3">
           {visible.map((task, i) => (

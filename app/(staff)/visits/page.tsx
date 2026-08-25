@@ -217,10 +217,38 @@ export default function VisitsPage() {
 
       {rows.length === 0 ? (
         visits.length === 0 ? (
-          <EmptyState
-            title="기록이 없습니다"
-            description="우측 상단의 방문 기록 버튼으로 첫 기록을 남겨보세요."
-          />
+          /*
+            "우측 상단의 방문 기록 버튼" 이라고 적어 두었는데, 폰에서는 그
+            단추가 제목 아래로 내려와 우측 상단에 없다. 게다가 고객이 한 명도
+            없으면 방문 기록 자체를 만들 수 없다 — 먼저 할 일은 고객 등록이다.
+            가리키지 말고 여기서 바로 누를 수 있게 둔다.
+          */
+          customers.length === 0 ? (
+            <EmptyState
+              title="아직 등록된 고객이 없습니다"
+              description="방문 기록은 고객에 붙습니다. 고객을 먼저 등록해 주세요."
+              action={
+                <Link href="/customers">
+                  <Button>고객 등록하러 가기</Button>
+                </Link>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="아직 기록이 없습니다"
+              description="고객이 다녀가신 날을 남겨 두시면 여기에 시간순으로 쌓입니다."
+              action={
+                <Button
+                  onClick={() => {
+                    setEditingVisit(undefined);
+                    setOpenForm(true);
+                  }}
+                >
+                  <PlusIcon className="h-4 w-4" />첫 방문 기록하기
+                </Button>
+              }
+            />
+          )
         ) : (
           <EmptyState
             title="조건에 맞는 기록이 없습니다"

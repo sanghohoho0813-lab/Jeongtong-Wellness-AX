@@ -12,8 +12,10 @@ import { daysAgo, formatRelative } from "@/lib/utils/date";
 import { displayName, displayPhone } from "@/lib/utils/format";
 import {
   Badge,
+  Button,
   Card,
   Em,
+  EmptyState,
   InsightBanner,
   OpportunityBadge,
   SectionTitle,
@@ -209,6 +211,24 @@ export default function RetentionPage() {
         description="다음 방문이 늦어지는 고객을 모았습니다."
       />
 
+      {/*
+        고객이 한 명도 없을 때. 이 화면은 구간마다 "챙길 것이 없다는 뜻입니다"
+        라고 세 번 말하는데, 개업 첫날 원장님에게는 사실이 아니다 — 챙길 것이
+        없는 게 아니라 아직 아무도 없는 것이다. 그 경우엔 여기서 끝낸다.
+      */}
+      {all.length === 0 ? (
+        <EmptyState
+          title="아직 등록된 고객이 없습니다"
+          description="고객이 쌓이면 다음 방문이 늦어지는 분들을 여기에 모아 드립니다."
+          action={
+            <Link href="/customers">
+              <Button>고객 등록하러 가기</Button>
+            </Link>
+          }
+        />
+      ) : (
+        <>
+
       {/* 오늘 우선관리 인사이트 */}
       {topPriority.length > 0 && (
         <InsightBanner
@@ -346,6 +366,8 @@ export default function RetentionPage() {
           </Card>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }

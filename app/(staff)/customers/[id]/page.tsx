@@ -123,7 +123,7 @@ export default function CustomerDetailPage() {
     <div>
       <Link
         href="/customers"
-        className="mb-3 inline-flex items-center gap-1 text-sm font-bold text-ink-sub hover:text-aqua-700"
+        className="tap-line mb-2 inline-flex items-center gap-1 pr-2 text-sm font-bold text-ink-sub hover:text-aqua-700"
       >
         <ChevronLeftIcon className="h-4 w-4" />
         고객 목록
@@ -751,18 +751,26 @@ export default function CustomerDetailPage() {
                       {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
                       {v.membershipId ? " · 이용권 차감" : ""}
                     </p>
+                    {/*
+                      이 둘은 45×26 이었다. 폰에서 손가락 끝은 그보다 크고,
+                      바로 옆이 '삭제' 다 — 수정하려다 방문 기록을 지우게 된다.
+                      되돌리기가 있다고 해도 그건 사고 뒤의 이야기다.
+                      둘 다 44px 과녁으로 키우고, 사이를 벌려 둔다.
+                    */}
                     <button
                       onClick={() => {
                         setEditingVisit(v);
                         setOpenVisit(true);
                       }}
-                      className="ml-auto shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+                      aria-label={`${formatDateKr(v.visitedAt)} 기록 수정`}
+                      className="touch-target ml-auto inline-flex shrink-0 items-center justify-center rounded-full px-3 text-xs font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
                     >
                       수정
                     </button>
                     <button
                       onClick={() => setConfirmDeleteV(v)}
-                      className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-ink-faint transition-colors hover:text-danger-text"
+                      aria-label={`${formatDateKr(v.visitedAt)} 기록 삭제`}
+                      className="touch-target ml-1.5 inline-flex shrink-0 items-center justify-center rounded-full px-3 text-xs font-bold text-ink-faint transition-colors hover:text-danger-text"
                     >
                       삭제
                     </button>
