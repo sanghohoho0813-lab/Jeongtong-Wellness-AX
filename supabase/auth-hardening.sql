@@ -115,32 +115,7 @@ grant select on customers_view to authenticated;
 
 
 -- ---------------------------------------------------------
--- 4. 확인 — 여기서 바로 결과를 본다
---
--- 아래 네 줄이 모두 PASS 여야 한다.
--- ---------------------------------------------------------
-select
-  case when mask_phone('010-1234-5678') = '010-****-5678'
-       then 'PASS' else 'FAIL' end as t1_하이픈_번호_가림,
-  mask_phone('010-1234-5678') as 결과;
-
-select
-  case when mask_phone('01012345678') = '010-****-5678'
-       then 'PASS' else 'FAIL' end as t2_붙여쓴_번호_가림,
-  mask_phone('01012345678') as 결과;
-
-select
-  case when mask_phone('없음') = '***-****-****'
-       then 'PASS' else 'FAIL' end as t3_모르는_모양은_통째로_가림,
-  mask_phone('없음') as 결과;
-
-select
-  case when has_column_privilege('authenticated', 'customers', 'phone', 'select')
-       then 'FAIL' else 'PASS' end as t4_연락처_컬럼_읽기_차단;
-
-
--- ---------------------------------------------------------
--- 5. 직원 계정 잇기 (ADMIN 전용)
+-- 4. 직원 계정 잇기 (ADMIN 전용)
 --
 -- 이메일로 만들어진 Auth 계정을 우리 지점 직원 한 명에 잇는다.
 -- 계정 자체를 여기서 만들지는 않는다 — 사용자 생성은 service_role 이
@@ -219,12 +194,12 @@ grant execute on function unlink_staff_account(uuid) to authenticated;
 
 
 -- =========================================================
--- 6. 실제로 붙여 보고 나서 고친 것 두 가지
---    (이 파일을 한 번 더 실행하면 반영된다 — 여러 번 돌려도 안전하다)
+-- 5. 실제 서버에 붙여 보고 나서 고친 것 넷
+--    (여러 번 돌려도 안전하다)
 -- =========================================================
 
 -- ---------------------------------------------------------
--- 6-1. phone_masked 가 true 가 아니라 null 로 나갔다
+-- 5-1. phone_masked 가 true 가 아니라 null 로 나갔다
 --
 -- 직원 세션에서는 current_customer_id() 가 null 이다.
 --   null = c.id            → null
@@ -258,7 +233,7 @@ grant select on customers_view to authenticated;
 
 
 -- ---------------------------------------------------------
--- 6-2. 고객 저장 통로 — upsert 가 막혀서 함수로 바꾼다
+-- 5-2. 고객 저장 통로 — upsert 가 막혀서 함수로 바꾼다
 --
 -- 컬럼 단위로 권한을 준 뒤부터 PostgREST 의 upsert(on conflict) 가
 -- 테이블 전체 select 를 요구하며 42501 로 막힌다. 실제로 확인했다.
@@ -349,19 +324,7 @@ grant execute on function save_customers(jsonb) to authenticated;
 
 
 -- ---------------------------------------------------------
--- 6-3. 확인
--- ---------------------------------------------------------
-select
-  case when (select phone_masked from customers_view limit 1) is not null
-       then 'PASS' else 'FAIL' end as t5_가림표시가_null이_아님;
-
-select
-  case when to_regprocedure('public.save_customers(jsonb)') is not null
-       then 'PASS' else 'FAIL' end as t6_고객저장_함수_있음;
-
-
--- ---------------------------------------------------------
--- 6-4. 한 계정이 직원이면서 동시에 고객일 수는 없다
+-- 5-3. 한 계정이 직원이면서 동시에 고객일 수는 없다
 --
 -- 검증 중에 실제로 만들어 본 상태다. 직원 계정을 고객으로도 이어 두면
 -- RLS 두 갈래가 OR 로 합쳐져, 고객 화면에서 지점 전체가 보인다.
@@ -426,11 +389,55 @@ end $$;
 revoke all on function redeem_customer_link_code(text) from public, anon;
 grant execute on function redeem_customer_link_code(text) to authenticated;
 
--- 이미 겹쳐 있는 계정이 있는지 — 있으면 손으로 정리해야 한다
-select
-  case when count(*) = 0 then 'PASS' else 'FAIL — 아래 계정이 직원이자 고객이다' end
-    as t7_직원_고객_겹침_없음,
-  coalesce(string_agg(ca.auth_user_id::text, ', '), '(없음)') as 겹친_계정
-from customer_accounts ca
-join staff s on s.auth_user_id = ca.auth_user_id and s.active
-where ca.active;
+
+-- =========================================================
+-- 확인 — 한 판에 모아서 본다
+--
+-- SQL Editor 는 여러 문장을 실행하면 **마지막 결과만** 보여 준다.
+-- 그래서 확인을 여러 개로 나눠 두면 앞의 것들이 화면에서 사라진다.
+-- 한 질의로 합쳐 일곱 줄이 함께 나오게 한다.
+--
+-- 일곱 줄이 모두 PASS 여야 한다.
+-- =========================================================
+select * from (
+  select 1 as 순, 't1 하이픈 번호 가림' as 항목,
+         case when mask_phone('010-1234-5678') = '010-****-5678'
+              then 'PASS' else 'FAIL' end as 결과,
+         mask_phone('010-1234-5678') as 값
+  union all
+  select 2, 't2 붙여쓴 번호 가림',
+         case when mask_phone('01012345678') = '010-****-5678'
+              then 'PASS' else 'FAIL' end,
+         mask_phone('01012345678')
+  union all
+  select 3, 't3 모르는 모양은 통째로 가림',
+         case when mask_phone('없음') = '***-****-****'
+              then 'PASS' else 'FAIL' end,
+         mask_phone('없음')
+  union all
+  select 4, 't4 연락처 컬럼 읽기 차단',
+         case when has_column_privilege('authenticated','customers','phone','select')
+              then 'FAIL' else 'PASS' end,
+         '직접 select 하면 42501'
+  union all
+  select 5, 't5 가림표시가 null 이 아님',
+         case when (select bool_and(phone_masked is not null)
+                      from customers_view) is not false
+              then 'PASS' else 'FAIL' end,
+         '직원 세션에서 true 로 와야 한다'
+  union all
+  select 6, 't6 고객저장 함수 있음',
+         case when to_regprocedure('public.save_customers(jsonb)') is not null
+              then 'PASS' else 'FAIL' end,
+         coalesce(to_regprocedure('public.save_customers(jsonb)')::text, '(없음)')
+  union all
+  select 7, 't7 직원·고객 겹친 계정 없음',
+         case when (select count(*) from customer_accounts ca
+                     join staff st on st.auth_user_id = ca.auth_user_id and st.active
+                    where ca.active) = 0
+              then 'PASS' else 'FAIL' end,
+         coalesce((select string_agg(ca.auth_user_id::text, ', ')
+                     from customer_accounts ca
+                     join staff st on st.auth_user_id = ca.auth_user_id and st.active
+                    where ca.active), '(없음)')
+) t order by 순;
