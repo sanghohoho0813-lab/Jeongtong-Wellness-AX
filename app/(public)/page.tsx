@@ -47,14 +47,14 @@ const ACTIONS = [
   {
     href: "/my/booking",
     label: "예약하기",
-    desc: "원하시는 날짜를 남기시면 매장에서 확인 후 연락드립니다",
+    desc: "날짜를 남기시면 매장에서 연락드립니다",
     icon: CalendarIcon,
     solid: true,
   },
   {
     href: "#가격",
     label: "이용권 보기",
-    desc: "1회 · 10회권 · 30회권 매장 가격표",
+    desc: "1회 · 10회권 · 30회권 가격표",
     icon: TicketIcon,
     solid: false,
   },
@@ -68,7 +68,7 @@ const ACTIONS = [
   {
     href: "/my",
     label: "내 기록 시작하기",
-    desc: "지금까지의 이용 기록과 남은 이용권을 확인",
+    desc: "이용 기록과 남은 이용권 확인",
     icon: ClipboardIcon,
     solid: true,
   },
@@ -111,7 +111,16 @@ export default function PublicHome() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-right opacity-45 sm:opacity-55"
+            /*
+              사진 자리를 두 번 고쳤다.
+                object-right  → 폰에서 초점 나간 배경만 잘려 나왔다
+                object-center → 쑥뜸 덩어리가 글자 한가운데 떠서 '달' 처럼 보였다
+
+              사진 속 물체가 글자 뒤 정중앙에 오는 게 문제였다. 오른쪽 아래로
+              밀어 프레임 밖으로 절반쯤 걸치게 두면 배경 질감처럼 읽힌다.
+              글자가 있는 왼쪽 위는 비워 둔다.
+            */
+            className="object-cover object-[88%_78%] opacity-[0.5] sm:object-[75%_center] sm:opacity-60"
           />
           {/*
             사진 위에 글자를 얹으면 밝은 부분에서 읽히지 않는다.
@@ -121,27 +130,32 @@ export default function PublicHome() {
           <div className="absolute inset-0 bg-gradient-to-t from-deep-950/70 to-transparent" />
         </div>
 
-        <div className="relative mx-auto max-w-5xl px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14">
-          <h1 className="max-w-xl text-[2rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
+        {/*
+          폰에서 히어로가 화면을 통째로 먹으면 '예약하기' 가 스크롤 아래로
+          내려간다. 이 화면에 오는 사람의 절반은 이미 다니시는 고객인데,
+          그분들 눈에 단추가 하나도 안 보이는 셈이다. 첫 카드가 살짝
+          걸치도록 여백과 글자를 조인다. (PC 는 그대로 넉넉하게)
+        */}
+        <div className="relative mx-auto max-w-5xl px-4 pb-9 pt-8 sm:px-6 sm:pb-16 sm:pt-14">
+          <h1 className="max-w-xl text-[1.875rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
             몸과 마음을 돌보는
             <span className="mt-1 block bg-gradient-to-r from-gold-lite to-gold bg-clip-text text-transparent">
               프리미엄 쑥뜸 케어
             </span>
           </h1>
 
-          <span className="my-5 flex max-w-xs items-center gap-3" aria-hidden>
+          <span className="my-4 flex max-w-xs items-center gap-3 sm:my-5" aria-hidden>
             <span className="h-px flex-1 bg-white/25" />
             <LeafIcon className="h-4 w-4 text-gold" />
             <span className="h-px flex-1 bg-white/25" />
           </span>
 
-          <p className="max-w-md text-[1.0625rem] leading-relaxed text-white/85 sm:text-[1.125rem]">
-            거즈 위에 특제 반죽을 넓게 펴고 쑥을 올려, 넓은 부위에 온열을
-            전달합니다. 다녀가신 기록이 쌓이면 다음 관리 시점까지 함께 챙겨
-            드립니다.
+          <p className="max-w-md text-[1rem] leading-relaxed text-white/85 sm:text-[1.125rem]">
+            거즈 위에 특제 반죽을 펴고 쑥을 올려 넓은 부위에 온열을 전달합니다.
+            다녀가신 기록이 쌓이면 다음 관리 시점까지 함께 챙겨 드립니다.
           </p>
 
-          <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-[0.9375rem] font-bold text-gold-lite ring-1 ring-gold/35">
+          <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-[0.9375rem] font-bold text-gold-lite ring-1 ring-gold/35">
             <LeafIcon className="h-4 w-4 shrink-0" />
             국내산 최상급 쑥 사용
           </span>
@@ -149,9 +163,16 @@ export default function PublicHome() {
       </section>
 
       {/* ── 2. 지금 할 수 있는 것 ─────────────────────────── */}
+      {/*
+        relative z-10 이 없으면 이 카드들이 히어로 밑에 깔린다.
+        히어로는 position:relative + isolate 라 스택 문맥을 만드는데, 이쪽은
+        position:static 이라 '위치 잡힌 요소'에게 그림 순서를 내준다.
+        -mt-6 으로 끌어올린 26px 이 그대로 히어로에 먹혀서, 실제 폰에서
+        첫 카드의 '예약하기' 글자 윗부분이 잘려 보였다.
+      */}
       <section
         aria-label="바로 하실 수 있는 것"
-        className="mx-auto -mt-6 max-w-5xl px-4 sm:px-6"
+        className="relative z-10 mx-auto -mt-6 max-w-5xl px-4 sm:px-6"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {ACTIONS.map((a) => {
