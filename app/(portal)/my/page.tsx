@@ -33,6 +33,7 @@ import {
   TicketIcon,
 } from "@/components/ui/icons";
 import { formatDateKr, formatRelative } from "@/lib/utils/date";
+import { BODY_PART_LABELS, type BodyPart } from "@/lib/types";
 import FeedbackCard from "@/components/portal/FeedbackCard";
 import ReferralCard from "@/components/portal/ReferralCard";
 import { homecareTip } from "@/lib/portal/content";
@@ -52,6 +53,19 @@ export default function MyHome() {
   });
 
   const lastVisit = visits.find((v) => v.type === "visit");
+
+  /** 실제로 봐 드린 부위 상위 두 곳 — 매장이 남긴 기록에서 그대로 센다 */
+  const partCount = new Map<BodyPart, number>();
+  for (const v of visits) {
+    for (const r of v.bodyParts ?? []) {
+      partCount.set(r.part, (partCount.get(r.part) ?? 0) + 1);
+    }
+  }
+  const topParts = [...partCount.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([part]) => part);
+
   const used = pass.active
     ? pass.active.totalCount - pass.active.remainingCount
     : 0;
@@ -121,7 +135,20 @@ export default function MyHome() {
         </Link>
       </Card>
 
-      {/* ── 오늘의 맞춤 추천 ─────────────────────────── */}
+      {/* ── 오늘의 맞춤 안내 ─────────────────────────── */}
+      {/*
+        여기에 Wellness Type 라벨(재등록 관심형 · 장기미방문형 …)을 큰 글씨로
+        걸어 두었었다. 그건 매장이 고객을 나누려고 만든 말이지 고객에게 할
+        말이 아니다. 자기 화면 맨 위에 "재등록 관심형" 이라고 붙어 있으면
+        기분이 좋을 리 없고, "장기미방문형" 은 더하다.
+
+        그 자리에 **매장이 실제로 해 드린 것**을 놓는다. 어느 부위를 봐
+        드렸는지는 방문마다 남아 있는 사실이고, 다음에 오시면 거기서
+        이어 간다는 말이 고객에게는 훨씬 쓸모 있다.
+
+        유형 자체를 감추지는 않는다 — '나의 웰니스'(/my/wellness)에 가면
+        무엇을 근거로 그렇게 봤는지까지 함께 설명되어 있다.
+      */}
       <Card>
         <div className="flex items-start gap-3.5">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-deep-700 to-deep-900 text-gold">
@@ -129,16 +156,22 @@ export default function MyHome() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[0.8125rem] font-extrabold text-aqua-700">
-              오늘의 맞춤 추천
+              오늘의 맞춤 안내
             </p>
-            <p className="mt-0.5 text-[1.25rem] font-extrabold leading-tight text-ink">
-              {type.label}
+            <p className="mt-0.5 break-words text-[1.25rem] font-extrabold leading-tight text-ink">
+              {topParts.length > 0
+                ? `${topParts.map((p) => BODY_PART_LABELS[p]).join(" · ")} 케어`
+                : usage.visitCount > 0
+                  ? "이용 기록을 쌓고 있습니다"
+                  : "첫 방문을 기다리고 있습니다"}
             </p>
           </div>
         </div>
 
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-          {type.description}
+          {topParts.length > 0
+            ? "지금까지 이 부위를 가장 많이 봐 드렸습니다. 다음에 오시면 이어서 봐 드리겠습니다."
+            : type.description}
         </p>
 
         <div className="mt-3 border-t border-stone-line pt-3">

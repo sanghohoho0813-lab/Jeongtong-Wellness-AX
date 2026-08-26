@@ -50,22 +50,41 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-/** 상단 브랜드 — 직원 화면과 같은 표식을 쓰되 이름만 MY WELLNESS 로 */
-export function PortalHeader() {
+/**
+ * 상단 브랜드.
+ *
+ * 바탕이 본문과 같은 미색이라 머리글이 있는 줄도 모르고 지나쳤다.
+ * 공개 화면·직원 화면 머리글이 둘 다 딥그린인데 여기만 밝아서, 같은
+ * 브랜드인지도 흐릿했다. 딥그린으로 맞춘다 — 화면 위쪽에 무게가 실리면
+ * 아래 카드들이 뜨는 느낌이 나기도 한다.
+ *
+ * 오른쪽에는 마이페이지 하나만 둔다. 시안에는 알림 종도 있지만, 알림은
+ * 마이페이지 안에 모아 두었고 종을 따로 달면 누를 것이 둘로 갈린다.
+ */
+export function PortalHeader({ account = false }: { account?: boolean }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-black/[0.05] bg-stone-bg/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 bg-deep-900 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
       <div className="mx-auto flex h-16 max-w-lg items-center gap-3 px-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-gold-deep font-serif text-lg font-bold text-deep-900 shadow-[0_2px_8px_rgba(10,46,44,0.25)]">
           鼎
         </span>
-        <span className="min-w-0">
-          <span className="block truncate text-[11px] font-bold text-ink-sub">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[11px] font-bold text-gold-lite/85">
             정통대왕쑥뜸원
           </span>
-          <span className="block truncate text-[17px] font-extrabold leading-tight tracking-tight text-ink">
+          <span className="block truncate text-[17px] font-extrabold leading-tight tracking-tight text-white">
             MY WELLNESS
           </span>
         </span>
+        {account && (
+          <Link
+            href="/my/account"
+            aria-label="마이페이지"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
+          >
+            <UsersIcon className="h-5 w-5" />
+          </Link>
+        )}
       </div>
     </header>
   );
@@ -96,7 +115,7 @@ export default function PortalShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-stone-bg">
-      <PortalHeader />
+      <PortalHeader account />
 
       {/*
         아래 여백은 하단 네비 높이 + 홈 인디케이터 몫이다.

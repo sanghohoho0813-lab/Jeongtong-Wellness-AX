@@ -11,6 +11,11 @@
  *               긴 이름이 상태 배지를 화면 밖으로 밀어내던 것이 이 경우였다.
  *
  * 스스로 가로 스크롤을 가진 상자(필터 칩 줄 같은 것) 안은 의도된 것이므로 뺀다.
+ *
+ * 덮임      — 화면에 있고 자리도 잡았는데, 그 자리를 눌러 보면 다른 것이
+ *             잡히는 경우. 히어로가 '예약하기' 카드의 윗부분을 덮어 글자가
+ *             잘려 보이던 것이 이것이었다. 넘침도 0, 대비도 정상이라
+ *             앞의 두 자로는 잡히지 않았다. elementFromPoint 로 직접 짚는다.
  */
 import { launch, recorder, go, seedExtremes, BASE } from "./lib.mjs";
 
@@ -62,14 +67,45 @@ for (const [path, label] of PAGES) {
       if (getComputedStyle(el).position === "absolute" && !(el.textContent || "").trim()) continue;
       bleed.push(`${el.tagName}.${String(el.className).split(" ")[0]} "${(el.textContent || "").trim().slice(0, 16)}"`);
     }
+    /*
+      제자리에 있는데 다른 것에 덮인 요소.
+      링크가 단추를 감싼 것처럼 서로 품고 있는 관계는 덮인 게 아니다.
+    */
+    const covered = [];
+    for (const el of document.querySelectorAll("main a, main button, main h1, main h2, main li")) {
+      const box = el.getBoundingClientRect();
+      if (box.width < 8 || box.height < 8) continue;
+      if (box.bottom < 0 || box.top > innerHeight) continue;
+      /*
+        한 점만 짚으면 못 쓴다. 요소의 위 모서리에는 아이콘도 있고, 줄
+        왼쪽의 강조 막대(row-accent 의 ::before)도 있어서 애먼 것이 잡힌다.
+        위쪽 띠에서 왼쪽·가운데·오른쪽 세 점을 짚고, **셋 다 같은 남의
+        요소**에 막힐 때만 덮였다고 본다. 진짜로 위에 깔린 판은 셋을 다
+        가리고, 아이콘 하나는 그러지 못한다.
+      */
+      const y = box.top + Math.min(6, box.height / 2);
+      const hits = [box.left + 4, box.left + box.width / 2, box.right - 4].map((x) =>
+        document.elementFromPoint(x, y),
+      );
+      const foreign = hits.filter(
+        (h) => h && !el.contains(h) && !h.contains(el) && !(el.closest("a") && el.closest("a") === h.closest("a")),
+      );
+      if (foreign.length < 3) continue;
+      if (new Set(foreign).size !== 1) continue;
+      const hit = foreign[0];
+      covered.push(`${el.tagName} "${(el.textContent || "").trim().slice(0, 14)}" ← ${hit.tagName}.${String(hit.className).split(" ")[0]}`);
+    }
+
     return {
       over: document.documentElement.scrollWidth - W,
       bleed: [...new Set(bleed)],
+      covered: [...new Set(covered)],
       screens: +(document.body.scrollHeight / 844).toFixed(1),
     };
   });
   log(`${label} — 가로로 밀리지 않는다`, r.over === 0, `넘침 ${r.over}px · 높이 ${r.screens}화면`);
   log(`${label} — 화면 밖으로 나간 조각이 없다`, r.bleed.length === 0, r.bleed.slice(0, 3).join(" | "));
+  log(`${label} — 다른 것에 덮인 것이 없다`, r.covered.length === 0, r.covered.slice(0, 3).join(" | "));
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
