@@ -116,7 +116,7 @@ export default function PortalShell({ children }: { children: ReactNode }) {
         <p className="mt-8 text-center text-[0.8125rem] text-ink-faint">
           매장 직원이신가요?{" "}
           <Link
-            href="/dashboard"
+            href="/"
             className="tap-line font-bold text-ink-sub underline-offset-4 hover:text-aqua-700 hover:underline"
           >
             내부 화면으로

@@ -45,7 +45,7 @@ function BrandMark() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/dashboard";
+  const next = params.get("next") || "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

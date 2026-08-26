@@ -90,6 +90,12 @@ export const STAFF_ROUTES = [
   "/more",
   "/guide", // 사용 가이드 — 직원이 업무를 익히는 문서
   "/intro", // 기획의도 — 왜 이 시스템을 쓰는지
+  /*
+    고객 공개 화면. 로그인 없이 누구나 볼 수 있는 주소라 여기서 막을 것이
+    없다. 목록에 넣는 이유는 메뉴 노출 때문이다 — 직원도 "고객에게는 이렇게
+    보인다" 를 확인할 수 있어야 한다.
+  */
+  "/welcome",
 ] as const;
 
 /** STAFF 의 기본 진입 경로 (허용되지 않은 경로 접근 시 이동) */
@@ -105,7 +111,7 @@ export function canAccessRoute(role: AppRole, pathname: string): boolean {
 
 /** ADMIN 전용 페이지 경로 — 화면 가드·RLS 설계의 단일 기준 */
 export const ADMIN_ONLY_ROUTES = [
-  "/dashboard",
+  "/",
   "/briefing",
   "/visits",
   "/retention",

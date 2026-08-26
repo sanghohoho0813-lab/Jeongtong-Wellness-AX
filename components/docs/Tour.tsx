@@ -45,14 +45,14 @@ export function buildTourSteps(
 
   const adminHead: TourStep[] = [
     {
-      route: "/dashboard",
+      route: "/",
       target: "dash-kpi",
       kicker: "대시보드",
       title: "오늘의 운영 상태를 먼저 봅니다",
       body: "오늘 방문, 관리 대상, 신규 고객, 이용권 현황이 한 줄로 요약됩니다. 모두 저장된 기록에서 계산된 값입니다.",
     },
     {
-      route: "/dashboard",
+      route: "/",
       target: "dash-briefing",
       kicker: "대시보드",
       title: "오늘 챙길 고객이 여기 나옵니다",

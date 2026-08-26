@@ -52,7 +52,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
     <div className="min-h-dvh bg-stone-bg">
       <header className="sticky top-0 z-30 bg-deep-900 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
         <div className="mx-auto flex h-[4.25rem] max-w-5xl items-center gap-3 px-4 sm:px-6">
-          <Link href="/" className="min-w-0 flex-1" aria-label="정통대왕쑥뜸원 홈">
+          <Link href="/welcome" className="min-w-0 flex-1" aria-label="정통대왕쑥뜸원 홈">
             <Brand />
           </Link>
           <Link
@@ -66,22 +66,18 @@ export default function PublicShell({ children }: { children: ReactNode }) {
       </header>
 
       {/*
-        직원 통로를 바닥글에만 두었더니, 늘 이 주소를 쓰시던 원장님이
-        루트를 열고 "내부 화면이 다 어디 갔냐" 고 하셨다. 당연한 반응이다 —
-        스크롤을 여섯 번 내려야 나오는 링크는 없는 것과 같다.
+        직원 통로.
 
-        그렇다고 고객이 보는 첫 화면 한복판에 '직원 로그인' 을 크게 둘 수도
-        없다. 여기가 누구를 위한 곳인지 흐려진다.
-
-        그래서 히어로 바로 위에 한 줄로 둔다. 눈에 걸리되 본문을 가리지 않는
-        높이다. 누르면 로그인 게이트가 받으므로 고객이 눌러도 아무 일 없다.
+        루트(/)는 내부 AX 대시보드다 — 매장에서 매일 쓰는 화면이고, 이
+        공개 화면은 /welcome 에 따로 있다. 그래서 이 줄은 "돌아가는 길"이다.
+        고객이 눌러도 로그인 게이트가 받으므로 아무 일도 일어나지 않는다.
       */}
       <div className="border-b border-white/10 bg-deep-950">
         <div className="mx-auto flex max-w-5xl items-center justify-end gap-2 px-4 sm:px-6">
           {/* white/45 는 딥그린 위에서 3.63:1 이라 기준(4.5:1)에 못 미쳤다 */}
           <span className="text-[0.8125rem] text-white/70">매장 직원이신가요?</span>
           <Link
-            href="/dashboard"
+            href="/"
             className="tap-line inline-flex items-center gap-1 text-[0.8125rem] font-extrabold text-gold-lite underline-offset-4 hover:underline"
           >
             내부 AX 화면

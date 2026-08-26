@@ -103,41 +103,31 @@ export default function PublicHome() {
   return (
     <>
       {/* ── 1. 히어로 ─────────────────────────────────────── */}
-      <section className="relative isolate overflow-hidden bg-deep-900">
-        <div className="absolute inset-0">
-          <Image
-            src="/service/moxa.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            /*
-              사진 자리를 두 번 고쳤다.
-                object-right  → 폰에서 초점 나간 배경만 잘려 나왔다
-                object-center → 쑥뜸 덩어리가 글자 한가운데 떠서 '달' 처럼 보였다
+      {/*
+        사진을 글자 뒤에서 뺐다 — 세 번 고치고 내린 결론이다.
 
-              사진 속 물체가 글자 뒤 정중앙에 오는 게 문제였다. 오른쪽 아래로
-              밀어 프레임 밖으로 절반쯤 걸치게 두면 배경 질감처럼 읽힌다.
-              글자가 있는 왼쪽 위는 비워 둔다.
-            */
-            className="object-cover object-[88%_78%] opacity-[0.5] sm:object-[75%_center] sm:opacity-60"
-          />
-          {/*
-            사진 위에 글자를 얹으면 밝은 부분에서 읽히지 않는다.
-            왼쪽(글자 쪽)을 진하게 덮는 가로 그라데이션을 하나 더 깐다.
-          */}
-          <div className="absolute inset-0 bg-gradient-to-r from-deep-950 via-deep-950/85 to-deep-950/35" />
-          <div className="absolute inset-0 bg-gradient-to-t from-deep-950/70 to-transparent" />
-        </div>
+          object-right  → 폰에서 초점 나간 배경만 잘려 나왔다
+          object-center → 쑥뜸 덩어리가 글자 뒤에 떠서 '달' 처럼 보였다
+          object-[88%_78%] → 덜 거슬리지만 여전히 흐린 얼룩이었다
 
-        {/*
-          폰에서 히어로가 화면을 통째로 먹으면 '예약하기' 가 스크롤 아래로
-          내려간다. 이 화면에 오는 사람의 절반은 이미 다니시는 고객인데,
-          그분들 눈에 단추가 하나도 안 보이는 셈이다. 첫 카드가 살짝
-          걸치도록 여백과 글자를 조인다. (PC 는 그대로 넉넉하게)
-        */}
-        <div className="relative mx-auto max-w-5xl px-4 pb-9 pt-8 sm:px-6 sm:pb-16 sm:pt-14">
-          <h1 className="max-w-xl text-[1.875rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
+        원인은 자리가 아니라 방식이었다. moxa.jpg 는 거의 정사각형(1.09)이라
+        가로로 긴 띠에 깔면 크게 잘리고, 40% 로 덮으면 딥그린과 섞여 진흙이
+        된다. 좋은 사진을 굳이 안 보이게 만들어 놓고 배경이라 부른 셈이다.
+
+        그래서 층을 나눈다.
+          위 — 단색 딥그린 위의 글자 (대비 걱정이 아예 없다)
+          아래 — 사진을 온전한 밝기로 띠 하나
+        둘 사이는 그라데이션으로 녹인다. 글자는 또렷하고 사진은 사진답다.
+      */}
+      <section className="relative isolate overflow-hidden bg-gradient-to-b from-deep-900 to-deep-950">
+        {/* 은은한 금빛 번짐 — 단색 면이 밋밋해지지 않게 */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold/10 blur-3xl"
+        />
+
+        <div className="relative mx-auto max-w-5xl px-4 pb-7 pt-9 sm:px-6 sm:pb-10 sm:pt-14">
+          <h1 className="max-w-xl text-[1.9375rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
             몸과 마음을 돌보는
             <span className="mt-1 block bg-gradient-to-r from-gold-lite to-gold bg-clip-text text-transparent">
               프리미엄 쑥뜸 케어
@@ -159,6 +149,20 @@ export default function PublicHome() {
             <LeafIcon className="h-4 w-4 shrink-0" />
             국내산 최상급 쑥 사용
           </span>
+        </div>
+
+        {/* 사진 띠 — 여기서는 가리지 않는다 */}
+        <div className="relative h-44 w-full sm:h-64">
+          <Image
+            src="/service/moxa.jpg"
+            alt="쑥을 올려 완성한 대왕쑥뜸"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          {/* 위쪽만 녹여 딥그린과 이어 붙인다. 아래는 카드가 덮으므로 그대로 둔다 */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-deep-950 to-transparent" />
         </div>
       </section>
 
@@ -233,23 +237,35 @@ export default function PublicHome() {
           <LeafIcon className="h-5 w-5 shrink-0 scale-x-[-1] text-gold-deep" aria-hidden />
         </h2>
 
-        <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/*
+          폰에서는 가로줄, PC 에서는 세 칸.
+
+          처음엔 어느 폭에서나 세로 카드였다. 그런데 폰에서 카드 하나가
+          480px 씩 차지해, 짧은 문장 셋을 읽는 데 스크롤이 두 화면 가까이
+          들었다. 여백이 넉넉한 것과 텅 빈 것은 다르다.
+
+          폰에서는 아이콘을 왼쪽에 두고 글을 오른쪽에 붙인다 — 셋을 합쳐
+          한 화면에 들어온다. PC 는 가로 폭이 남으니 그대로 세 칸으로 편다.
+        */}
+        <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
           {FOR_WHOM.map((f) => {
             const Icon = f.icon;
             return (
               <li
                 key={f.title}
-                className="rounded-card-lg bg-card p-6 text-center shadow-card ring-1 ring-stone-line"
+                className="flex items-center gap-4 rounded-card-lg bg-card p-4 shadow-card ring-1 ring-stone-line sm:flex-col sm:p-6 sm:text-center"
               >
-                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-deep-700 to-deep-900 text-gold shadow-[0_4px_12px_rgba(10,46,44,0.25)]">
-                  <Icon className="h-8 w-8" />
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-deep-700 to-deep-900 text-gold shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16">
+                  <Icon className="h-6 w-6 sm:h-8 sm:w-8" />
                 </span>
-                <p className="mt-4 text-[1.0625rem] font-extrabold text-ink">
-                  {f.title}
-                </p>
-                <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
-                  {f.desc}
-                </p>
+                <span className="min-w-0 flex-1 sm:flex-none">
+                  <span className="block text-[1.0625rem] font-extrabold text-ink sm:mt-4">
+                    {f.title}
+                  </span>
+                  <span className="mt-1 block break-words text-[0.9375rem] leading-snug text-ink-sub sm:mt-1.5 sm:leading-relaxed">
+                    {f.desc}
+                  </span>
+                </span>
               </li>
             );
           })}
@@ -309,50 +325,65 @@ export default function PublicHome() {
           매장 가격표 기준입니다. 변동될 수 있으니 방문 전 확인해 주세요.
         </p>
 
-        <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/*
+          폰에서는 가로줄, PC 에서는 세 칸.
+
+          세로 카드로 두었더니 값 하나 보는 데 카드가 400px 씩 들었고,
+          '가장 많이 찾으십니다' 배지를 카드 위쪽에 띄워 놓은 탓에 폰에서
+          위 카드의 아래쪽을 덮었다 — 히어로가 예약 카드를 덮던 것과 같은
+          실수다. 배지를 카드 안으로 들이고, 폰에서는 한 줄로 눕힌다.
+        */}
+        <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
           {PUBLIC_PRICES.map((p) => (
             <li
               key={p.name}
-              className={`relative flex flex-col rounded-card-lg p-6 shadow-card ${
+              className={`flex items-center gap-4 rounded-card-lg p-4 shadow-card sm:flex-col sm:items-start sm:p-6 ${
                 p.highlight
                   ? "bg-deep-800 text-white ring-1 ring-gold/40"
                   : "bg-card ring-1 ring-stone-line"
               }`}
             >
-              {p.highlight && (
-                <span className="absolute -top-2.5 left-6 rounded-full bg-gradient-to-r from-gold to-gold-deep px-3 py-1 text-[0.6875rem] font-extrabold tracking-wide text-deep-900">
-                  가장 많이 찾으십니다
-                </span>
-              )}
-              <p
-                className={`text-[1.0625rem] font-extrabold ${p.highlight ? "text-gold-lite" : "text-ink"}`}
-              >
-                {p.name}
-              </p>
-              <p
-                className={`nowrap-num mt-2 text-[1.75rem] font-extrabold tabular ${
-                  p.highlight ? "text-white" : "text-ink"
-                }`}
-              >
-                {formatWon(p.price)}
-              </p>
-              {p.sessions > 1 && (
-                <p
-                  className={`nowrap-num mt-1 text-[0.875rem] tabular ${
-                    p.highlight ? "text-white/70" : "text-ink-sub"
+              <span className="min-w-0 flex-1">
+                {p.highlight && (
+                  <span className="mb-1.5 inline-flex rounded-full bg-gradient-to-r from-gold to-gold-deep px-2.5 py-0.5 text-[0.6875rem] font-extrabold tracking-wide text-deep-900">
+                    가장 많이 찾으십니다
+                  </span>
+                )}
+                <span
+                  className={`block break-words text-[1.0625rem] font-extrabold ${
+                    p.highlight ? "text-gold-lite" : "text-ink"
                   }`}
                 >
-                  1회당 {formatWon(p.perSession)} 꼴
-                </p>
-              )}
-              <p
-                className={`mt-4 flex items-center gap-1.5 text-[0.875rem] font-bold ${
-                  p.highlight ? "text-gold-lite" : "text-aqua-800"
-                }`}
-              >
-                <CheckIcon className="h-4 w-4 shrink-0" />
-                {p.sessions}회 이용
-              </p>
+                  {p.name}
+                </span>
+                <span
+                  className={`mt-1 flex items-center gap-1.5 text-[0.875rem] font-bold ${
+                    p.highlight ? "text-gold-lite" : "text-aqua-800"
+                  }`}
+                >
+                  <CheckIcon className="h-4 w-4 shrink-0" />
+                  {p.sessions}회 이용
+                </span>
+              </span>
+
+              <span className="shrink-0 text-right sm:mt-4 sm:w-full sm:text-left">
+                <span
+                  className={`nowrap-num block text-[1.375rem] font-extrabold tabular sm:text-[1.75rem] ${
+                    p.highlight ? "text-white" : "text-ink"
+                  }`}
+                >
+                  {formatWon(p.price)}
+                </span>
+                {p.sessions > 1 && (
+                  <span
+                    className={`nowrap-num mt-0.5 block text-[0.8125rem] tabular ${
+                      p.highlight ? "text-white/70" : "text-ink-sub"
+                    }`}
+                  >
+                    1회당 {formatWon(p.perSession)}
+                  </span>
+                )}
+              </span>
             </li>
           ))}
         </ul>

@@ -74,7 +74,7 @@ for (const [path, btnName, label] of MODALS) {
 }
 
 // ── 명령 팔레트
-await go(p, "/dashboard");
+await go(p, "/");
 await p.keyboard.press("Control+k");
 await p.waitForTimeout(700);
 const pal = await p.evaluate(() => ({
@@ -90,7 +90,7 @@ await p.keyboard.press("Escape");
 await p.waitForTimeout(500);
 
 // ── 건너뛰기 링크 — 첫 Tab 에 보여야 의미가 있다
-await go(p, "/dashboard");
+await go(p, "/");
 await p.keyboard.press("Tab");
 const skip = await p.evaluate(() => {
   const a = document.activeElement;

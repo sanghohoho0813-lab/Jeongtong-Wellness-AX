@@ -24,12 +24,12 @@ const p = await (await browser.newContext({ viewport: { width: 390, height: 844 
 const errs = [];
 p.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
 
-await go(p, "/dashboard", 2500);
+await go(p, "/", 2500);
 await seedExtremes(p, { big, dark });
 
 const PAGES = [
-  ["/", "공개첫화면"],
-  ["/dashboard", "대시보드"],
+  ["/welcome", "공개첫화면"],
+  ["/", "대시보드"],
   ["/customers", "고객목록"],
   ["/customers/c-01", "고객상세"],
   ["/briefing", "브리핑"],

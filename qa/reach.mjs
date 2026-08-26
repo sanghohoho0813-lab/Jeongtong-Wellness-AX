@@ -26,7 +26,7 @@ const { log, finish } = recorder(`손가락 · 눈 (390px · ${mode})`);
 const browser = await launch();
 const p = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
 
-await go(p, "/dashboard", 2500);
+await go(p, "/", 2500);
 await p.evaluate(
   ({ dark, big }) => {
     const raw = localStorage.getItem("jeongtong-ax-v1");
@@ -41,8 +41,8 @@ await p.evaluate(
 );
 
 const PAGES = [
-  ["/", "공개첫화면"],
-  ["/dashboard", "대시보드"],
+  ["/welcome", "공개첫화면"],
+  ["/", "대시보드"],
   ["/customers", "고객목록"],
   ["/customers/c-01", "고객상세"],
   ["/briefing", "브리핑"],

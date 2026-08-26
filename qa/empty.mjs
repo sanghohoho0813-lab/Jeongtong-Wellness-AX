@@ -21,7 +21,7 @@ const p = await (await browser.newContext({ viewport: { width: 390, height: 844 
 const errs = [];
 p.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
 
-await go(p, "/dashboard", 2500);
+await go(p, "/", 2500);
 // '실제 운영 시작' 과 같은 상태 — 고객·방문·이용권만 비우고 직원·설정·상품은 남긴다
 await p.evaluate(() => {
   const raw = localStorage.getItem("jeongtong-ax-v1");
@@ -35,7 +35,7 @@ await p.evaluate(() => {
 });
 
 const PAGES = [
-  ["/dashboard", "대시보드"],
+  ["/", "대시보드"],
   ["/customers", "고객목록"],
   ["/briefing", "브리핑"],
   ["/retention", "재방문"],

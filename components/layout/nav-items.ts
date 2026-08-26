@@ -6,6 +6,7 @@ import {
   ChartIcon,
   ClipboardIcon,
   HomeIcon,
+  LeafIcon,
   MoreIcon,
   RefreshIcon,
   SettingsIcon,
@@ -37,7 +38,7 @@ export interface NavItem {
 
 /** Desktop 사이드바 메뉴 */
 export const SIDEBAR_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "대시보드", icon: HomeIcon, tone: "aqua" },
+  { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua" },
   { href: "/briefing", label: "오늘의 실행 브리핑", icon: SparkIcon, tone: "teal" },
   { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky" },
   { href: "/visits", label: "방문 / 이용 기록", icon: ClipboardIcon, tone: "violet" },
@@ -46,6 +47,14 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/service", label: "서비스 표준", icon: BodyIcon, tone: "violet" },
   { href: "/branches", label: "지점 / 운영", icon: BuildingIcon, tone: "gold" },
   { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray" },
+  /*
+    고객이 보는 화면으로 건너가는 길.
+
+    (staff) 밖에 있는 주소라 이 메뉴만 새 창처럼 다른 세계로 넘어간다.
+    그래도 메뉴에 둔 이유는, 여기 없으면 주소를 직접 쳐야 하기 때문이다.
+    돌아오는 길은 그쪽 머리글의 '내부 AX 화면' 에 있다.
+  */
+  { href: "/welcome", label: "고객 화면", icon: LeafIcon, tone: "emerald" },
 ];
 
 /**
@@ -60,7 +69,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
  *  현장에서 급한 쪽은 언제나 '기록하기'다.)
  */
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "대시보드", icon: HomeIcon, tone: "aqua" },
+  { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua" },
   { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky" },
   { href: "/analytics", label: "분석", icon: ChartIcon, tone: "emerald" },
   { href: "/more", label: "더보기", icon: MoreIcon, tone: "gray" },
