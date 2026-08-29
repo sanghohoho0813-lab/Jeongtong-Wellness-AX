@@ -25,6 +25,7 @@ import {
   BookIcon,
   ChevronRightIcon,
   DownloadIcon,
+  PlayIcon,
   SearchIcon,
   SparkIcon,
   UsersIcon,
@@ -169,17 +170,43 @@ export default function CommandPalette({
     );
     const list: Item[] = [
       {
-        id: "act-tour",
+        id: "act-tour-quick",
         group: "동작",
-        label: "단계별 안내 시작",
-        hint: "화면을 옮겨 가며 사용법을 보여 드립니다",
-        keywords: "튜토리얼 도움말 사용법",
+        label: "빠른 시작 안내 (4걸음)",
+        hint: "처음 쓰실 때 — 오늘 뭘 하면 되는지만",
+        keywords: "튜토리얼 도움말 사용법 처음 시작",
         icon: chip(<SparkIcon className="h-4 w-4" />, NAV_TONE_CLASS.aqua),
         run: () => {
           onClose();
-          startTour();
+          startTour("quick");
         },
       },
+      {
+        id: "act-tour",
+        group: "동작",
+        label: "전체 둘러보기",
+        hint: "화면을 옮겨 가며 기능을 하나씩 보여 드립니다",
+        keywords: "튜토리얼 도움말 사용법 전체",
+        icon: chip(<SparkIcon className="h-4 w-4" />, NAV_TONE_CLASS.aqua),
+        run: () => {
+          onClose();
+          startTour("full");
+        },
+      },
+      ...(isManager
+        ? [{
+        id: "act-demo",
+        group: "동작" as const,
+        label: "시연 시작 (10걸음)",
+        hint: "남에게 보여 드릴 순서 — 왜 · 무엇을 · 무엇이 남았는가",
+        keywords: "시연 발표 데모 프레젠테이션 심사 소개",
+        icon: chip(<PlayIcon className="h-4 w-4" />, NAV_TONE_CLASS.gold),
+        run: () => {
+          onClose();
+          startTour("demo");
+        },
+      }]
+        : []),
       {
         id: "act-theme",
         group: "동작",

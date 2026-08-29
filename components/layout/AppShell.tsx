@@ -164,7 +164,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
               className={`group relative flex items-center gap-2.5 rounded-btn px-2.5 py-2 text-[0.9375rem] font-bold transition-colors ${
                 active
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
-                  : "text-ink-sub hover:bg-stone-bg"
+                  : "text-nav-ink hover:bg-stone-bg"
               }`}
             >
               {active && (
@@ -280,7 +280,7 @@ function BottomNav({
 
   const tabCls = (active: boolean) =>
     `relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold transition-colors ${
-      active ? "text-deep-800 dark:text-aqua-700" : "text-ink-faint"
+      active ? "text-deep-800 dark:text-aqua-700" : "text-nav-ink"
     }`;
 
   const tab = (item: (typeof items)[number]) => {

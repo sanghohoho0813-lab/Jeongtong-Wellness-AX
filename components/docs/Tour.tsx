@@ -36,6 +36,28 @@ export interface TourStep {
   tip?: string;
 }
 
+/**
+ * 세 가지 코스
+ * ============
+ *
+ * 하나로 다 하려다 스무 걸음짜리가 되었다. 그런데 그 스무 걸음은
+ *   - 처음 켠 사람에게는 너무 길고 (다섯 번째쯤에서 닫는다)
+ *   - 남에게 보여 줄 때는 순서가 안 맞는다 (왜 하는지가 빠져 있다)
+ * 서로 다른 세 가지 필요라서, 코스를 셋으로 나눈다. 화면을 옮겨 다니며
+ * 실제 자리를 짚는 방식은 셋 다 같고 단계 목록만 다르다.
+ *
+ *   quick  3~5걸음  처음 켠 날, 오늘 뭘 하면 되는지만
+ *   full   전부     기능을 하나씩 익힐 때 (지금까지의 그 투어)
+ *   demo   8~12걸음 남에게 보여 줄 때 — 왜 → 무엇을 → 그래서 무엇이 남는가
+ */
+export type TourMode = "quick" | "full" | "demo";
+
+export const TOUR_LABEL: Record<TourMode, string> = {
+  quick: "빠른 시작 안내",
+  full: "전체 둘러보기",
+  demo: "시연 모드",
+};
+
 /** 투어 단계 정의 — 고객 ID와 권한에 따라 구성이 달라진다 */
 export function buildTourSteps(
   customerId: string | undefined,
@@ -205,9 +227,177 @@ export function buildTourSteps(
     : customerSteps;
 }
 
+/**
+ * 빠른 시작 — 처음 켠 날 4걸음.
+ *
+ * 처음 오신 분이 알아야 할 것은 기능 목록이 아니라 **하루의 순서**다.
+ * 오늘 누구를 챙기는지 보고 → 그 사람을 열고 → 기록하고 → 그 판단
+ * 기준이 내 것임을 안다. 이 넷이면 다음 날부터 혼자 쓸 수 있다.
+ */
+function buildQuickSteps(
+  customerId: string | undefined,
+  isManager: boolean,
+): TourStep[] {
+  const detail = customerId ? `/customers/${customerId}` : "/customers";
+
+  if (!isManager) {
+    return [
+      {
+        route: "/customers",
+        target: "customer-tiles",
+        kicker: "1 / 3",
+        title: "여기가 직원 계정의 일하는 자리입니다",
+        body: "위쪽 상태를 누르면 그 상태의 고객만 걸러 보실 수 있습니다. 관리가 필요한 분이 위로 올라옵니다.",
+      },
+      {
+        route: "/customers",
+        target: "quick-search",
+        kicker: "2 / 3",
+        title: "이름 · 초성 · 번호로 바로 찾습니다",
+        body: "'ㄱㅎㅅ' 처럼 초성만 쳐도 찾아집니다. 찾은 자리에서 바로 기록까지 이어집니다.",
+        tip: "PC 에서는 Ctrl(⌘) + K 로도 열립니다",
+      },
+      {
+        route: detail,
+        target: "visit-record",
+        kicker: "3 / 3",
+        title: "방문은 이 버튼 하나로 남깁니다",
+        body: "오신 날짜와 봐 드린 부위를 그 자리에서 적습니다. 이용권은 자동으로 한 번 차감됩니다.",
+      },
+    ];
+  }
+
+  return [
+    {
+      route: "/",
+      target: "dash-briefing",
+      kicker: "1 / 4",
+      title: "오늘 챙길 분부터 보시면 됩니다",
+      body: "매장이 정한 기준에 걸린 고객을 시스템이 미리 골라 둡니다. 아침에 이 칸만 보셔도 그날 할 일이 정해집니다.",
+    },
+    {
+      route: "/customers",
+      target: "customer-tiles",
+      kicker: "2 / 4",
+      title: "관리가 필요한 분이 위로 올라옵니다",
+      body: "이름순이 아니라 챙겨야 하는 순서로 늘어놓습니다. 위쪽 상태를 누르면 그 상태만 걸러 보실 수 있습니다.",
+    },
+    {
+      route: detail,
+      target: "visit-record",
+      kicker: "3 / 4",
+      title: "방문은 이 버튼 하나로 남깁니다",
+      body: "오신 날짜와 봐 드린 부위를 그 자리에서 적습니다. 이용권은 자동으로 한 번 차감되고, 고객 화면의 남은 횟수도 같이 줄어듭니다.",
+      tip: "폰에서는 화면 아래 가운데 [기록] 버튼이 어디서든 열립니다",
+    },
+    {
+      route: "/settings",
+      target: "settings-rules",
+      kicker: "4 / 4",
+      title: "그 순서를 정하는 건 시스템이 아니라 매장입니다",
+      body: "관리주기 · 장기 미방문 기준 · 잔여 회차 기준을 여기서 바꾸시면, 위에서 본 목록이 그대로 따라 바뀝니다. 바꾸기 전에 몇 명이 움직이는지 미리 보여 드립니다.",
+    },
+  ];
+}
+
+/**
+ * 시연 — 남에게 보여 줄 때 10걸음.
+ *
+ * 순서를 기능 순서가 아니라 **이야기 순서**로 짠다.
+ *   왜 하는가 → 오늘의 상태 → 판단 → 실행 → 그 판단의 근거 →
+ *   고객 쪽에 어떻게 닿는가 → 실제로 남은 결과 → 기준은 누가 정하는가
+ *
+ * 모든 걸음이 (staff) 안의 실제 화면이다. 슬라이드가 아니다.
+ * 그룹 밖(/welcome 같은 곳)으로 나가면 이 투어를 붙들고 있는 껍데기가
+ * 통째로 사라지므로, 고객 화면은 게이트 안쪽의 미리보기로 보여 준다.
+ */
+function buildDemoSteps(customerId: string | undefined): TourStep[] {
+  const detail = customerId ? `/customers/${customerId}` : "/customers";
+  const preview = customerId
+    ? `/customers/${customerId}/preview`
+    : "/customers";
+
+  return [
+    {
+      route: "/why",
+      kicker: "1 / 10 · 왜",
+      title: "먼저, 무엇을 풀려는 일인지",
+      body: "이 매장이 새고 있던 자리는 넷입니다 — 뜸해진 분을 놓치고, 이용권이 조용히 끝나고, 상담만 하고 끝나고, 해 드린 것이 남지 않는 것. 전부 새 고객 문제가 아니라 이미 오셨던 분을 다시 만나는 문제입니다.",
+    },
+    {
+      route: "/",
+      target: "dash-kpi",
+      kicker: "2 / 10 · 상태",
+      title: "오늘의 운영 상태",
+      body: "오늘 방문 · 관리 대상 · 신규 · 이용권 현황. 전부 저장된 기록에서 계산한 값이고, 만들어 낸 숫자는 없습니다.",
+    },
+    {
+      route: "/",
+      target: "dash-briefing",
+      kicker: "3 / 10 · 판단",
+      title: "오늘 챙길 고객을 골라 둡니다",
+      body: "200명을 다 볼 수는 없습니다. 오늘 실제로 손이 가야 할 분만 위로 올립니다.",
+    },
+    {
+      route: "/briefing",
+      target: "briefing-hero",
+      kicker: "4 / 10 · 실행",
+      title: "판단이 그날의 할 일이 됩니다",
+      body: "연락하고 나면 처리로 표시합니다. 처리한 것과 아직 남은 것이 나뉘어 보여서, 바쁜 날에도 건너뛰지 않습니다.",
+      tip: "이 화면은 그대로 인쇄해서 들고 다니실 수 있습니다",
+    },
+    {
+      route: "/customers",
+      target: "customer-tiles",
+      kicker: "5 / 10 · 순서",
+      title: "목록이 아니라 순서입니다",
+      body: "이름순으로 늘어놓으면 누가 급한지는 열어 봐야 압니다. 여기서는 챙겨야 하는 순서로 옵니다.",
+    },
+    {
+      route: detail,
+      target: "ax-insight",
+      kicker: "6 / 10 · 근거",
+      title: "왜 이분이 위에 있는지가 함께 나옵니다",
+      body: "결론만 주면 쓰는 사람이 판단할 수가 없습니다. 마지막 방문 이후 경과일 · 평균 이용 간격 · 잔여 회차 같은 근거를 같이 적습니다.",
+      tip: "AI READY 를 누르면 지금 무엇으로 계산하는지 그대로 나옵니다",
+    },
+    {
+      route: detail,
+      target: "next-manage",
+      kicker: "7 / 10 · 다리",
+      title: "여기서 정한 날짜가 고객에게 그대로 갑니다",
+      body: "다음 관리 예정일을 바꾸면 고객 화면의 '다음 방문 예정'이 같이 바뀝니다. 같은 사실을 두 군데에 따로 저장하지 않습니다.",
+    },
+    {
+      route: preview,
+      kicker: "8 / 10 · 고객 쪽",
+      title: "고객이 보는 화면은 이렇습니다",
+      body: "고객은 셋만 봅니다 — 다음에 언제 가는지, 몇 번 남았는지, 저번에 어디를 봐 드렸는지. 매장이 쓰는 내부 분류는 여기 나오지 않습니다.",
+      tip: "직원 화면 안에서 그려 보는 것입니다 — 고객으로 로그인한 것이 아닙니다",
+    },
+    {
+      route: "/analytics",
+      target: "analytics-opportunity",
+      kicker: "9 / 10 · 결과",
+      title: "관리한 것이 실제 매출로 이어졌는지",
+      body: "예상 매출을 만들어 보여 주지 않습니다. 실제로 일어난 재등록만 셉니다. 그래야 이 숫자를 그대로 가지고 나가실 수 있습니다.",
+    },
+    {
+      route: "/settings",
+      target: "settings-rules",
+      kicker: "10 / 10 · 기준",
+      title: "그리고 그 기준은 매장이 정합니다",
+      body: "관리주기 · 장기 미방문 · 잔여 회차 기준을 직접 바꾸시면 앞의 모든 화면이 따라 바뀝니다. 시스템이 정해 준 기준을 따르는 것이 아니라, 원장님의 기준을 시스템이 대신 지켜 보는 구조입니다.",
+    },
+  ];
+}
+
 // ---------- Context ----------
 
-const TourContext = createContext<{ startTour: () => void } | null>(null);
+const TourContext = createContext<{
+  /** 코스를 골라 시작한다 (기본은 전체 둘러보기 — 기존 호출부 호환) */
+  startTour: (mode?: TourMode) => void;
+} | null>(null);
 
 export function useTour() {
   const ctx = useContext(TourContext);
@@ -246,15 +436,23 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { customers, isManager } = useStore();
   const [active, setActive] = useState(false);
+  const [mode, setMode] = useState<TourMode>("full");
   const [index, setIndex] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [ready, setReady] = useState(false);
   const timers = useRef<number[]>([]);
 
-  const steps = useMemo(
-    () => buildTourSteps(customers[0]?.id, isManager),
-    [customers, isManager],
-  );
+  const steps = useMemo(() => {
+    const id = customers[0]?.id;
+    if (mode === "quick") return buildQuickSteps(id, isManager);
+    /*
+      시연은 매출·성과 화면을 지난다. 직원 계정에는 그 화면이 없으므로
+      (RouteGuard 가 고객 목록으로 되돌린다) 시연을 열어 주지 않는다 —
+      중간에 튕겨 나가는 것보다 아예 없는 편이 낫다.
+    */
+    if (mode === "demo" && isManager) return buildDemoSteps(id);
+    return buildTourSteps(id, isManager);
+  }, [customers, isManager, mode]);
   const step = steps[index];
 
   const clearTimers = () => {
@@ -262,7 +460,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     timers.current = [];
   };
 
-  const startTour = useCallback(() => {
+  const startTour = useCallback((next: TourMode = "full") => {
+    setMode(next);
     setIndex(0);
     setBox(null);
     setReady(false);
@@ -354,6 +553,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
       {active && step && (
         <TourOverlay
           step={step}
+          mode={mode}
           index={index}
           total={steps.length}
           box={box}
@@ -375,6 +575,7 @@ const DIM = "fixed bg-deep-950/60 backdrop-blur-[3px] transition-all duration-30
 
 function TourOverlay({
   step,
+  mode,
   index,
   total,
   box,
@@ -384,6 +585,7 @@ function TourOverlay({
   onClose,
 }: {
   step: TourStep;
+  mode: TourMode;
   index: number;
   total: number;
   box: Box | null;
@@ -534,8 +736,12 @@ function TourOverlay({
       >
         <div className="rise-in overflow-hidden rounded-card-lg bg-card shadow-float ring-1 ring-black/[0.06] dark:ring-white/10">
           <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-deep-800 to-deep-700 px-4 py-2.5">
+            {/*
+              어느 코스를 도는 중인지 적는다. 시연 모드는 남 앞에서 켜는
+              것이라 "지금 안내를 켜 둔 상태" 임이 화면에 보여야 한다.
+            */}
             <p className="nowrap-num min-w-0 truncate text-[0.8125rem] font-extrabold uppercase tracking-wider text-aqua-300">
-              {index + 1} · {step.kicker}
+              {TOUR_LABEL[mode]} · {step.kicker}
             </p>
             <div className="flex shrink-0 items-center gap-2">
               <span className="nowrap-num rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white">

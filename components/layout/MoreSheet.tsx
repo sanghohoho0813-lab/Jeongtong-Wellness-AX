@@ -29,9 +29,11 @@ import { FieldLabel, SegmentedControl } from "@/components/ui";
 import {
   BookIcon,
   ChevronRightIcon,
+  PlayIcon,
   SparkIcon,
   XIcon,
 } from "@/components/ui/icons";
+import { useTour } from "@/components/docs/Tour";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -47,6 +49,7 @@ export default function MoreSheet({
 }) {
   const pathname = usePathname();
   const { settings, isManager, updateSettings } = useStore();
+  const { startTour } = useTour();
   const [mounted, setMounted] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
@@ -168,6 +171,36 @@ export default function MoreSheet({
               })}
             </ul>
           )}
+
+          {/*
+            안내 코스 — 라벨이 곧 행동이다.
+            '시연' 은 실제 화면을 도는 안내를 시작하고, 슬라이드를 열지 않는다.
+          */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                startTour("quick");
+              }}
+              className="touch-target flex-1 rounded-btn bg-aqua-50 px-3 py-2.5 text-[0.875rem] font-extrabold text-aqua-800 ring-1 ring-aqua-200 transition-colors hover:bg-aqua-100"
+            >
+              빠른 시작 안내
+            </button>
+            {isManager && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  startTour("demo");
+                }}
+                className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-gold-soft px-3 py-2.5 text-[0.875rem] font-extrabold text-gold-deep ring-1 ring-gold/30 transition-colors hover:bg-gold/20"
+              >
+                <PlayIcon className="h-4 w-4" />
+                시연
+              </button>
+            )}
+          </div>
 
           {/* 지금 화면을 PC 폭으로 — 폰에서만 나온다 */}
           <DevicePreviewButton />

@@ -66,6 +66,8 @@ const config: Config = {
         /* 선택된 칩·세그먼트 (배경/글자 한 쌍) */
         sel: v("--c-sel"),
         "sel-ink": v("--c-sel-ink"),
+        /* 어두운 껍데기 위의 메뉴 글자 (globals.css 설명 참고) */
+        "nav-ink": v("--c-nav-ink"),
         ink: {
           DEFAULT: v("--c-ink"),
           soft: v("--c-ink-soft"),

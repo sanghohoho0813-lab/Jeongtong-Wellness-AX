@@ -72,6 +72,17 @@
    */
   --c-ink-sub: 86 97 104;
   --c-ink-faint: 100 110 116;
+  /*
+   * 메뉴 글자 전용.
+   *
+   * 라이트에서 사이드바는 흰 바탕이라 보조 글자색 그대로가 맞다.
+   * 다크에서는 바탕이 어두워지는데, 거기에 ink-sub(#96A6A2)를 그대로
+   * 쓰면 대비는 6.49 로 통과하지만 **회색빛 청록**이 된다. 메뉴 열 개가
+   * 전부 그 색이면 목록 전체가 한 톤 가라앉아 읽힌다.
+   * 어두운 껍데기 위의 메뉴 글자는 흰 계열로 두고, 구분은 아이콘 색과
+   * 활성 알약으로 만든다.
+   */
+  --c-nav-ink: 86 97 104;
   --c-aqua-50: 234 246 245; /* #EAF6F5 */
   --c-aqua-100: 220 240 238;
   --c-aqua-200: 191 227 224;
@@ -126,6 +137,8 @@
   --c-ink-sub: 150 166 162;
   /* 어두운 카드 위에서 3.44 였다 — 5.04 로 올린다 */
   --c-ink-faint: 128 146 142;
+  /* 흰 계열 — #E9EFED */
+  --c-nav-ink: 233 239 237;
   --c-aqua-50: 22 48 45; /* 어두운 teal 표면 */
   --c-aqua-100: 27 58 55;
   --c-aqua-200: 36 80 76;
@@ -443,10 +456,17 @@ body {
     @apply bg-card rounded-card shadow-card;
     border: 1px solid var(--c-card-border);
     padding: var(--density-card-pad);
+    /*
+      상태 되먹임은 160ms 다.
+      예전에는 0.28s 였다. 손을 얹고 카드가 떠오르는 데 3분의 1초가
+      걸리면 "반응이 온다" 가 아니라 "화면이 느리다" 로 읽힌다.
+      v1.2 가 정한 140~180ms 안으로 들인다 — ease-out 으로 처음에 빠르게
+      움직이고 끝에서 부드럽게 선다.
+    */
     transition:
-      box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.28s ease;
+      box-shadow 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.16s ease-out;
   }
 
   /* 정보 카드 hover — 살짝 떠오르는 입체감 (포인터 지원 기기에서만) */
@@ -585,9 +605,9 @@ body {
   position: relative;
   overflow: hidden;
   transition:
-    background-color 0.22s ease,
-    box-shadow 0.22s ease,
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    background-color 0.16s ease-out,
+    box-shadow 0.16s ease-out,
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .row-accent::before {
   content: "";
@@ -599,7 +619,7 @@ body {
   background: linear-gradient(180deg, #2ab3af, #0e7f7d);
   transform: scaleY(0);
   transform-origin: center;
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.17s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) {
   .row-accent:hover::before {
@@ -613,7 +633,7 @@ body {
 /* 아이콘 타일 hover 미세 확대 */
 @media (hover: hover) {
   .icon-pop {
-    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.17s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .group:hover .icon-pop {
     transform: scale(1.08);

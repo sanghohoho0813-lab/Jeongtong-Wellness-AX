@@ -110,7 +110,7 @@ export default function FirstRunCard() {
         {steps.map((s) => (
           <span
             key={s.key}
-            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
+            className={`h-1.5 flex-1 rounded-full transition-colors duration-150 ${
               s.done
                 ? "bg-gradient-to-r from-aqua-400 to-deep-700"
                 : "bg-stone-bg-deep"

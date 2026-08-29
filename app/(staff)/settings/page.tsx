@@ -556,7 +556,7 @@ export default function SettingsPage() {
           <SupabaseLinkCard />
         </div>
 
-        <Card id="set-rules" className="scroll-mt-36 lg:scroll-mt-6">
+        <Card id="set-rules" dataTour="settings-rules" className="scroll-mt-36 lg:scroll-mt-6">
           <SectionTitle>고객관리 기준</SectionTitle>
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
             오늘의 실행 브리핑과 재방문 관리가 이 기준으로 대상을 가려냅니다.

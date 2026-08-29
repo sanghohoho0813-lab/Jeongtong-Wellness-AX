@@ -23,7 +23,7 @@ import {
   Ui,
   type DocTone,
 } from "@/components/docs/DocParts";
-import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
+import { ChevronRightIcon, PlayIcon, SparkIcon } from "@/components/ui/icons";
 import { useTour } from "@/components/docs/Tour";
 
 const TOC = [
@@ -92,13 +92,42 @@ export default function GuidePage() {
               읽는 대신 직접 보면서 배우실 수 있습니다. 화면을 하나씩 옮겨 가며
               설명할 부분만 밝게 보여 드립니다.
             </p>
+            {/*
+              세 갈래로 나눈 이유 —
+              처음 켠 분에게 스무 걸음은 너무 길고, 남에게 보여 줄 때는
+              기능 순서가 아니라 이야기 순서여야 한다.
+            */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => startTour("quick")}
+                className="touch-target rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-5 py-2.5 text-[0.9375rem] font-extrabold text-white shadow-[0_2px_10px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-850 hover:to-deep-700"
+              >
+                빠른 시작 · 4걸음
+              </button>
+              <button
+                onClick={() => startTour("full")}
+                className="touch-target rounded-btn bg-aqua-50 px-5 py-2.5 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-200 transition-colors hover:bg-aqua-100"
+              >
+                전체 둘러보기
+              </button>
+              {isManager && (
+                <button
+                  onClick={() => startTour("demo")}
+                  className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-gold-soft px-5 py-2.5 text-[0.9375rem] font-extrabold text-gold-deep ring-1 ring-gold/30 transition-colors hover:bg-gold/20"
+                >
+                  <PlayIcon className="h-4 w-4" />
+                  시연 · 10걸음
+                </button>
+              )}
+            </div>
+            {isManager && (
+              <p className="mt-2 text-[0.875rem] leading-relaxed text-ink-sub">
+                <b>시연</b>은 남에게 보여 드릴 때 쓰는 순서입니다 — 왜 이걸
+                하는지부터 시작해 실제 화면을 돌고, 마지막에 &lsquo;기준은
+                매장이 정한다&rsquo;로 끝납니다.
+              </p>
+            )}
           </div>
-          <button
-            onClick={startTour}
-            className="touch-target shrink-0 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-6 py-3 text-[1.0625rem] font-extrabold text-white shadow-[0_2px_10px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-850 hover:to-deep-700"
-          >
-            단계별 안내 시작
-          </button>
         </section>
 
         <DocToc

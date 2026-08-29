@@ -56,9 +56,9 @@
 | 25 | AI 표현 정직성 | 미연결 시 `AI READY / AI PREVIEW` + 규칙 기반 명시 | UI 전반에 `AI 추천`·`AX Insight` 라벨은 있으나, **"현재 규칙 기반 Demo"라는 고지가 화면 어디에도 없다.** `analytics/page.tsx:107` 주석에만 존재 | **C** | P0 |
 | 26 | Sidebar Icon Color System | 무채색 단색 금지, Palette 6~8 이내 | `NAV_TONE_CLASS` 8 tone (aqua/teal/sky/violet/amber/emerald/gold/gray) + 30~34px 타일. 요구 충족 | **A** | — |
 | 27 | Dark Shell Readability | Nav Text White 계열(비활성 ≥ `#E5E7EB`) | 다크 모드 사이드바 비활성 글자 `--c-ink-sub: 150 166 162` = `#96A6A2`. 대비는 AA를 넘지만 **v1.2가 요구하는 White 계열이 아님** | **B** | P2 |
-| 28 | Pure White Surface 비중 | Raised Surface 60~80% Pure White | `--c-card: 255 255 255` (라이트 기본이 Pure White). `card-soft`(#FAF9F6)·`gold-soft` 카드가 섞여 있어 **실측 필요** | **E→측정** | P2 |
-| 29 | Hover Coverage ≥ 90% | 주요 Clickable 전부 상태 Feedback | `hover:` 선언 148곳 + `.card:hover`(globals.css:181). **CSS 존재만으로 PASS 금지**가 v1.2 규정이므로 실측 필요 | **E→측정** | P2 |
-| 30 | Motion Contract | 140~180ms ease-out, reduced-motion 대응 | `prefers-reduced-motion: reduce` 대응 존재(globals.css:484). 카드 transition은 **280ms** `cubic-bezier(.22,1,.36,1)` — 규격(140~180ms)보다 느리다 | **B** | P2 |
+| 28 | Pure White Surface 비중 | Raised Surface 60~80% Pure White | `--c-card: 255 255 255` (라이트 기본이 Pure White). **실측 결과 최상위 카드 79/111 = 71%** — 기준 범위 안 (`qa/polish.mjs`) | **A** (실측) | — |
+| 29 | Hover Coverage ≥ 90% | 주요 Clickable 전부 상태 Feedback | **실측 결과 201/201 = 100%** — 실제로 손을 얹어 전후 스타일을 비교한 값 (`qa/polish.mjs`) | **A** (실측) | — |
+| 30 | Motion Contract | 140~180ms ease-out, reduced-motion 대응 | `prefers-reduced-motion: reduce` 대응 존재(globals.css). 카드 transition이 **280ms** 로 규격(140~180ms) 초과 | **B** | P2 |
 
 ---
 
@@ -153,3 +153,47 @@ priority.ts   변경 없음
 
 이 기준선이 PASS 2 이후에도 **같거나 늘어난 상태**로 유지되지 않으면
 완료로 보고하지 않는다.
+
+---
+
+## 6. PASS 2 종료 시점 (실측)
+
+```
+vitest        175 pass      (변화 없음)
+lint          0 error
+typecheck     clean
+build         OK
+npm run qa    338 checks pass   (219 → 338, +119)
+priority.ts   변경 없음
+/intro        변경 없음
+```
+
+신설된 회귀 묶음 둘 —
+
+| 파일 | 건수 | 재는 것 |
+|---|---|---|
+| `qa/shell.mjs` | 89 | 기기 미리보기(진짜 390px · 상하 잘림 0 · 재귀 0 · 나가는 길 셋) · 더보기 시트 · 색 조합 6종 실동작 · 안내 코스 3종 왕복 |
+| `qa/polish.mjs` | 5 | Hover Coverage · Pure White 비중 · 되먹임 속도 · 모션 감소 대응 |
+
+PASS 2 이후 판정 변화:
+
+| # | 영역 | PASS 1 | PASS 2 | 근거 |
+|---|---|---|---|---|
+| 02 | Surface Round-trip (Mobile) | B | **A** | 더보기 시트에 `고객 화면` |
+| 04~07 | Device Preview | C | **A** | `components/layout/DevicePreview.tsx` · 실측 |
+| 09 | `더보기` 의미 | D | **A** | Bottom Sheet (`/more` Route 보존) |
+| 11 | Presentation Mode | C | **A** | 실제 Route 10걸음 · 실측 |
+| 12 | Tutorial 3~5 Step | B | **A** | `quick` 코스 4걸음 신설 |
+| 14·15 | Why AX | C | **A** | `/why` 14개 절 · 사이드바/시트/팔레트에서 발견 |
+| 16·17 | Theme 6종 | C | **A** | `data-palette` × 6 · 실측 |
+| 25 | AI 표현 정직성 | C | **A** | `AI READY` 고지 4곳 |
+| 27 | Dark Shell 가독성 | B | **A** | `--c-nav-ink` — 다크 `#E9EFED` (대비 14.16) |
+| 30 | Motion | B | **A** | 280ms → 160ms |
+
+남은 항목 (P2, 이번 범위 밖으로 남김):
+
+| # | 영역 | 판정 | 왜 남겼는가 |
+|---|---|---|---|
+| 03 | Demo Control Layer 노출 정책 | B | 공개 화면의 직원 진입점이 누구에게나 보인다. 링크 뒤가 `StaffGate` 라 유출은 없으나, 일반 고객에게 감추려면 공개 화면에서 로그인 상태를 읽어야 한다 — 지금은 DB 를 읽지 않는 화면이라 구조가 바뀐다 |
+| 21 | Permission Matrix 화면 | B | Role 전환 시 메뉴·화면·자료가 실제로 달라지는 것은 이미 동작한다. 그 규칙을 한 장의 표로 보여 주는 화면은 없다 |
+| 22 | Demo Reset 발견성 | B | 설정 최하단에 있어 동작하지만, 스크롤을 끝까지 내려야 만난다 |
