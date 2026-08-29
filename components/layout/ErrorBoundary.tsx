@@ -22,6 +22,14 @@ interface Props {
   children: ReactNode;
   /** 경로가 바뀌면 오류 상태를 푼다 (다른 화면은 멀쩡할 수 있으므로) */
   resetKey?: string;
+  /**
+   * 안내 화면 둘레에 여백을 준다.
+   *
+   * 가장 바깥(RootBoundary)에서 오류를 받으면 껍데기가 통째로 사라진 상태라
+   * 안내 카드가 화면 모서리에 딱 붙는다. 그때만 켠다 — 평소 화면에는 이
+   * 여백이 붙으면 안 된다.
+   */
+  padded?: boolean;
 }
 
 interface State {
@@ -75,7 +83,9 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children;
 
     return (
-      <div className="card mx-auto max-w-2xl">
+      <div
+        className={`card mx-auto max-w-2xl ${this.props.padded ? "!mx-4 !my-6 sm:!mx-6" : ""}`}
+      >
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-warn-text ring-1 ring-warn/20 dark:bg-amber-400/10">
           <AlertIcon className="h-6 w-6" />
         </span>

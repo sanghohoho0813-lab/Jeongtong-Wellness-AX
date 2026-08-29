@@ -12,6 +12,7 @@ import AppShell from "@/components/layout/AppShell";
 import StaffGate from "@/components/layout/StaffGate";
 import { ToastProvider } from "@/components/ui/toast";
 import { TourProvider } from "@/components/docs/Tour";
+import { DevicePreviewProvider } from "@/components/layout/DevicePreview";
 
 export default function StaffLayout({
   children,
@@ -24,7 +25,13 @@ export default function StaffLayout({
           <TourProvider>
             {/* 로그인하지 않았으면 여기서 멈춘다 (Demo 는 지나간다) */}
             <StaffGate>
-              <AppShell>{children}</AppShell>
+              {/*
+                게이트 안쪽에 둔다. 미리보기는 지금 화면을 그대로 다시
+                그리는 것이라, 로그인하지 않은 사람에게는 열릴 일이 없어야 한다.
+              */}
+              <DevicePreviewProvider>
+                <AppShell>{children}</AppShell>
+              </DevicePreviewProvider>
             </StaffGate>
           </TourProvider>
         </ToastProvider>

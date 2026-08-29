@@ -402,6 +402,37 @@ export type FontScale = "small" | "default" | "large";
 export type Density = "default" | "relaxed";
 export type Theme = "light" | "dark" | "system";
 
+/**
+ * 색 조합 — 밝기(Theme)와는 다른 축이다.
+ *
+ * Theme 는 라이트/다크를 정하고, Palette 는 어떤 색을 쓸지 정한다.
+ * 다크로 두고 네이비를 고르는 것이 가능해야 해서 둘을 분리했다.
+ * 기본값 "teal" 은 지금까지 써 온 딥틸 + 샴페인 골드 그대로다.
+ * (app/globals.css 의 data-palette 블록 참고)
+ */
+export type Palette =
+  | "navy"
+  | "teal"
+  | "burgundy"
+  | "graphite"
+  | "indigo"
+  | "forest";
+
+export const PALETTES: Array<{
+  key: Palette;
+  no: string;
+  name: string;
+  /** 미리보기 점 세 개 — Shell · Primary · Accent */
+  swatch: [string, string, string];
+}> = [
+  { key: "navy", no: "01", name: "이그제큐티브 네이비", swatch: ["#183151", "#2559e3", "#D4A94F"] },
+  { key: "teal", no: "02", name: "딥틸 샴페인", swatch: ["#0C3937", "#0F8280", "#C9A86A"] },
+  { key: "burgundy", no: "03", name: "버건디 골드", swatch: ["#4a2130", "#a03c5f", "#C5A15A"] },
+  { key: "graphite", no: "04", name: "그라파이트 코퍼", swatch: ["#31343a", "#5c6670", "#C37B4A"] },
+  { key: "indigo", no: "05", name: "인디고 라벤더", swatch: ["#2f3068", "#5257c9", "#B59AE7"] },
+  { key: "forest", no: "06", name: "포레스트 샌드", swatch: ["#20463a", "#357a61", "#C9A66B"] },
+];
+
 export interface CareRuleSettings {
   dormantDays: number; // 장기 미방문 판단 기준 (일)
   membershipLowCount: number; // 이용권 소진 임박 기준 (회)
@@ -433,6 +464,8 @@ export interface AppSettings {
   fontScale: FontScale;
   density: Density;
   theme: Theme;
+  /** 색 조합 — 없으면 기본 딥틸 (기존 저장 데이터 호환) */
+  palette?: Palette;
   companyName: string;
   branchName: string;
   ownerName: string;
@@ -462,6 +495,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontScale: "default",
   density: "default",
   theme: "light",
+  palette: "teal",
   companyName: "정통대왕쑥뜸원",
   branchName: "본점",
   ownerName: "최정철",

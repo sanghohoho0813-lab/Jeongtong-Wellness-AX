@@ -39,6 +39,9 @@ var t=portal?"system":(s.theme||"light");
 r.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;
 r.dataset.fontScale=portal?"default":(s.fontScale||"default");
 r.dataset.density=portal?"default":(s.density||"default");
+/* 색 조합은 브랜드라서 고객 화면에서도 매장이 고른 것을 따른다 —
+   밝기와 달리 "고객 폰의 취향" 이 개입할 자리가 아니다 */
+r.dataset.palette=s.palette||"teal";
 }catch(e){}})()`;
 
 export default function RootLayout({

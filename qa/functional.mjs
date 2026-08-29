@@ -207,7 +207,7 @@ log("파일 선택칸이 실제로 있다", fileInputs > 0, `${fileInputs}개`);
 await go(p, "/settings");
 t = await bodyText(p);
 log("글자 크기 설정을 찾을 수 있다", /작게[\s\S]{0,20}기본[\s\S]{0,20}크게/.test(t));
-log("화면 밝기 설정을 찾을 수 있다", /밝게|어둡게|테마|화면 밝기/.test(t));
+log("화면 밝기 설정을 찾을 수 있다", /밝게|어둡게|테마|밝기/.test(t));
 const beforeSize = await p.evaluate(() => getComputedStyle(document.body).fontSize);
 await p.getByRole("button", { name: "크게", exact: true }).first().click();
 await p.waitForTimeout(900);

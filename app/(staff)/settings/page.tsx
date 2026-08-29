@@ -11,6 +11,7 @@ import {
   OpportunityRuleSettings,
   StaffRole,
   Theme,
+  PALETTES,
 } from "@/lib/types";
 import {
   Button,
@@ -22,6 +23,7 @@ import {
   inputCls,
 } from "@/components/ui";
 import { CheckIcon, DownloadIcon, PlusIcon } from "@/components/ui/icons";
+import AiReadyNote from "@/components/ui/AiReadyNote";
 import { useToast } from "@/components/ui/toast";
 import DataImport from "@/components/settings/DataImport";
 import ProductTable from "@/components/settings/ProductTable";
@@ -273,9 +275,9 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <FieldLabel>테마</FieldLabel>
+              <FieldLabel>밝기</FieldLabel>
               <SegmentedControl<Theme>
-                label="테마"
+                label="밝기"
                 value={settings.theme ?? "light"}
                 options={[
                   { key: "light", label: "라이트" },
@@ -286,6 +288,75 @@ export default function SettingsPage() {
               />
               <p className="mt-2 text-sm text-ink-sub">
                 시스템을 선택하면 기기의 다크모드 설정을 자동으로 따라갑니다.
+              </p>
+            </div>
+
+            {/*
+              색 조합 — 밝기와 따로 고른다.
+
+              한 줄로 묶어 두면 '다크 네이비' 같은 조합을 만들 수 없다.
+              밝기는 눈이 편한 쪽, 색은 매장 분위기. 서로 다른 이유로 고르는
+              것이라 칸을 나눈다.
+
+              기본값은 딥틸 샴페인 — 지금까지 쓰던 색 그대로다. 다른 조합을
+              고르면 어두운 면 · 주 단추 · 활성 메뉴 · 배지 · 그래프 색이 함께
+              바뀌고, 본문 글자와 표면은 그대로 있는다.
+            */}
+            <div>
+              <FieldLabel>색 조합</FieldLabel>
+              <ul
+                role="radiogroup"
+                aria-label="색 조합"
+                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+              >
+                {PALETTES.map((p) => {
+                  const on = (settings.palette ?? "teal") === p.key;
+                  return (
+                    <li key={p.key}>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        onClick={() => updateSettings({ palette: p.key })}
+                        className={`touch-target flex w-full items-center gap-3 rounded-card px-3.5 py-3 text-left transition-colors ${
+                          on
+                            ? "bg-aqua-50 ring-2 ring-aqua-500"
+                            : "bg-card-soft ring-1 ring-stone-line hover:bg-aqua-50"
+                        }`}
+                      >
+                        {/* 색 점 셋 — 껍데기 · 주 색 · 강조색 */}
+                        <span className="flex shrink-0 items-center -space-x-1.5">
+                          {p.swatch.map((c) => (
+                            <span
+                              key={c}
+                              style={{ backgroundColor: c }}
+                              className="h-6 w-6 rounded-full ring-2 ring-card"
+                            />
+                          ))}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[0.9375rem] font-extrabold text-ink">
+                            {p.name}
+                          </span>
+                          <span className="nowrap-num block text-[0.75rem] text-ink-sub">
+                            {p.no}
+                            {p.key === "teal" && " · 기본"}
+                          </span>
+                        </span>
+                        {on && (
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-aqua-500 text-white">
+                            <CheckIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-2 text-sm leading-relaxed text-ink-sub">
+                본문 글자와 표면 색은 조합과 관계없이 그대로 유지됩니다. 어느
+                조합을 고르셔도 글이 흐려지지 않도록 대비를 미리 맞춰 두었습니다.
+                고객 화면에도 같은 조합이 적용됩니다.
               </p>
             </div>
           </div>
@@ -644,6 +715,9 @@ export default function SettingsPage() {
               unit="회 이상 (기회 강도 판단)"
               onChange={(n) => setOppRule({ loyalVisitCount: n })}
             />
+          </div>
+          <div className="mt-4">
+            <AiReadyNote subject="opportunity" />
           </div>
         </Card>
 

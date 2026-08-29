@@ -53,6 +53,7 @@ const NAV_KEYWORDS: Record<string, string> = {
   "/analytics": "분석 성과 매출 통계 지표 추이 리포트",
   "/branches": "지점 운영 매장 조직",
   "/settings": "환경 기준 백업 데이터 가져오기 직원 관리기준",
+  "/why": "why ax 우리매장 이야기 무엇이달라지나 스토리 발표 심사",
   "/intro": "왜 배경 소개 기획",
   "/guide": "도움말 설명서 매뉴얼 사용법 안내",
 };
@@ -121,6 +122,7 @@ export default function CommandPalette({
   const navItems: Item[] = useMemo(() => {
     const items = navItemsFor(SIDEBAR_ITEMS, isManager);
     const docs = [
+      { href: "/why", label: "Why AX", icon: SparkIcon, tone: "teal" as const },
       { href: "/intro", label: "기획의도", icon: BookIcon, tone: "gold" as const },
       { href: "/guide", label: "사용 가이드", icon: SparkIcon, tone: "aqua" as const },
     ];

@@ -47,6 +47,7 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import MembershipForm from "@/components/customers/MembershipForm";
 import CareReport from "@/components/customers/CareReport";
 import CustomerVoiceCard from "@/components/customers/CustomerVoiceCard";
+import AiReadyNote from "@/components/ui/AiReadyNote";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
 export default function CustomerDetailPage() {
@@ -325,6 +326,11 @@ export default function CustomerDetailPage() {
                 <OpportunityBadge opportunity={opportunity} />
               )}
             </div>
+          </div>
+
+          {/* 아래 판단근거가 무엇으로 계산된 것인지 밝혀 둔다 */}
+          <div className="no-print mt-2">
+            <AiReadyNote subject="insight" />
           </div>
 
           {/*

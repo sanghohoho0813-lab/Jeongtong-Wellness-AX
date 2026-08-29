@@ -39,6 +39,23 @@ export default function MorePage() {
       {/* 문서 — 메뉴 목록보다 위에 두고 색으로 구분한다 */}
       <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <Link
+          href="/why"
+          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-deep-700/10 to-card px-4 py-4 shadow-card ring-1 ring-deep-700/20 transition-colors active:bg-deep-700/15 sm:col-span-2"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-deep-700 to-deep-900 text-gold shadow-sm">
+            <SparkIcon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
+              Why AX
+            </span>
+            <span className="block text-[0.875rem] leading-snug text-ink-sub">
+              우리 매장에 무엇이 달라지는가 · 14개 절
+            </span>
+          </span>
+          <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+        </Link>
+        <Link
           href="/intro"
           className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-gold-soft to-card px-4 py-4 shadow-card ring-1 ring-gold/25 transition-colors active:bg-gold/10"
         >

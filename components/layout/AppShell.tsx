@@ -22,7 +22,9 @@ import {
 } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
 import CommandPalette from "./CommandPalette";
+import { DevicePreviewButton } from "./DevicePreview";
 import LiveClock from "./LiveClock";
+import MoreSheet from "./MoreSheet";
 import ErrorBoundary from "./ErrorBoundary";
 import QuickVisitModal from "@/components/visits/QuickVisitModal";
 import RecordSheet from "@/components/visits/RecordSheet";
@@ -94,30 +96,61 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         </button>
       </div>
 
-      {/* 문서 — 메뉴 위에 배치해 처음 쓰는 사람이 먼저 보게 한다 */}
-      <div className="mx-3 mb-2 grid grid-cols-2 gap-2">
+      {/*
+        문서 — 메뉴 위에 배치해 처음 쓰는 사람이 먼저 보게 한다.
+
+        셋으로 늘었다. 나란히 세 칸으로 놓으면 '사용 가이드' 가 잘려서,
+        'Why AX' 를 한 줄로 크게 올리고 아래에 둘을 나란히 둔다. 처음
+        오시는 분(투자·심사 자리 포함)이 가장 먼저 눌러야 할 것이 이것이다.
+      */}
+      <div className="mx-3 mb-2 space-y-2">
         <Link
-          href="/intro"
-          className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
-            isActive(pathname, "/intro")
-              ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
-              : "bg-gold-soft text-gold-deep ring-1 ring-gold/30 hover:bg-gold/20"
-          }`}
-        >
-          <BookIcon className="h-4 w-4 shrink-0" />
-          <span className="truncate">기획의도</span>
-        </Link>
-        <Link
-          href="/guide"
-          className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
-            isActive(pathname, "/guide")
-              ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
-              : "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100"
+          href="/why"
+          className={`flex items-center gap-2 rounded-btn px-3 py-2.5 text-sm font-extrabold transition-colors ${
+            isActive(pathname, "/why")
+              ? "bg-gradient-to-r from-deep-700 to-deep-900 text-white shadow-sm"
+              : "bg-gradient-to-r from-deep-700/10 to-transparent text-deep-800 ring-1 ring-deep-700/20 hover:from-deep-700/20 dark:text-aqua-400"
           }`}
         >
           <SparkIcon className="h-4 w-4 shrink-0" />
-          <span className="truncate">사용 가이드</span>
+          <span className="min-w-0 flex-1 truncate">Why AX</span>
+          <span
+            className={`shrink-0 text-[0.6875rem] font-bold ${
+              isActive(pathname, "/why") ? "text-white/70" : "text-ink-faint"
+            }`}
+          >
+            우리 매장 이야기
+          </span>
         </Link>
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href="/intro"
+            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
+              isActive(pathname, "/intro")
+                ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                : "bg-gold-soft text-gold-deep ring-1 ring-gold/30 hover:bg-gold/20"
+            }`}
+          >
+            <BookIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">기획의도</span>
+          </Link>
+          <Link
+            href="/guide"
+            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
+              isActive(pathname, "/guide")
+                ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
+                : "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100"
+            }`}
+          >
+            <SparkIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">사용 가이드</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* 지금 이 화면이 폰에서 어떻게 보이는지 — 메뉴 바로 위에 둔다 */}
+      <div className="mx-3 mb-2">
+        <DevicePreviewButton />
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
@@ -183,6 +216,8 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
         >
           <SearchIcon className="h-5 w-5" />
         </button>
+        {/* 폰에서 쓰는 중이면 여기 단추는 'PC 에서 보기' 하나만 나온다 */}
+        <DevicePreviewButton compact />
         {/* 직원 계정은 실행 브리핑에 접근하지 않으므로 표시하지 않는다 */}
         {isManager && (
         <Link
@@ -215,29 +250,62 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
  * 목록에서 찾고 고객을 연 다음에야 기록할 수 있었다. 어느 화면에 있든
  * 엄지가 가장 편하게 닿는 가운데 자리에서 바로 시작하게 한다.
  */
-function BottomNav({ onRecord }: { onRecord: () => void }) {
+function BottomNav({
+  onRecord,
+  onMore,
+  moreOpen,
+}: {
+  onRecord: () => void;
+  onMore: () => void;
+  moreOpen: boolean;
+}) {
   const pathname = usePathname();
   const { isManager } = useStore();
   const items = navItemsFor(BOTTOM_NAV_ITEMS, isManager);
   // 관리자 4개 → 좌 2 / 우 2, 직원 2개 → 좌 1 / 우 1. 항상 한가운데에 놓인다.
   const split = Math.ceil(items.length / 2);
 
-  const tab = (item: (typeof items)[number]) => {
-    const active = isActive(pathname, item.href);
+  const face = (item: (typeof items)[number], active: boolean) => {
     const Icon = item.icon;
     return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold ${
-          active ? "text-deep-800 dark:text-aqua-700" : "text-ink-faint"
-        }`}
-      >
+      <>
         {active && (
           <span className="absolute top-0 h-[3px] w-9 rounded-b-full bg-aqua-500" />
         )}
         <Icon className={`h-6 w-6 ${active ? "" : "opacity-85"}`} />
         <span className="truncate">{item.label}</span>
+      </>
+    );
+  };
+
+  const tabCls = (active: boolean) =>
+    `relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold transition-colors ${
+      active ? "text-deep-800 dark:text-aqua-700" : "text-ink-faint"
+    }`;
+
+  const tab = (item: (typeof items)[number]) => {
+    /*
+      '더보기'만 이동이 아니라 시트를 연다 — 라벨이 말하는 대로 더 보여 준다.
+      보던 화면을 잃지 않는 것이 핵심이라, 링크가 아니라 단추여야 한다.
+    */
+    if (item.href === "/more") {
+      return (
+        <button
+          key={item.href}
+          type="button"
+          onClick={onMore}
+          aria-expanded={moreOpen}
+          aria-haspopup="dialog"
+          className={tabCls(moreOpen)}
+        >
+          {face(item, moreOpen)}
+        </button>
+      );
+    }
+    const active = isActive(pathname, item.href);
+    return (
+      <Link key={item.href} href={item.href} className={tabCls(active)}>
+        {face(item, active)}
       </Link>
     );
   };
@@ -485,6 +553,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [recordFor, setRecordFor] = useState<string | undefined>();
   /** 폰 하단 [기록] 단추가 여는 고객 고르기 화면 */
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** 폰 하단 [더보기] 시트 */
+  const [moreOpen, setMoreOpen] = useState(false);
   /** 처음 오신 분 등록 — 값이 있으면 등록 창이 열린다 (검색칸에 적던 이름) */
   const [newName, setNewName] = useState<string | undefined>();
 
@@ -586,7 +656,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
           )}
         </div>
       </main>
-      <BottomNav onRecord={() => setSheetOpen(true)} />
+      <BottomNav
+        onRecord={() => setSheetOpen(true)}
+        onMore={() => setMoreOpen(true)}
+        moreOpen={moreOpen}
+      />
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
       <footer className="hidden pb-6 text-center text-xs text-ink-faint lg:ml-64 lg:block">
         © 2026 정통대왕쑥뜸원 AX Platform
       </footer>

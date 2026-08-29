@@ -13,6 +13,7 @@ import {
 } from "@/lib/types";
 import { Button, Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
 import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
+import AiReadyNote from "@/components/ui/AiReadyNote";
 
 /** 한 번에 그리는 과제 수 — 나머지는 [더 보기]로 이어 그린다 */
 const PAGE_SIZE = 40;
@@ -118,6 +119,14 @@ export default function BriefingPage() {
           </Button>
         }
       />
+
+      {/*
+        이 화면의 순서가 무엇으로 정해지는지 — 인쇄물에는 넣지 않는다.
+        고객과 함께 보는 종이에 시스템 설명이 끼어들 이유가 없다.
+      */}
+      <div className="no-print mb-3">
+        <AiReadyNote subject="priority" />
+      </div>
 
       {/* Hero 요약 밴드 */}
       <HeroCard dataTour="briefing-hero" className="mb-4 !p-5 sm:!p-6 lg:mb-5">

@@ -24,6 +24,7 @@ import {
   recommendLevel,
 } from "@/components/ui";
 import { ChevronRightIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
+import AiReadyNote from "@/components/ui/AiReadyNote";
 
 const STATUS_TILES: Array<{
   key: CustomerStatus | "all";
@@ -258,6 +259,10 @@ export default function CustomersPage() {
             </>
           )}
         </p>
+        {/* 'AI 추천' 이 무엇으로 계산되는지 — 라벨 바로 옆에서 밝힌다 */}
+        {priorityCount > 0 && (
+          <AiReadyNote subject="priority" className="mt-2" />
+        )}
       </Card>
 
       {rows.length === 0 ? (

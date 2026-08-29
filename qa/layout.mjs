@@ -46,6 +46,8 @@ const PAGES = [
   ["/more", "더보기"],
   ["/branches", "지점"],
   ["/guide", "가이드"],
+  ["/why", "WhyAX"],
+  ["/intro", "기획의도"],
 ];
 
 for (const [path, label] of PAGES) {
@@ -93,6 +95,20 @@ for (const [path, label] of PAGES) {
       if (foreign.length < 3) continue;
       if (new Set(foreign).size !== 1) continue;
       const hit = foreign[0];
+      /*
+        떠 있는 막대(하단 네비 · 머리글 · 알림 띠) 위로 지나가는 것은
+        덮인 게 아니다. 스크롤하면 드러난다 — 실제로 300px 만 내리면
+        그 자리에서 자기 자신이 잡힌다.
+
+        찾으려는 것은 **아무리 굴려도 안 나오는** 경우다. 히어로가 카드
+        위를 덮고 함께 흐르던 것이 그랬다(그 요소는 fixed 가 아니었다).
+        그래서 fixed·sticky 로 떠 있는 것에 가린 경우는 넘긴다. 단,
+        페이지가 굴러가지 않으면(문서가 화면보다 짧으면) 정말로 못 보므로
+        그때는 넘기지 않는다.
+      */
+      const hitPos = getComputedStyle(hit).position;
+      const scrollable = document.documentElement.scrollHeight > innerHeight + 4;
+      if (scrollable && (hitPos === "fixed" || hitPos === "sticky")) continue;
       covered.push(`${el.tagName} "${(el.textContent || "").trim().slice(0, 14)}" ← ${hit.tagName}.${String(hit.className).split(" ")[0]}`);
     }
 

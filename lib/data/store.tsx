@@ -436,6 +436,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     root.dataset.fontScale = state.settings.fontScale;
     root.dataset.density = state.settings.density;
+    // 색 조합은 밝기와 따로 간다 — 다크로 두고 네이비를 고를 수 있어야 한다
+    root.dataset.palette = state.settings.palette ?? "teal";
 
     const theme = state.settings.theme ?? "light";
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -464,7 +466,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("afterprint", apply);
       if (theme === "system") media.removeEventListener("change", apply);
     };
-  }, [state.settings.fontScale, state.settings.density, state.settings.theme]);
+  }, [
+    state.settings.fontScale,
+    state.settings.density,
+    state.settings.theme,
+    state.settings.palette,
+  ]);
 
   const factsById = useMemo(() => {
     const map = new Map<string, CustomerFacts>();

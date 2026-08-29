@@ -233,3 +233,37 @@ export const TrendUpIcon = (p: IconProps) => (
     <path d="M15 7h6v6" />
   </svg>
 );
+
+/** 폰 — 모바일 보기 */
+export const PhoneFrameIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="7" y="2.5" width="10" height="19" rx="2.4" />
+    <path d="M10.7 5.2h2.6" />
+    <path d="M10.8 18.6h2.4" />
+  </svg>
+);
+
+/** 모니터 — PC 보기 */
+export const MonitorIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="2.5" y="4" width="19" height="12.5" rx="2" />
+    <path d="M9 20h6M12 16.5V20" />
+  </svg>
+);
+
+/** 상영 — 시연 모드 */
+export const PlayIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M8.5 5.6v12.8l10-6.4z" />
+  </svg>
+);
+
+/** 팔레트 — 색 조합 */
+export const PaletteIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.9-.8 1.9-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16A5 5 0 0 0 21 12c0-4.9-4-9-9-9z" />
+    <circle cx="7.8" cy="11.5" r="1" />
+    <circle cx="10.4" cy="7.7" r="1" />
+    <circle cx="15.2" cy="8.2" r="1" />
+  </svg>
+);

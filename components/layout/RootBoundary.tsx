@@ -18,9 +18,22 @@ import ErrorBoundary from "./ErrorBoundary";
 export default function RootBoundary({ children }: { children: ReactNode }) {
   // 경로가 바뀌면 다시 시도한다 (다른 화면은 멀쩡할 수 있다)
   const pathname = usePathname();
+  /*
+    여기서 children 을 <div className="px-4 py-6 sm:px-6"> 로 감싸고 있었다.
+    오류 안내 카드가 화면 모서리에 붙지 않게 하려던 여백인데, 오류가 났을
+    때만이 아니라 **앱 전체에 항상** 걸려 있었다.
+
+    폰(390px)에서 그 대가가 컸다.
+      - 머리글이 좌우로 17.6px 씩 들어가 앉고, 위로 26.4px 밀려났다.
+      - 본문은 이 여백 위에 자기 px-4 를 또 얹어, 쓸 수 있는 폭이
+        354.8px → 319.6px 로 줄었다. 화면의 10% 다.
+    머리글 바탕이 본문 배경과 같은 색이라 눈에 잘 띄지 않아 오래 남아 있었다.
+
+    여백은 필요할 때(오류 안내가 실제로 뜰 때)만 준다.
+  */
   return (
-    <div className="px-4 py-6 sm:px-6">
-      <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
-    </div>
+    <ErrorBoundary resetKey={pathname} padded>
+      {children}
+    </ErrorBoundary>
   );
 }
