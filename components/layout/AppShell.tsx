@@ -58,8 +58,16 @@ function Logo() {
         <span className="block truncate text-[17px] font-extrabold leading-tight tracking-tight text-ink">
           정통대왕쑥뜸원
         </span>
-        <span className="block truncate text-[9px] font-bold uppercase tracking-normal text-aqua-700 xs:text-[10px] xs:tracking-[0.1em]">
-          Wellness Business AX
+        {/*
+          전에는 400px 미만에서 이 줄을 **9px** 까지 줄여서 넣었다.
+          긴 문구를 좁은 자리에 우겨 넣으려다 그렇게 된 것인데, 9px 은
+          주 사용자층(40~60대)에게 사실상 읽을 수 없는 크기다. 읽히지
+          않는 글씨를 넣느니 짧은 쪽을 쓰는 편이 낫다 — 공개 화면
+          머리글에서 이미 같은 방법을 쓰고 있다.
+        */}
+        <span className="block truncate text-[11px] font-bold uppercase tracking-[0.1em] text-aqua-700">
+          <span className="xs:hidden">Wellness AX</span>
+          <span className="hidden xs:inline">Wellness Business AX</span>
         </span>
       </span>
     </Link>

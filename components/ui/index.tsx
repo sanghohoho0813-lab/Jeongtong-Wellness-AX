@@ -563,7 +563,7 @@ export function SummaryTile({
       } ${onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-card-hover" : ""}`}
     >
       {/* 지표 이름은 자르지 않는다 — 좁으면 두 줄로 접힌다 */}
-      <p className="flex items-start gap-1.5 text-xs font-bold leading-snug text-ink-sub">
+      <p className="flex items-start gap-1.5 text-[0.875rem] font-bold leading-snug text-ink-sub">
         <span className={`mt-[0.3rem] h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
         <span className="min-w-0">{label}</span>
       </p>

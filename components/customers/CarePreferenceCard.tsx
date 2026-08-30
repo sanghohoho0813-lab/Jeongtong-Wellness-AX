@@ -194,7 +194,7 @@ export default function CarePreferenceCard({
       >
         케어 선호 · 특이사항
       </SectionTitle>
-      <p className="-mt-2 mb-3 text-xs leading-relaxed text-ink-sub">
+      <p className="-mt-2 mb-3 text-[0.875rem] leading-relaxed text-ink-sub">
         고객이 좋아하는 방식과 기억해야 할 점을 남겨두면, 다음 방문 기록 시
         먼저 확인할 수 있습니다.
       </p>

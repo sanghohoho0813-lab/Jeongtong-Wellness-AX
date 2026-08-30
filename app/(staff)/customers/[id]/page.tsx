@@ -245,7 +245,7 @@ export default function CustomerDetailPage() {
             <p className="mt-1.5 text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
               {formatRelative(c.nextManageDate)}
             </p>
-            <p className="tabular mt-1 text-xs leading-snug text-ink-sub">
+            <p className="tabular mt-1 text-[0.875rem] leading-snug text-ink-sub">
               {c.nextManageDate
                 ? formatDateTimeKr(c.nextManageDate, c.nextManageTime)
                 : "예정일 미정"}

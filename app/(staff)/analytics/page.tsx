@@ -81,7 +81,9 @@ function MetricTile({
       >
         {value}
       </p>
-      {caption && <p className="mt-1 text-xs text-ink-sub">{caption}</p>}
+      {caption && (
+        <p className="mt-1 text-[0.875rem] leading-snug text-ink-sub">{caption}</p>
+      )}
     </div>
   );
 }
@@ -574,7 +576,7 @@ export default function AnalyticsPage() {
                         {row.label}
                       </span>
                       {/* 이 숫자가 무엇을 센 것인지 알려 주는 줄이라 자르지 않는다 */}
-                      <span className="block text-xs leading-snug text-ink-sub">
+                      <span className="block text-[0.875rem] leading-snug text-ink-sub">
                         {row.desc}
                       </span>
                     </span>
@@ -605,7 +607,7 @@ export default function AnalyticsPage() {
                       : "데이터 축적 중"}
                   </span>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-ink-sub">
+                <p className="mt-1 text-[0.875rem] leading-relaxed text-ink-sub">
                   {renewalRevenue.count > 0
                     ? `재등록 기회를 처리한 뒤 ${renewalRevenue.windowDays}일 안에 실제로 등록된 이용권 ${renewalRevenue.count}건의 판매금액입니다. 이미 저장된 구매 기록만 더한 값이며, 관리가 원인이라고 단정하지는 않습니다.`
                     : `재등록 기회를 처리한 뒤 ${renewalRevenue.windowDays}일 안에 등록된 이용권이 아직 없습니다. 실제 등록이 생기면 그 금액이 여기에 쌓입니다.`}
@@ -713,7 +715,7 @@ export default function AnalyticsPage() {
                         </span>
                       </div>
 
-                      <p className="mt-1.5 text-xs leading-relaxed text-ink-sub">
+                      <p className="mt-1.5 text-[0.875rem] leading-relaxed text-ink-sub">
                         {p.medianReturnDays !== undefined && (
                           <span className="nowrap-num">
                             다음 방문까지 보통 {p.medianReturnDays}일
@@ -736,7 +738,7 @@ export default function AnalyticsPage() {
                   );
                 })}
               </ul>
-              <p className="mt-3 text-xs leading-relaxed text-ink-faint">
+              <p className="mt-3 text-[0.875rem] leading-relaxed text-ink-faint">
                 &lsquo;다음 방문까지 보통 N일&rsquo;은 중앙값입니다. 한두 분의 긴 공백이
                 전체를 왜곡하지 않도록 평균 대신 씁니다.
               </p>
@@ -775,7 +777,7 @@ export default function AnalyticsPage() {
                         <span className="block truncate font-extrabold text-ink">
                           {staffName(a.staffId)}
                         </span>
-                        <span className="tabular block text-xs leading-snug text-ink-sub">
+                        <span className="tabular block text-[0.875rem] leading-snug text-ink-sub">
                           처리완료 {a.done}건 · 보류 {a.held}건
                           {a.lastHandledAt
                             ? ` · 마지막 ${formatRelative(a.lastHandledAt)}`

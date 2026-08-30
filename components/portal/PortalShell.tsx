@@ -179,7 +179,13 @@ export default function PortalShell({ children }: { children: ReactNode }) {
                   }`}
                 >
                   <Icon className="h-[1.375rem] w-[1.375rem]" />
-                  <span className="text-[0.6875rem] font-bold leading-none">
+                  {/*
+                    실측 12.1px 이었다. 주 사용자층이 40~60대이고 이
+                    다섯 칸이 고객 화면의 **주 메뉴** 인데, 화면에서 가장
+                    작은 글씨 축에 들어 있었다. 13.2px 로 올린다 — 다섯 칸
+                    폭(78px)에 '마이페이지' 다섯 자가 여전히 들어간다.
+                  */}
+                  <span className="text-[0.75rem] font-bold leading-none">
                     {item.label}
                   </span>
                 </Link>

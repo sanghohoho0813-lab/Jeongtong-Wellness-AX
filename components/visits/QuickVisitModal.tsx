@@ -46,7 +46,7 @@ export default function QuickVisitModal({
               <p className="truncate font-extrabold text-ink">
                 {displayName(derived.customer.name, privacyMode)}
               </p>
-              <p className="tabular line-clamp-2 text-xs leading-snug text-ink-sub">
+              <p className="tabular line-clamp-2 text-[0.875rem] leading-snug text-ink-sub">
                 {displayPhone(derived.customer.phone, canSeePhone)} · 방문{" "}
                 {derived.visitCount}회
                 {derived.lastVisitDate

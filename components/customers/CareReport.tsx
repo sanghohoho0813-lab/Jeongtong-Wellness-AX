@@ -273,7 +273,7 @@ export default function CareReport({ customer }: { customer: Customer }) {
         )}
 
         {/* 맺음말 — 지어내지 않는다는 것을 분명히 해 둔다 */}
-        <p className="mt-5 border-t border-stone-line pt-3 text-xs leading-relaxed text-ink-faint">
+        <p className="mt-5 border-t border-stone-line pt-3 text-[0.875rem] leading-relaxed text-ink-faint">
           이 기록은 {settings.companyName}에 남아 있는 방문 · 이용 내역을 그대로
           정리한 것입니다. 몸 상태에 대한 판단이나 의학적 소견이 아니며, 앞으로의
           관리 일정을 함께 정하는 데 참고하기 위한 자료입니다.

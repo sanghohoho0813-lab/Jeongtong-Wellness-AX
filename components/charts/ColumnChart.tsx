@@ -95,7 +95,7 @@ export default function ColumnChart({
         <div className="min-w-0">
           <h3 className="text-section-title text-ink">{title}</h3>
           {caption && (
-            <p className="mt-0.5 text-xs leading-relaxed text-ink-sub">
+            <p className="mt-0.5 text-[0.875rem] leading-relaxed text-ink-sub">
               {caption}
             </p>
           )}

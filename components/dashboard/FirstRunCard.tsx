@@ -199,7 +199,7 @@ export default function FirstRunCard() {
         })}
       </ul>
 
-      <p className="mt-3 text-xs leading-relaxed text-ink-faint">
+      <p className="mt-3 text-[0.875rem] leading-relaxed text-ink-faint">
         네 단계를 마치면 이 안내는 사라집니다. 사용법을 처음부터 보고 싶으시면{" "}
         <Link
           href="/guide"

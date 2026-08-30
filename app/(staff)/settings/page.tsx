@@ -662,7 +662,7 @@ export default function SettingsPage() {
                   </ul>
                 )}
 
-                <p className="mt-2.5 text-xs leading-relaxed text-ink-faint">
+                <p className="mt-2.5 text-[0.875rem] leading-relaxed text-ink-faint">
                   실제 브리핑을 만드는 규칙을 그대로 돌려 센 숫자입니다. 아직
                   저장되지 않았습니다.
                 </p>

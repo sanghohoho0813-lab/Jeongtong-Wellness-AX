@@ -237,7 +237,7 @@ export default function BranchesPage() {
                   <p className="font-bold text-ink-soft">{r.title}</p>
                   <Badge tone="gray">고도화 예정</Badge>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-ink-sub">
+                <p className="mt-1 text-[0.875rem] leading-relaxed text-ink-sub">
                   {r.desc}
                 </p>
               </li>

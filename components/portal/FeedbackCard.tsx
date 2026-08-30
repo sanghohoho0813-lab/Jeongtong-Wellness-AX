@@ -155,7 +155,8 @@ export default function FeedbackCard({
               <span className="nowrap-num text-[1.0625rem] font-extrabold tabular">
                 {n}
               </span>
-              <span className="text-[0.625rem] font-bold leading-none">
+              {/* 실측 11px 이었다. 뜻풀이가 안 읽히면 숫자만 남는다 → 12.1px */}
+              <span className="text-[0.6875rem] font-bold leading-none">
                 {SCORE_LABEL[n]}
               </span>
             </button>

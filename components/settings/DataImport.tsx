@@ -131,7 +131,7 @@ export default function DataImport() {
             <span className="block font-bold leading-snug text-ink">
               고객 명부 가져오기
             </span>
-            <span className="block text-xs leading-snug text-ink-sub">
+            <span className="block text-[0.875rem] leading-snug text-ink-sub">
               엑셀에서 저장한 CSV
             </span>
           </span>
@@ -148,7 +148,7 @@ export default function DataImport() {
             <span className="block font-bold leading-snug text-ink">
               백업으로 되돌리기
             </span>
-            <span className="block text-xs leading-snug text-ink-sub">
+            <span className="block text-[0.875rem] leading-snug text-ink-sub">
               전체 백업 JSON
             </span>
           </span>
@@ -327,7 +327,7 @@ export default function DataImport() {
                   ]}
                   onChange={setDupMode}
                 />
-                <p className="mt-1.5 text-xs leading-relaxed text-ink-sub">
+                <p className="mt-1.5 text-[0.875rem] leading-relaxed text-ink-sub">
                   {dupMode === "skip"
                     ? "기존 고객 정보를 전혀 건드리지 않습니다."
                     : "기존에 비어 있던 항목만 파일 값으로 채웁니다. 이미 입력된 값은 그대로 둡니다."}
@@ -344,7 +344,7 @@ export default function DataImport() {
                 </p>
                 <ul className="max-h-40 space-y-1 overflow-y-auto rounded-card bg-card-soft p-2.5 ring-1 ring-black/[0.04]">
                   {csvPreview.errors.slice(0, 20).map((e) => (
-                    <li key={e.line} className="text-xs leading-relaxed text-ink-sub">
+                    <li key={e.line} className="text-[0.875rem] leading-relaxed text-ink-sub">
                       <b className="nowrap-num text-ink-soft">{e.line}번째 줄</b>{" "}
                       — {e.reason}
                     </li>
