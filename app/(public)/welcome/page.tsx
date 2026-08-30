@@ -93,6 +93,31 @@ const FOR_WHOM = [
   },
 ];
 
+/**
+ * 매장을 믿을 만한 이유 — **확인된 사실만**.
+ *
+ * 경력 연수 · 만족도 · 누적 고객 수는 넣지 않았다. 매장이 확인해 준 값이
+ * 없어서다. 아래 셋은 전부 서비스 표준(/service)·실제 제품자료에 이미
+ * 있는 내용이고, 효능이나 결과를 약속하는 문장은 하나도 없다.
+ */
+const TRUST = [
+  {
+    icon: LeafIcon,
+    title: "국내산 최상급 쑥",
+    desc: "반죽 위에 올리는 쑥은 국내산 최상급을 씁니다.",
+  },
+  {
+    icon: CheckIcon,
+    title: "세 겹, 늘 같은 순서",
+    desc: "거즈 → 특제 반죽 → 쑥. 매번 같은 구성으로 준비합니다.",
+  },
+  {
+    icon: ClipboardIcon,
+    title: "기록으로 잇는 관리",
+    desc: "부위와 반응을 방문마다 남겨 다음 방문에 이어 갑니다.",
+  },
+];
+
 /** 실제 시술 구성 — 서비스 표준 화면과 같은 내용 */
 const LAYERS = [
   { no: 1, name: "보호용 거즈", desc: "피부에 먼저 올립니다" },
@@ -105,20 +130,30 @@ export default function PublicHome() {
     <>
       {/* ── 1. 히어로 ─────────────────────────────────────── */}
       {/*
-        사진을 글자 뒤에서 뺐다 — 세 번 고치고 내린 결론이다.
+        사진을 '띠' 로 깔지 않는다 — 이게 이번에 바뀐 핵심이다.
 
-          object-right  → 폰에서 초점 나간 배경만 잘려 나왔다
-          object-center → 쑥뜸 덩어리가 글자 뒤에 떠서 '달' 처럼 보였다
-          object-[88%_78%] → 덜 거슬리지만 여전히 흐린 얼룩이었다
+        moxa.jpg 는 1120×1031, 거의 정사각형(1.09)이다. 이걸 가로로 긴 띠에
+        object-cover 로 깔면 어떻게 되는지 계산해 보면 답이 바로 나온다.
 
-        원인은 자리가 아니라 방식이었다. moxa.jpg 는 거의 정사각형(1.09)이라
-        가로로 긴 띠에 깔면 크게 잘리고, 40% 로 덮으면 딥그린과 섞여 진흙이
-        된다. 좋은 사진을 굳이 안 보이게 만들어 놓고 배경이라 부른 셈이다.
+            폰   390 × 208  → 가로세로비 1.88 → 세로의 42% 가 잘려 나간다
+            PC  1280 × 288  → 가로세로비 4.44 → 세로의 76% 가 잘려 나간다
 
-        그래서 층을 나눈다.
-          위 — 단색 딥그린 위의 글자 (대비 걱정이 아예 없다)
-          아래 — 사진을 온전한 밝기로 띠 하나
-        둘 사이는 그라데이션으로 녹인다. 글자는 또렷하고 사진은 사진답다.
+        76% 를 잘라내면 남는 것은 쑥 덩어리 한가운데의 회갈색 결뿐이다.
+        무엇을 찍은 사진인지 알아볼 수 없고, 알아볼 수 없는 큰 사진은
+        화면을 고급스럽게 만들지 않는다 — 그냥 크고 지저분한 얼룩이다.
+
+        그래서 사진을 **줄이고 틀에 넣는다.**
+
+            폰   5:4 틀   → 잘리는 양 13%
+            PC  1:1 틀   → 잘리는 양 8% (가로로)
+
+        그리고 틀에 금빛 실선과 깊은 그림자를 준다. 화면 끝까지 늘어난
+        사진은 '배경'으로 읽히지만, 테두리가 있는 사진은 '작품'으로 읽힌다.
+        PC 에서는 글과 사진을 좌우로 나눈다 — 오른쪽 절반이 비어 있던
+        자리에 사진이 들어가면서, 세로로 300px 가까이 짧아진다.
+
+        글자는 여전히 단색 딥그린 위에만 올린다. 사진 위에 얹는 것은 작은
+        설명표 하나뿐이고, 그 자리에는 아래쪽 어둠 그라데이션을 깐다.
       */}
       <section className="relative isolate overflow-hidden bg-gradient-to-b from-deep-900 to-deep-950">
         {/* 은은한 금빛 번짐 — 단색 면이 밋밋해지지 않게 */}
@@ -127,52 +162,71 @@ export default function PublicHome() {
           className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold/10 blur-3xl"
         />
 
-        <div className="relative mx-auto max-w-5xl px-4 pb-7 pt-9 sm:px-6 sm:pb-10 sm:pt-14">
-          <h1 className="max-w-xl text-[1.9375rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
-            몸과 마음을 돌보는
-            <span className="mt-1 block bg-gradient-to-r from-gold-lite to-gold bg-clip-text text-transparent">
-              프리미엄 쑥뜸 케어
+        <div className="relative mx-auto grid max-w-5xl items-center gap-7 px-4 pb-14 pt-9 sm:px-6 sm:pb-16 sm:pt-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
+          <div className="min-w-0">
+            <h1 className="text-[1.9375rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
+              몸과 마음을 돌보는
+              <span className="mt-1 block bg-gradient-to-r from-gold-lite to-gold bg-clip-text text-transparent">
+                프리미엄 쑥뜸 케어
+              </span>
+            </h1>
+
+            <span className="my-4 flex max-w-xs items-center gap-3 sm:my-5" aria-hidden>
+              <span className="h-px flex-1 bg-white/25" />
+              <LeafIcon className="h-4 w-4 text-gold" />
+              <span className="h-px flex-1 bg-white/25" />
             </span>
-          </h1>
 
-          <span className="my-4 flex max-w-xs items-center gap-3 sm:my-5" aria-hidden>
-            <span className="h-px flex-1 bg-white/25" />
-            <LeafIcon className="h-4 w-4 text-gold" />
-            <span className="h-px flex-1 bg-white/25" />
-          </span>
+            <p className="max-w-md text-[1.0625rem] leading-relaxed text-white/85 sm:text-[1.125rem]">
+              거즈 위에 특제 반죽을 펴고 쑥을 올려 넓은 부위에 온열을
+              전달합니다. 다녀가신 기록이 쌓이면 다음 관리 시점까지 함께
+              챙겨 드립니다.
+            </p>
+          </div>
 
-          <p className="max-w-md text-[1rem] leading-relaxed text-white/85 sm:text-[1.125rem]">
-            거즈 위에 특제 반죽을 펴고 쑥을 올려 넓은 부위에 온열을 전달합니다.
-            다녀가신 기록이 쌓이면 다음 관리 시점까지 함께 챙겨 드립니다.
-          </p>
+          {/*
+            사진 틀.
 
-          <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-[0.9375rem] font-bold text-gold-lite ring-1 ring-gold/35">
-            <LeafIcon className="h-4 w-4 shrink-0" />
-            국내산 최상급 쑥 사용
-          </span>
-        </div>
+            aspect 를 폰·PC 다르게 주는 이유는 위 계산 그대로다. 폰에서는
+            5:4 가 사진을 알아볼 만큼 담으면서도 첫 화면을 다 먹지 않는
+            선이고, PC 에서는 옆에 글이 있으니 정사각형으로 두어 원본에
+            가장 가깝게 보여 준다.
+          */}
+          <figure className="relative min-w-0">
+            {/*
+              사진 둘레에 얇은 빛 테두리(매트)를 한 겹 두른다.
 
-        {/*
-          사진 띠 — 여기서는 가리지 않는다.
+              moxa.jpg 는 검은 배경에서 찍은 제품 사진이라, 딥그린 위에
+              그냥 얹으면 '까만 네모' 가 하나 떠 있는 것처럼 보인다.
+              액자에 흰 매트를 두르듯 반투명한 밝은 테두리를 한 겹 주면
+              검은 면이 배경 사고가 아니라 작품의 일부로 읽힌다.
+            */}
+            <div className="rounded-[2rem] bg-white/[0.06] p-2 shadow-[0_28px_64px_-28px_rgba(0,0,0,0.8)] ring-1 ring-gold/25">
+            <div className="relative aspect-[5/4] overflow-hidden rounded-[1.5rem] lg:aspect-[6/5]">
+              <Image
+                src="/service/moxa.jpg"
+                alt="거즈와 특제 반죽 위에 쑥을 올려 완성한 대왕쑥뜸"
+                fill
+                priority
+                sizes="(min-width: 1024px) 480px, 100vw"
+                className="object-cover object-center"
+              />
 
-          높이를 176 → 208px 로 올렸다. 176px 에서는 거의 정사각형인
-          moxa.jpg 가 위아래로 크게 잘려, 쑥 덩어리 가운데만 남아 '탄
-          접시' 처럼 보였다. 조금 더 주면 접시 가장자리와 거즈가 함께
-          들어와 무엇을 찍은 사진인지 알아볼 수 있다.
+              {/* 아래쪽만 어둡게 — 설명표가 사진 위에서 읽히도록 */}
+              <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+              />
 
-          위쪽 그라데이션도 96 → 72px 로 줄였다. 너무 길게 녹이면 사진의
-          위 3분의 1이 딥그린에 먹혀서, 결국 잘린 것과 같아진다.
-        */}
-        <div className="relative h-52 w-full sm:h-72">
-          <Image
-            src="/service/moxa.jpg"
-            alt="쑥을 올려 완성한 대왕쑥뜸"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-x-0 top-0 h-[4.5rem] bg-gradient-to-b from-deep-950 via-deep-950/60 to-transparent" />
+              <figcaption className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
+                <span className="inline-flex items-center gap-2 rounded-full bg-deep-950/65 px-3.5 py-2 text-[0.875rem] font-bold text-gold-lite ring-1 ring-gold/35 backdrop-blur-md sm:text-[0.9375rem]">
+                  <LeafIcon className="h-4 w-4 shrink-0" />
+                  국내산 최상급 쑥 사용
+                </span>
+              </figcaption>
+            </div>
+            </div>
+          </figure>
         </div>
       </section>
 
@@ -189,6 +243,18 @@ export default function PublicHome() {
         data-book-anchor
         className="relative z-10 mx-auto -mt-6 max-w-5xl px-4 sm:px-6"
       >
+        {/*
+          네 칸의 크기를 맞춘다.
+
+          전에는 설명 길이가 칸마다 달라서 카드 높이가 제각각이었다
+          ('1회 · 10회권 · 30회권 가격표' 는 한 줄, '날짜를 남기시면
+          매장에서 연락드립니다' 는 두 줄). PC 에서 2×2 로 놓이면 그 차이가
+          왼쪽·오른쪽 어긋남으로 그대로 드러난다.
+
+          items-stretch(기본) + h-full 로 같은 줄의 두 칸을 같은 높이로
+          묶고, 글은 위에서부터 채운다(items-start). 아이콘 상자는 어느
+          칸에서나 48px 한 가지다.
+        */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {ACTIONS.map((a) => {
             const Icon = a.icon;
@@ -196,14 +262,14 @@ export default function PublicHome() {
               <Link
                 key={a.label}
                 href={a.href}
-                className={`card-lift group flex items-center gap-4 rounded-card-lg p-5 shadow-card transition-colors ${
+                className={`card-lift group flex h-full items-start gap-4 rounded-card-lg p-5 shadow-card transition-colors ${
                   a.solid
                     ? "bg-deep-800 text-white ring-1 ring-deep-700 hover:bg-deep-700"
                     : "bg-card text-ink ring-1 ring-stone-line hover:bg-aqua-50"
                 }`}
               >
                 <span
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                  className={`icon-pop flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
                     a.solid
                       ? "bg-white/12 text-gold-lite ring-1 ring-white/15"
                       : "bg-gold-soft/50 text-gold-deep ring-1 ring-gold/25"
@@ -216,25 +282,69 @@ export default function PublicHome() {
                     {a.label}
                   </span>
                   <span
-                    className={`mt-1 block text-[0.875rem] leading-snug ${
-                      a.solid ? "text-white/70" : "text-ink-sub"
+                    className={`mt-1 block text-[0.9375rem] leading-snug ${
+                      a.solid ? "text-white/75" : "text-ink-sub"
                     }`}
                   >
                     {a.desc}
                   </span>
                 </span>
                 <ChevronRightIcon
-                  className={`h-5 w-5 shrink-0 ${a.solid ? "text-white/60" : "text-ink-faint"}`}
+                  className={`mt-1 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5 ${
+                    a.solid ? "text-white/60" : "text-ink-faint"
+                  }`}
                 />
               </Link>
             );
           })}
         </div>
 
-        <p className="mt-3 px-1 text-[0.875rem] leading-relaxed text-ink-sub">
+        <p className="mt-3 px-1 text-[0.9375rem] leading-relaxed text-ink-sub">
           예약과 상담은 <b className="text-ink-soft">내 기록</b>에 들어가신 뒤
           남기실 수 있습니다. 처음이시라면 매장에서 연결코드를 받아 주세요.
         </p>
+      </section>
+
+      {/* ── 2-1. 매장을 믿을 만한 이유 ────────────────────── */}
+      {/*
+        여기에 무엇을 쓰지 '않았는지' 를 먼저 적어 둔다.
+
+        보통 이 자리에는 '○년 경력', '만족도 ○%', '누적 ○명' 이 들어간다.
+        그 숫자들을 쓰지 않았다. 매장이 확인해 준 값이 이 저장소 어디에도
+        없기 때문이다. 확인되지 않은 숫자를 공개 화면에 거는 것은 그냥
+        거짓말이고, 한 번 걸면 내리기도 어렵다.
+
+        그래서 **이미 확인된 사실 셋**만 쓴다. 셋 다 서비스 표준 화면
+        (/service) · 실제 제품자료와 같은 내용이고, 효능을 말하지 않는다.
+        매장에서 경력·만족도 수치를 확정해 주시면 그때 이 자리에 더한다.
+      */}
+      <section
+        aria-labelledby="trust"
+        className="mx-auto mt-10 max-w-5xl px-4 sm:px-6"
+      >
+        <h2 id="trust" className="eyebrow mb-3 px-1">
+          정통대왕쑥뜸원이 지키는 것
+        </h2>
+        <ul className="stat-strip grid-cols-1 sm:grid-cols-3">
+          {TRUST.map((t) => {
+            const Icon = t.icon;
+            return (
+              <li key={t.title} className="stat-cell flex items-start gap-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/60 text-gold-deep ring-1 ring-gold/25">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[1.0625rem] font-extrabold leading-tight text-ink">
+                    {t.title}
+                  </span>
+                  <span className="mt-1 block text-[0.9375rem] leading-snug text-ink-sub">
+                    {t.desc}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       {/* ── 3. 이런 분께 ──────────────────────────────────── */}
@@ -285,17 +395,26 @@ export default function PublicHome() {
 
       {/* ── 4. 어떻게 하는가 ──────────────────────────────── */}
       <section aria-labelledby="how" className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
-        <div className="overflow-hidden rounded-card-lg bg-card shadow-card ring-1 ring-stone-line">
-          <div className="relative aspect-[16/9] sm:aspect-[21/9]">
+        {/*
+          여기도 같은 문제였다. mugwort.jpg 는 840×1120, **세로로 긴** 사진
+          (0.75)인데 21:9(2.33) 띠에 깔아 두었다 — 세로의 68% 가 잘려서,
+          쑥 무더기의 허리께만 가로로 길게 남았다.
+
+          세로 사진은 세로로 놓는다. PC 에서는 왼쪽에 3:4 로 세워
+          원본 그대로 보여 주고(잘리는 양 0%), 글과 3단 구성을 오른쪽에
+          붙인다. 폰에서는 1:1 로 두어 25% 만 잘리게 한다.
+        */}
+        <div className="overflow-hidden rounded-card-lg bg-card shadow-card ring-1 ring-stone-line sm:grid sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <div className="relative aspect-square sm:aspect-auto sm:min-h-full">
             <Image
               src="/service/mugwort.jpg"
               alt="반죽 위에 올리는 국내산 쑥"
               fill
-              sizes="(min-width: 640px) 900px, 100vw"
-              className="object-cover"
+              sizes="(min-width: 640px) 420px, 100vw"
+              className="object-cover object-center"
             />
           </div>
-          <div className="p-6 sm:p-7">
+          <div className="min-w-0 p-6 sm:p-7">
             <h2 id="how" className="text-[1.375rem] font-extrabold text-ink sm:text-[1.5rem]">
               세 겹으로 올립니다
             </h2>
@@ -348,7 +467,7 @@ export default function PublicHome() {
           {PUBLIC_PRICES.map((p) => (
             <li
               key={p.name}
-              className={`flex items-center gap-4 rounded-card-lg p-4 shadow-card sm:flex-col sm:items-start sm:p-6 ${
+              className={`flex h-full items-center gap-4 rounded-card-lg p-4 shadow-card sm:flex-col sm:items-start sm:p-6 ${
                 p.highlight
                   ? "bg-deep-800 text-white ring-1 ring-gold/40"
                   : "bg-card ring-1 ring-stone-line"
@@ -377,7 +496,13 @@ export default function PublicHome() {
                 </span>
               </span>
 
-              <span className="shrink-0 text-right sm:mt-4 sm:w-full sm:text-left">
+              {/*
+                PC 에서 값을 카드 바닥에 붙인다(mt-auto). 10회권만 위에
+                배지가 붙어 있어서, 그냥 두면 세 카드의 값이 계단처럼
+                어긋난 높이에 놓인다 — 값을 견주려고 보는 표에서 그건
+                제일 하면 안 되는 일이다.
+              */}
+              <span className="shrink-0 text-right sm:mt-auto sm:w-full sm:pt-4 sm:text-left">
                 <span
                   className={`nowrap-num block text-[1.375rem] font-extrabold tabular sm:text-[1.75rem] ${
                     p.highlight ? "text-white" : "text-ink"
