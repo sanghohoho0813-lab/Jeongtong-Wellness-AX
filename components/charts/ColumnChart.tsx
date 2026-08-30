@@ -177,13 +177,24 @@ export default function ColumnChart({
                   className="block h-px flex-1"
                   style={{ background: "var(--chart-grid)" }}
                 />
-                <span className="nowrap-num w-9 shrink-0 pl-1.5 text-right text-[0.6875rem] leading-none text-ink-faint">
+                {/*
+                  눈금 자리를 36px(w-9)로 잡아 두었는데 '500만원' 은
+                  50px 이 필요했다. overflow 가 visible 이라 잘리지는
+                  않고 **왼쪽 막대 위로 삐져나와** 겹쳐 있었다.
+
+                  formatKrw 가 낼 수 있는 가장 긴 눈금은 '9,999만원'
+                  (8자 ≈ 66px) 이다. 1억을 넘으면 '1억원'으로 짧아지므로
+                  64px(w-16) 이면 실제로 나올 수 있는 값을 다 담는다.
+                  아래 막대 목록의 right 값도 같이 맞춰야 한다 — 둘이
+                  어긋나면 막대가 눈금 밑으로 들어간다.
+                */}
+                <span className="nowrap-num w-16 shrink-0 pl-1.5 text-right text-[0.6875rem] leading-none text-ink-faint">
                   {tick}
                 </span>
               </span>
             ))}
 
-            <ul className={`absolute inset-y-0 left-0 right-9 ${ROW}`}>
+            <ul className={`absolute inset-y-0 left-0 right-16 ${ROW}`}>
               {data.map((d, i) => {
                 const pct = max > 0 ? (d.value / max) * 100 : 0;
                 const active = hover === i;

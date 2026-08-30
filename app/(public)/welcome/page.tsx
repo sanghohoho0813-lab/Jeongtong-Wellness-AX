@@ -504,7 +504,7 @@ export default function PublicHome() {
               */}
               <span className="shrink-0 text-right sm:mt-auto sm:w-full sm:pt-4 sm:text-left">
                 <span
-                  className={`nowrap-num block text-[1.375rem] font-extrabold tabular sm:text-[1.75rem] ${
+                  className={`nowrap-num block text-[1.375rem] font-extrabold tabular lg:text-[1.75rem] ${
                     p.highlight ? "text-white" : "text-ink"
                   }`}
                 >

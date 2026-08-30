@@ -27,6 +27,7 @@ const SUITES = [
   ["화면 무너짐 (큰 글씨 · 어두움)", "layout.mjs", ["--big", "--dark"]],
   ["손가락 · 눈 (밝음)", "reach.mjs", []],
   ["손가락 · 눈 (큰 글씨 · 어두움)", "reach.mjs", ["--big", "--dark"]],
+  ["태블릿 폭 (768 · 1024)", "tablet.mjs", []],
   ["제품 껍데기", "shell.mjs", []],
   ["고객 화면 (새어 나가는 것)", "customer.mjs", []],
   ["촉감", "polish.mjs", []],

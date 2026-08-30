@@ -102,9 +102,28 @@ export default function MyPasses() {
                     </span>
                   </div>
 
+                  {/*
+                    막대가 '쓴 만큼' 이 아니라 '남은 만큼' 을 채운다.
+
+                    전에는 used/total 이었다. 그런데 바로 옆 숫자는
+                    '6/10회' — 남은 횟수다. 한 줄에서 막대와 숫자가 서로
+                    반대되는 것을 가리키고 있었고, 결과는 이랬다.
+
+                        이용 중  6회 남음  →  막대 40% 참
+                        사용 완료 0회 남음 →  막대 100% 참
+
+                    다 쓴 이용권이 가장 꽉 차 보였다. 홈 화면의 도넛은
+                    이미 '남은 만큼'(6/10 → 60%)을 그리고 있었으니 두
+                    화면끼리도 어긋나 있었다.
+
+                    남은 것이 줄어들수록 막대도 줄어든다 — 그게 고객이
+                    기대하는 방향이고, 옆 숫자·홈 화면과도 맞는다.
+                  */}
                   <div className="mt-2">
                     <ProgressBar
-                      ratio={m.totalCount > 0 ? used / m.totalCount : 0}
+                      ratio={
+                        m.totalCount > 0 ? m.remainingCount / m.totalCount : 0
+                      }
                       tone={low ? "warn" : "aqua"}
                     />
                   </div>
