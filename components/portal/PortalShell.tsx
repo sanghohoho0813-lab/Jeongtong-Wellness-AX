@@ -15,6 +15,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
+import { demoMode } from "@/lib/auth/mode";
 import {
   CalendarIcon,
   ClipboardIcon,
@@ -116,6 +117,22 @@ export default function PortalShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-stone-bg">
       <PortalHeader account />
+
+      {/*
+        시연 빌드라는 표시.
+
+        견본 고객으로 열려 있을 때는 그 사실을 화면에 적어 둔다. 보는
+        사람이 "내 기록" 으로 착각하면 그게 더 나쁜 일이고, 대표님이
+        남에게 보여 줄 때도 "이건 예시입니다" 를 매번 입으로 말하지
+        않아도 된다. 운영 빌드에서는 demoMode 가 false 라 그려지지 않는다.
+      */}
+      {demoMode && (
+        <div className="bg-gold-soft px-4 py-2 text-center">
+          <p className="mx-auto max-w-lg text-[0.8125rem] font-bold leading-snug text-gold-deep">
+            견본 화면입니다 — 실제 고객 기록이 아니라 예시로 만든 자료입니다
+          </p>
+        </div>
+      )}
 
       {/*
         아래 여백은 하단 네비 높이 + 홈 인디케이터 몫이다.

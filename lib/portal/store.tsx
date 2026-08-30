@@ -35,6 +35,14 @@ import {
 } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { portalClient, supabaseConfigured, humanError } from "@/lib/supabase/client";
+import { demoMode } from "@/lib/auth/mode";
+import {
+  DEMO_BRANCH,
+  DEMO_CUSTOMER,
+  DEMO_MEMBERSHIPS,
+  DEMO_PRODUCTS,
+  DEMO_VISITS,
+} from "./demo";
 import {
   branchFromRow,
   customerFromRow,
@@ -284,6 +292,28 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
 
   // 첫 진입 — 이미 로그인돼 있으면 바로 자기 화면으로
   useEffect(() => {
+    /*
+      시연 빌드에서는 견본 고객으로 바로 연다.
+
+      이 화면은 로그인 뒤에만 열리는데, 그러면 대표님이 남에게 보여 줄
+      때마다 실제 고객 계정을 빌려야 하고, 만드는 쪽도 자기가 만든 화면을
+      확인할 수가 없다. 고객 화면만 유독 덜 다듬어져 있던 이유가 그것이었다.
+
+      NEXT_PUBLIC_DEMO_MODE=1 로 빌드했을 때만 지난다. 그 값은 빌드 시점에
+      코드에 박히므로 운영 빌드에는 이 통로가 아예 없다. 여기 들어오는
+      사람도 실존하지 않는다 (lib/portal/demo.ts).
+    */
+    if (demoMode) {
+      setEmail("demo@example.com");
+      setCustomer(DEMO_CUSTOMER);
+      setBranch(DEMO_BRANCH);
+      setVisits(DEMO_VISITS);
+      setMemberships(DEMO_MEMBERSHIPS);
+      setProducts(DEMO_PRODUCTS);
+      setPhase("ready");
+      return;
+    }
+
     const sb = sbRef.current;
     if (!supabaseConfigured || !sb) {
       setPhase("anon");

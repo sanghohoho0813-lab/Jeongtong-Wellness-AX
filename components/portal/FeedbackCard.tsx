@@ -110,6 +110,20 @@ export default function FeedbackCard({
     }
   };
 
+  /*
+    처음에는 점수 줄만 보인다.
+
+    묻는 것이 셋(만족도 · 재방문 의향 · 하고 싶은 말)이라 전부 펼쳐 두면
+    입력칸 · 라디오 · 글상자 · 체크박스 · 보내기까지 열두 개가 홈 화면
+    한가운데를 차지한다. 고객이 홈에 오는 이유는 "언제 가지 · 몇 번 남았지 ·
+    뭘 해 줬더라" 셋인데, 그 셋보다 설문이 크면 화면이 목적을 잃는다.
+
+    그래서 첫 물음(점수)만 남기고 나머지는 접는다. 점수를 누르는 순간
+    나머지가 펼쳐진다 — 이미 한 번 답한 사람은 끝까지 갈 확률이 높고,
+    아무 관심 없는 사람은 두 줄만 지나치면 된다.
+  */
+  const started = score !== null;
+
   return (
     <Card>
       <h2 className="text-[1.0625rem] font-extrabold text-ink">
@@ -149,6 +163,9 @@ export default function FeedbackCard({
         </div>
       </div>
 
+      {/* 아래는 점수를 고른 뒤에만 — 첫 물음에 답한 사람에게만 마저 묻는다 */}
+      {started && (
+      <>
       {/* 다음 방문 의향 */}
       <div className="mt-4">
         <p className="mb-2 text-[0.8125rem] font-bold text-ink-sub">
@@ -225,6 +242,8 @@ export default function FeedbackCard({
       >
         {busy ? "보내는 중…" : "보내기"}
       </Button>
+      </>
+      )}
     </Card>
   );
 }

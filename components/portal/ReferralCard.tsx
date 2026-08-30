@@ -57,7 +57,11 @@ export default function ReferralCard({
 
   return (
     <Card>
-      <div className="flex items-center gap-3.5">
+      {/*
+        단추를 옆에 두면 폰에서 제목이 "친구에게 / 알리기" 로 갈라진다.
+        폰에서는 아래로 내려 폭을 다 준다 (1:1 상담 카드와 같은 규칙).
+      */}
+      <div className="flex items-start gap-3.5">
         {icon && (
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold-deep text-deep-900">
             {icon}
@@ -67,14 +71,19 @@ export default function ReferralCard({
           <p className="text-[1.0625rem] font-extrabold text-ink">
             친구에게 알리기
           </p>
-          <p className="mt-0.5 text-[0.875rem] leading-snug text-ink-sub">
+          <p className="mt-0.5 text-[0.9375rem] leading-relaxed text-ink-sub">
             매장 소개 링크를 보내 드립니다.
           </p>
         </div>
-        <Button variant="secondary" onClick={() => void share()} className="shrink-0">
-          링크 보내기
-        </Button>
       </div>
+      <Button
+        variant="secondary"
+        size="lg"
+        onClick={() => void share()}
+        className="mt-3.5 w-full"
+      >
+        링크 보내기
+      </Button>
 
       {state === "copied" && (
         <p className="mt-3 rounded-btn bg-aqua-50 px-3.5 py-2.5 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-100">
