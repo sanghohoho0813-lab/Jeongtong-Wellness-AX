@@ -2,6 +2,7 @@
 
 import PageHeader from "@/components/layout/PageHeader";
 import KpiRow from "@/components/dashboard/KpiRow";
+import DecisionBand from "@/components/dashboard/DecisionBand";
 import FirstRunCard from "@/components/dashboard/FirstRunCard";
 import BriefingPreview from "@/components/dashboard/BriefingPreview";
 import CustomerInboxCard from "@/components/dashboard/CustomerInboxCard";
@@ -11,6 +12,7 @@ import SegmentCard from "@/components/dashboard/SegmentCard";
 import RevisitPreview from "@/components/dashboard/RevisitPreview";
 import BranchSummaryCard from "@/components/dashboard/BranchSummaryCard";
 import { useStore } from "@/lib/data/store";
+import { SectionRule } from "@/components/ui";
 
 export default function DashboardPage() {
   const { settings, customers, visits } = useStore();
@@ -32,15 +34,20 @@ export default function DashboardPage() {
         description={`${settings.companyName} ${settings.branchName}`}
       />
       {/*
-        순서에 담은 뜻.
+        순서에 담은 뜻 — 판단 → 실행 → 근거
 
-        여태 이 화면은 숫자카드 넉 장으로 시작했다. 그런데 아침에 이 화면을
-        여는 이유는 "몇 명인지" 를 세려는 게 아니라 "오늘 누구를 챙기지" 를
-        정하려는 것이다. 숫자가 맨 위에 있으면 그 답은 한 화면 아래로 밀린다.
+        이 화면은 숫자카드 넉 장으로 시작했었다. 아침에 여기 들어오는
+        이유는 "몇 명인지" 를 세려는 게 아니라 "오늘 누구를 챙기지" 를
+        정하려는 것인데, 숫자가 맨 위에 있으면 그 답이 한 화면 아래로 밀린다.
 
-        그래서 **해야 할 일 → 챙길 사람 → 그다음 현황** 순으로 놓았다.
-        위쪽 셋은 오늘 손이 가야 하는 것들이고, '오늘의 현황' 아래는
-        확인하고 지나가는 참고 자료다. 그 경계를 선 하나로 눈에 보이게 했다.
+        그래서 세 층으로 나눈다.
+
+          판단  오늘 봐야 할 것 셋 — 숫자 · 그렇게 본 이유 · 갈 곳
+          실행  그 판단을 오늘 처리하는 자리
+          근거  판단이 맞는지 확인하는 숫자 (여기부터는 훑고 지나간다)
+
+        층 사이는 카드가 아니라 눈썹 글자와 선 하나로 가른다. 카드를 하나
+        더 만들면 그만큼 첫 화면이 밀리기 때문이다.
       */}
       <div className="flex flex-col card-gap">
         {/*
@@ -58,11 +65,21 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            {/* ① 오늘 해야 할 일 — 화면 폭을 다 준다 */}
+            {/*
+              ① 판단 — 오늘 무엇을 봐야 하는가
+              숫자 · 그렇게 본 이유 · 지금 갈 곳이 한 칸에 함께 있다.
+            */}
+            <SectionRule
+              label="오늘의 판단"
+              hint="지금 화면을 열어야 하는 이유 세 가지"
+            />
+            <DecisionBand />
+
+            {/* ② 실행 — 그 판단을 오늘 어떻게 처리하는가 */}
+            <SectionRule label="실행" hint="누구에게 · 무엇을 · 어떤 순서로" />
             <div className="rise-stagger">
               <BriefingPreview />
             </div>
-            {/* ② 오늘 챙길 사람 — 매출기회 · 재방문 */}
             <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
               <OpportunityCard />
               <RevisitPreview />
@@ -75,13 +92,18 @@ export default function DashboardPage() {
             */}
             <FirstRunCard />
 
-            {/* ③ 여기부터는 확인하고 지나가는 자리 */}
-            <div className="flex items-center gap-3 pt-1">
-              <span className="shrink-0 text-[0.7rem] font-extrabold uppercase tracking-[0.14em] text-ink-faint">
-                오늘의 현황
-              </span>
-              <span className="h-px flex-1 bg-stone-line" />
-            </div>
+            {/*
+              ③ 근거 — 위 판단이 맞는지 확인하는 숫자.
+
+              예전에는 이 숫자들이 화면 맨 위에 카드 넉 장으로 있었다.
+              판단보다 크게 보이면 화면이 거짓말을 한다 — 저 숫자를 다
+              읽어도 오늘 뭘 할지는 안 나오기 때문이다. 판단 아래로 내리고,
+              카드에서 한 판 안의 칸으로 낮췄다.
+            */}
+            <SectionRule
+              label="근거"
+              hint="위 판단이 어떤 숫자 위에 서 있는지"
+            />
             <div data-tour="dash-kpi">
               <KpiRow />
             </div>

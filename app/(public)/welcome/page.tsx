@@ -11,6 +11,7 @@ import {
   LeafIcon,
   TicketIcon,
 } from "@/components/ui/icons";
+import StickyBookBar from "@/components/public/StickyBookBar";
 import { PUBLIC_PRICES } from "@/lib/public/price-sheet";
 import { formatWon } from "@/lib/utils/format";
 
@@ -151,8 +152,18 @@ export default function PublicHome() {
           </span>
         </div>
 
-        {/* 사진 띠 — 여기서는 가리지 않는다 */}
-        <div className="relative h-44 w-full sm:h-64">
+        {/*
+          사진 띠 — 여기서는 가리지 않는다.
+
+          높이를 176 → 208px 로 올렸다. 176px 에서는 거의 정사각형인
+          moxa.jpg 가 위아래로 크게 잘려, 쑥 덩어리 가운데만 남아 '탄
+          접시' 처럼 보였다. 조금 더 주면 접시 가장자리와 거즈가 함께
+          들어와 무엇을 찍은 사진인지 알아볼 수 있다.
+
+          위쪽 그라데이션도 96 → 72px 로 줄였다. 너무 길게 녹이면 사진의
+          위 3분의 1이 딥그린에 먹혀서, 결국 잘린 것과 같아진다.
+        */}
+        <div className="relative h-52 w-full sm:h-72">
           <Image
             src="/service/moxa.jpg"
             alt="쑥을 올려 완성한 대왕쑥뜸"
@@ -161,8 +172,7 @@ export default function PublicHome() {
             sizes="100vw"
             className="object-cover object-center"
           />
-          {/* 위쪽만 녹여 딥그린과 이어 붙인다. 아래는 카드가 덮으므로 그대로 둔다 */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-deep-950 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-[4.5rem] bg-gradient-to-b from-deep-950 via-deep-950/60 to-transparent" />
         </div>
       </section>
 
@@ -176,6 +186,7 @@ export default function PublicHome() {
       */}
       <section
         aria-label="바로 하실 수 있는 것"
+        data-book-anchor
         className="relative z-10 mx-auto -mt-6 max-w-5xl px-4 sm:px-6"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -432,6 +443,15 @@ export default function PublicHome() {
           </Link>
         </div>
       </section>
+
+      {/*
+        폰 하단 고정 예약 막대 — 위쪽 단추가 화면 밖으로 나간 뒤에만 올라온다.
+        (자세한 이유는 StickyBookBar 안에)
+      */}
+      <StickyBookBar />
+
+      {/* 고정 막대가 마지막 글을 가리지 않게 그만큼 비워 둔다 */}
+      <div aria-hidden className="h-[4.5rem] sm:hidden" />
     </>
   );
 }

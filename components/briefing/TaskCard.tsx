@@ -115,11 +115,21 @@ export default function TaskCard({
   rank,
   compact = false,
   variant = "light",
+  showReasons = true,
 }: {
   task: BriefingTask;
   rank?: number;
   compact?: boolean;
   variant?: "light" | "hero";
+  /**
+   * 판단 이유를 이 카드 안에서도 보여 줄지.
+   *
+   * 고객 상세에서는 바로 위 AX Insight 가 이미 같은 이유를 번호까지
+   * 붙여 늘어놓는다. 그 아래 카드에서 또 적으면 같은 문장이 한 화면에
+   * 두 번 나오고, 두 번째 것은 아무도 읽지 않으면서 자리만 먹는다.
+   * 그 화면에서만 끈다. 브리핑에서는 위에 설명이 없으므로 켜 둔다.
+   */
+  showReasons?: boolean;
 }) {
   const { customers, staff, setTaskStatus, canSeePhone, privacyMode } = useStore();
   const toast = useToast();
@@ -329,6 +339,7 @@ export default function TaskCard({
               </div>
 
               {/* 폰 전용 — 근거 펼치기 */}
+              {showReasons && (
               <button
                 type="button"
                 onClick={() => setDetailOpen((v) => !v)}
@@ -340,9 +351,10 @@ export default function TaskCard({
                   className={`h-4 w-4 shrink-0 transition-transform ${detailOpen ? "rotate-90" : ""}`}
                 />
               </button>
+              )}
 
               <div
-                className={`print-open space-y-2 ${detailOpen ? "block" : "hidden lg:block"}`}
+                className={`print-open space-y-2 ${showReasons ? (detailOpen ? "block" : "hidden lg:block") : "hidden"}`}
               >
                 <div>
                   <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">

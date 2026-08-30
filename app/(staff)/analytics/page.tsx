@@ -61,7 +61,12 @@ function MetricTile({
   dot?: keyof typeof METRIC_DOTS;
 }) {
   return (
-    <Card className={`min-w-0 !p-4 sm:!p-5 ${highlight ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}>
+    /*
+      카드가 아니라 한 판 안의 칸이다.
+      여덟 장을 각각 흰 카드로 띄우면 그것만으로 두 화면이 되고, 정작
+      위의 해석은 스크롤 밖으로 밀린다. 값 크기는 그대로 둔다.
+    */
+    <div className={`stat-cell min-w-0 ${highlight ? "!bg-aqua-50" : ""}`}>
       {/*
         지표 이름은 자르지 않는다.
         '신규 고객 (최근 3(' 처럼 반쯤 잘리면 무슨 숫자인지 알 수 없어
@@ -77,7 +82,7 @@ function MetricTile({
         {value}
       </p>
       {caption && <p className="mt-1 text-xs text-ink-sub">{caption}</p>}
-    </Card>
+    </div>
   );
 }
 
@@ -191,17 +196,65 @@ export default function AnalyticsPage() {
             <Em>{customers.length}명</Em>이 저장되어 있습니다.
           </InsightBanner>
         ) : (
+        /*
+          해석 → 왜 → 할 일 → 근거
+
+          예전에는 이 밴드가 한 줄짜리 요약과 한 줄짜리 권장으로 끝났고,
+          그 아래로 곧바로 그래프가 넉 장 이어졌다. 그러면 이 화면은
+          "차트 대시보드" 가 된다 — 그래프를 읽을 줄 아는 사람만 쓸 수 있고,
+          읽고 나서도 무엇을 하라는 것인지는 각자 알아서 정해야 한다.
+
+          네 단으로 나눈다. 결론을 맨 위에 크게 두고, 그렇게 본 근거를
+          항목으로 펼치고, 할 일을 금색으로 묶고, 숫자는 맨 아래 작은
+          글씨로 내린다. 숫자를 지우지는 않는다 — 근거가 없으면 결론도
+          믿을 수 없기 때문이다. 다만 **읽는 순서**를 뒤집는다.
+        */
         <InsightBanner title="AX 운영 인사이트">
-          <p>{opInsight.headline}</p>
-          <p className="mt-2 font-bold text-aqua-300">
-            → {opInsight.recommendation}
-          </p>
           {/*
-            아래 지표 타일과 같은 숫자다.
+            ① 해석 · ② 왜
+
+            headline 은 아래 항목들을 쉼표로 이어 붙인 한 줄이다. 둘을
+            그대로 나란히 두면 같은 문장을 두 번 읽게 된다 — 큰 글씨로
+            한 번, 점 찍힌 목록으로 또 한 번.
+
+            그래서 **첫 항목을 큰 글씨로 올리고, 나머지만 아래에 편다.**
+            첫 항목은 규칙이 가장 먼저 세운 신호라 결론 자리에 맞고,
+            문장을 새로 지어내지도 않는다.
+          */}
+          <p className="text-[1.1875rem] font-extrabold leading-snug text-white sm:text-[1.3125rem]">
+            {opInsight.reasons[0] ?? opInsight.headline}
+          </p>
+
+          {opInsight.reasons.length > 1 && (
+            <ul className="mt-3 space-y-1">
+              {opInsight.reasons.slice(1).map((r, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full bg-aqua-300" />
+                  <span className="min-w-0 text-[0.9375rem] leading-relaxed text-deep-sub">
+                    {r}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* ③ 할 일 — 결론은 색으로 묶는다 */}
+          <div
+            style={{ "--rail": "rgb(var(--c-gold))" } as never}
+            className="rail rail-strong mt-4 rounded-btn bg-white/[0.07] py-3 pl-4 pr-4"
+          >
+            <p className="eyebrow !text-gold-lite">그래서 무엇을 하는가</p>
+            <p className="mt-1 text-[1rem] font-bold leading-snug text-white">
+              {opInsight.recommendation}
+            </p>
+          </div>
+
+          {/*
+            ④ 근거 숫자 — 아래 지표 타일과 같은 값이다.
             폰에서는 이 줄이 한 화면을 더 밀어내 정작 지표가 안 보였다.
             자리가 넉넉한 화면에서만 요약으로 보여 준다.
           */}
-          <p className="mt-2.5 hidden border-t border-white/10 pt-2.5 text-[0.8125rem] text-deep-sub sm:block">
+          <p className="mt-3 hidden border-t border-white/10 pt-3 text-[0.8125rem] text-deep-sub sm:block">
             이번 달 방문 <Em>{latest.visitCount}건</Em>
             {visitTrend && prev && (
               <>
@@ -292,7 +345,7 @@ export default function AnalyticsPage() {
         <>
         <div
           data-tour="analytics-kpi"
-          className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
+          className="stat-strip rise-stagger grid-cols-2 xl:grid-cols-4"
         >
           <MetricTile
             label="신규 고객 (최근 30일)"

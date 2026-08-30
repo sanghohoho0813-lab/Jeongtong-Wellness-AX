@@ -34,19 +34,42 @@ export interface NavItem {
   label: string;
   icon: ComponentType<{ className?: string }>;
   tone: NavTone;
+  /** 사이드바에서 어느 묶음에 들어가는지 (하단 네비는 쓰지 않는다) */
+  group?: NavGroup;
 }
 
 /** Desktop 사이드바 메뉴 */
+/**
+ * 메뉴 묶음 — 열 개를 한 줄로 늘어놓지 않는다.
+ *
+ * 아홉 개가 같은 간격으로 세로로 서 있으면, 무엇이 매일 쓰는 것이고
+ * 무엇이 가끔 여는 것인지 구분되지 않는다. 눈은 첫 두세 개만 보고
+ * 나머지는 "설정 같은 것들" 로 뭉뚱그린다.
+ *
+ * 하는 일로 셋을 나눈다.
+ *   오늘   매일 아침 여는 것
+ *   고객   사람과 기록을 다루는 것
+ *   운영   가끔 확인하고 정하는 것
+ * 묶음 이름은 아주 작게 — 메뉴와 크기로 겨루면 목록이 더 시끄러워진다.
+ */
+export type NavGroup = "today" | "customer" | "ops";
+
+export const NAV_GROUP_LABEL: Record<NavGroup, string> = {
+  today: "오늘",
+  customer: "고객",
+  ops: "운영",
+};
+
 export const SIDEBAR_ITEMS: NavItem[] = [
-  { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua" },
-  { href: "/briefing", label: "오늘의 실행 브리핑", icon: SparkIcon, tone: "teal" },
-  { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky" },
-  { href: "/visits", label: "방문 / 이용 기록", icon: ClipboardIcon, tone: "violet" },
-  { href: "/retention", label: "재방문 관리", icon: RefreshIcon, tone: "amber" },
-  { href: "/analytics", label: "AX 도입성과", icon: ChartIcon, tone: "emerald" },
-  { href: "/service", label: "서비스 표준", icon: BodyIcon, tone: "violet" },
-  { href: "/branches", label: "지점 / 운영", icon: BuildingIcon, tone: "gold" },
-  { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray" },
+  { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua", group: "today" },
+  { href: "/briefing", label: "오늘의 실행 브리핑", icon: SparkIcon, tone: "teal", group: "today" },
+  { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky", group: "customer" },
+  { href: "/visits", label: "방문 / 이용 기록", icon: ClipboardIcon, tone: "violet", group: "customer" },
+  { href: "/retention", label: "재방문 관리", icon: RefreshIcon, tone: "amber", group: "customer" },
+  { href: "/analytics", label: "AX 도입성과", icon: ChartIcon, tone: "emerald", group: "ops" },
+  { href: "/service", label: "서비스 표준", icon: BodyIcon, tone: "violet", group: "ops" },
+  { href: "/branches", label: "지점 / 운영", icon: BuildingIcon, tone: "gold", group: "ops" },
+  { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray", group: "ops" },
   /*
     고객이 보는 화면으로 건너가는 길.
 
@@ -54,7 +77,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
     그래도 메뉴에 둔 이유는, 여기 없으면 주소를 직접 쳐야 하기 때문이다.
     돌아오는 길은 그쪽 머리글의 '내부 AX 화면' 에 있다.
   */
-  { href: "/welcome", label: "고객 화면", icon: LeafIcon, tone: "emerald" },
+  { href: "/welcome", label: "고객 화면", icon: LeafIcon, tone: "emerald", group: "ops" },
 ];
 
 /**

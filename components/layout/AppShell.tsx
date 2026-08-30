@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/icons";
 import {
   BOTTOM_NAV_ITEMS,
+  NAV_GROUP_LABEL,
   NAV_TONE_CLASS,
   SIDEBAR_ITEMS,
   navItemsFor,
@@ -153,35 +154,53 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         <DevicePreviewButton />
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-        {items.map((item) => {
+      {/*
+        묶음별로 끊어 그린다.
+
+        아홉 개를 같은 간격으로 세우면 어디까지가 매일 쓰는 것인지
+        구분되지 않는다. 묶음이 바뀌는 자리에만 아주 작은 라벨을 넣어
+        숨을 준다 — 선을 긋지는 않는다. 선까지 넣으면 왼쪽 기둥이
+        칸막이로 보여 오히려 답답해진다.
+        (직원 계정은 메뉴가 하나뿐이라 묶음 라벨이 나오지 않는다)
+      */}
+      <nav className="flex-1 overflow-y-auto px-3">
+        {items.map((item, i) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
+          const newGroup =
+            items.length > 2 && item.group && item.group !== items[i - 1]?.group;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`group relative flex items-center gap-2.5 rounded-btn px-2.5 py-2 text-[0.9375rem] font-bold transition-colors ${
-                active
-                  ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
-                  : "text-nav-ink hover:bg-stone-bg"
-              }`}
-            >
-              {active && (
-                <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-aqua-400" />
+            <div key={item.href} className={newGroup && i > 0 ? "mt-3" : ""}>
+              {newGroup && (
+                <p className="eyebrow px-2.5 pb-1.5 pt-0.5">
+                  {NAV_GROUP_LABEL[item.group!]}
+                </p>
               )}
-              {/* 메뉴별 컬러 아이콘 타일 */}
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-colors ${
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`group relative mb-1 flex items-center gap-2.5 rounded-btn px-2.5 py-2 text-[0.9375rem] font-bold transition-colors ${
                   active
-                    ? "bg-white/15 text-aqua-300 ring-white/20"
-                    : NAV_TONE_CLASS[item.tone]
+                    ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
+                    : "text-nav-ink hover:bg-stone-bg"
                 }`}
               >
-                <Icon className="h-[1.15rem] w-[1.15rem]" />
-              </span>
-              <span className="truncate">{item.label}</span>
-            </Link>
+                {active && (
+                  <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-aqua-400" />
+                )}
+                {/* 메뉴별 컬러 아이콘 타일 */}
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-colors ${
+                    active
+                      ? "bg-white/15 text-aqua-300 ring-white/20"
+                      : NAV_TONE_CLASS[item.tone]
+                  }`}
+                >
+                  <Icon className="h-[1.15rem] w-[1.15rem]" />
+                </span>
+                <span className="truncate">{item.label}</span>
+              </Link>
+            </div>
           );
         })}
       </nav>

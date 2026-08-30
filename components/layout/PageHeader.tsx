@@ -9,7 +9,7 @@ export default function PageHeader({
   action,
 }: {
   title: string;
-  description?: string;
+  description?: ReactNode;
   action?: ReactNode;
 }) {
   // 화면 제목이 곧 탭 이름이다 — 탭을 여러 개 열어 두면 여기서 구분한다

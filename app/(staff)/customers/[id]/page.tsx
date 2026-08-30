@@ -216,10 +216,16 @@ export default function CustomerDetailPage() {
       </Card>
 
       <div className="flex flex-col card-gap">
-        {/* 상태 요약 — 최근 방문 → 다음 관리일 → 이용권 잔여 → 우선도 순 */}
-        <div className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
-            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600" />
+        {/*
+          상태 요약 — 최근 방문 → 다음 관리일 → 이용권 잔여 → 우선도 순.
+
+          넷을 각각 흰 카드로 띄우면 고객 이름 바로 아래에서 카드 넷이
+          또 한 줄을 차지해, 정작 아래의 AX Insight 가 화면 밖으로 밀렸다.
+          한 판 안의 칸으로 낮춘다 — 값은 그대로 크게 남고, 넷이 한 묶음
+          이라는 것도 같이 읽힌다.
+        */}
+        <div className="stat-strip rise-stagger grid-cols-2 xl:grid-cols-4">
+          <div className="stat-cell min-w-0">
             <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
             <p className="mt-1.5 text-2xl font-extrabold text-ink">
               {formatRelative(derived.lastVisitDate)}
@@ -228,12 +234,11 @@ export default function CustomerDetailPage() {
               누적 {derived.visitCount}회
               {derived.avgCycleDays ? ` · 평균 주기 ${derived.avgCycleDays}일` : ""}
             </p>
-          </Card>
-          <Card
-            dataTour="next-manage"
-            className={`relative min-w-0 overflow-hidden !p-4 sm:!p-5 ${derived.priorityScore > 0 ? "!bg-gradient-to-br !from-aqua-50 !to-card ring-1 ring-aqua-200/50" : ""}`}
+          </div>
+          <div
+            data-tour="next-manage"
+            className={`stat-cell min-w-0 ${derived.priorityScore > 0 ? "!bg-aqua-50" : ""}`}
           >
-            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-aqua-400 to-deep-700" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">
               다음 관리 예정일
             </p>
@@ -253,16 +258,16 @@ export default function CustomerDetailPage() {
               <CalendarIcon className="h-4 w-4" />
               날짜 · 시간 선택
             </button>
-          </Card>
-          <Card
-            className="relative min-w-0 overflow-hidden !p-4 sm:!p-5"
+          </div>
+          <button
+            type="button"
+            className="stat-cell min-w-0 cursor-pointer text-left"
             onClick={() =>
               document
                 .querySelector('[data-tour="memberships"]')
                 ?.scrollIntoView({ behavior: "smooth", block: "center" })
             }
           >
-            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold to-gold-deep" />
             <p className="text-[0.8125rem] font-bold text-ink-sub">이용권 잔여</p>
             {derived.activeMembership ? (
               <>
@@ -286,11 +291,8 @@ export default function CustomerDetailPage() {
                 </p>
               </>
             )}
-          </Card>
-          <Card className="relative min-w-0 overflow-hidden !p-4 sm:!p-5">
-            <span
-              className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${derived.priorityScore > 0 ? "from-amber-300 to-warn" : "from-emerald-300 to-positive"}`}
-            />
+          </button>
+          <div className="stat-cell min-w-0">
             <p className="text-[0.8125rem] font-bold text-ink-sub">AI 추천</p>
             <p
               className={`mt-1.5 truncate text-2xl font-extrabold ${
@@ -306,101 +308,141 @@ export default function CustomerDetailPage() {
             <p className="mt-1 text-xs text-ink-sub">
               {derived.priorityScore > 0 ? "관리 대상" : "정상 관리 중"}
             </p>
-          </Card>
+          </div>
         </div>
 
-        {/* AX INSIGHT — 브리핑과 동일한 판단근거·권장행동 체계를 재사용 */}
-        <div data-tour="ax-insight" className="card-accent">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="flex items-center gap-2 text-[0.8125rem] font-extrabold uppercase tracking-wider text-deep-800 dark:text-aqua-700">
-              <span
-                className={`h-2 w-2 rounded-full ${insight.attention ? "bg-aqua-500" : "bg-positive"}`}
-              />
-              AX Insight
-            </p>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge tone={insight.attention ? "aqua" : "positive"} dot>
-                {insight.attention ? "AI 추천 · 관리 대상" : "정상 관리군"}
-              </Badge>
+        {/*
+          AX INSIGHT — 상태 → 이유 → 다음 행동
+
+          예전에는 이 셋이 한 카드 안에 작은 회색 라벨로만 나뉘어 있었다.
+          '관리상태' '매출기회' '권장 실행' 이 전부 같은 크기, 같은 색,
+          같은 줄 간격이라 읽는 사람은 위에서부터 차례로 다 읽어야 했고,
+          결론(무엇을 하라는 것인가)이 맨 아래 작은 글씨에 있었다.
+
+          세 단을 눈으로 갈라 놓는다.
+            ① 상태 — 딥그린 위에 크게. 이 고객이 지금 어떤가.
+            ② 이유 — 흰 판 위에 번호를 붙여. 왜 그렇게 봤는가.
+            ③ 행동 — 금색 띠로 묶어. 그래서 무엇을 하는가.
+          결론이 맨 아래여도, 색과 무게가 다르면 눈이 먼저 간다.
+        */}
+        <div
+          data-tour="ax-insight"
+          className="overflow-hidden rounded-card-lg bg-card shadow-card ring-1 ring-stone-line"
+        >
+          {/* ① 상태 */}
+          <div
+            className={`px-5 py-4 ${
+              insight.attention
+                ? "bg-gradient-to-r from-deep-800 to-deep-700"
+                : "bg-gradient-to-r from-deep-700 to-deep-600"
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="eyebrow !text-aqua-300">AX Insight · 현재 상태</p>
               {opportunity && opportunity.type !== "none" && (
                 <OpportunityBadge opportunity={opportunity} />
               )}
             </div>
+            <p className="mt-1.5 flex items-center gap-2.5 text-[1.375rem] font-extrabold leading-tight text-white">
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${insight.attention ? "bg-aqua-300" : "bg-positive"}`}
+              />
+              {insight.attention ? "관리가 필요합니다" : "정상 관리 중입니다"}
+            </p>
+            <p className="mt-1 text-[0.875rem] leading-snug text-deep-sub">
+              {insight.attention
+                ? `아래 ${insight.reasons.length}가지 기준에 걸렸습니다`
+                : "지금은 따로 챙기실 것이 없습니다"}
+            </p>
           </div>
 
-          {/* 아래 판단근거가 무엇으로 계산된 것인지 밝혀 둔다 */}
-          <div className="no-print mt-2">
-            <AiReadyNote subject="insight" />
-          </div>
-
-          {/*
-            관리상태 — 지금 챙겨야 하는 이유 (Priority 기준).
-
-            근거를 전부 펼쳐 두면 무엇이 핵심인지 흐려진다. 판단을 뒤집을
-            만한 것은 대개 위의 두세 줄이고, 나머지는 확인하고 싶을 때만
-            본다. 그래서 셋까지만 펼치고 나머지는 눌러서 편다.
-          */}
-          <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-            관리상태
-          </p>
-          <ul className="mt-1 space-y-1">
-            {(reasonsOpen ? insight.reasons : insight.reasons.slice(0, 3)).map(
-              (r, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
-                >
-                  <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
-                  {r}
-                </li>
-              ),
-            )}
-          </ul>
-          {insight.reasons.length > 3 && (
-            <button
-              type="button"
-              onClick={() => setReasonsOpen((v) => !v)}
-              aria-expanded={reasonsOpen}
-              className="tap-line mt-1 text-[0.8125rem] font-bold text-aqua-700"
-            >
-              {reasonsOpen
-                ? "판단 근거 접기"
-                : `판단 근거 ${insight.reasons.length - 3}개 더 보기`}
-            </button>
-          )}
-
-          {/* 매출기회 — 관리하면 기존 매출로 이어질 수 있는 근거 */}
-          {opportunity && opportunity.type !== "none" && (
-            <>
-              <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
-                매출기회 · {opportunity.label}
-              </p>
-              <ul className="mt-1 space-y-1">
-                {opportunity.reasons.map((r, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
-                  >
-                    <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
-                    {r}
+          {/* ② 이유 */}
+          <div className="px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="eyebrow">왜 그렇게 봤는가</p>
+              {/* 무엇으로 계산된 값인지 — 인쇄물에는 넣지 않는다 */}
+              <div className="no-print">
+                <AiReadyNote subject="insight" />
+              </div>
+            </div>
+            {/*
+              근거를 전부 펼쳐 두면 무엇이 핵심인지 흐려진다. 판단을 뒤집을
+              만한 것은 대개 위의 두세 줄이고, 나머지는 확인하고 싶을 때만
+              본다. 그래서 셋까지만 펼치고 나머지는 눌러서 편다.
+            */}
+            <ol className="mt-2.5 space-y-1.5">
+              {(reasonsOpen ? insight.reasons : insight.reasons.slice(0, 3)).map(
+                (r, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="nowrap-num mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-aqua-50 text-[0.75rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100">
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 text-[0.9375rem] leading-relaxed text-ink-soft">
+                      {r}
+                    </span>
+                  </li>
+                ),
+              )}
+              {/*
+                매출기회 근거는 우선순위 근거와 겹치는 문장이 많다
+                ("다음 관리 예정일이 2일 지남" / "다음 관리 예정일 2일 경과").
+                두 계산이 같은 사실을 각자 다른 말로 적어 둔 것이라,
+                따로 두면 한 화면에서 같은 이야기를 두 번 읽게 된다.
+                숫자와 한글만 남겨 견주어 보고, 겹치면 뒤엣것을 접는다.
+              */}
+              {opportunity &&
+                opportunity.type !== "none" &&
+                (() => {
+                  const key = (t: string) =>
+                    t.replace(/[^0-9가-힣]/g, "");
+                  const shown = insight.reasons.map(key);
+                  return opportunity.reasons.filter(
+                    (r) =>
+                      !shown.some(
+                        (s) => s.includes(key(r)) || key(r).includes(s),
+                      ),
+                  );
+                })().map((r, i) => (
+                  <li key={`opp-${i}`} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-gold-soft text-[0.75rem] font-extrabold text-gold-deep ring-1 ring-gold/25">
+                      ₩
+                    </span>
+                    <span className="min-w-0 text-[0.9375rem] leading-relaxed text-ink-soft">
+                      {r}
+                    </span>
                   </li>
                 ))}
-              </ul>
-            </>
-          )}
+            </ol>
+            {insight.reasons.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setReasonsOpen((v) => !v)}
+                aria-expanded={reasonsOpen}
+                className="tap-line mt-1.5 text-[0.8125rem] font-bold text-aqua-700 underline-offset-4 hover:underline"
+              >
+                {reasonsOpen
+                  ? "판단 근거 접기"
+                  : `판단 근거 ${insight.reasons.length - 3}개 더 보기`}
+              </button>
+            )}
+          </div>
 
-          {/* 권장 실행 — 관리 권장행동 + (있으면) 매출기회 권장행동 */}
-          <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-            권장 실행
-          </p>
-          <p className="mt-1 text-sm font-bold text-aqua-700">
-            → {insight.recommendation}
-          </p>
-          {opportunity && opportunity.type !== "none" && (
-            <p className="mt-0.5 text-sm font-bold text-gold-deep">
-              → {opportunity.action}
+          {/* ③ 다음 행동 — 결론은 색으로 묶는다 */}
+          <div
+            style={{ "--rail": "rgb(var(--c-gold))" } as never}
+            className="rail rail-strong bg-gold-soft/50 px-5 py-4 pl-6"
+          >
+            <p className="eyebrow !text-gold-deep">다음에 할 일</p>
+            <p className="mt-1.5 text-[1.0625rem] font-extrabold leading-snug text-ink">
+              {insight.recommendation}
             </p>
-          )}
+            {opportunity && opportunity.type !== "none" && (
+              <p className="mt-1.5 flex items-start gap-1.5 text-[0.9375rem] font-bold leading-snug text-gold-deep">
+                <span className="mt-[0.35rem] h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+                {opportunity.action}
+              </p>
+            )}
+          </div>
         </div>
 
         {/*
@@ -429,7 +471,7 @@ export default function CustomerDetailPage() {
             >
               지금 할 일
             </SectionTitle>
-            <TaskCard task={task} compact />
+            <TaskCard task={task} compact showReasons={false} />
           </Card>
         )}
 

@@ -4,7 +4,7 @@ import { useStore } from "@/lib/data/store";
 import { calcDashboardKpis, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import { daysAgo } from "@/lib/utils/date";
 import { formatKrw } from "@/lib/utils/format";
-import { KpiCard, MiniBars } from "@/components/ui";
+import { KpiCard, MiniBars, StatStrip } from "@/components/ui";
 import CountUp from "@/components/ui/CountUp";
 import {
   CalendarIcon,
@@ -49,7 +49,7 @@ export default function KpiRow() {
   const doneTasks = todayHandled.length;
 
   return (
-    <div className="rise-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+    <StatStrip className="rise-stagger">
       <KpiCard
         label="오늘 신규 상담"
         value={<CountUp value={kpis.todayNewConsults} />}
@@ -104,6 +104,6 @@ export default function KpiRow() {
           tint="violet"
         />
       )}
-    </div>
+    </StatStrip>
   );
 }

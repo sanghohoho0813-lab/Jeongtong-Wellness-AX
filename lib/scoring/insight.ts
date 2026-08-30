@@ -122,6 +122,14 @@ export interface OperationInsight {
   headline: string;
   /** 권장 운영 방향 (규칙 기반, 과장 없음) */
   recommendation: string;
+  /**
+   * headline 을 이루는 낱개 문장들.
+   *
+   * headline 은 이것들을 쉼표로 이어 붙인 한 줄이다. 화면에서 "왜 그렇게
+   * 봤는가" 를 항목으로 늘어놓으려면 이어 붙이기 전의 조각이 필요해서
+   * 함께 돌려준다. 계산은 그대로다 — 있던 값을 내보내기만 한다.
+   */
+  reasons: string[];
 }
 
 /**
@@ -184,5 +192,6 @@ export function buildOperationInsight(
   return {
     headline: parts.length > 0 ? parts.join(", ") + "." : "운영 데이터 축적 중입니다.",
     recommendation,
+    reasons: parts,
   };
 }

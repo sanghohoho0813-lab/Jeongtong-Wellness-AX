@@ -83,27 +83,71 @@ export function SectionTitle({
   action,
   icon,
   tone = "aqua",
+  eyebrow,
+  hint,
   className = "",
 }: {
   children: ReactNode;
   action?: ReactNode;
   icon?: ReactNode;
   tone?: IconTone;
+  /** 제목 위 아주 작은 분류 라벨 — 무슨 종류의 이야기인지 */
+  eyebrow?: string;
+  /** 제목 아래 한 줄 — 이 칸을 어떻게 읽어야 하는지 */
+  hint?: ReactNode;
   className?: string;
 }) {
   return (
-    <div className={`mb-4 flex items-center justify-between gap-3 ${className}`}>
-      <h2 className="text-section-title flex min-w-0 items-center gap-2.5 text-ink">
-        {icon && (
-          <span
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 ${ICON_TONE_CLASS[tone]}`}
-          >
-            {icon}
-          </span>
+    <div className={`mb-4 flex items-start justify-between gap-3 ${className}`}>
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
+        <h2 className="text-section-title flex min-w-0 items-center gap-2.5 text-ink">
+          {icon && (
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 ${ICON_TONE_CLASS[tone]}`}
+            >
+              {icon}
+            </span>
+          )}
+          <span className="min-w-0">{children}</span>
+        </h2>
+        {hint && (
+          <p className="mt-1.5 text-[0.875rem] leading-relaxed text-ink-sub">
+            {hint}
+          </p>
         )}
-        <span className="min-w-0">{children}</span>
-      </h2>
+      </div>
       {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+/**
+ * 화면을 나누는 가로줄 — 여기서부터 성격이 달라진다는 표시.
+ *
+ * 카드를 계속 이어 붙이면 어디까지가 '오늘 할 일' 이고 어디부터가
+ * '참고 자료' 인지 알 수 없다. 눈썹 글자 하나와 선 하나로 그 경계를
+ * 만든다. 카드를 하나 더 만드는 것보다 자리를 훨씬 덜 먹는다.
+ */
+export function SectionRule({
+  label,
+  hint,
+  action,
+}: {
+  label: string;
+  hint?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex items-baseline gap-3 pt-1">
+      <span className="eyebrow shrink-0">{label}</span>
+      {hint && (
+        <span className="hidden min-w-0 truncate text-[0.8125rem] text-ink-faint sm:block">
+          {hint}
+        </span>
+      )}
+      <span className="h-px min-w-4 flex-1 bg-stone-line" />
+      {action && <span className="shrink-0">{action}</span>}
     </div>
   );
 }
@@ -267,6 +311,8 @@ export function recommendLevel(score: number) {
       short: "우선 연락",
       chip: "bg-gradient-to-r from-red-500 to-danger text-white",
       text: "text-danger-text",
+      /* 목록 줄 왼쪽 세로 띠 색 (--rail) */
+      rail: "rgb(var(--c-danger-text))",
     };
   if (score >= 35)
     return {
@@ -274,12 +320,14 @@ export function recommendLevel(score: number) {
       short: "관리 권장",
       chip: "bg-gradient-to-r from-amber-400 to-warn text-white",
       text: "text-warn-text",
+      rail: "rgb(var(--c-warn-text))",
     };
   return {
     label: "AI 추천 · 관찰",
     short: "관찰",
     chip: "bg-gradient-to-r from-aqua-650 to-deep-700 text-white",
     text: "text-aqua-700",
+    rail: "rgb(var(--c-aqua-500))",
   };
 }
 
@@ -348,6 +396,20 @@ const KPI_BARS: Record<KpiTint, string> = {
   violet: "from-violet-400 to-violet-600",
 };
 
+/**
+ * 지표 한 칸.
+ *
+ * 예전에는 이것 하나가 흰 카드 한 장이었다. 넷을 늘어놓으면 PC 에서
+ * 첫 화면의 3분의 1을, 폰에서는 두 화면을 먹었다. 그런데 이 숫자들은
+ * 오늘 무엇을 할지 정해 주지 않는다 — 정해 놓은 판단이 맞는지 확인하는
+ * **근거**다. 근거가 판단보다 커 보이면 화면이 거짓말을 한다.
+ *
+ * 그래서 카드에서 '칸' 으로 내린다. 넷이 한 판(.stat-strip) 안에 실선으로만
+ * 나뉘어 들어가고, 색은 아이콘에만 남긴다. 숫자 크기는 그대로 두었다 —
+ * 작아지면 읽기 어려워지고, 그건 이 매장에서 가장 피해야 하는 일이다.
+ *
+ * `standalone` 은 예전처럼 홀로 뜨는 카드가 필요할 때만 쓴다.
+ */
 export function KpiCard({
   label,
   value,
@@ -356,6 +418,7 @@ export function KpiCard({
   icon,
   chart,
   tint = "aqua",
+  standalone = false,
 }: {
   label: string;
   value: ReactNode;
@@ -364,12 +427,10 @@ export function KpiCard({
   icon?: ReactNode;
   chart?: ReactNode;
   tint?: KpiTint;
+  standalone?: boolean;
 }) {
-  return (
-    <Card className="group relative min-w-0 overflow-hidden !p-4 sm:!p-5">
-      <span
-        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${KPI_BARS[tint]}`}
-      />
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-2.5">
         {/*
           지표 이름은 자르지 않는다 — '오늘 방…' '월 매출 …' 처럼 잘리면
@@ -380,7 +441,7 @@ export function KpiCard({
         </p>
         {icon && (
           <div
-            className={`icon-pop flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 sm:h-10 sm:w-10 ${KPI_TINTS[tint]}`}
+            className={`icon-pop flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 sm:h-9 sm:w-9 ${KPI_TINTS[tint]}`}
           >
             {icon}
           </div>
@@ -396,7 +457,40 @@ export function KpiCard({
         <div className="min-w-0 text-xs font-medium text-ink-sub">{sub}</div>
         {chart && <div className="shrink-0">{chart}</div>}
       </div>
-    </Card>
+    </>
+  );
+
+  if (standalone) {
+    return (
+      <Card className="group relative min-w-0 overflow-hidden !p-4 sm:!p-5">
+        <span
+          className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${KPI_BARS[tint]}`}
+        />
+        {body}
+      </Card>
+    );
+  }
+  return <div className="stat-cell group min-w-0">{body}</div>;
+}
+
+/**
+ * 지표 판 — 칸 넷을 한 덩어리로 묶는다.
+ *
+ * 실선 격자는 `.stat-cell` 이 위·왼쪽에만 그리고, 바깥 판이
+ * overflow-hidden 으로 잘라 낸다. 그래서 몇 칸이 몇 줄로 접히든
+ * 바깥 테두리가 두 겹으로 겹치지 않는다.
+ */
+export function StatStrip({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`stat-strip grid-cols-2 xl:grid-cols-4 ${className}`}>
+      {children}
+    </div>
   );
 }
 

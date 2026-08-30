@@ -40,6 +40,7 @@ import {
   DocToc,
   Ui,
 } from "@/components/docs/DocParts";
+import { DocFigure, DocLayers, DocLoop } from "@/components/docs/DocDiagram";
 import { Button } from "@/components/ui";
 import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
 import { useDocumentTitle } from "@/lib/utils/title";
@@ -105,14 +106,28 @@ export default function WhyAxPage() {
           <p>
             판매하는 것은 세 가지입니다.
           </p>
-          <DocList
-            tone="gold"
-            items={[
-              `${single?.name ?? "1회"} · ${formatKrw(single?.price ?? 0)}`,
-              `${ten?.name ?? "10회권"} · ${formatKrw(ten?.price ?? 0)} (1회당 ${formatKrw(ten?.perSession ?? 0)})`,
-              `${thirty?.name ?? "30회권"} · ${formatKrw(thirty?.price ?? 0)} (1회당 ${formatKrw(thirty?.perSession ?? 0)})`,
-            ]}
-          />
+          {/*
+            글머리표 세 줄로 적어 두었더니 "45,000원" 과 "400,000원" 의
+            차이가 눈에 안 들어왔다. 가격표는 읽는 것이 아니라 견주는
+            것이라, 숫자를 크게 세워 나란히 둔다.
+          */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <DocFigure
+              label={single?.name ?? "1회"}
+              value={formatKrw(single?.price ?? 0)}
+              note="한 번 받으실 때"
+            />
+            <DocFigure
+              label={ten?.name ?? "10회권"}
+              value={formatKrw(ten?.price ?? 0)}
+              note={`1회당 ${formatKrw(ten?.perSession ?? 0)}`}
+            />
+            <DocFigure
+              label={thirty?.name ?? "30회권"}
+              value={formatKrw(thirty?.price ?? 0)}
+              note={`1회당 ${formatKrw(thirty?.perSession ?? 0)}`}
+            />
+          </div>
           <DocNote>
             이 세 가지가 이 시스템 전체의 기준입니다. 설정 →{" "}
             <Ui>서비스 · 이용권 상품</Ui>에 그대로 들어 있고, 매출·잔여회차·
@@ -496,33 +511,40 @@ export default function WhyAxPage() {
             끊으시는 것과, 여섯 번에서 멈추시는 것의 차이가 그대로 매출
             차이입니다.
           </p>
-          <DocChain
-            items={[
+          {/*
+            줄줄이 늘어놓은 목록이었다. 그런데 이 여섯은 줄이 아니라
+            **고리**다 — 여섯 번째에서 첫 번째로 돌아간다. 돌아가는
+            화살표가 없으면 그냥 절차서이고, 있으면 "돌수록 쌓인다" 가
+            된다. 이 문서에서 가장 중요한 그림이라 그림으로 그린다.
+          */}
+          <DocLoop
+            steps={[
               {
                 title: "기록이 쌓인다",
-                desc: "방문 · 부위 · 잔여 회차가 남는다.",
+                desc: "방문 · 부위 · 잔여 회차가 남는다",
               },
               {
                 title: "기준에 걸린다",
-                desc: "관리주기가 지났거나 잔여가 적으면 목록 위로 올라온다.",
+                desc: "관리주기가 지났거나 잔여가 적으면 위로 올라온다",
               },
               {
                 title: "연락한다",
-                desc: "브리핑에서 그날 할 일로 나오고, 처리하면 표시된다.",
+                desc: "그날 할 일로 나오고, 처리하면 표시된다",
               },
               {
                 title: "다시 오신다",
-                desc: "방문이 기록되고, 다음 관리 예정일이 다시 잡힌다.",
+                desc: "방문이 기록되고 다음 예정일이 다시 잡힌다",
               },
               {
                 title: "재등록으로 이어진다",
-                desc: "이용권이 끝날 때가 재등록을 말씀드릴 자리다.",
+                desc: "이용권이 끝날 때가 말씀드릴 자리다",
               },
               {
                 title: "성과로 확인한다",
-                desc: "AX 도입성과 화면에서 관리한 것이 실제 재등록 매출로 이어졌는지 센다.",
+                desc: "실제 재등록 매출로 이어졌는지 센다",
               },
             ]}
+            closing="그리고 그 방문이 다시 ① 기록으로 쌓여 다음 바퀴가 돌아갑니다 — 한 바퀴 돌 때마다 판단할 근거가 늘어납니다."
           />
           <DocNote>
             마지막 한 걸음이 중요합니다. 이 시스템은 <b>예상 매출을 만들어
@@ -608,9 +630,50 @@ export default function WhyAxPage() {
             tone="gold"
             items={[
               "판단 층에 언어모델 연결 — 상담 원문까지 읽는 우선순위",
-              "지점 추가 — 지점별 운영 비교 화면이 이미 있다",
               "고객 알림 — 지금은 화면에서 확인, 다음은 알림으로",
               "예약 확정까지 — 지금은 요청 접수, 다음은 시간 확정",
+            ]}
+          />
+
+          {/*
+            매장이 늘어날 때의 구조.
+
+            지금 있는 것과 아직 없는 것을 한 그림에 넣되, 없는 것은
+            점선과 '아직 없음' 으로 분명히 갈라 둔다. 이 화면은 심사
+            자리에서도 띄우는 화면이라, 계획을 이미 된 일처럼 그려 두면
+            그 자리에서 바로 문제가 된다.
+          */}
+          <p className="mt-5 text-[1.0625rem] font-extrabold text-ink">
+            매장이 늘어나면 이렇게 됩니다
+          </p>
+          <DocLayers
+            layers={[
+              {
+                label: "지금",
+                tone: "teal",
+                title: "본점 — 정통대왕쑥뜸원",
+                desc: "여기서 쓰는 기준(관리주기 · 미방문 · 잔여 회차)이 곧 운영 표준이 된다",
+              },
+              {
+                label: "지금",
+                tone: "aqua",
+                title: "지점 화면",
+                desc: "지점별 고객 · 방문 · 매출을 나눠 보는 화면이 이미 있다 (지점 / 운영)",
+              },
+              {
+                label: "다음",
+                tone: "gold",
+                future: true,
+                title: "가맹점",
+                desc: "본점의 기준을 그대로 받아 같은 방식으로 운영한다 — 새로 배울 것이 화면 하나뿐이다",
+              },
+              {
+                label: "다음",
+                tone: "gold",
+                future: true,
+                title: "본사에 모이는 기록",
+                desc: "어느 프로그램이 어느 지역에서 재방문으로 이어지는지가 모인다. 그 답으로 서비스를 다시 고친다",
+              },
             ]}
           />
           <DocQuote tone="gold">

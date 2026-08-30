@@ -107,7 +107,20 @@ export default function BriefingPage() {
     <div>
       <PageHeader
         title="오늘의 실행 브리핑"
-        description="오늘 챙길 고객을 우선순위대로 정리했습니다."
+        description={
+          <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+            오늘 챙길 고객을 우선순위대로 정리했습니다.
+            {/*
+              순서가 무엇으로 정해지는지 — 설명 바로 옆에 둔다.
+              아래에 홀로 떠 있으면 무엇에 대한 표시인지 흐려진다.
+              인쇄물에는 넣지 않는다: 고객과 함께 보는 종이에 시스템
+              설명이 끼어들 이유가 없다.
+            */}
+            <span className="no-print">
+              <AiReadyNote subject="priority" />
+            </span>
+          </span>
+        }
         action={
           <Button
             variant="secondary"
@@ -119,14 +132,6 @@ export default function BriefingPage() {
           </Button>
         }
       />
-
-      {/*
-        이 화면의 순서가 무엇으로 정해지는지 — 인쇄물에는 넣지 않는다.
-        고객과 함께 보는 종이에 시스템 설명이 끼어들 이유가 없다.
-      */}
-      <div className="no-print mb-3">
-        <AiReadyNote subject="priority" />
-      </div>
 
       {/* Hero 요약 밴드 */}
       <HeroCard dataTour="briefing-hero" className="mb-4 !p-5 sm:!p-6 lg:mb-5">

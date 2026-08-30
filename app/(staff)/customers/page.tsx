@@ -77,6 +77,20 @@ export default function CustomersPage() {
   const [status, setStatus] = useState<CustomerStatus | "all">("all");
   const [sort, setSort] = useState<SortKey>("priority");
   const [onlyOpportunity, setOnlyOpportunity] = useState(false);
+  /*
+    대시보드의 '해당 고객 보기' 가 여기로 데려온다.
+    링크가 데려다만 놓고 필터는 꺼져 있으면, 온 사람이 목록 전체를 보며
+    "뭘 보라는 거지" 하게 된다. 주소에 붙은 표식을 읽어 그 필터를 켠 채로 연다.
+
+    useSearchParams 대신 마운트 후 location 을 읽는다 — 이 화면은 정적으로
+    미리 그려 두는 쪽이 빨라서, 검색 파라미터 훅을 넣어 통째로 동적 렌더로
+    돌릴 이유가 없다.
+  */
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("opportunity") === "1") {
+      setOnlyOpportunity(true);
+    }
+  }, []);
   const [openForm, setOpenForm] = useState(false);
   /**
    * 한 번에 그리는 줄 수.
@@ -290,11 +304,37 @@ export default function CustomersPage() {
       ) : (
         <div className="rise-stagger space-y-2.5">
           {visibleRows.map((d) => (
+            /*
+              줄마다 왼쪽에 세로 띠를 세운다.
+
+              예전에는 모든 줄이 똑같은 흰 카드였고, 급한 줄이라는 표시는
+              카드 안쪽의 작은 배지뿐이었다. 스무 줄을 훑을 때 배지는
+              안 읽힌다 — 눈은 줄 안쪽까지 들어가지 않고 왼쪽 가장자리를
+              따라 내려가기 때문이다.
+
+              그 가장자리에 색을 놓는다. 급한 줄은 진하고 두껍게, 챙길
+              줄은 얇게, 정상인 줄은 아예 흐리게. 훑는 눈이 지나가는 자리에
+              세기가 있으면 멈춰야 할 줄에서 저절로 멈춘다.
+            */
             <Link
               key={d.customer.id}
               data-tour="customer-row"
               href={`/customers/${d.customer.id}`}
-              className="card card-lift row-accent group flex items-center gap-3 !py-3.5 !pl-5 sm:gap-4"
+              style={
+                {
+                  "--rail":
+                    d.priorityScore > 0
+                      ? recommendLevel(d.priorityScore).rail
+                      : "rgb(var(--c-line))",
+                } as never
+              }
+              className={`card card-lift rail group flex items-center gap-3 !py-3.5 !pl-5 sm:gap-4 ${
+                d.priorityScore >= 60
+                  ? "rail-strong"
+                  : d.priorityScore > 0
+                    ? ""
+                    : "rail-soft"
+              }`}
             >
               <span
                 className={`icon-pop flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}
@@ -340,33 +380,76 @@ export default function CustomersPage() {
                   목록에서 못 보면 한 명씩 열어 보게 된다. 글자를 늘리지 않도록
                   라벨 없이 값만, 한 줄로 둔다.
                 */}
-                <p className="tabular mt-0.5 text-[0.875rem] font-bold leading-snug">
-                  <span
-                    className={
-                      d.activeMembership && d.activeMembership.remainingCount <= 2
-                        ? "text-gold-deep"
-                        : "text-ink-soft"
-                    }
-                  >
-                    {d.activeMembership
-                      ? `이용권 ${d.activeMembership.remainingCount}/${d.activeMembership.totalCount}회`
-                      : "이용권 없음"}
-                  </span>
-                  <span className="text-ink-faint"> · </span>
-                  <span
-                    className={
-                      d.customer.nextManageDate &&
-                      daysAgo(d.customer.nextManageDate) >= 0
-                        ? "text-danger-text"
-                        : "text-ink-soft"
-                    }
-                  >
-                    {/* 목록에서는 연도까지 필요 없다 — 줄을 하나로 유지한다 */}
-                    {d.customer.nextManageDate
-                      ? `예정일 ${d.customer.nextManageDate.slice(5).replace("-", ".")}`
-                      : "예정일 미정"}
-                  </span>
-                </p>
+                {/*
+                  이용권 잔여 · 다음 관리 예정일 — 글자에서 눈금으로.
+
+                  예전에는 "이용권 3/10회 · 예정일 09.14" 라고 글로만 적었다.
+                  글로 적으면 세 줄을 다 읽어야 어느 쪽이 급한지 알 수 있다.
+                  잔여는 **눈금**으로 두면 스무 줄을 훑을 때 짧은 막대가
+                  저절로 눈에 걸린다. 숫자는 지우지 않고 옆에 그대로 둔다 —
+                  막대는 빠르게, 숫자는 정확하게 읽는 자리다.
+                */}
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {d.activeMembership ? (
+                    (() => {
+                      const m = d.activeMembership;
+                      const left = m.remainingCount / Math.max(m.totalCount, 1);
+                      const low = m.remainingCount <= 2;
+                      return (
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <span className="h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-stone-bg-deep">
+                            <span
+                              className={`block h-full rounded-full ${low ? "bg-gold" : "bg-aqua-500"}`}
+                              style={{ width: `${Math.max(left * 100, 4)}%` }}
+                            />
+                          </span>
+                          <span
+                            className={`nowrap-num tabular text-[0.875rem] font-bold ${low ? "text-gold-deep" : "text-ink-soft"}`}
+                          >
+                            {m.remainingCount}/{m.totalCount}회
+                          </span>
+                        </span>
+                      );
+                    })()
+                  ) : (
+                    <span className="text-[0.875rem] font-bold text-ink-faint">
+                      이용권 없음
+                    </span>
+                  )}
+
+                  {/* 예정일 — 지났으면 점을 붙여 표시한다 */}
+                  {(() => {
+                    const date = d.customer.nextManageDate;
+                    const over = date ? daysAgo(date) >= 0 : false;
+                    return (
+                      <span className="nowrap-num tabular flex items-center gap-1 text-[0.875rem] font-bold">
+                        <span
+                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                            over
+                              ? "bg-danger"
+                              : date
+                                ? "bg-aqua-400"
+                                : "bg-stone-bg-deep"
+                          }`}
+                        />
+                        <span
+                          className={
+                            over
+                              ? "text-danger-text"
+                              : date
+                                ? "text-ink-soft"
+                                : "text-ink-faint"
+                          }
+                        >
+                          {/* 목록에서는 연도까지 필요 없다 — 줄을 하나로 유지한다 */}
+                          {date
+                            ? `${date.slice(5).replace("-", ".")}${over ? " 지남" : ""}`
+                            : "예정일 미정"}
+                        </span>
+                      </span>
+                    );
+                  })()}
+                </div>
                 {(() => {
                   const opp = opportunityById.get(d.customer.id);
                   const hasOpp = opp && opp.type !== "none";

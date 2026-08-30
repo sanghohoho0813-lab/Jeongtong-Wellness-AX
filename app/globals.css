@@ -506,6 +506,114 @@ body {
     border: 1px solid rgba(20, 157, 154, 0.16);
   }
 
+  /* ══════════════════════════════════════════════════════════
+     표면 세 단계 — 카드 반복을 깨는 자리
+     ══════════════════════════════════════════════════════════
+     여태 화면 위의 거의 모든 상자가 같은 .card 였다. 둥근 정도도,
+     그림자도, 여백도 똑같은 흰 상자가 위에서 아래로 여덟 장 늘어서면
+     "정보가 여덟 덩어리 있다" 는 것 말고는 아무것도 읽히지 않는다.
+     무엇이 더 중요한지, 무엇이 무엇에 딸린 것인지가 사라진다.
+
+     그래서 높이를 셋으로 나눈다. 셋의 차이는 장식이 아니라 **위계**다.
+
+       card    떠 있다   — 스스로 서는 한 덩어리 (KPI · 표 · 폼 · 주요 카드)
+       panel   놓여 있다 — 바닥에 붙은 묶음. 그림자 없이 실선 하나
+       inset   파여 있다 — 카드 **안쪽**의 한 단 낮은 자리 (목록 줄 · 근거)
+
+     같은 화면에서 셋을 섞으면, 카드가 몇 장이든 눈이 먼저 '떠 있는 것'
+     으로 간다.
+     ══════════════════════════════════════════════════════════ */
+
+  /* 놓여 있는 판 — 그림자를 쓰지 않는다 */
+  .panel {
+    @apply rounded-card bg-card;
+    padding: var(--density-card-pad);
+    border: 1px solid rgb(var(--c-line));
+  }
+
+  /* 파여 있는 자리 — 카드 안쪽 한 단 아래 */
+  .inset {
+    @apply rounded-btn bg-card-soft;
+    border: 1px solid rgb(var(--c-line) / 0.7);
+  }
+  :root[data-theme="dark"] .inset {
+    background: rgb(var(--c-bg-deep));
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /*
+    상태 레일 — 카드 왼쪽에 세로로 세우는 색 띠.
+
+    지금까지 상태는 카드 **위쪽**에 1px 그라데이션 선으로만 표시했다.
+    선이 얇고 위에 있어서, 줄이 여러 개면 어느 것이 급한지 훑어지지
+    않았다. 왼쪽에 세로로 세우면 목록을 위아래로 훑는 눈의 방향과
+    같은 축이라 한 번에 잡힌다.
+  */
+  .rail {
+    position: relative;
+    overflow: hidden;
+  }
+  .rail::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 4px;
+    background: var(--rail, rgb(var(--c-aqua-500)));
+  }
+  /* 세기 — 급한 것일수록 두껍고 진하게 */
+  .rail-strong::before {
+    width: 5px;
+  }
+  .rail-soft::before {
+    opacity: 0.45;
+  }
+
+  /*
+    지표 한 칸 — KPI 를 카드가 아니라 '칸'으로 본다.
+
+    KPI 넉 장을 각각 흰 카드로 띄우면 그것만으로 첫 화면이 찬다.
+    숫자는 판단의 **근거**지 판단 자체가 아니므로, 한 판 안에 나란히
+    넣고 사이를 실선으로만 나눈다. 자리를 덜 먹고, 넷이 한 묶음이라는
+    것도 같이 읽힌다.
+  */
+  .stat-strip {
+    @apply overflow-hidden rounded-card;
+    border: 1px solid rgb(var(--c-line));
+    /*
+      칸 사이 실선은 테두리가 아니라 **틈**이다.
+      칸마다 border 를 그리면 첫 줄·첫 칸이 바깥 테두리와 겹쳐 두 겹이
+      되고, 몇 칸이 몇 줄로 접히느냐에 따라 겹치는 자리가 달라진다.
+      판 바탕을 선 색으로 깔고 1px 씩 벌리면, 칸이 넷이든 다섯이든
+      줄이 몇 개로 접히든 늘 한 겹이다.
+    */
+    background: rgb(var(--c-line));
+    display: grid;
+    gap: 1px;
+  }
+  .stat-cell {
+    padding: 0.875rem 1rem;
+    background: rgb(var(--c-card));
+    transition: background-color 0.16s ease-out;
+  }
+  @media (hover: hover) {
+    .stat-cell:hover {
+      background: rgb(var(--c-aqua-50));
+    }
+  }
+
+  /*
+    눈썹 글자 — 섹션 위에 붙는 아주 작은 분류 라벨.
+    본문 제목과 크기로 겨루지 않게 자간을 벌리고 굵기로만 세운다.
+  */
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--c-ink-faint));
+  }
+
   .card-gap {
     gap: var(--density-gap);
   }

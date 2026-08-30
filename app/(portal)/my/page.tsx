@@ -23,7 +23,7 @@ import {
   summarizePasses,
   summarizeUsage,
 } from "@/lib/portal/wellness";
-import { Button, Card, ProgressBar } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import {
   CalendarIcon,
   ChatIcon,
@@ -191,28 +191,90 @@ export default function MyHome() {
         </Link>
       </Card>
 
-      {/* ── 이용권 잔여 ──────────────────────────────── */}
+      {/*
+        ── 이용권 잔여 ────────────────────────────────
+
+        고객이 이 화면에서 가장 자주 확인하는 숫자다. 그런데 예전에는
+        아이콘 옆 작은 라벨 아래 32px 숫자로만 있었고, 남은 정도가
+        얼마나 되는지는 가느다란 막대 하나로 눈에 잘 안 들어왔다.
+
+        큰 원 눈금으로 바꾼다. 남은 칸이 얼마나 되는지를 색 있는 호(弧)
+        길이로 보여 주고 가운데에 숫자를 넣는다 — 숫자를 지우는 것이
+        아니라 숫자에 모양을 붙이는 것이다. 두 번 볼 필요가 없어진다.
+      */}
       <Card>
-        <div className="flex items-start gap-3.5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gold-soft/60 text-gold-deep ring-1 ring-gold/25">
-            <TicketIcon className="h-6 w-6" />
-          </span>
+        <div className="flex items-center gap-5">
+          {pass.active ? (
+            (() => {
+              const total = Math.max(pass.active.totalCount, 1);
+              const leftRatio = pass.active.remainingCount / total;
+              const low = pass.active.remainingCount <= 2;
+              /* 둘레 = 2πr, r=34 → 213.6 */
+              const C = 213.6;
+              return (
+                <span
+                  className="relative flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center"
+                  role="img"
+                  aria-label={`남은 횟수 ${pass.active.remainingCount}회 (전체 ${pass.active.totalCount}회)`}
+                >
+                  <svg viewBox="0 0 80 80" className="h-full w-full -rotate-90">
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="34"
+                      fill="none"
+                      stroke="rgb(var(--c-bg-deep))"
+                      strokeWidth="8"
+                    />
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="34"
+                      fill="none"
+                      stroke={low ? "rgb(var(--c-gold))" : "rgb(var(--c-aqua-500))"}
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${C * leftRatio} ${C}`}
+                    />
+                  </svg>
+                  <span className="nowrap-num tabular absolute flex flex-col items-center leading-none">
+                    <span
+                      className={`text-[1.75rem] font-extrabold ${low ? "text-gold-deep" : "text-aqua-800"}`}
+                    >
+                      {pass.active.remainingCount}
+                    </span>
+                    <span className="mt-0.5 text-[0.75rem] font-bold text-ink-sub">
+                      /{pass.active.totalCount}회
+                    </span>
+                  </span>
+                </span>
+              );
+            })()
+          ) : (
+            <span className="flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center rounded-full bg-stone-bg-deep text-ink-faint">
+              <TicketIcon className="h-8 w-8" />
+            </span>
+          )}
+
           <div className="min-w-0 flex-1">
-            <p className="text-[0.8125rem] font-extrabold text-ink-sub">
+            <p className="text-[0.8125rem] font-extrabold tracking-wide text-ink-sub">
               이용권 잔여 횟수
             </p>
             {pass.active ? (
-              <p className="nowrap-num mt-0.5 tabular text-ink">
-                <span className="text-[2rem] font-extrabold leading-none text-aqua-800">
-                  {pass.active.remainingCount}
-                </span>
-                <span className="text-[1.0625rem] font-bold text-ink-sub">
-                  {" "}
-                  / {pass.active.totalCount}회
-                </span>
-              </p>
+              <>
+                <p className="mt-1 text-[1.1875rem] font-extrabold leading-snug text-ink">
+                  {pass.active.remainingCount <= 2
+                    ? "곧 다 쓰십니다"
+                    : "남아 있습니다"}
+                </p>
+                <p className="nowrap-num mt-1 text-[0.875rem] leading-snug text-ink-sub">
+                  {pass.active.programName}
+                  <br />
+                  {used}회 사용하셨습니다
+                </p>
+              </>
             ) : (
-              <p className="mt-0.5 text-[1.25rem] font-extrabold leading-tight text-ink">
+              <p className="mt-1 text-[1.1875rem] font-extrabold leading-snug text-ink">
                 {pass.totalRemaining > 0
                   ? `${pass.totalRemaining}회 남음`
                   : "보유 이용권 없음"}
@@ -220,20 +282,6 @@ export default function MyHome() {
             )}
           </div>
         </div>
-
-        {pass.active && (
-          <div className="mt-3">
-            <ProgressBar
-              ratio={
-                pass.active.totalCount > 0 ? used / pass.active.totalCount : 0
-              }
-              tone={pass.active.remainingCount <= 2 ? "warn" : "aqua"}
-            />
-            <p className="nowrap-num mt-1.5 text-[0.8125rem] tabular text-ink-sub">
-              {pass.active.programName} · {used}회 사용
-            </p>
-          </div>
-        )}
 
         <Link href="/my/passes" className="mt-4 block">
           <Button size="lg" className="w-full justify-between">
