@@ -19,6 +19,11 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 import { ChevronRightIcon } from "@/components/ui/icons";
+import {
+  StaffEntryButton,
+  SurfaceStrip,
+  SurfaceSwitch,
+} from "@/components/layout/SurfaceSwitch";
 
 /** 상호는 화면 설정(글자 크기)을 따르지 않는다 — 브랜드 표기라서 */
 function Brand({ tone = "dark" }: { tone?: "dark" | "light" }) {
@@ -68,23 +73,17 @@ export default function PublicShell({ children }: { children: ReactNode }) {
       {/*
         직원 통로.
 
-        루트(/)는 내부 AX 대시보드다 — 매장에서 매일 쓰는 화면이고, 이
-        공개 화면은 /welcome 에 따로 있다. 그래서 이 줄은 "돌아가는 길"이다.
-        고객이 눌러도 로그인 게이트가 받으므로 아무 일도 일어나지 않는다.
+        전에는 이 자리에 "매장 직원이신가요?  내부 AX 화면 ›" 이 **모든
+        사람에게** 늘 떠 있었다. 이 화면을 보는 사람의 대부분은 고객이고,
+        고객에게 그 링크는 눌러도 로그인 벽만 만나는 막다른 길이다.
+        첫 화면 두 번째 줄을 막다른 길에 내주고 있던 셈이다.
+
+        이제는 이 기기에서 직원으로 들어온 적이 있을 때만 그린다. 그때는
+        각주가 아니라 두 칸짜리 스위치로 — 지금 어느 쪽에 있고 어디로 갈
+        수 있는지가 한눈에 보인다. 아무것도 안 보이는 사람에게는 바닥글의
+        '매장 직원 로그인' 버튼이 그 자리를 대신한다.
       */}
-      <div className="border-b border-white/10 bg-deep-950">
-        <div className="mx-auto flex max-w-5xl items-center justify-end gap-2 px-4 sm:px-6">
-          {/* white/45 는 딥그린 위에서 3.63:1 이라 기준(4.5:1)에 못 미쳤다 */}
-          <span className="text-[0.8125rem] text-white/70">매장 직원이신가요?</span>
-          <Link
-            href="/"
-            className="tap-line inline-flex items-center gap-1 text-[0.8125rem] font-extrabold text-gold-lite underline-offset-4 hover:underline"
-          >
-            내부 AX 화면
-            <ChevronRightIcon className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </div>
+      <SurfaceStrip current="public" />
 
       <main id="main">{children}</main>
 
@@ -103,13 +102,13 @@ export default function PublicShell({ children }: { children: ReactNode }) {
             >
               내 기록 보기
             </Link>
-            {/* 직원 통로 — 찾으면 있는 자리에, 크지 않게 */}
-            <Link
-              href="/login"
-              className="touch-target inline-flex items-center rounded-full px-4 text-[0.9375rem] font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-stone-bg-deep hover:text-ink"
-            >
-              매장 직원 로그인
-            </Link>
+            {/*
+              직원 통로 — 찾으면 있는 자리에, 크지 않게.
+              위쪽 스위치가 보이는 기기에서는 이 버튼이 사라진다.
+              같은 일을 하는 길이 한 화면에 둘 있을 이유가 없다.
+            */}
+            <StaffEntryButton />
+            <SurfaceSwitch current="public" />
           </div>
 
           {/*

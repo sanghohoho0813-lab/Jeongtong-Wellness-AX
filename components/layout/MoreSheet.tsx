@@ -25,6 +25,7 @@ import { FontScale, PALETTES, Theme } from "@/lib/types";
 import { MORE_ITEMS, NAV_TONE_CLASS, navItemsFor } from "./nav-items";
 import { DevicePreviewButton } from "./DevicePreview";
 import { ProfileButton } from "./UserSwitch";
+import { SurfaceSwitch } from "./SurfaceSwitch";
 import { FieldLabel, SegmentedControl } from "@/components/ui";
 import {
   BookIcon,
@@ -119,6 +120,15 @@ export default function MoreSheet({
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <ProfileButton />
+
+          {/*
+            화면 전환 — 목록에 섞어 두지 않고 맨 위에 스위치로 둔다.
+            폰에서 고객 화면을 확인하고 돌아오는 왕복이 잦다.
+          */}
+          <SurfaceSwitch
+            current="staff"
+            className="mt-3 w-full !justify-stretch [&>a]:flex-1 [&>a]:justify-center"
+          />
 
           {/* 이야기 두 편 — 기획의도와 Why AX 는 목적이 다르다 */}
           <div className="grid grid-cols-1 gap-2.5 xs:grid-cols-2">

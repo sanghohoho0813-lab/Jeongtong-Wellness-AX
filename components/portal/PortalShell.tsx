@@ -16,6 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { demoMode } from "@/lib/auth/mode";
+import { SurfaceSwitch } from "@/components/layout/SurfaceSwitch";
 import {
   CalendarIcon,
   ClipboardIcon,
@@ -145,19 +146,19 @@ export default function PortalShell({ children }: { children: ReactNode }) {
         {/*
           직원이 고객 화면을 열어 본 뒤 돌아갈 길.
 
-          누구에게나 보이지만 아무것도 새어 나가지 않는다 — 이 링크가 가리키는
-          /dashboard 는 직원 로그인 게이트 뒤에 있어서, 고객이 눌러도 로그인
-          화면에서 멈춘다. 링크 하나로 권한이 생기지는 않는다.
+          전에는 "매장 직원이신가요? 내부 화면으로" 라는 작은 밑줄 글이
+          모든 고객의 화면 맨 아래에 늘 붙어 있었다. 고객에게는 뜻도
+          쓸모도 없는 줄이고, 정작 직원에게는 하루에 몇 번씩 쓰는 길이
+          9px 짜리 각주였다.
+
+          이제는 이 기기에서 직원으로 들어온 적이 있을 때만, 두 칸짜리
+          스위치로 그린다. 고객 기기에서는 아무것도 그려지지 않는다.
+          (스위치가 권한을 주지는 않는다 — /dashboard 는 여전히 StaffGate
+          뒤에 있고, 자료는 RLS 가 지킨다.)
         */}
-        <p className="mt-8 text-center text-[0.8125rem] text-ink-faint">
-          매장 직원이신가요?{" "}
-          <Link
-            href="/"
-            className="tap-line font-bold text-ink-sub underline-offset-4 hover:text-aqua-700 hover:underline"
-          >
-            내부 화면으로
-          </Link>
-        </p>
+        <div className="mt-8 flex justify-center">
+          <SurfaceSwitch current="portal" />
+        </div>
       </main>
 
       <nav

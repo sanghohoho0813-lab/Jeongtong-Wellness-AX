@@ -71,13 +71,14 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/branches", label: "지점 / 운영", icon: BuildingIcon, tone: "gold", group: "ops" },
   { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray", group: "ops" },
   /*
-    고객이 보는 화면으로 건너가는 길.
+    매장 소개 페이지 — 로그인하지 않은 사람이 보는 공개 첫 화면.
 
-    (staff) 밖에 있는 주소라 이 메뉴만 새 창처럼 다른 세계로 넘어간다.
-    그래도 메뉴에 둔 이유는, 여기 없으면 주소를 직접 쳐야 하기 때문이다.
-    돌아오는 길은 그쪽 머리글의 '내부 AX 화면' 에 있다.
+    이름을 '고객 화면' 에서 '공개 첫화면' 으로 바꿨다. 이 주소(/welcome)
+    는 매장 소개이고, 다니시는 고객이 보는 자기 기록 화면은 /my 다.
+    둘을 같은 이름으로 부르니 어느 쪽으로 가는지 알 수 없었다.
+    /my 로 건너가는 길은 사이드바 아래 화면 전환 스위치가 맡는다.
   */
-  { href: "/welcome", label: "고객 화면", icon: LeafIcon, tone: "emerald", group: "ops" },
+  { href: "/welcome", label: "공개 첫화면", icon: LeafIcon, tone: "emerald", group: "ops" },
 ];
 
 /**

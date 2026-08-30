@@ -22,6 +22,7 @@ import {
   navItemsFor,
 } from "./nav-items";
 import { ProfileButton } from "./UserSwitch";
+import { SurfaceSwitch } from "./SurfaceSwitch";
 import CommandPalette from "./CommandPalette";
 import { DevicePreviewButton } from "./DevicePreview";
 import LiveClock from "./LiveClock";
@@ -204,7 +205,16 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           );
         })}
       </nav>
-      <div className="m-3">
+      {/*
+        사이드바 바닥 — 내가 누구인지, 그리고 어느 화면에 서 있는지.
+
+        전에는 '고객 화면' 이 메뉴 열 개 사이에 한 줄로 섞여 있었다.
+        그건 다른 화면으로 가는 링크가 아니라 **다른 세계로 건너가는
+        문**이라 성격이 다르고, 매일 여러 번 오간다. 그래서 목록에서
+        빼내 여기 스위치로 세운다 — 지금 어느 쪽인지가 늘 보인다.
+      */}
+      <div className="m-3 space-y-2.5">
+        <SurfaceSwitch current="staff" className="w-full !justify-stretch [&>a]:flex-1 [&>a]:justify-center" />
         <ProfileButton />
       </div>
     </aside>

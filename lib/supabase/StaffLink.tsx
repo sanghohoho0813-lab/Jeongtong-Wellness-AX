@@ -32,6 +32,7 @@ import {
 } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useStore } from "@/lib/data/store";
+import { markStaffDevice } from "@/lib/auth/surface";
 import { humanError, staffClient, supabaseConfigured } from "./client";
 import {
   type CustomerFeedbackRow,
@@ -172,10 +173,19 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
       if (!id) {
         const { data } = await sb.auth.getSession();
         setAuthStaff(undefined);
+        // 직원이 아니면 이 기기의 '직원 표시' 도 내린다
+        markStaffDevice(false);
         setPhase(data.session ? "no_staff" : "signed_out");
         return;
       }
       setIdentity(id);
+      /*
+        이 기기에서 직원으로 들어온 적이 있다고 표시해 둔다.
+        고객 화면·공개 화면의 껍데기는 StaffLink 를 볼 수 없어서(Provider
+        가 (staff) 안에만 있다) 이 표시로 왕복 스위치를 그릴지 정한다.
+        권한이 아니라 화면 표시용이고, 로그아웃하면 바로 꺼진다.
+      */
+      markStaffDevice(true);
       /*
         여기가 권한의 출발점이다.
 
@@ -361,6 +371,12 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     setIdentity(undefined);
     // 권한도 함께 내려놓는다 — 세션만 지우고 role 을 남겨 두면 안 된다
     setAuthStaff(undefined);
+    /*
+      매장 태블릿 하나를 직원과 고객이 번갈아 쓰는 일이 실제로 있다.
+      로그아웃했는데 '내부 AX' 스위치가 그대로 남아 있으면, 다음에 그
+      기기를 잡은 고객에게 눌러 봐야 막히는 길이 보인다.
+    */
+    markStaffDevice(false);
     setFeedback([]);
     setRequests([]);
     setLastSyncedAt(undefined);
