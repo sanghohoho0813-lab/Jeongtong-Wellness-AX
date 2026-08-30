@@ -18,6 +18,7 @@
 
 import Link from "next/link";
 import { ReactNode } from "react";
+import { useDeviceTheme } from "@/components/portal/PortalShell";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import {
   StaffEntryButton,
@@ -53,6 +54,13 @@ function Brand({ tone = "dark" }: { tone?: "dark" | "light" }) {
 }
 
 export default function PublicShell({ children }: { children: ReactNode }) {
+  /*
+    고객 폰의 밝기를 따라간다 — 고객 화면(/my)과 같은 규칙이다.
+    첫 그림은 layout.tsx 의 선(先)적용 스크립트가 맞춰 두고, 여기서는
+    화면을 열어 둔 채 폰이 밤 모드로 넘어가는 경우를 받는다.
+  */
+  useDeviceTheme();
+
   return (
     <div className="min-h-dvh bg-stone-bg">
       <header className="sticky top-0 z-30 bg-deep-900 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
