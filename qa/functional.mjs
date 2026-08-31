@@ -104,12 +104,32 @@ await p.waitForTimeout(1200);
   log("방문 일시 — 빠른 선택이 지난 쪽을 가리킨다",
       chips.includes("어제") && !chips.some((c) => /뒤$/.test(c)), chips.join(" · "));
 
-  const future = await p.evaluate(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return [...document.querySelectorAll('[role="dialog"] button[aria-label]')]
-      .map((b) => ({ d: b.getAttribute("aria-label"), off: b.disabled }))
-      .filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && x.d > today);
-  });
+  /*
+    달력에 '앞날' 칸이 하나도 없는 날이 있다.
+
+    오늘이 그 달의 마지막 날이면 이번 달 격자에 오늘보다 뒤인 날이
+    없다. 실제로 8월 31일에 이 검사가 "앞날 0칸" 으로 떨어졌다 —
+    막는 기능이 고장 난 것이 아니라 **막을 것이 없었던** 것이다.
+    (그 전날 같은 검사는 "앞날 1칸 중 잠김 1칸" 으로 통과했다)
+
+    그래서 앞날 칸이 없으면 다음 달로 넘겨서 본다. 매달 말일마다
+    빨갛게 되는 검사는 아무도 안 믿게 되고, 안 믿는 검사는 없는 것만
+    못하다.
+  */
+  const readFuture = () =>
+    p.evaluate(() => {
+      const today = new Date().toISOString().slice(0, 10);
+      return [...document.querySelectorAll('[role="dialog"] button[aria-label]')]
+        .map((b) => ({ d: b.getAttribute("aria-label"), off: b.disabled }))
+        .filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && x.d > today);
+    });
+
+  let future = await readFuture();
+  if (future.length === 0) {
+    await p.getByRole("button", { name: "다음 달" }).click();
+    await p.waitForTimeout(400);
+    future = await readFuture();
+  }
   log("방문 일시 — 아직 오지 않은 날은 고를 수 없다",
       future.length > 0 && future.every((x) => x.off), `앞날 ${future.length}칸 중 잠김 ${future.filter((x) => x.off).length}칸`);
 
