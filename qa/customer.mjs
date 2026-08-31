@@ -30,8 +30,28 @@ const p = await (
   await browser.newContext({ viewport: { width: 390, height: 844 } })
 ).newPage();
 
-/** 견본 자료에 들어 있는 '다른 사람들' — 직원 화면 쪽 가상 고객 이름 */
-const OTHERS = ["한복순", "김영희", "이순자", "최정철", "박순덕"];
+/**
+ * '다른 사람들' — 직원 화면에 있는 고객 이름 전부.
+ *
+ * 전에는 다섯 명을 손으로 적어 두었다. 그런데 명부가 매장 실제 자료로
+ * 바뀌면서 그 다섯이 사라졌고, 검사는 **없는 이름을 못 찾았다고
+ * 통과**하게 되었다. 아무것도 지키지 않으면서 초록불만 켜는 검사다.
+ *
+ * 게다가 이제는 진짜 사람들의 이름이다. 그래서 더더욱 손으로 베껴
+ * 적으면 안 된다 — 같은 개인정보가 검사 파일로 또 번진다.
+ *
+ * 직원 화면의 고객 목록에서 **그때그때 읽어 온다.** 명부가 무엇으로
+ * 바뀌든 "고객 화면에 남의 이름이 있는가" 를 실제로 지킨다.
+ */
+async function loadOtherNames(page) {
+  await go(page, "/customers");
+  const names = await page.evaluate(() =>
+    [...document.querySelectorAll('a[href^="/customers/c-"]')]
+      .map((a) => (a.textContent || "").trim().split(/\s|\n/)[0])
+      .filter((n) => n.length >= 2),
+  );
+  return [...new Set(names)];
+}
 
 /** 직원이 쓰는 말 */
 const INTERNAL = [
@@ -71,6 +91,9 @@ const PAGES = [
   "/my/wellness",
   "/my/content",
 ];
+
+const OTHERS = await loadOtherNames(p);
+log("직원 화면에서 고객 이름을 읽어 왔다", OTHERS.length > 0, `${OTHERS.length}명`);
 
 for (const path of PAGES) {
   await go(p, path);

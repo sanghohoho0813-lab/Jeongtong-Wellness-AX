@@ -26,14 +26,32 @@ p.on("console", (m) => {
 let t;
 
 // ── 1. 명령 팔레트 — 이름 몇 글자로 고객까지 간다
+/*
+  찾을 이름을 여기 적어 두지 않는다.
+
+  전에는 "김영희" 를 박아 두었다. 그런데 고객 명부가 매장 실제 자료로
+  바뀌면서 그 이름이 사라졌고, 검사는 있지도 않은 사람을 찾다가 실패할
+  판이었다. 게다가 실제 고객 이름을 검사 파일에까지 베껴 두면 같은
+  개인정보가 저장소 여기저기로 번진다.
+
+  그래서 **화면에 실제로 있는 첫 번째 고객**을 읽어 와 그 이름으로
+  찾는다. 명부가 무엇으로 바뀌든 검사는 그대로 돈다.
+*/
+await go(p, "/customers", 2200);
+const someone = await p.evaluate(() => {
+  const a = [...document.querySelectorAll('a[href^="/customers/c-"]')][0];
+  return (a?.textContent || "").trim().split(/\s|\n/)[0] || "";
+});
+log("고객 명부에 사람이 있다", someone.length >= 2, someone);
+
 await go(p, "/", 2200);
 await p.keyboard.press("Control+k");
 await p.waitForTimeout(700);
 t = await bodyText(p);
 log("팔레트가 열린다", /고객 이름|빠른|검색|찾기|이동/.test(t));
-await p.keyboard.type("김영");
+await p.keyboard.type(someone.slice(0, 2));
 await p.waitForTimeout(700);
-log("고객 이름으로 찾아진다", /김영희/.test(await bodyText(p)));
+log("고객 이름으로 찾아진다", (await bodyText(p)).includes(someone), someone);
 await p.keyboard.press("Enter");
 await p.waitForTimeout(2000);
 log("눌러서 그 고객으로 간다", /\/customers\//.test(p.url()), p.url().replace(BASE, ""));
