@@ -29,7 +29,15 @@ export default function DocPhoto({
 }) {
   return (
     <figure className="my-4">
-      <div className="relative aspect-[16/9] overflow-hidden rounded-card ring-1 ring-stone-line sm:aspect-[21/9]">
+      {/*
+        21:9 로 눕혔다가 되돌렸다.
+
+        받은 사진은 1536×1024 (비 1.50)인데 21:9 는 2.33 이다. 그 틀에
+        넣으면 세로의 **36%** 가 잘린다 — 사람이 있는 사진이라 위아래를
+        그만큼 잘라내면 머리나 손이 먼저 없어진다.
+        16:9(1.78)면 16% 만 잘린다. 폰·PC 모두 같은 비율을 쓴다.
+      */}
+      <div className="relative aspect-[16/9] overflow-hidden rounded-card ring-1 ring-stone-line">
         <Image
           src={src}
           alt={alt}

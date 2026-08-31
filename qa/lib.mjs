@@ -48,10 +48,27 @@ export function recorder(title) {
     rows.push({ name, r });
     console.log(`${r} - ${name}${detail ? " :: " + String(detail).slice(0, 110) : ""}`);
   };
+  /*
+    실패가 있으면 **여기서 종료 코드를 세운다.**
+
+    전에는 실패 수를 돌려주기만 했다. 부르는 쪽이
+    `process.exit(finish() ? 1 : 0)` 을 써야 러너에 전달됐는데,
+    이번에 새로 만든 세 묶음이 그냥 `finish()` 로 끝나 있었다.
+    그래서 그 셋은 몇 건이 실패하든 러너에게 **언제나 '통과'** 였다.
+
+    실제로 v1.4 사진 묶음이 4건 실패한 실행에서 요약은 "전부
+    통과했습니다" 라고 찍혔다. 아무도 지키지 않는 안전망이 초록불만
+    켜고 있던 셈이다.
+
+    부르는 쪽의 성실함에 기대지 않는다. finish() 가 불리는 순간
+    process.exitCode 가 정해지고, 기존처럼 process.exit(...) 을 쓰는
+    묶음도 그대로 동작한다.
+  */
   const finish = () => {
     const fails = rows.filter((x) => x.r === "FAIL");
     console.log(`\n${title} — 총 ${rows.length}건 · 실패 ${fails.length}건`);
     for (const f of fails) console.log(`   ✗ ${f.name}`);
+    if (fails.length > 0) process.exitCode = 1;
     return fails.length;
   };
   return { log, finish, rows };
