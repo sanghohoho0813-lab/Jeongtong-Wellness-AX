@@ -50,8 +50,8 @@ alt 글과 주변 문구에서 **"실제 고객"·"저희 원장"** 처럼 단�
 | `store_space.jpg` | **1774×887** | **2.00** | 400KB | 매장 내부 공간 (가로로 긴 사진) | **가로 배너** — 비율이 딱 맞다 |
 | `my_wellness.jpg` | 1536×1024 | 1.50 | 262KB | 고객이 휴대폰을 보는 모습 | MY WELLNESS 안내 |
 | `homecare_future.jpg` | 1536×1024 | 1.50 | 379KB | 홈케어 제품 정물 | **향후 확장 — 홈케어 Preview** |
-| `staff_action.jpg` | 1536×1024 | 1.50 | 378KB | 직원이 태블릿과 기록으로 일하는 모습 | Why AX (AX 화면에는 최소 사용) |
-| `manager_tablet.jpg` | 1536×1024 | 1.50 | 363KB | 직원이 태블릿 차트를 보는 모습 | Why AX |
+| `staff_action.jpg` | 1536×1024 | 1.50 | 378KB | 직원이 태블릿과 기록으로 일하는 모습 | Why AX 03 「매장 안에서 벌어지는 일」 |
+| `manager_tablet.jpg` | 1536×1024 | 1.50 | 363KB | 직원이 태블릿 차트를 보는 모습 | Why AX 07 「내부 AX 가 바꾸는 것」 |
 | `why_ax_current.jpg` | 1536×1024 | 1.50 | 392KB | 종이·서류가 흩어진 책상, 수기 작업 | **Why AX ① 지금까지** |
 | `why_ax_improved.jpg` | 1536×1024 | 1.50 | 307KB | 태블릿 대시보드를 함께 보는 모습 | **Why AX ② 지금** |
 | `why_ax_growth.jpg` | **1774×887** | **2.00** | 446KB | 매장·데이터·고객 3분할 | **Why AX ③ 앞으로** |
@@ -88,7 +88,23 @@ alt 글과 주변 문구에서 **"실제 고객"·"저희 원장"** 처럼 단�
 
 ---
 
-## 3. 부족한 것
+## 3. 실제로 몇 장을 썼나 — 실측
 
-없다. 이번 작업 범위에서 필요한 자리는 12 + 3 = 15장으로 전부 채워진다.
+받은 12장 **전부** 화면에 놓였다 (12/12). 같은 사진을 두 곳에 쓴 것은
+하나도 없다.
+
+| 화면 | 사진 |
+|---|---|
+| 공개 첫화면 | hero_main · service_scene · store_space · material_closeup · my_wellness · customer_experience + 기존 mugwort(실제 제품) = **7장** |
+| Why AX | why_ax_current · why_ax_improved · why_ax_growth · staff_action · manager_tablet = **5장** |
+| 향후 확장 Preview | homecare_future = **1장** |
+| 내부 AX 업무 화면 | **0장** (의도적 — v1.4 §4) |
+
+내부 AX 가 0장인 것은 빠뜨린 것이 아니라 규칙이다. 대시보드·고객목록·
+브리핑은 지표를 읽는 화면이고, 거기에 사진이 들어가면 숫자가 밀린다.
+`qa/visual-v14.mjs` 가 이 0장을 검사로 붙들고 있다.
+
+## 4. 부족한 것
+
+없다. 필요한 자리는 12 + 3 = 15장으로 전부 채워진다.
 자세한 내용은 `ASSET_GAP.md`.

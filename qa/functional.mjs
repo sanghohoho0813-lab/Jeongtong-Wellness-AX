@@ -38,10 +38,22 @@ let t;
   찾는다. 명부가 무엇으로 바뀌든 검사는 그대로 돈다.
 */
 await go(p, "/customers", 2200);
-const someone = await p.evaluate(() => {
-  const a = [...document.querySelectorAll('a[href^="/customers/c-"]')][0];
-  return (a?.textContent || "").trim().split(/\s|\n/)[0] || "";
-});
+/*
+  이름은 **고객 상세 화면의 제목(h1)** 에서 읽는다.
+
+  처음에는 목록 줄의 글자를 그대로 잘라 썼다. 그랬더니
+  "김김수연신규방문" 이 나왔다 — 한 줄 안에 아바타 글자('김') · 이름 ·
+  태그('신규') · 상태가 붙어 있어서, 사이에 공백이 없으면 통째로
+  이어진다. 그 이름으로 찾으니 당연히 아무것도 안 나왔다.
+
+  목록 줄의 생김새는 앞으로도 바뀐다. 제목은 이름 하나만 들어 있는
+  자리라 바뀔 일이 없다.
+*/
+const href = await p.evaluate(
+  () => document.querySelector('a[href^="/customers/c-"]')?.getAttribute("href") ?? "",
+);
+await go(p, href, 1800);
+const someone = (await p.evaluate(() => document.querySelector("h1")?.textContent?.trim() ?? "")).trim();
 log("고객 명부에 사람이 있다", someone.length >= 2, someone);
 
 await go(p, "/", 2200);
@@ -212,12 +224,39 @@ if ((await rule.count()) > 0) {
   await p.waitForTimeout(1600);
   t = await bodyText(p);
   const c1 = countOf(t);
-  log("기준을 바꾸면 대상 수가 실제로 다시 계산된다",
-      c0 !== undefined && c1 !== undefined && c0 !== c1, `${c0}명 → ${c1}명`);
+  /*
+    "숫자가 반드시 달라진다" 를 요구하지 않는다.
+
+    전에는 c0 !== c1 을 봤다. 견본 자료에는 이용권도 예정일도 넉넉해서
+    기준을 45일에서 3일로 당기면 대상이 늘 움직였기 때문이다.
+
+    그런데 매장 실제 명부로 바꾸니 5명 → 5명 이 나왔다. 미리보기가
+    고장 난 것이 아니라, 열두 분 모두 상담 한 번뿐이라 **기준을 어떻게
+    바꿔도 대상이 바뀌지 않는 것**이 참이었다. 화면도 그렇게 말한다 —
+    "5명으로 그대로지만, 달라지는 것이 없습니다".
+
+    그래서 '숫자가 움직였는가' 대신 **'다시 계산했다고 말하는가'** 를
+    본다. 미리보기가 얼어붙으면 손대기 전 문구("지금 기준으로")가 그대로
+    남으므로 그건 여전히 잡힌다.
+  */
+  const recalculated = /그대로지만|달라지는 것이 없|\d+\s*→\s*\d+|명으로 바뀝니다/.test(t);
+  log("기준을 바꾸면 다시 계산해서 알려 준다", recalculated,
+      `${c0}명 → ${c1}명 · ${(t.match(/[^\n]*관리 대상[^\n]*/) || [""])[0].slice(0, 46)}`);
   log("아직 저장되지 않았음을 분명히 말한다", /아직\s*저장되지 않았습니다/.test(t));
-  log("어느 항목이 몇 명 달라지는지 항목별로 보여 준다",
-      /장기 미방문|이용권|재방문|신규/.test(t) && /\d+\s*→\s*\d+/.test(t),
-      (t.match(/[^\n]*\d+\s*→\s*\d+[^\n]*/) || [])[0]);
+  /*
+    항목별 증감은 **실제로 달라진 것이 있을 때만** 나온다.
+    달라진 게 없으면 항목 목록도 없는 것이 맞다 — 없는 변화를 항목으로
+    늘어놓으면 그게 더 헷갈린다.
+  */
+  if (c0 !== c1) {
+    log("어느 항목이 몇 명 달라지는지 항목별로 보여 준다",
+        /장기 미방문|이용권|재방문|신규/.test(t) && /\d+\s*→\s*\d+/.test(t),
+        (t.match(/[^\n]*\d+\s*→\s*\d+[^\n]*/) || [])[0]);
+  } else {
+    log("달라진 것이 없으면 없다고 말한다",
+        /달라지는 것이 없|그대로/.test(t),
+        (t.match(/[^\n]*관리 대상[^\n]*/) || [""])[0].slice(0, 46));
+  }
   await rule.fill(before);
   await p.waitForTimeout(800);
 

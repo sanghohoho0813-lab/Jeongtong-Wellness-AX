@@ -42,6 +42,7 @@ import {
 } from "@/components/docs/DocParts";
 import { DocFigure, DocLayers, DocLoop } from "@/components/docs/DocDiagram";
 import DocStages from "@/components/docs/DocStages";
+import DocPhoto from "@/components/docs/DocPhoto";
 import { Button } from "@/components/ui";
 import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
 import { useDocumentTitle } from "@/lib/utils/title";
@@ -251,6 +252,11 @@ export default function WhyAxPage() {
           tone="violet"
           collapsible
         >
+          <DocPhoto
+            src="/brand/staff_action.jpg"
+            alt="상담 기록과 태블릿을 함께 놓고 그날 준비를 하는 모습"
+            caption="케어 자체보다 그 앞뒤 — 누가 오시는지 확인하고, 무엇을 봐 드릴지 정하고, 다녀가신 뒤 남기는 일 — 이 하루의 대부분이다."
+          />
           <p>
             고객이 나가시고 나면 원장님 머릿속에 이런 것들이 남습니다.
           </p>
@@ -409,6 +415,11 @@ export default function WhyAxPage() {
           tone="aqua"
           collapsible
         >
+          <DocPhoto
+            src="/brand/manager_tablet.jpg"
+            alt="태블릿으로 오늘의 관리 대상을 확인하는 모습"
+            caption="화면 하나를 열면 오늘 챙길 분과 그렇게 본 이유가 함께 나온다. 기억을 더듬어 명부를 넘기던 자리가 여기다."
+          />
           <p>
             내부 화면의 핵심은 목록이 아니라 <b>순서</b>입니다. 고객이 200명이면
             200줄을 다 볼 수는 없습니다. 오늘 실제로 손이 가야 할 대여섯 명이

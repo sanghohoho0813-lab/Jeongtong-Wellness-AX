@@ -259,14 +259,35 @@ export default function CustomerDetailPage() {
               날짜 · 시간 선택
             </button>
           </div>
+          {/*
+            누르면 적힌 대로 되어야 한다.
+
+            이 칸은 늘 아래 이용권 구역으로 **스크롤만** 했다. 이용권이
+            있는 분에게는 맞는 동작이다 — "몇 회 남았지" 를 눌렀으니
+            그 목록으로 데려다주면 된다.
+
+            그런데 이용권이 없으면 이 칸에 「눌러서 이용권 등록」 이라고
+            적힌다. 적힌 대로 눌렀는데 화면만 조금 움직이고, 거기서
+            '첫 이용권 등록' 을 다시 찾아 눌러야 했다. 글자가 약속한
+            것과 단추가 하는 일이 달랐다.
+
+            (오래 안 보이던 버그다. 예전 견본 자료는 첫 고객이 이용권을
+             가지고 있어서 이 갈래를 아무도 지나가지 않았다. 매장 실제
+             명부로 바꾸니 열두 분 모두 이 갈래로 들어왔다.)
+          */}
           <button
             type="button"
             className="stat-cell min-w-0 cursor-pointer text-left"
-            onClick={() =>
-              document
-                .querySelector('[data-tour="memberships"]')
-                ?.scrollIntoView({ behavior: "smooth", block: "center" })
-            }
+            onClick={() => {
+              if (derived.activeMembership) {
+                document
+                  .querySelector('[data-tour="memberships"]')
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+              }
+              setEditingMembership(undefined);
+              setOpenMembership(true);
+            }}
           >
             <p className="text-[0.8125rem] font-bold text-ink-sub">이용권 잔여</p>
             {derived.activeMembership ? (
