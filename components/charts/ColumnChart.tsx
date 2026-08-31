@@ -38,8 +38,21 @@ export interface ColumnPoint {
 
 /** 네 줄을 같은 간격으로 맞추기 위한 공통 설정 */
 const ROW = "flex items-end justify-between gap-1.5 sm:gap-2.5";
-/** 눈금 숫자가 들어갈 오른쪽 여백 — 막대와 겹치지 않게 자리를 비워 둔다 */
-const GUTTER = "pr-9";
+/**
+ * 눈금 숫자가 들어갈 오른쪽 여백 — 막대와 겹치지 않게 자리를 비워 둔다.
+ *
+ * **아래 세 줄이 전부 이 값을 써야 한다.** 값 라벨 · 막대 · 달 이름이
+ * 같은 격자 위에 서야 라벨이 제 막대 위에 온다.
+ *
+ * 실제로 어긋난 적이 있다. 눈금 자리를 36px → 64px 로 넓히면서 막대
+ * 쪽(right-16)만 고치고 이 값을 pr-9 로 두었더니, 360px 화면에서
+ *
+ *   - 값 라벨이 제 막대보다 28px 오른쪽에 떠 있고
+ *   - '320만원' 과 '18만원' 이 겹쳐 '320만원18만원' 으로 읽혔다
+ *
+ * 눈금 쪽(w-16 · right-16)을 바꿀 때는 여기도 같이 바꿔야 한다.
+ */
+const GUTTER = "pr-16";
 
 export default function ColumnChart({
   title,
@@ -75,7 +88,26 @@ export default function ColumnChart({
     (best, d, i) => (d.value > data[best].value ? i : best),
     0,
   );
-  const labelled = new Set<number>([maxIdx, data.length - 1]);
+  /*
+    값을 적어 줄 칸 — 가장 큰 달과 마지막 달.
+
+    그런데 그 둘이 **바로 옆칸일 때** 문제가 생긴다. 360px 화면에서 한
+    칸은 29px 인데 '320만원' 은 49px 이라, 둘이 붙어 있으면 글자가 서로
+    겹쳐 '320만원18만원' 처럼 읽힌다. 실제로 그렇게 나왔다.
+
+    그래서 붙어 있으면 **마지막 달만** 적는다.
+
+      - 가장 큰 달은 막대가 제일 높다는 것으로 이미 보인다.
+        정확한 값이 필요하면 「표로 보기」에 다 있다.
+      - 마지막 달(= 이번 달)의 값은 눈으로 짐작할 수 없다.
+        높이만 봐서는 320만원인지 180만원인지 알 수 없다.
+
+    지울 것을 골라야 한다면, 눈으로 알 수 있는 쪽을 지운다.
+  */
+  const lastIdx = data.length - 1;
+  const labelled = new Set<number>(
+    Math.abs(maxIdx - lastIdx) <= 1 ? [lastIdx] : [maxIdx, lastIdx],
+  );
   const color = SERIES_VAR[kind];
 
   if (allZero) {

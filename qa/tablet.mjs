@@ -30,7 +30,7 @@
  */
 import { launch, recorder, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("태블릿 폭 (768 · 1024)");
+const { log, finish } = recorder("좁은 폭 · 태블릿 폭 (360 · 768 · 1024)");
 const browser = await launch();
 
 const PAGES = [
@@ -73,12 +73,32 @@ const FIND_OVERFLOW = `() => {
     if (cs.textOverflow === "ellipsis") continue;
     if (cs.overflowX === "auto" || cs.overflowX === "scroll") continue;
     if (srOnly(el)) continue;
+    /*
+      옆칸이 전부 비어 있으면 넘쳐도 부딪힐 것이 없다.
+
+      막대그래프의 값 라벨이 그렇다. 여섯 칸 중 한 칸에만 '18만원' 이
+      적히고 나머지는 빈 칸이라, 라벨이 제 칸을 5px 씩 넘어가도 빈 자리로
+      번질 뿐이다. 오히려 칸에 맞춰 줄이면 제 막대 위에서 벗어난다.
+
+      그래서 '넘쳤다' 가 아니라 '넘쳐서 부딪힌다' 를 본다. 옆칸에 글자가
+      하나라도 있으면 그대로 잡는다 — 실제로 '320만원' 과 '18만원' 이
+      겹쳐 붙어 나온 적이 있고, 그건 이 조건으로도 걸린다.
+    */
+    const sibs = [...(el.parentElement?.children ?? [])].filter((s) => s !== el);
+    if (sibs.length > 0 && sibs.every((s) => !(s.textContent || "").trim())) continue;
     out.push(t.slice(0, 22) + " (" + el.scrollWidth + ">" + el.clientWidth + ")");
   }
   return out;
 }`;
 
+/*
+  360 을 뒤늦게 넣었다. 폰은 390 만 보고 있었는데, 실제로 파는 폰 중에
+  가장 좁은 축(갤럭시 S 시리즈 기본 폭 등)이 360 이다. 30px 차이 같지만
+  좌우 여백 16px 을 빼면 본문 폭이 358 → 328 로 8% 줄어든다 — 두 칸으로
+  나뉜 자리에서는 그 8% 가 글자 하나를 밀어낸다.
+*/
 for (const [w, h] of [
+  [360, 800],
   [768, 1024],
   [1024, 768],
 ]) {

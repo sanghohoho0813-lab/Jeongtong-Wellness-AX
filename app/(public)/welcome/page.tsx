@@ -12,6 +12,8 @@ import {
   TicketIcon,
 } from "@/components/ui/icons";
 import StickyBookBar from "@/components/public/StickyBookBar";
+import PhotoBand from "@/components/public/PhotoBand";
+import FutureSection from "@/components/public/FutureSection";
 import { PUBLIC_PRICES } from "@/lib/public/price-sheet";
 import { formatWon } from "@/lib/utils/format";
 
@@ -130,27 +132,41 @@ export default function PublicHome() {
     <>
       {/* ── 1. 히어로 ─────────────────────────────────────── */}
       {/*
-        사진을 '띠' 로 깔지 않는다 — 이게 이번에 바뀐 핵심이다.
+        히어로 사진이 바뀌었다 — 그리고 그게 이번 작업에서 가장 큰 변화다.
 
-        moxa.jpg 는 1120×1031, 거의 정사각형(1.09)이다. 이걸 가로로 긴 띠에
-        object-cover 로 깔면 어떻게 되는지 계산해 보면 답이 바로 나온다.
+        전에는 `moxa.jpg` 였다. 완성된 대왕쑥뜸을 검은 배경에서 찍은 **제품
+        정물**이다. 제품을 설명하는 자리에서는 훌륭하지만, 처음 온 사람이
+        5초 안에 보는 첫 화면에 놓기에는 성격이 맞지 않았다. 브랜드의 첫
+        인상이 '무엇을 파는가' 로 시작해 버린다.
 
-            폰   390 × 208  → 가로세로비 1.88 → 세로의 42% 가 잘려 나간다
-            PC  1280 × 288  → 가로세로비 4.44 → 세로의 76% 가 잘려 나간다
+        `hero_main.jpg` 는 **장면**이다. 케어 베드에 편안히 누운 분이 있고,
+        앞쪽 나무 쟁반에 쑥과 허브볼이 놓여 있다. 여기가 어떤 곳이고 오면
+        어떤 시간을 보내게 되는지가 한 장에 들어 있다.
 
-        76% 를 잘라내면 남는 것은 쑥 덩어리 한가운데의 회갈색 결뿐이다.
-        무엇을 찍은 사진인지 알아볼 수 없고, 알아볼 수 없는 큰 사진은
-        화면을 고급스럽게 만들지 않는다 — 그냥 크고 지저분한 얼룩이다.
+        잘라내기 — 사진을 열어 보고 정한다
+        ----------------------------------
+        1536×1024 (비 1.50). 화면에서 눈이 가는 곳은 둘이다.
 
-        그래서 사진을 **줄이고 틀에 넣는다.**
+            얼굴    가로 약 60%, 세로 약 32%
+            쟁반    아래쪽 절반 전체
 
-            폰   5:4 틀   → 잘리는 양 13%
-            PC  1:1 틀   → 잘리는 양 8% (가로로)
+        왼쪽 4분의 1은 아무것도 없는 미색 벽이라 잘라도 잃을 것이 없다.
 
-        그리고 틀에 금빛 실선과 깊은 그림자를 준다. 화면 끝까지 늘어난
-        사진은 '배경'으로 읽히지만, 테두리가 있는 사진은 '작품'으로 읽힌다.
-        PC 에서는 글과 사진을 좌우로 나눈다 — 오른쪽 절반이 비어 있던
-        자리에 사진이 들어가면서, 세로로 300px 가까이 짧아진다.
+            PC   3:2 (= 원본 그대로)  → 잘리는 양 0%
+            폰   4:3                  → 가로 11% 만 잘림.
+                 그것도 가운데가 아니라 58% 지점을 기준으로 잘라
+                 빈 벽 쪽을 먼저 버리고 얼굴을 남긴다
+
+        같은 비율을 기계적으로 쓰지 않는 이유가 이것이다. 폰에서 3:2 를
+        그대로 쓰면 높이가 239px 밖에 안 되어 얼굴이 너무 작아지고, PC 에서
+        4:3 을 쓰면 잘라낼 이유가 없는데 잘라내게 된다.
+
+        선명도
+        ------
+        원본이 가로 1536px 이다. 1920 화면에 전체폭으로 깔면 25% 확대되어
+        흐려지고 2배 화면에서는 더 심하다. 그래서 **전체폭으로 깔지 않는다.**
+        PC 에서는 좌우 2단의 오른쪽 칸(최대 약 620px)에 넣는다 — 2배 화면
+        기준 1240px 이 필요하므로 1536px 로 넉넉하다.
 
         글자는 여전히 단색 딥그린 위에만 올린다. 사진 위에 얹는 것은 작은
         설명표 하나뿐이고, 그 자리에는 아래쪽 어둠 그라데이션을 깐다.
@@ -184,47 +200,41 @@ export default function PublicHome() {
             </p>
           </div>
 
-          {/*
-            사진 틀.
-
-            aspect 를 폰·PC 다르게 주는 이유는 위 계산 그대로다. 폰에서는
-            5:4 가 사진을 알아볼 만큼 담으면서도 첫 화면을 다 먹지 않는
-            선이고, PC 에서는 옆에 글이 있으니 정사각형으로 두어 원본에
-            가장 가깝게 보여 준다.
-          */}
           <figure className="relative min-w-0">
             {/*
               사진 둘레에 얇은 빛 테두리(매트)를 한 겹 두른다.
-
-              moxa.jpg 는 검은 배경에서 찍은 제품 사진이라, 딥그린 위에
-              그냥 얹으면 '까만 네모' 가 하나 떠 있는 것처럼 보인다.
-              액자에 흰 매트를 두르듯 반투명한 밝은 테두리를 한 겹 주면
-              검은 면이 배경 사고가 아니라 작품의 일부로 읽힌다.
+              액자에 매트를 두르듯 — 화면 끝까지 늘어난 사진은 '배경'으로
+              읽히지만, 테두리가 있는 사진은 '작품'으로 읽힌다.
             */}
             <div className="rounded-[2rem] bg-white/[0.06] p-2 shadow-[0_28px_64px_-28px_rgba(0,0,0,0.8)] ring-1 ring-gold/25">
-            <div className="relative aspect-[5/4] overflow-hidden rounded-[1.5rem] lg:aspect-[6/5]">
-              <Image
-                src="/service/moxa.jpg"
-                alt="거즈와 특제 반죽 위에 쑥을 올려 완성한 대왕쑥뜸"
-                fill
-                priority
-                sizes="(min-width: 1024px) 480px, 100vw"
-                className="object-cover object-center"
-              />
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] lg:aspect-[3/2]">
+                <Image
+                  src="/brand/hero_main.jpg"
+                  alt="따뜻한 조명 아래 케어를 받으며 쉬고 계신 모습과, 앞에 놓인 쑥과 허브볼"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 620px, 100vw"
+                  /*
+                    58% 지점을 기준으로 자른다. 가운데(50%)로 두면 폰에서
+                    오른쪽 화초가 잘려 나가고 왼쪽 빈 벽이 남는다 —
+                    버릴 것을 남기고 남길 것을 버리는 셈이다.
+                  */
+                  className="object-cover object-[58%_50%] lg:object-center"
+                />
 
-              {/* 아래쪽만 어둡게 — 설명표가 사진 위에서 읽히도록 */}
-              <div
-                aria-hidden
-                className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
-              />
+                {/* 아래쪽만 어둡게 — 설명표가 사진 위에서 읽히도록 */}
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
+                />
 
-              <figcaption className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
-                <span className="inline-flex items-center gap-2 rounded-full bg-deep-950/65 px-3.5 py-2 text-[0.875rem] font-bold text-gold-lite ring-1 ring-gold/35 backdrop-blur-md sm:text-[0.9375rem]">
-                  <LeafIcon className="h-4 w-4 shrink-0" />
-                  국내산 최상급 쑥 사용
-                </span>
-              </figcaption>
-            </div>
+                <figcaption className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-deep-950/65 px-3.5 py-2 text-[0.875rem] font-bold text-gold-lite ring-1 ring-gold/35 backdrop-blur-md sm:text-[0.9375rem]">
+                    <LeafIcon className="h-4 w-4 shrink-0" />
+                    국내산 최상급 쑥 사용
+                  </span>
+                </figcaption>
+              </div>
             </div>
           </figure>
         </div>
@@ -345,6 +355,78 @@ export default function PublicHome() {
             );
           })}
         </ul>
+      </section>
+
+      {/* ── 2-2. 어떤 시간을 보내시게 되는지 ─────────────── */}
+      {/*
+        사진을 몇 장 넣었는지가 아니라, 사진마다 **왜 거기 있는지**가
+        달라야 한다. 여기 셋은 서로 다른 질문에 답한다.
+
+            서비스 장면  — 가면 무엇을 해 주나
+            매장 공간    — 어떤 곳인가
+            재료         — 무엇을 몸에 올리나
+
+        같은 쑥뜸 사진을 세 번 쓰면 세 번 다 같은 말이 된다.
+      */}
+      <section
+        aria-label="어떤 시간을 보내시게 되는지"
+        className="mx-auto mt-12 max-w-5xl space-y-3 px-4 sm:px-6"
+      >
+        <PhotoBand
+          src="/brand/service_scene.jpg"
+          alt="직원이 고객의 복부에 쑥뜸을 올려 드리는 모습"
+          eyebrow="방문하시면"
+          title="눕기만 하시면 됩니다"
+          position="object-[45%_45%]"
+        >
+          <p>
+            부위를 여쭙고, 거즈를 깔고, 반죽을 편 다음 쑥을 올립니다.
+            한 점이 아니라 넓은 면에 온기가 퍼지도록 준비해 드립니다.
+          </p>
+          <p>진행되는 동안에는 편히 쉬시면 됩니다.</p>
+        </PhotoBand>
+
+        {/*
+          store_space.jpg 만 원본이 1774×887(비 2.0)이라 가로로 긴 띠에
+          제대로 들어간다. 1536×1024 짜리를 여기 넣으면 위아래로 25%가
+          잘려 나간다 — 그래서 이 자리에는 이 사진만 쓴다.
+        */}
+        <figure className="relative overflow-hidden rounded-card-lg shadow-card ring-1 ring-stone-line">
+          <div className="relative aspect-[16/10] sm:aspect-[2/1]">
+            <Image
+              src="/brand/store_space.jpg"
+              alt="따뜻한 조명과 나무·초록으로 꾸민 케어 공간"
+              fill
+              sizes="(min-width: 640px) 900px, 100vw"
+              className="object-cover object-center"
+            />
+            <span
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-deep-950/85 via-deep-950/25 to-transparent"
+            />
+          </div>
+          <figcaption className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+            <p className="eyebrow !text-gold-lite">머무는 동안</p>
+            <p className="mt-1.5 max-w-md text-[1.125rem] font-extrabold leading-snug text-white sm:text-[1.375rem]">
+              서두르지 않아도 되는 자리로 준비해 두었습니다
+            </p>
+          </figcaption>
+        </figure>
+
+        <PhotoBand
+          src="/brand/material_closeup.jpg"
+          alt="거즈 위에 넓게 편 쑥 — 가까이서 본 모습"
+          eyebrow="무엇을 올리나"
+          title="몸에 닿는 것부터 봅니다"
+          ratioWide="sm:aspect-[5/4]"
+          textFirst
+        >
+          <p>
+            피부에 먼저 닿는 것은 보호용 거즈입니다. 그 위에 여러 식물을
+            곱게 갈아 배합·발효한 특제 반죽을 넓게 펴고, 마지막에 국내산
+            최상급 쑥을 올립니다.
+          </p>
+        </PhotoBand>
       </section>
 
       {/* ── 3. 이런 분께 ──────────────────────────────────── */}
@@ -531,42 +613,115 @@ export default function PublicHome() {
 
       {/* ── 6. 왜 여기인가 — 기록이 쌓인다 ────────────────── */}
       <section className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
-        <div className="rounded-card-lg bg-gradient-to-br from-deep-800 to-deep-950 p-7 shadow-card ring-1 ring-gold/25 sm:p-9">
-          <p className="text-[0.75rem] font-extrabold uppercase tracking-[0.16em] text-gold">
-            다니실수록 편해집니다
-          </p>
-          <h2 className="mt-2 max-w-xl text-[1.5rem] font-extrabold leading-snug text-white sm:text-[1.875rem]">
-            매번 처음부터 다시 설명하지 않으셔도 됩니다
-          </h2>
-          <p className="mt-3 max-w-xl text-[1rem] leading-relaxed text-white/80">
-            어느 부위를 어떻게 봐 드렸는지, 어떤 반응이 좋으셨는지가 방문마다
-            남습니다. 다음에 오시면 그 기록에서 이어서 시작합니다.
-          </p>
+        {/*
+          이 칸은 딥그린 한 판이었다. 글은 좋은데 화면에서 가장 큰 덩어리가
+          단색이라, 바로 위 가격표와 무게가 같아 보였다. 오른쪽에 사진을
+          넣어 '여기가 결론' 이라는 것이 눈으로도 보이게 한다.
 
-          <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            {[
-              "케어 부위와 반응 기록",
-              "남은 이용권 확인",
-              "다음 방문 권장 시점 안내",
-            ].map((t) => (
-              <li
-                key={t}
-                className="flex items-center gap-2.5 rounded-card bg-white/[0.07] px-4 py-3 text-[0.9375rem] font-bold text-white ring-1 ring-white/10"
-              >
-                <CheckIcon className="h-4 w-4 shrink-0 text-gold" />
-                <span className="min-w-0">{t}</span>
-              </li>
-            ))}
-          </ul>
+          사진은 my_wellness.jpg — 고객이 자기 화면을 보는 장면이다.
+          바로 아래 단추가 '내 기록 시작하기' 이므로, 누르면 무엇이
+          나오는지를 사진이 먼저 말해 준다.
+        */}
+        <div className="overflow-hidden rounded-card-lg bg-gradient-to-br from-deep-800 to-deep-950 shadow-card ring-1 ring-gold/25 lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
+          <div className="p-7 sm:p-9">
+            <p className="text-[0.75rem] font-extrabold uppercase tracking-[0.16em] text-gold">
+              다니실수록 편해집니다
+            </p>
+            <h2 className="mt-2 max-w-xl text-[1.5rem] font-extrabold leading-snug text-white sm:text-[1.875rem]">
+              매번 처음부터 다시 설명하지 않으셔도 됩니다
+            </h2>
+            <p className="mt-3 max-w-xl text-[1rem] leading-relaxed text-white/80">
+              어느 부위를 어떻게 봐 드렸는지, 어떤 반응이 좋으셨는지가 방문마다
+              남습니다. 다음에 오시면 그 기록에서 이어서 시작합니다.
+            </p>
 
-          <Link
-            href="/my"
-            className="touch-target mt-7 inline-flex items-center gap-1.5 rounded-btn bg-gradient-to-r from-gold to-gold-deep px-6 text-[1.0625rem] font-extrabold text-deep-900 shadow-[0_4px_14px_rgba(201,168,106,0.3)] transition-transform hover:scale-[1.02]"
-          >
-            내 기록 시작하기
-            <ChevronRightIcon className="h-5 w-5" />
-          </Link>
+            {/*
+              PC 에서도 세 줄을 나란히 둔다(lg:grid-cols-1 을 뺐다).
+
+              세로로 쌓아 두었더니 글 칸 높이가 545px 이 되었고, 옆 사진이
+              거기 맞춰 늘어나면서 456×545 — **세로로 긴 상자**가 되었다.
+              my_wellness.jpg 는 가로 사진(1.50)이라 세로 상자에 넣으면
+              가로의 44% 가 잘려 나간다. 글 줄을 어떻게 배치하느냐가 옆
+              사진 잘리는 양을 정하고 있었던 것이다.
+            */}
+            <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              {[
+                "케어 부위와 반응 기록",
+                "남은 이용권 확인",
+                "다음 방문 권장 시점 안내",
+              ].map((t) => (
+                <li
+                  key={t}
+                  className="flex items-center gap-2.5 rounded-card bg-white/[0.07] px-4 py-3 text-[0.9375rem] font-bold text-white ring-1 ring-white/10"
+                >
+                  <CheckIcon className="h-4 w-4 shrink-0 text-gold" />
+                  <span className="min-w-0">{t}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/my"
+              className="touch-target mt-7 inline-flex items-center gap-1.5 rounded-btn bg-gradient-to-r from-gold to-gold-deep px-6 text-[1.0625rem] font-extrabold text-deep-900 shadow-[0_4px_14px_rgba(201,168,106,0.3)] transition-transform hover:scale-[1.02]"
+            >
+              내 기록 시작하기
+              <ChevronRightIcon className="h-5 w-5" />
+            </Link>
+          </div>
+
+          {/*
+            aspect 를 PC 에서도 유지하고 min-h-full 로 늘어나게만 한다.
+            (aspect-auto 로 두면 옆 글 높이가 사진 비율을 정해 버린다 —
+             위 목록 주석과 같은 이유)
+          */}
+          <figure className="relative aspect-[4/3] lg:aspect-[3/2] lg:min-h-full">
+            <Image
+              src="/brand/my_wellness.jpg"
+              alt="휴대폰으로 자신의 이용 기록을 확인하는 모습"
+              fill
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              className="object-cover object-[55%_40%]"
+            />
+            {/* 왼쪽에서 딥그린이 사진으로 녹아들게 — 두 면이 딱 잘려 보이지 않도록 */}
+            <span
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-deep-950/70 to-transparent lg:bg-gradient-to-r lg:from-deep-950 lg:via-deep-950/25 lg:to-transparent"
+            />
+          </figure>
         </div>
+      </section>
+
+      {/* ── 6-2. 편안히 쉬다 가시는 자리 ─────────────────── */}
+      <section className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
+        <PhotoBand
+          src="/brand/customer_experience.jpg"
+          alt="케어를 마치고 편안히 쉬고 계신 모습"
+          eyebrow="다녀가신 뒤"
+          title="몸이 어떠셨는지 한마디만 남겨 주세요"
+          position="object-[40%_40%]"
+          textFirst
+        >
+          <p>
+            남겨 주신 말은 다음 방문 준비에 그대로 쓰입니다. 어느 부위가
+            편하셨는지, 어떤 세기가 좋으셨는지를 기억에 기대지 않고 적어 둡니다.
+          </p>
+          <p className="text-[0.875rem] text-ink-faint">
+            몸 상태에 대한 판단이나 의학적 안내는 제공하지 않습니다.
+          </p>
+        </PhotoBand>
+      </section>
+
+      {/* ── 7. 앞으로 준비하고 있는 것 ────────────────────── */}
+      {/*
+        맨 아래에 둔다. 오늘 예약하러 오신 분이 아직 없는 기능을 먼저
+        만나면 안 된다 — 화면 위쪽 80% 는 지금 하실 수 있는 일이고,
+        미래 이야기는 다 보고 난 뒤에 나온다.
+      */}
+      <section
+        aria-labelledby="future"
+        className="mx-auto mt-14 max-w-5xl px-4 sm:px-6"
+      >
+        <FutureSection />
       </section>
 
       {/*

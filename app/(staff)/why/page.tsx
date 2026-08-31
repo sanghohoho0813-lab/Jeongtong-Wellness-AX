@@ -41,6 +41,7 @@ import {
   Ui,
 } from "@/components/docs/DocParts";
 import { DocFigure, DocLayers, DocLoop } from "@/components/docs/DocDiagram";
+import DocStages from "@/components/docs/DocStages";
 import { Button } from "@/components/ui";
 import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
 import { useDocumentTitle } from "@/lib/utils/title";
@@ -86,6 +87,80 @@ export default function WhyAxPage() {
           items={TOC}
           flow="지금 이 매장 → 어디서 새는가 → 두 화면이 그것을 어떻게 받는가 → 무엇이 남는가"
           phoneHint="폰에서는 각 절이 접혀 있습니다. 제목을 누르면 펼쳐집니다."
+        />
+
+        {/*
+          본문 앞에 세 칸 — 30초 안에 읽히는 요약.
+
+          아래 14개 절을 다 읽으면 같은 이야기가 들어 있다. 그런데 심사
+          자리에서는 끝까지 읽어 주지 않는다. "무엇이 달라졌고 어디까지
+          가려는 거냐" 는 화면을 띄운 지 30초 안에 답이 나와야 한다.
+
+          세 번째 칸은 아직 없는 것이다. 점선 · 배지 · 사진 위 막으로
+          갈라 두었고, 그 내용은 고객 화면의 「앞으로 준비하고 있는 것」
+          다섯 가지와 같은 축을 쓴다 — 화면마다 다른 미래를 말하면 아무
+          미래도 못 믿는다.
+        */}
+        <DocStages
+          stages={[
+            {
+              when: "지금까지",
+              title: "기억과 종이에 기대던 관리",
+              lead: "고객을 아끼는 마음이 부족했던 적은 없습니다. 다만 그 마음이 남는 자리가 없었습니다.",
+              points: [
+                "고객 기록이 장부 · 엑셀 · 머릿속으로 흩어져 있다",
+                "누가 언제 다녀갔는지는 담당 직원의 기억에 달려 있다",
+                "이용권 잔여는 따로 세어 봐야 안다",
+                "한동안 안 오신 분은 조용히 잊힌다",
+              ],
+              image: {
+                src: "/brand/why_ax_current.jpg",
+                alt: "종이 기록과 메모가 흩어진 책상에서 손으로 정리하는 모습",
+              },
+              href: "#w4",
+              hrefLabel: "어디서 새고 있었는지 보기",
+            },
+            {
+              when: "지금",
+              title: "기록이 판단으로 이어집니다",
+              lead: "쌓인 방문·이용권·상담 기록이 오늘 누구에게 연락할지까지 이어집니다.",
+              points: [
+                "고객 데이터 → 우선순위 → AX 인사이트 → 오늘의 실행업무",
+                "판단의 이유를 늘 함께 보여 준다 (규칙 기반)",
+                "처리하면 결과가 다시 기록으로 돌아온다",
+                "고객은 MY WELLNESS 에서 자기 기록을 본다",
+              ],
+              image: {
+                src: "/brand/why_ax_improved.jpg",
+                alt: "태블릿의 관리 화면을 함께 보며 이야기하는 모습",
+              },
+              href: "#w7",
+              hrefLabel: "내부 AX 가 바꾸는 것",
+            },
+            {
+              /*
+                여기만 '앞으로' 가 아니라 「향후 확장」 이라고 적는다.
+                고객 화면의 배지와 **같은 낱말**이어야 한다 — 화면마다
+                다른 말로 부르면 같은 것을 가리키는지 알 수 없다.
+              */
+              when: "향후 확장",
+              future: true,
+              title: "본점에서 검증하고, 지점으로 넓힙니다",
+              lead: "아래는 아직 없습니다. 지금 만들어 둔 자리 위에 얹으려는 방향입니다.",
+              points: [
+                "본점에서 검증한 운영 기준을 지점·가맹점이 그대로 쓴다",
+                "멤버십 · 홈케어 · 친구추천으로 관계가 이어진다",
+                "어느 지점에서나 같은 MY WELLNESS 기록",
+                "본사에 모이는 기록이 다시 서비스를 고친다",
+              ],
+              image: {
+                src: "/brand/why_ax_growth.jpg",
+                alt: "매장과 데이터 화면과 고객이 이어지는 모습",
+              },
+              href: "#w14",
+              hrefLabel: "어디까지 갈 수 있는지 보기",
+            },
+          ]}
         />
 
         {/* 01 ─────────────────────────────────────────── */}

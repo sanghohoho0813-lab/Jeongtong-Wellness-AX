@@ -16,6 +16,7 @@ import Link from "next/link";
 import { usePortal } from "@/lib/portal/store";
 import { nextReference, summarizePasses, summarizeUsage } from "@/lib/portal/wellness";
 import { Badge, Button, Card } from "@/components/ui";
+import FutureSection from "@/components/public/FutureSection";
 import {
   BellIcon,
   ChevronRightIcon,
@@ -214,6 +215,20 @@ export default function MyAccount() {
           <ChevronRightIcon className="h-5 w-5" />
         </Button>
       </Link>
+
+      {/*
+        앞으로 준비하고 있는 것.
+
+        폰에서는 이걸 하단 다섯 칸에 넣지 않는다. 그 다섯 칸은 오늘 하러
+        오신 일(홈 · 예약 · 이용권 · 케어기록 · 마이페이지)의 자리이고,
+        아직 없는 기능이 거기 끼면 매일 쓰는 길이 그만큼 좁아진다.
+
+        그래서 마이페이지 안쪽, 그것도 아래쪽에 둔다. 찾으면 있지만
+        먼저 눈에 띄지는 않는 자리다.
+      */}
+      <Card>
+        <FutureSection compact />
+      </Card>
 
       {/* 로그아웃 */}
       <Card>
