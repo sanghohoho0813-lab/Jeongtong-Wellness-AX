@@ -76,7 +76,62 @@ for (const [path, label] of PAGES) {
       b: top.b * top.a + bottom.b * (1 - top.a),
       a: 1,
     });
+    /*
+      사진 위에 덮개(그라데이션)를 깔고 그 위에 글자를 얹는 경우.
+
+      이 함수는 조상만 거슬러 올라가며 바탕을 찾는다. 그런데 덮개는
+      보통 **형제**로 놓인다 — 사진 <img> 와 나란히 absolute inset-0
+      짜리 <span> 을 하나 깔고, 글자는 그 위에 온다.
+
+      그러면 조상 어디에도 바탕색이 없어 계속 올라가다 body 의 미색을
+      집고, "흰 글자가 미색 위에 있다(1.33:1)" 는 엉뚱한 결론이 나온다.
+      실제로 매장 사진 띠의 흰 글자가 그렇게 걸렸는데, 화면을 찍어
+      화소를 재 보니 **10.16:1** 이었다.
+
+      조상에 그라데이션이 있으면 이 함수는 이미 판단을 포기한다
+      ("gradient" 를 돌려주면 부르는 쪽이 건너뛴다). 덮개가 형제로
+      놓였을 때도 똑같이 포기해야 앞뒤가 맞는다 — 재지 못하는 것을
+      틀렸다고 하면 안 된다.
+
+      (덮개를 '못 재니 통과' 로 두는 것이 느슨해 보이지만, 그 자리는
+       사람이 눈으로 보고 화소로 재야 하는 자리다. 검사기가 잘못된
+       숫자로 빨간불을 켜면 진짜 빨간불을 아무도 안 보게 된다.)
+    */
+    const coveredByOverlay = (el) => {
+      const box = el.getBoundingClientRect();
+      for (let a = el.parentElement; a; a = a.parentElement) {
+        /*
+          형제만 보면 놓친다. 덮개는 보통 사진과 나란히, 즉 글자보다
+          **한 겹 더 안쪽**에 놓인다.
+
+              <figure>
+                <div class="relative">      ← 여기 안에
+                  <img>
+                  <span class="absolute inset-0 …">   ← 덮개
+                </div>
+                <figcaption class="absolute bottom-0">글자</figcaption>
+              </figure>
+
+          그래서 조상의 자식이 아니라 조상의 **하위 전체**에서 찾는다.
+          글자를 품고 있는 것은 제외한다 — 그건 덮개가 아니라 부모다.
+        */
+        for (const sib of a.querySelectorAll("*")) {
+          if (sib === el || sib.contains(el) || el.contains(sib)) continue;
+          const cs = getComputedStyle(sib);
+          if (cs.position !== "absolute" && cs.position !== "fixed") continue;
+          if (cs.backgroundImage === "none" && rgba(cs.backgroundColor)?.a === 0) continue;
+          const r = sib.getBoundingClientRect();
+          // 글자 상자를 덮고 있는가
+          if (r.left <= box.left + 1 && r.right >= box.right - 1 &&
+              r.top <= box.top + 1 && r.bottom >= box.bottom - 1) return true;
+        }
+        if (a.tagName === "BODY") break;
+      }
+      return false;
+    };
+
     const bgOf = (el) => {
+      if (coveredByOverlay(el)) return "gradient";
       const stack = [];
       for (let a = el; a; a = a.parentElement) {
         const s = getComputedStyle(a);
