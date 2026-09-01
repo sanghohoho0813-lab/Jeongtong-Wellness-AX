@@ -20,6 +20,7 @@ import Link from "next/link";
 import { ReactNode } from "react";
 import { useDeviceTheme } from "@/components/portal/PortalShell";
 import { ChevronRightIcon } from "@/components/ui/icons";
+import PublicNav from "./PublicNav";
 import {
   StaffEntryButton,
   SurfaceStrip,
@@ -68,6 +69,13 @@ export default function PublicShell({ children }: { children: ReactNode }) {
           <Link href="/welcome" className="min-w-0 flex-1" aria-label="정통대왕쑥뜸원 홈">
             <Brand />
           </Link>
+          {/*
+            머리글에는 둘만 둔다 — 「내 기록」과 차림표.
+
+            이 화면은 폰에서 6,900px 이라 위에서부터 훑어 내려가는 것만으로는
+            두 번째 오는 분이 가격이나 예약을 다시 찾기 어렵다. 차림표를
+            열면 화면 안의 자리로 바로 내려간다.
+          */}
           <Link
             href="/my"
             className="touch-target inline-flex shrink-0 items-center gap-1 rounded-full bg-white/12 px-4 text-[0.9375rem] font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-white/22"
@@ -75,6 +83,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
             내 기록
             <ChevronRightIcon className="h-4 w-4" />
           </Link>
+          <PublicNav />
         </div>
       </header>
 

@@ -78,7 +78,7 @@ const MEASURE = `async () => {
 const CUT_LIMIT = 34;
 
 const PHOTO_PAGES = [
-  ["/welcome", "공개첫화면"],
+  ["/welcome", "고객용 화면"],
   ["/why", "Why AX"],
 ];
 
@@ -153,13 +153,13 @@ for (const [w, h] of [
   for (const s of srcs) counts[s] = (counts[s] ?? 0) + 1;
   const repeated = Object.entries(counts).filter(([, n]) => n > 1);
   log(
-    "공개첫화면 — 같은 사진을 두 번 쓰지 않는다",
+    "고객용 화면 — 같은 사진을 두 번 쓰지 않는다",
     repeated.length === 0,
     repeated.map(([s, n]) => `${s.split("/").pop()} ×${n}`).join(", ") ||
       `서로 다른 사진 ${Object.keys(counts).length}장`,
   );
   log(
-    "공개첫화면 — 사진이 충분히 쓰였다 (5장 이상)",
+    "고객용 화면 — 사진이 충분히 쓰였다 (5장 이상)",
     Object.keys(counts).length >= 5,
     `${Object.keys(counts).length}장`,
   );
@@ -191,18 +191,18 @@ for (const [w, h] of [
   await p.goto(BASE + "/welcome", { waitUntil: "networkidle" });
   await p.waitForTimeout(600);
 
-  const rows = p.locator("section[aria-labelledby='future'] li");
+  const rows = p.locator("section#future li");
   const n = await rows.count();
   log("향후 확장 — 다섯 가지가 있다", n === 5, `${n}개`);
 
   const badges = await p
-    .locator("section[aria-labelledby='future']")
+    .locator("section#future")
     .getByText("향후 확장")
     .count();
   log("향후 확장 — 모두 배지를 달고 있다", badges >= 5, `배지 ${badges}개`);
 
   const warn = await p
-    .locator("section[aria-labelledby='future']")
+    .locator("section#future")
     .getByText(/아직 이용하실 수 없습니다/)
     .count();
   log("향후 확장 — 아직 못 쓴다고 글로도 적혀 있다", warn > 0);

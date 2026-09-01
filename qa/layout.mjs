@@ -33,7 +33,7 @@ await go(p, "/", 2500);
 await seedExtremes(p, { big, dark });
 
 const PAGES = [
-  ["/welcome", "공개첫화면"],
+  ["/welcome", "고객용 화면"],
   ["/", "대시보드"],
   ["/customers", "고객목록"],
   ["/customers/c-01", "고객상세"],

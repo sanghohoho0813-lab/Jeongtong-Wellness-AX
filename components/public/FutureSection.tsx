@@ -123,7 +123,10 @@ function FutureRow({ item, onOpen }: { item: FutureItem; onOpen: () => void }) {
       onClick={onOpen}
       className="card-lift group flex h-full w-full items-start gap-3.5 rounded-card-lg border border-dashed border-stone-line bg-card/60 p-5 text-left transition-colors hover:bg-card"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/50 text-gold-deep ring-1 ring-dashed ring-gold/30">
+      {/* ring 은 box-shadow 라 점선이 안 된다 — `ring-dashed` 는 아무
+          CSS 도 만들지 않고 조용히 버려진다. 점선은 카드 바깥 테두리가
+          맡고, 아이콘 칸은 실선으로 둔다. */}
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/50 text-gold-deep ring-1 ring-gold/30">
         <SparkIcon className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">
@@ -147,7 +150,12 @@ function FutureRow({ item, onOpen }: { item: FutureItem; onOpen: () => void }) {
 
 /**
  * 목록 + 창을 함께 쓰는 훅스러운 덩어리.
- * 공개 첫화면과 고객 마이페이지 두 곳에서 같은 것을 쓴다.
+ * 고객용 화면(/welcome)과 MY WELLNESS 마이페이지 두 곳에서 같은 것을 쓴다.
+ *
+ * 두 곳의 무게는 일부러 다르다. 고객용 화면에서는 옅은 금빛 판 위에
+ * 점선으로 둘러 눈에 띄게 두고, 마이페이지에서는 카드 안에 조용히
+ * 둔다 — 그쪽은 오늘 할 일을 보러 들어오는 화면이라 미래 이야기가
+ * 앞을 가리면 안 된다.
  */
 export function useFuturePreview() {
   const [open, setOpen] = useState<FutureItem | null>(null);
@@ -174,16 +182,30 @@ export default function FutureSection({
 
   return (
     <>
-      <div className="mb-4">
+      {/*
+        머리를 눈에 띄게 세운다.
+
+        전에는 제목 한 줄에 설명 한 줄이었고, 그 아래 점선 카드 다섯이
+        미색 바탕 위에 놓였다. 점선은 '아직 없는 것' 을 알리는 데는
+        맞았지만, 구역 전체가 바탕에 묻혀 **화면 맨 아래에 붙은 덤**처럼
+        보였다. 실제로 대표님이 "잘 보이게 해 달라" 고 하신 자리다.
+
+        그렇다고 지금 되는 기능처럼 꾸미면 안 된다. 그래서 눈에 띄게
+        하되 **다르게** 띄운다 — 금빛 계열의 옅은 판을 깔고 테두리를
+        점선으로 둘러, 위쪽의 실선·흰 카드들과 한눈에 갈라지게 한다.
+        '중요하지만 성격이 다른 구역' 으로 읽히는 것이 목표다.
+      */}
+      <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2">
         <h2 className="text-[1.375rem] font-extrabold text-ink sm:text-[1.625rem]">
           앞으로 준비하고 있는 것
         </h2>
-        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
-          아래 다섯 가지는 <b className="text-ink-soft">아직 이용하실 수
-          없습니다.</b> 정통대왕쑥뜸원이 앞으로 만들어 가려는 방향이라
-          미리 적어 둡니다.
-        </p>
+        <FutureBadge className="!text-[0.8125rem]" />
       </div>
+      <p className="-mt-3 mb-5 text-[0.9375rem] leading-relaxed text-ink-sub">
+        아래 다섯 가지는 <b className="text-ink-soft">아직 이용하실 수
+        없습니다.</b> 정통대왕쑥뜸원이 앞으로 만들어 가려는 방향이라
+        미리 적어 둡니다.
+      </p>
 
       <ul
         className={`grid grid-cols-1 gap-3 ${compact ? "" : "sm:grid-cols-2 lg:grid-cols-3"}`}

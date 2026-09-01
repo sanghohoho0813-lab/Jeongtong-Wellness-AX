@@ -108,8 +108,19 @@ export function DocLayers({
         <div key={l.title}>
           <div
             className={`flex items-start gap-3.5 rounded-card px-4 py-3.5 shadow-card ${
+              /*
+                아직 없는 층은 점선으로 그린다.
+
+                `ring-1 ring-dashed` 로 적어 두었었는데, ring 은
+                box-shadow 라 점선이 될 수 없고 테일윈드는 `ring-dashed`
+                를 아무 CSS 없이 버린다 — 빌드된 CSS 에 그 이름이 아예
+                없었다. 그래서 여태 실선 테두리였다.
+
+                border 로 바꾸면 실제로 점선이 나온다. 색이 아니라 선의
+                생김새로 갈라 두어야 흑백으로 뽑아도 남는다.
+              */
               l.future
-                ? "bg-card ring-1 ring-dashed ring-stone-line"
+                ? "border border-dashed border-stone-line bg-card"
                 : `bg-gradient-to-r ${SKIN[l.tone]}`
             }`}
             /* 층이 내려갈수록 안쪽으로 들여 — 넓어지는 관계가 눈에 보인다 */

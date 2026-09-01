@@ -312,9 +312,17 @@ await m.waitForTimeout(600);
 const sheet = m.locator('[role="dialog"][aria-label="더보기"]');
 log("더보기 — 시트가 덮여 열린다", (await sheet.count()) === 1);
 log("더보기 — 보던 화면을 잃지 않는다", m.url() === before, `${before} → ${m.url()}`);
+/*
+  이름이 '고객 화면' 에서 'MY WELLNESS' 로 바뀌었다.
+
+  사이드바 메뉴의 /welcome 도 고객이 보는 화면이라 둘 다 '고객 화면'
+  이면 어느 쪽인지 알 수 없었다. 여기서 찾는 것은 로그인한 고객이
+  자기 기록을 보는 쪽(/my)이므로 주소로 확인한다 — 앞으로 이름이 또
+  바뀌어도 이 검사는 그대로 돈다.
+*/
 log(
   "더보기 — 고객 화면으로 건너갈 수 있다 (폰 왕복)",
-  (await sheet.getByRole("link", { name: "고객 화면" }).count()) > 0,
+  (await sheet.locator('a[href="/my"]').count()) > 0,
 );
 log(
   "더보기 — Why AX 가 있다",
@@ -375,6 +383,167 @@ log(
   "폰 → PC 미리보기가 닫힌다",
   (await m.locator('[role="dialog"][aria-label*="미리보기"]').count()) === 0,
 );
+
+
+// ═══ 5. 고객용 화면 차림표 (햄버거) ═══════════════════════════
+/*
+  이 화면은 폰에서 6,900px 이라 목차 없이는 두 번째 오는 분이 가격이나
+  예약을 다시 찾지 못한다. 그래서 차림표를 붙였는데, 여기서 조용히
+  깨질 수 있는 것이 하나 있다 —
+
+    차림표의 항목은 `id` 로 자리를 찾아간다. 나중에 누가 welcome
+    화면에서 그 `id` 를 지우거나 이름을 바꾸면, 단추는 그대로 있고
+    눌러도 **아무 일도 일어나지 않는다.** 화면은 멀쩡해 보인다.
+
+  그래서 "단추가 있다" 가 아니라 "눌렀더니 그 자리로 갔다" 로 본다.
+  자리까지 확인해야 하는 이유는, 다른 곳으로 가더라도 스크롤은
+  움직이기 때문이다.
+*/
+const nc = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const w = await nc.newPage();
+w.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+await go(w, "/welcome", 1800);
+
+// 게으른 사진이 다 자리를 잡아야 좌표가 확정된다
+await w.evaluate(`(${(async () => {
+  for (const img of Array.from(document.images)) {
+    img.scrollIntoView({ block: "center" });
+    await new Promise((r) => setTimeout(r, 40));
+  }
+  window.scrollTo(0, 0);
+}).toString()})()`);
+await w.waitForTimeout(600);
+
+/*
+  자리 이름(id)이 겹치면 getElementById 는 먼저 나오는 것 하나만
+  집는다. 구역과 그 안의 제목에 같은 이름을 붙여 두면 차림표가
+  엉뚱한 데로 내려가는데, 화면만 봐서는 알 수 없다.
+*/
+const dupIds = await w.evaluate(() => {
+  const seen = new Map();
+  for (const el of document.querySelectorAll("[id]"))
+    seen.set(el.id, (seen.get(el.id) || 0) + 1);
+  return [...seen].filter(([, n]) => n > 1).map(([k, n]) => `${k}×${n}`);
+});
+log("고객용 화면 — 겹치는 id 가 없다", dupIds.length === 0, dupIds.join(", "));
+
+const burger = w.getByRole("button", { name: "차림표 열기" });
+log("차림표 — 폰 머리글에 있다", (await burger.count()) === 1);
+
+await burger.click();
+await w.waitForTimeout(400);
+const menu = w.locator('[role="dialog"][aria-label="차림표"]');
+log("차림표 — 열린다", (await menu.count()) === 1);
+log(
+  "차림표 — 열려 있는 동안 뒤가 안 움직인다",
+  (await w.evaluate(() => document.body.style.overflow)) === "hidden",
+);
+
+// 다른 화면으로 건너가는 문 셋
+for (const [href, label] of [
+  ["/my/booking", "예약하기"],
+  ["/my", "내 기록 보기"],
+  ["/my/request", "상담 문의"],
+]) {
+  const a = menu.locator(`a[href="${href}"]`);
+  log(
+    `차림표 — '${label}' 이 ${href} 로 간다`,
+    (await a.count()) === 1 && /\S/.test((await a.first().innerText()) || ""),
+  );
+}
+
+await w.keyboard.press("Escape");
+await w.waitForTimeout(300);
+log("차림표 — ESC 로 닫힌다", (await menu.count()) === 0);
+log(
+  "차림표 — 닫으면 잠금이 풀린다",
+  (await w.evaluate(() => document.body.style.overflow)) !== "hidden",
+);
+
+/*
+  이름과 자리를 짝지어 둔다 (components/public/PublicNav.tsx 와 같아야 한다).
+  개수까지 맞춰 보는 이유는, 나중에 항목이 늘었는데 여기 안 적히면
+  그 새 항목은 아무도 안 눌러 본 채로 나가기 때문이다.
+*/
+const JUMPS = [
+  ["바로 하실 수 있는 것", "actions"],
+  ["정통대왕쑥뜸원이 지키는 것", "trust"],
+  ["어떤 시간을 보내시게 되는지", "service"],
+  ["이런 분께 권해 드립니다", "for-whom"],
+  ["세 겹으로 올립니다", "how"],
+  ["이용권 안내 · 가격", "가격"],
+  ["방문 기록이 남습니다", "records"],
+  ["앞으로 준비하고 있는 것", "future"],
+];
+
+await burger.click();
+await w.waitForTimeout(350);
+const jumpCount = await menu.locator("button").count();
+log(
+  "차림표 — 적어 둔 항목이 실제 항목 수와 맞는다",
+  jumpCount === JUMPS.length + 1, // + 닫기 단추
+  `단추 ${jumpCount}개 · 적어 둔 것 ${JUMPS.length}개(+닫기)`,
+);
+await w.keyboard.press("Escape");
+await w.waitForTimeout(250);
+
+for (const [label, id] of JUMPS) {
+  await w.evaluate(() => window.scrollTo(0, 0));
+  await w.waitForTimeout(150);
+  await burger.click();
+  await w.waitForTimeout(350);
+
+  const row = menu.getByRole("button", { name: label, exact: false });
+  if ((await row.count()) === 0) {
+    log(`차림표 — '${label}' 항목이 있다`, false, "못 찾음");
+    await w.keyboard.press("Escape");
+    await w.waitForTimeout(250);
+    continue;
+  }
+  await row.first().click();
+  await w.waitForTimeout(1100); // 부드럽게 내려가는 동안
+
+  const at = await w.evaluate(
+    `(${((wanted) => {
+      const el = document.getElementById(wanted);
+      if (!el) return { missing: true };
+      const r = el.getBoundingClientRect();
+      const atBottom =
+        window.scrollY + window.innerHeight >=
+        document.documentElement.scrollHeight - 4;
+      return {
+        top: Math.round(r.top),
+        scrollY: Math.round(window.scrollY),
+        atBottom,
+        // 화면 안에 실제로 보이는가
+        visible: r.bottom > 0 && r.top < window.innerHeight,
+        hash: location.hash,
+        locked: document.body.style.overflow === "hidden",
+      };
+    }).toString()})(${JSON.stringify(id)})`,
+  );
+
+  log(`차림표 — '${label}' 자리가 화면에 있다`, !at.missing, at.missing ? "id 없음" : "");
+  if (at.missing) continue;
+
+  /*
+    scroll-mt-24(=6rem) 만큼 띄우고 멈추므로 구역 윗변이 100px 언저리에
+    온다. 다만 화면 끝의 구역은 더 내려갈 데가 없어 그만큼 못 올라온다 —
+    그때는 '보이기만 하면' 통과로 본다.
+  */
+  const landed = at.atBottom ? at.visible : at.top > 40 && at.top < 190;
+  log(
+    `차림표 — '${label}' 누르면 그 자리로 간다`,
+    landed,
+    `윗변 ${at.top}px · scrollY ${at.scrollY}${at.atBottom ? " (화면 끝)" : ""}`,
+  );
+  log(`차림표 — '${label}' 뒤 잠금이 풀려 있다`, !at.locked);
+  log(
+    `차림표 — '${label}' 주소에 조각(#)이 남지 않는다`,
+    at.hash === "",
+    at.hash || "(없음)",
+  );
+}
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
 console.log(`   (기준 ${BASE})`);

@@ -24,8 +24,13 @@ export const metadata: Metadata = {
 };
 
 /**
- * 공개 첫 화면 — 처음 온 사람이 5초 안에 알아야 하는 것
- * ======================================================
+ * 고객용 화면 — 고객이 보는 플랫폼
+ * =================================
+ *
+ * '공개 첫 화면' 이라고 불렀었다. 만드는 쪽의 말이다. 이 주소는
+ * 소개만 하고 마는 랜딩페이지가 아니라, 고객이 예약을 남기고 가격을
+ * 보고 상담을 남기고 자기 기록으로 건너가는 **플랫폼**이다.
+ * 이름이 하는 일을 가리키게 바꿨다.
  *
  * 순서를 이렇게 잡았다.
  *
@@ -249,9 +254,10 @@ export default function PublicHome() {
         첫 카드의 '예약하기' 글자 윗부분이 잘려 보였다.
       */}
       <section
+        id="actions"
         aria-label="바로 하실 수 있는 것"
         data-book-anchor
-        className="relative z-10 mx-auto -mt-6 max-w-5xl px-4 sm:px-6"
+        className="relative z-10 mx-auto -mt-6 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
         {/*
           네 칸의 크기를 맞춘다.
@@ -329,10 +335,11 @@ export default function PublicHome() {
         매장에서 경력·만족도 수치를 확정해 주시면 그때 이 자리에 더한다.
       */}
       <section
-        aria-labelledby="trust"
-        className="mx-auto mt-10 max-w-5xl px-4 sm:px-6"
+        id="trust"
+        aria-labelledby="trust-h"
+        className="mx-auto mt-10 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
-        <h2 id="trust" className="eyebrow mb-3 px-1">
+        <h2 id="trust-h" className="eyebrow mb-3 px-1">
           정통대왕쑥뜸원이 지키는 것
         </h2>
         <ul className="stat-strip grid-cols-1 sm:grid-cols-3">
@@ -369,8 +376,9 @@ export default function PublicHome() {
         같은 쑥뜸 사진을 세 번 쓰면 세 번 다 같은 말이 된다.
       */}
       <section
+        id="service"
         aria-label="어떤 시간을 보내시게 되는지"
-        className="mx-auto mt-12 max-w-5xl space-y-3 px-4 sm:px-6"
+        className="mx-auto mt-12 max-w-5xl scroll-mt-24 space-y-3 px-4 sm:px-6"
       >
         <PhotoBand
           src="/brand/service_scene.jpg"
@@ -430,9 +438,9 @@ export default function PublicHome() {
       </section>
 
       {/* ── 3. 이런 분께 ──────────────────────────────────── */}
-      <section aria-labelledby="for-whom" className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
+      <section id="for-whom" aria-labelledby="for-whom-h" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
         <h2
-          id="for-whom"
+          id="for-whom-h"
           className="flex items-center justify-center gap-2.5 text-center text-[1.375rem] font-extrabold text-ink sm:text-[1.625rem]"
         >
           <LeafIcon className="h-5 w-5 shrink-0 text-gold-deep" aria-hidden />
@@ -476,7 +484,7 @@ export default function PublicHome() {
       </section>
 
       {/* ── 4. 어떻게 하는가 ──────────────────────────────── */}
-      <section aria-labelledby="how" className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
+      <section id="how" aria-labelledby="how-h" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
         {/*
           여기도 같은 문제였다. mugwort.jpg 는 840×1120, **세로로 긴** 사진
           (0.75)인데 21:9(2.33) 띠에 깔아 두었다 — 세로의 68% 가 잘려서,
@@ -497,7 +505,7 @@ export default function PublicHome() {
             />
           </div>
           <div className="min-w-0 p-6 sm:p-7">
-            <h2 id="how" className="text-[1.375rem] font-extrabold text-ink sm:text-[1.5rem]">
+            <h2 id="how-h" className="text-[1.375rem] font-extrabold text-ink sm:text-[1.5rem]">
               세 겹으로 올립니다
             </h2>
             <p className="mt-2 max-w-prose text-[0.9375rem] leading-relaxed text-ink-sub">
@@ -612,7 +620,7 @@ export default function PublicHome() {
       </section>
 
       {/* ── 6. 왜 여기인가 — 기록이 쌓인다 ────────────────── */}
-      <section className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
+      <section id="records" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
         {/*
           이 칸은 딥그린 한 판이었다. 글은 좋은데 화면에서 가장 큰 덩어리가
           단색이라, 바로 위 가격표와 무게가 같아 보였다. 오른쪽에 사진을
@@ -717,11 +725,32 @@ export default function PublicHome() {
         만나면 안 된다 — 화면 위쪽 80% 는 지금 하실 수 있는 일이고,
         미래 이야기는 다 보고 난 뒤에 나온다.
       */}
+      {/*
+        aria-labelledby="future" 라고 적었다가 고쳤다 — 자기 자신을
+        가리키고 있었다. 그러면 이름이 붙는 게 아니라 구역 전체의 글이
+        이름이 되거나 아예 무시된다. 제목(h2)은 FutureSection 안에 있어
+        여기서 id 로 집을 수 없으므로 aria-label 로 직접 적는다.
+      */}
       <section
-        aria-labelledby="future"
-        className="mx-auto mt-14 max-w-5xl px-4 sm:px-6"
+        id="future"
+        aria-label="앞으로 준비하고 있는 것"
+        className="mx-auto mt-14 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
-        <FutureSection />
+        {/*
+          옅은 금빛 판을 깔고 점선으로 두른다.
+
+          "잘 보이게" 와 "있는 것처럼 보이면 안 된다" 는 서로 당긴다.
+          채운 흰 카드로 만들면 눈에는 잘 띄지만 위쪽의 실제 기능들과
+          같아 보이고, 그러면 아직 없는 것을 있다고 읽게 된다.
+
+          판을 까는 것으로 **구역의 존재감**을 올리고, 테두리를 점선으로
+          두는 것으로 **성격의 차이**를 유지한다. 멀리서 보면 "여기 뭔가
+          따로 있네" 가 먼저 오고, 가까이 오면 점선과 배지가 "아직은
+          아니다" 를 말한다.
+        */}
+        <div className="rounded-card-lg border border-dashed border-gold/45 bg-gold-soft/25 p-6 sm:p-8">
+          <FutureSection />
+        </div>
       </section>
 
       {/*

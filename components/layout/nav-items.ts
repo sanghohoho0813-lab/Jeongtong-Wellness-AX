@@ -71,14 +71,20 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/branches", label: "지점 / 운영", icon: BuildingIcon, tone: "gold", group: "ops" },
   { href: "/settings", label: "설정", icon: SettingsIcon, tone: "gray", group: "ops" },
   /*
-    매장 소개 페이지 — 로그인하지 않은 사람이 보는 공개 첫 화면.
+    고객이 보는 화면 — 매장 소개부터 예약·이용권·상담까지.
 
-    이름을 '고객 화면' 에서 '공개 첫화면' 으로 바꿨다. 이 주소(/welcome)
-    는 매장 소개이고, 다니시는 고객이 보는 자기 기록 화면은 /my 다.
-    둘을 같은 이름으로 부르니 어느 쪽으로 가는지 알 수 없었다.
-    /my 로 건너가는 길은 사이드바 아래 화면 전환 스위치가 맡는다.
+    이름을 두 번 바꿨다. 처음엔 '고객 화면' 이었는데 /my 로 가는 전환
+    스위치와 같은 말이라 어느 쪽인지 알 수 없어 '공개 첫화면' 으로
+    바꿨고, 이번에 '고객용 화면' 으로 다시 정했다.
+
+    '공개 첫화면' 은 만드는 쪽의 말이었다. 이 주소는 랜딩페이지가
+    아니라 고객이 예약하고 가격을 보고 상담을 남기는 **플랫폼**이다.
+    이름이 하는 일을 가리켜야 한다.
+
+    /my 와 겹치지 않는 이유는 그쪽 이름을 'MY WELLNESS' 로 바꿨기
+    때문이다 (components/layout/SurfaceSwitch.tsx).
   */
-  { href: "/welcome", label: "공개 첫화면", icon: LeafIcon, tone: "emerald", group: "ops" },
+  { href: "/welcome", label: "고객용 화면", icon: LeafIcon, tone: "emerald", group: "ops" },
 ];
 
 /**

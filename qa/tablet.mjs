@@ -42,7 +42,7 @@ const PAGES = [
   ["/visits", "방문기록"],
   ["/settings", "설정"],
   ["/service", "서비스표준"],
-  ["/welcome", "공개첫화면"],
+  ["/welcome", "고객용 화면"],
   ["/my", "MY WELLNESS"],
   ["/my/passes", "이용권"],
   ["/my/care", "케어기록"],
