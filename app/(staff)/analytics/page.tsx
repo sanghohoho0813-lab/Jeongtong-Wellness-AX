@@ -289,7 +289,12 @@ export default function AnalyticsPage() {
           "무엇을 하면 이 화면이 채워지는지"는 어디에도 없었다.
         */}
         {visitCount < 5 ? (
-          <Card>
+          /*
+            투어가 이 카드를 비춘다(analytics-empty). 지표가 없을 때
+            성과 걸음이 없는 요소를 찾다 빈 안내로 물러나지 않게,
+            '기록이 없으면 숫자를 만들지 않는다' 를 여기서 짚는다.
+          */
+          <Card dataTour="analytics-empty">
             <SectionTitle tone="aqua">이 화면이 채워지려면</SectionTitle>
             <ol className="space-y-2.5">
               {[

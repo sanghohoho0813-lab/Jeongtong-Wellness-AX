@@ -73,7 +73,7 @@ export default function GuidePage() {
       <div className="rise-stagger flex flex-col card-gap">
         <DocHero
           eyebrow={`${settings.companyName} Wellness Business AX`}
-          title="사용 가이드"
+          title="사용 방법"
           subtitle="오늘 할 일을 확인하고, 방문을 기록하고, 다음 방문을 잡는 것 — 이 셋이 전부입니다"
           lead="컴퓨터가 익숙하지 않으셔도 순서대로 따라 하시면 됩니다. 각 항목은 실제 화면에 적힌 버튼 이름 그대로 적었습니다. 필요한 부분만 차례에서 골라 보셔도 됩니다."
           meta="전체를 읽는 데 10분쯤 걸립니다"

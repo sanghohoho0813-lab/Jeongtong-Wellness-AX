@@ -109,7 +109,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
       {/*
         문서 — 메뉴 위에 배치해 처음 쓰는 사람이 먼저 보게 한다.
 
-        셋으로 늘었다. 나란히 세 칸으로 놓으면 '사용 가이드' 가 잘려서,
+        셋으로 늘었다. 나란히 세 칸으로 놓으면 '사용 방법' 이 잘려서,
         'Why AX' 를 한 줄로 크게 올리고 아래에 둘을 나란히 둔다. 처음
         오시는 분(투자·심사 자리 포함)이 가장 먼저 눌러야 할 것이 이것이다.
       */}
@@ -153,7 +153,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             }`}
           >
             <SparkIcon className="h-4 w-4 shrink-0" />
-            <span className="truncate">사용 가이드</span>
+            <span className="truncate">사용 방법</span>
           </Link>
         </div>
       </div>

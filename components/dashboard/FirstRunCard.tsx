@@ -205,7 +205,7 @@ export default function FirstRunCard() {
           href="/guide"
           className="tap-line font-bold text-aqua-700 hover:underline"
         >
-          사용 가이드
+          사용 방법
         </Link>
         를 열어 보세요.
       </p>

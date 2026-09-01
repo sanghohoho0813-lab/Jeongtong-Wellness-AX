@@ -13,6 +13,7 @@ import StaffGate from "@/components/layout/StaffGate";
 import { ToastProvider } from "@/components/ui/toast";
 import { TourProvider } from "@/components/docs/Tour";
 import { DevicePreviewProvider } from "@/components/layout/DevicePreview";
+import WelcomeIntro from "@/components/docs/WelcomeIntro";
 
 export default function StaffLayout({
   children,
@@ -31,6 +32,11 @@ export default function StaffLayout({
               */}
               <DevicePreviewProvider>
                 <AppShell>{children}</AppShell>
+                {/*
+                  첫 실행 환영 — 게이트 안쪽이다. 로그인하지 않은 사람에게
+                  "처음 오셨나요?" 를 물을 이유가 없다.
+                */}
+                <WelcomeIntro />
               </DevicePreviewProvider>
             </StaffGate>
           </TourProvider>

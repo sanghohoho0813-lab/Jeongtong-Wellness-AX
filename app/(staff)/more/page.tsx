@@ -81,7 +81,7 @@ export default function MorePage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
-              사용 가이드
+              사용 방법
             </span>
             <span className="block text-[0.875rem] leading-snug text-aqua-800">
               화면별 사용법 · 단계별 안내

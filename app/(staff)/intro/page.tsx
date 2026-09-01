@@ -542,7 +542,7 @@ export default function IntroPage() {
               href="/guide"
               className="inline-flex items-center gap-1.5 text-sm font-extrabold text-aqua-800 hover:text-aqua-700"
             >
-              화면별 사용법은 사용 가이드에서 보실 수 있습니다
+              화면별 사용법은 「사용 방법」에서 보실 수 있습니다
               <ChevronRightIcon className="h-4 w-4" />
             </Link>
           </div>

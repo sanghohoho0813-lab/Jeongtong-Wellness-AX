@@ -303,7 +303,7 @@ for (const [path, needle] of [
   ["/service", "서비스 표준"],
   ["/analytics", "AX 도입성과"],
   ["/branches", "지점"],
-  ["/guide", "사용 가이드"],
+  ["/guide", "사용 방법"],
   ["/intro", "기획"],
   ["/more", "더보기"],
 ]) {

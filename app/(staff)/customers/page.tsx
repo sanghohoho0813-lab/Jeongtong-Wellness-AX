@@ -201,7 +201,15 @@ export default function CustomersPage() {
           );
         })}
       </div>
-      <div className="mb-4 hidden gap-2.5 sm:grid sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+      {/*
+        같은 표식을 폰 칩 줄에도 붙여 두었다 — 투어는 그중 화면에
+        실제로 보이는 쪽을 골라 비춘다. PC 쪽에 표식이 없어서 투어가
+        4.8초를 기다리다 빈 안내로 물러나고 있었다 (qa/tour.mjs 가 잡음).
+      */}
+      <div
+        data-tour="customer-tiles"
+        className="mb-4 hidden gap-2.5 sm:grid sm:grid-cols-3 sm:gap-3 lg:grid-cols-5"
+      >
         {STATUS_TILES.map((t) => (
           <SummaryTile
             key={t.key}

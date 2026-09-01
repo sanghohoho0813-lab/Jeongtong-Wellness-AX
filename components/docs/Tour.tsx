@@ -58,10 +58,32 @@ export const TOUR_LABEL: Record<TourMode, string> = {
   demo: "시연 모드",
 };
 
-/** 투어 단계 정의 — 고객 ID와 권한에 따라 구성이 달라진다 */
+/**
+ * 성과 화면이 아직 비어 있을 때의 한 걸음.
+ *
+ * 성과 화면은 방문 기록이 5건 모이기 전에는 지표를 그리지 않는다
+ * (억지 0% 대신 "이 화면이 채워지려면" 목록을 낸다). 그런데 투어가
+ * 그 사실을 모르면, 성과 걸음 다섯 개가 전부 **없는 요소를 4.8초씩
+ * 기다리다 빈 안내로 물러난다.** 실제로 실명부(방문 0건)로 바꾼 뒤
+ * 그렇게 삭아 있었다 — qa/tour.mjs 가 잡았다.
+ *
+ * 화면이 정직하게 비어 있으면 투어도 정직하게 그 이유를 짚는 것이
+ * 맞다. 특히 시연에서 이 걸음은 약점이 아니라 강점이다 — "기록이
+ * 없으면 숫자를 만들지 않는다" 가 이 제품의 핵심 약속이기 때문이다.
+ */
+const ANALYTICS_EMPTY_STEP: TourStep = {
+  route: "/analytics",
+  target: "analytics-empty",
+  kicker: "AX 도입성과",
+  title: "기록이 모이기 전에는 숫자를 그리지 않습니다",
+  body: "방문 기록이 5건 모이면 재방문율·월별 추이·매출기회가 여기서 자동으로 계산됩니다. 그 전에는 억지 0%를 보여 주는 대신, 무엇을 하면 채워지는지를 보여 드립니다 — 이 화면의 숫자는 전부 실제 기록에서만 나온다는 뜻입니다.",
+};
+
+/** 투어 단계 정의 — 고객 ID와 권한, 쌓인 기록에 따라 구성이 달라진다 */
 export function buildTourSteps(
   customerId: string | undefined,
   isManager: boolean,
+  analyticsReady: boolean,
 ): TourStep[] {
   const detail = customerId ? `/customers/${customerId}` : "/customers";
 
@@ -175,7 +197,7 @@ export function buildTourSteps(
     },
   ];
 
-  const adminTail: TourStep[] = [
+  const analyticsSteps: TourStep[] = [
     {
       route: "/analytics",
       target: "analytics-kpi",
@@ -212,6 +234,10 @@ export function buildTourSteps(
       title: "누가 얼마나 관리했는지 봅니다",
       body: "실행 브리핑에서 과제를 처리한 기록을 담당자별로 셉니다. 순위를 매기려는 것이 아니라, 관리가 한쪽으로 몰려 있지 않은지 확인하기 위한 것입니다.",
     },
+  ];
+
+  const adminTail: TourStep[] = [
+    ...(analyticsReady ? analyticsSteps : [ANALYTICS_EMPTY_STEP]),
     {
       route: "/settings",
       target: "settings-data",
@@ -311,7 +337,10 @@ function buildQuickSteps(
  * 그룹 밖(/welcome 같은 곳)으로 나가면 이 투어를 붙들고 있는 껍데기가
  * 통째로 사라지므로, 고객 화면은 게이트 안쪽의 미리보기로 보여 준다.
  */
-function buildDemoSteps(customerId: string | undefined): TourStep[] {
+function buildDemoSteps(
+  customerId: string | undefined,
+  analyticsReady: boolean,
+): TourStep[] {
   const detail = customerId ? `/customers/${customerId}` : "/customers";
   const preview = customerId
     ? `/customers/${customerId}/preview`
@@ -375,13 +404,26 @@ function buildDemoSteps(customerId: string | undefined): TourStep[] {
       body: "고객은 셋만 봅니다 — 다음에 언제 가는지, 몇 번 남았는지, 저번에 어디를 봐 드렸는지. 매장이 쓰는 내부 분류는 여기 나오지 않습니다.",
       tip: "직원 화면 안에서 그려 보는 것입니다 — 고객으로 로그인한 것이 아닙니다",
     },
-    {
-      route: "/analytics",
-      target: "analytics-opportunity",
-      kicker: "9 / 10 · 결과",
-      title: "관리한 것이 실제 매출로 이어졌는지",
-      body: "예상 매출을 만들어 보여 주지 않습니다. 실제로 일어난 재등록만 셉니다. 그래야 이 숫자를 그대로 가지고 나가실 수 있습니다.",
-    },
+    /*
+      성과가 아직 비어 있으면 빈 화면을 정직하게 짚는다. 시연에서 이건
+      약점이 아니다 — "기록이 없으면 숫자를 만들지 않는다" 는 것이야말로
+      정책기관 앞에서 가장 힘 있는 말이다.
+    */
+    analyticsReady
+      ? {
+          route: "/analytics",
+          target: "analytics-opportunity",
+          kicker: "9 / 10 · 결과",
+          title: "관리한 것이 실제 매출로 이어졌는지",
+          body: "예상 매출을 만들어 보여 주지 않습니다. 실제로 일어난 재등록만 셉니다. 그래야 이 숫자를 그대로 가지고 나가실 수 있습니다.",
+        }
+      : {
+          route: "/analytics",
+          target: "analytics-empty",
+          kicker: "9 / 10 · 결과",
+          title: "기록이 없으면 숫자를 만들지 않습니다",
+          body: "성과 화면은 방문 기록이 5건 모여야 열립니다. 그 전에는 억지 0%나 예상 매출을 그리는 대신 이렇게 비워 둡니다 — 여기서 보시게 될 모든 숫자가 실제 기록에서만 나온다는 뜻입니다.",
+        },
     {
       route: "/settings",
       target: "settings-rules",
@@ -434,7 +476,7 @@ interface Box {
 export function TourProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { customers, isManager } = useStore();
+  const { customers, visits, isManager } = useStore();
   const [active, setActive] = useState(false);
   const [mode, setMode] = useState<TourMode>("full");
   const [index, setIndex] = useState(0);
@@ -444,15 +486,22 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
   const steps = useMemo(() => {
     const id = customers[0]?.id;
+    /*
+      성과 화면과 같은 문턱(방문 기록 5건)을 본다. 문턱이 어긋나면
+      투어가 없는 요소를 비추려다 빈 안내로 물러난다.
+      (app/(staff)/analytics/page.tsx 의 visitCount < 5 와 짝)
+    */
+    const analyticsReady =
+      visits.filter((v) => v.type === "visit").length >= 5;
     if (mode === "quick") return buildQuickSteps(id, isManager);
     /*
       시연은 매출·성과 화면을 지난다. 직원 계정에는 그 화면이 없으므로
       (RouteGuard 가 고객 목록으로 되돌린다) 시연을 열어 주지 않는다 —
       중간에 튕겨 나가는 것보다 아예 없는 편이 낫다.
     */
-    if (mode === "demo" && isManager) return buildDemoSteps(id);
-    return buildTourSteps(id, isManager);
-  }, [customers, isManager, mode]);
+    if (mode === "demo" && isManager) return buildDemoSteps(id, analyticsReady);
+    return buildTourSteps(id, isManager, analyticsReady);
+  }, [customers, visits, isManager, mode]);
   const step = steps[index];
 
   const clearTimers = () => {
@@ -510,7 +559,16 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (tries++ < 40) timers.current.push(window.setTimeout(find, 120));
-      else setReady(true); // 못 찾으면 화면 전체 안내로 대체
+      else {
+        /*
+          못 찾으면 화면 전체 안내로 물러난다. 이때 box 를 지워야 한다 —
+          같은 화면 안에서 다음 걸음으로 넘어온 경우 box 에는 **직전
+          걸음의 자리**가 남아 있어서, 지우지 않으면 엉뚱한 요소를
+          비춘 채 다음 설명을 읽게 된다. 실제로 그랬다.
+        */
+        setBox(null);
+        setReady(true);
+      }
     };
     find();
 
@@ -761,7 +819,12 @@ function TourOverlay({
             <p className="text-[1.1875rem] font-extrabold leading-snug text-ink">
               {step.title}
             </p>
-            <p className="mt-2 text-[0.9375rem] leading-[1.75] text-ink-soft">
+            {/*
+              본문 15px → 16px, 단추도 한 뼘 키웠다. 이 카드를 읽는
+              분들이 이 앱에서 가장 눈이 어두운 분들이다 — 안내문이
+              본문보다 작으면 안내가 아니다.
+            */}
+            <p className="mt-2 text-[1rem] leading-[1.75] text-ink-soft">
               {step.body}
             </p>
             {step.tip && (
@@ -779,20 +842,20 @@ function TourOverlay({
               <button
                 onClick={onPrev}
                 disabled={index === 0}
-                className="touch-target flex items-center gap-1 rounded-btn px-3 py-2 text-sm font-bold text-ink-sub transition-colors hover:bg-stone-bg disabled:opacity-40"
+                className="touch-target flex items-center gap-1 rounded-btn px-3 py-2 text-[0.9375rem] font-bold text-ink-sub transition-colors hover:bg-stone-bg disabled:opacity-40"
               >
                 <ChevronLeftIcon className="h-4 w-4" />
                 이전
               </button>
               <button
                 onClick={onClose}
-                className="touch-target rounded-btn px-3 py-2 text-sm font-bold text-ink-faint transition-colors hover:text-ink-sub"
+                className="touch-target rounded-btn px-3 py-2 text-[0.9375rem] font-bold text-ink-faint transition-colors hover:text-ink-sub"
               >
                 그만보기
               </button>
               <button
                 onClick={onNext}
-                className="touch-target ml-auto flex items-center gap-1 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-4 py-2 text-sm font-extrabold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-850 hover:to-deep-700"
+                className="touch-target ml-auto flex items-center gap-1.5 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-6 py-2.5 text-[1.0625rem] font-extrabold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)] transition-colors hover:from-aqua-850 hover:to-deep-700"
               >
                 {index >= total - 1 ? "안내 마치기" : "다음"}
                 {index < total - 1 && <ChevronRightIcon className="h-4 w-4" />}

@@ -829,7 +829,7 @@ export default function WhyAxPage() {
             },
             {
               href: "/guide",
-              label: "사용 가이드",
+              label: "사용 방법",
               desc: "화면별 사용법이 필요하실 때",
               tone: "violet",
             },

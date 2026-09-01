@@ -125,7 +125,7 @@ export default function CommandPalette({
     const docs = [
       { href: "/why", label: "Why AX", icon: SparkIcon, tone: "teal" as const },
       { href: "/intro", label: "기획의도", icon: BookIcon, tone: "gold" as const },
-      { href: "/guide", label: "사용 가이드", icon: SparkIcon, tone: "aqua" as const },
+      { href: "/guide", label: "사용 방법", icon: SparkIcon, tone: "aqua" as const },
     ];
     return [
       ...items.map((n) => ({
