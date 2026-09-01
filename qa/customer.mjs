@@ -141,5 +141,105 @@ log(
   forged.url,
 );
 
+
+/* ── 예시 화면 — 막다른 길이 없는가 ───────────────────────── */
+/*
+  매장 시스템이 연결되기 전에는 고객 화면이 이 한 장이었다.
+
+      아직 연결 준비 중입니다
+      고객 화면은 매장 시스템과 연결된 뒤에 열립니다.
+
+  사실이긴 했지만, 보러 온 분은 이 서비스가 무엇인지 알 방법 없이
+  되돌아갔다. 이제는 예시 자료로 전부 열린다.
+
+  여기서 보는 것은 두 가지다.
+
+    ① 어느 화면도 막다른 길이 아니다   — 열리고, 내용이 있다
+    ② 예시라는 사실이 화면에 적혀 있다 — 보는 분이 자기 기록으로
+                                         착각하는 것이 가장 나쁜 실패다
+
+  ②가 없으면 ①은 오히려 해롭다. 그래서 둘을 늘 같이 본다.
+*/
+const PORTAL_PAGES = [
+  ["/my", "홈"],
+  ["/my/booking", "예약"],
+  ["/my/passes", "이용권"],
+  ["/my/care", "케어기록"],
+  ["/my/account", "마이페이지"],
+  ["/my/request", "상담 문의"],
+  ["/my/visits", "이용 기록"],
+  ["/my/wellness", "웰니스"],
+  ["/my/content", "콘텐츠"],
+  ["/my/more", "더보기"],
+];
+
+for (const [path, name] of PORTAL_PAGES) {
+  await go(p, path, 900);
+  const r = await p.evaluate(() => {
+    const t = (document.body.innerText || "").replace(/\s+/g, " ");
+    return {
+      chars: t.length,
+      blocked: /아직 연결 준비 중/.test(t),
+      banner: /예시 화면입니다/.test(t),
+    };
+  });
+  log(
+    `${name} — 막다른 길이 아니다`,
+    !r.blocked && r.chars > 200,
+    `${r.chars}자${r.blocked ? " · 연결 안내 한 장뿐" : ""}`,
+  );
+  log(`${name} — 예시라고 적혀 있다`, r.banner);
+}
+
+/*
+  "예시입니다" 만 적어 두면 보는 분의 다음 질문이 갈 곳이 없다 —
+  그럼 실제로는 어떻게 되는 건데? 그 답이 한 번 눌러서 닿아야 한다.
+*/
+await go(p, "/my", 900);
+await p.getByRole("button", { name: "어떻게 이용하게 되나요" }).first().click();
+await p.waitForTimeout(700);
+const guide = await p.evaluate(() => {
+  const d = document.querySelector('[role="dialog"]');
+  if (!d) return null;
+  const t = (d.innerText || "").replace(/\s+/g, " ");
+  return {
+    chars: t.length,
+    start: /어떻게 시작하나/.test(t),
+    loop: /다니시는 동안/.test(t),
+    build: /어떻게 만들어지고 있나/.test(t),
+    // 근거 없는 숫자를 적지 않았는가 (몇 명 · 몇 % · 언제 열림)
+    numbers: (t.match(/\d+\s*(%|퍼센트|명|배)/g) || []).join(", "),
+  };
+});
+log("예시 띠에서 이용 안내가 열린다", !!guide);
+log("이용 안내 — 시작하는 순서가 있다", !!guide?.start);
+log("이용 안내 — 다니시는 동안이 있다", !!guide?.loop);
+log("이용 안내 — 만드는 방식이 있다", !!guide?.build);
+log(
+  "이용 안내 — 근거 없는 숫자를 적지 않았다",
+  guide?.numbers === "",
+  guide?.numbers || "없음",
+);
+
+/*
+  예시에서 남긴 것이 "매장에 전달되었다" 고 말하면 그건 거짓말이다.
+  화면 맨 위 띠가 예시라고 말하고 있어도, 방금 누른 단추 바로 밑
+  문장이 반대로 말하면 사람은 가까운 쪽을 믿는다.
+*/
+await go(p, "/my/request", 900);
+await p.getByRole("button", { name: "문의" }).click();
+await p.locator("textarea").first().fill("예시 점검");
+await p.getByRole("button", { name: "요청 남기기" }).click();
+await p.waitForTimeout(900);
+const said = await p.evaluate(() =>
+  (document.body.innerText || "").replace(/\s+/g, " "),
+);
+log(
+  "예시에서 남긴 뒤 — 전달되지 않았다고 말한다",
+  /전달되지는 않았습니다/.test(said),
+  said.slice(0, 0) || "",
+);
+log("예시에서 남긴 뒤 — 남긴 것이 목록에 보인다", /예시 점검/.test(said));
+
 await browser.close();
 finish();

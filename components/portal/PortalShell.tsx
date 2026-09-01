@@ -15,7 +15,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
-import { demoMode } from "@/lib/auth/mode";
+import { usePortal } from "@/lib/portal/store";
+import { useHowItWorks } from "@/components/public/HowItWorks";
 import { SurfaceSwitch } from "@/components/layout/SurfaceSwitch";
 import {
   CalendarIcon,
@@ -113,6 +114,8 @@ export function useDeviceTheme() {
 
 export default function PortalShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { sample } = usePortal();
+  const { openHowItWorks, howItWorksSheet } = useHowItWorks();
   useDeviceTheme();
 
   return (
@@ -120,20 +123,41 @@ export default function PortalShell({ children }: { children: ReactNode }) {
       <PortalHeader account />
 
       {/*
-        시연 빌드라는 표시.
+        예시 자료로 열려 있다는 표시.
 
-        견본 고객으로 열려 있을 때는 그 사실을 화면에 적어 둔다. 보는
-        사람이 "내 기록" 으로 착각하면 그게 더 나쁜 일이고, 대표님이
-        남에게 보여 줄 때도 "이건 예시입니다" 를 매번 입으로 말하지
-        않아도 된다. 운영 빌드에서는 demoMode 가 false 라 그려지지 않는다.
+        보는 분이 "내 기록" 으로 착각하는 것이 이 화면에서 가장 나쁜
+        실패다. 그래서 예시일 때는 **모든 화면 맨 위에** 적어 둔다.
+        대표님이 남에게 보여 줄 때 "이건 예시입니다" 를 매번 입으로
+        말하지 않아도 되는 효과도 같이 있다.
+
+        전에는 시연 빌드(demoMode)에서만 그렸는데, 이제는 매장 시스템이
+        연결되기 전이나 「예시로 둘러보기」 로 들어온 경우에도 켜진다.
+        실제 기록이 들어와 있을 때는 sample 이 false 라 그려지지 않는다.
       */}
-      {demoMode && (
-        <div className="bg-gold-soft px-4 py-2 text-center">
-          <p className="mx-auto max-w-lg text-[0.8125rem] font-bold leading-snug text-gold-deep">
-            견본 화면입니다 — 실제 고객 기록이 아니라 예시로 만든 자료입니다
-          </p>
+      {sample && (
+        <div className="border-b border-gold/30 bg-gold-soft px-4 py-2.5">
+          <div className="mx-auto flex max-w-lg flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+            <p className="text-[0.8125rem] font-bold leading-snug text-gold-deep">
+              예시 화면입니다 — 실제 기록이 아니라 보여 드리려고 만든 자료입니다
+            </p>
+            {/*
+              띠에서 바로 안내를 열 수 있게 한다.
+
+              "예시입니다" 만 적어 두면 보는 분의 다음 질문이 갈 곳이 없다 —
+              그럼 실제로는 어떻게 되는 건데? 그 답을 한 번 눌러서 닿는
+              자리에 둔다.
+            */}
+            <button
+              type="button"
+              onClick={openHowItWorks}
+              className="tap-line shrink-0 text-[0.8125rem] font-extrabold text-gold-deep underline underline-offset-2"
+            >
+              어떻게 이용하게 되나요
+            </button>
+          </div>
         </div>
       )}
+      {howItWorksSheet}
 
       {/*
         아래 여백은 하단 네비 높이 + 홈 인디케이터 몫이다.

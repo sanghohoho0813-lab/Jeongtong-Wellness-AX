@@ -27,6 +27,7 @@ import { FormEvent, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { Button, Card, FieldLabel, inputCls } from "@/components/ui";
 import { PortalHeader, useDeviceTheme } from "./PortalShell";
+import { useHowItWorks } from "@/components/public/HowItWorks";
 
 function Frame({ children }: { children: React.ReactNode }) {
   // 로그인 화면도 폰의 밝기를 따라간다 (문 안쪽만 어두우면 이상하다)
@@ -55,28 +56,28 @@ function Waiting() {
 }
 
 function SignIn() {
-  const { sendCode, verifyCode, configured } = usePortal();
+  const { sendCode, verifyCode, enterSample } = usePortal();
+  const { openHowItWorks, howItWorksSheet } = useHowItWorks();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
-  if (!configured) {
-    return (
-      <Frame>
-        <Card>
-          <h1 className="text-[1.25rem] font-extrabold text-ink">
-            아직 연결 준비 중입니다
-          </h1>
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-sub">
-            고객 화면은 매장 시스템과 연결된 뒤에 열립니다. 매장에 문의해
-            주세요.
-          </p>
-        </Card>
-      </Frame>
-    );
-  }
+  /*
+    여기 있던 「아직 연결 준비 중입니다」 한 장은 없앴다.
+
+    연결 설정이 없는 빌드에서 뜨던 화면인데, 설정이 없다는 것은 곧
+    **읽어 올 실제 자료가 어디에도 없다**는 뜻이다. 보호할 것이 없는
+    자리에 막다른 길을 세워 두고, 보러 온 분은 이 서비스가 무엇인지
+    알 방법 없이 되돌아갔다.
+
+    이제 그 경우는 스토어가 예시로 열어 준다(lib/portal/store.tsx).
+    그래서 이 화면은 **연결 설정이 있는데 아직 로그인 안 한 분**만
+    만난다. 그분께도 예시로 먼저 둘러볼 길을 둔다 — 로그인 화면은
+    "이게 뭔지 모르겠는데 왜 이메일부터 달라고 하지" 에서 가장 많이
+    막히는 자리다.
+  */
 
   const askCode = async (e: FormEvent) => {
     e.preventDefault();
@@ -181,10 +182,33 @@ function SignIn() {
         )}
       </Card>
 
+      {/*
+        아직 계정이 없는 분을 위한 두 갈래.
+
+        로그인 화면만 덩그러니 두면, 이게 무슨 화면인지 모르는 분은
+        이메일을 넣을 이유를 못 찾는다. 먼저 보고 나서 시작할 수 있게 한다.
+      */}
+      <Card className="mt-4">
+        <h2 className="text-[1rem] font-extrabold text-ink">처음이신가요?</h2>
+        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
+          계정이 없어도 어떤 화면인지 먼저 보실 수 있습니다. 예시 자료로
+          채워진 화면이라 실제 기록은 아닙니다.
+        </p>
+        <div className="mt-3.5 flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={enterSample}>
+            예시로 둘러보기
+          </Button>
+          <Button variant="ghost" onClick={openHowItWorks}>
+            어떻게 이용하게 되나요
+          </Button>
+        </div>
+      </Card>
+
       <p className="mt-4 px-1 text-[0.8125rem] leading-relaxed text-ink-faint">
         여기서는 내 이용기록과 이용권만 볼 수 있습니다. 몸 상태에 대한 판단이나
         의학적 안내는 제공하지 않습니다.
       </p>
+      {howItWorksSheet}
     </Frame>
   );
 }

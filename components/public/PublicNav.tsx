@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 고객용 화면 차림표 (햄버거)
+ * 고객용 화면 전체 메뉴 (햄버거)
  * ============================
  *
  * 왜 필요해졌나
@@ -27,7 +27,7 @@
  *
  * 순서 — 지금 할 수 있는 것이 먼저다
  * ----------------------------------
- * 차림표에서도 70/30 을 지킨다. 지금 되는 일(예약 · 이용권 · 상담 ·
+ * 전체 메뉴에서도 70/30 을 지킨다. 지금 되는 일(예약 · 이용권 · 상담 ·
  * 내 기록)이 위에 오고, 「앞으로 준비하고 있는 것」은 맨 아래에 배지를
  * 달고 들어간다. 눌러 보면 아직 없는 기능이라는 것을 알 수 있지만,
  * 그 전에 지금 되는 것들을 먼저 지나가게 한다.
@@ -39,6 +39,7 @@ import { createPortal } from "react-dom";
 import {
   CalendarIcon,
   BodyIcon,
+  BookIcon,
   ChatIcon,
   CheckIcon,
   ChevronRightIcon,
@@ -49,6 +50,7 @@ import {
   TicketIcon,
   XIcon,
 } from "@/components/ui/icons";
+import { useHowItWorks } from "./HowItWorks";
 
 /**
  * 지금 바로 하실 수 있는 일 — 다른 화면으로 건너간다.
@@ -85,13 +87,14 @@ const SECTIONS = [
 ];
 
 export default function PublicNav() {
+  const { openHowItWorks, howItWorksSheet } = useHowItWorks();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   /*
     열려 있는 동안 뒤 본문이 따라 움직이지 않게 한다. 이걸 안 하면
-    차림표 안에서 손가락을 움직였을 때 뒤의 긴 화면이 스크롤되어,
+    전체 메뉴 안에서 손가락을 움직였을 때 뒤의 긴 화면이 스크롤되어,
     닫고 나면 엉뚱한 곳에 와 있다.
   */
   useEffect(() => {
@@ -111,7 +114,7 @@ export default function PublicNav() {
    *
    * `<a href="#가격">` 로 두면 주소창에 조각(#)이 남는다. 고객이
    * 새로고침하거나 뒤로 가기를 눌렀을 때 화면 중간에서 시작하게 되고,
-   * 공유한 주소도 지저분해진다. 차림표를 닫고 부드럽게 내려 주기만 한다.
+   * 공유한 주소도 지저분해진다. 전체 메뉴를 닫고 부드럽게 내려 주기만 한다.
    */
   const goTo = (id: string) => {
     setOpen(false);
@@ -133,11 +136,11 @@ export default function PublicNav() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="차림표"
+        aria-label="전체 메뉴"
         className="relative z-10 flex h-full w-full max-w-sm flex-col bg-card shadow-float"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-stone-line px-5 py-4">
-          <p className="text-[1.0625rem] font-extrabold text-ink">차림표</p>
+          <p className="text-[1.0625rem] font-extrabold text-ink">전체 메뉴</p>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -182,6 +185,41 @@ export default function PublicNav() {
                 </li>
               );
             })}
+
+            {/*
+              이용 안내.
+
+              위 셋과 같은 생김새로 같은 묶음에 둔다. 화면으로 가는 것이
+              아니라 설명 창을 여는 것이지만, 처음 오신 분에게는 이것도
+              '지금 할 수 있는 일' 이다 — 오히려 예약보다 먼저 필요하다.
+
+              링크(<a>)가 아니라 단추인 이유는 주소를 만들지 않기 위해서다.
+              주소가 생기면 그 주소를 연 사람은 설명만 덩그러니 있는 화면을
+              만난다.
+            */}
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  openHowItWorks();
+                }}
+                className="flex w-full items-center gap-3 rounded-card bg-card-soft px-4 py-3 text-left ring-1 ring-stone-line transition-colors hover:bg-aqua-50"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/50 text-gold-deep ring-1 ring-gold/25">
+                  <BookIcon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[1rem] font-extrabold text-ink">
+                    어떻게 이용하게 되나요
+                  </span>
+                  <span className="mt-0.5 block text-[0.875rem] leading-snug text-ink-sub">
+                    시작하는 순서와 서비스가 도는 방식
+                  </span>
+                </span>
+                <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+              </button>
+            </li>
           </ul>
 
           <p className="eyebrow mb-2 mt-6">이 화면에서 찾기</p>
@@ -208,7 +246,7 @@ export default function PublicNav() {
           {/*
             앞으로 준비하고 있는 것.
 
-            차림표에서도 맨 아래다. 그 위 항목들은 오늘 되는 일이고
+            전체 메뉴에서도 맨 아래다. 그 위 항목들은 오늘 되는 일이고
             이건 아직 아니다. 대신 배지와 점선으로 눈에 띄게 두어,
             찾는 사람은 놓치지 않게 한다.
           */}
@@ -258,13 +296,25 @@ export default function PublicNav() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="차림표 열기"
+        aria-label="전체 메뉴 열기"
         aria-expanded={open}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/12 text-white ring-1 ring-white/25 transition-colors hover:bg-white/22"
+        /*
+          48px 에서 52px 로. 아주 조금만 키운다.
+
+          한 번 55px 까지 올려 봤는데, 옆의 [내 기록] 알약이 44px 이라
+          동그라미 혼자 11px 더 커져 머리글이 기울어 보였다. 재 보고 되돌린
+          값이다 — 동그라미가 알약보다 조금 큰 정도(8px)가 균형점이다.
+
+          아이콘도 같이 20 → 24px 로 올린다. 테두리만 키우고 점 세 개를
+          그대로 두면 과녁만 커지고 눌러야 할 것은 그대로라, 커진 느낌이
+          나지 않는다.
+        */
+        className="flex h-[2.9375rem] w-[2.9375rem] shrink-0 items-center justify-center rounded-full bg-white/12 text-white ring-1 ring-white/25 transition-colors hover:bg-white/22"
       >
-        <MoreIcon className="h-5 w-5" />
+        <MoreIcon className="h-[1.375rem] w-[1.375rem]" />
       </button>
       {open && mounted && createPortal(sheet, document.body)}
+      {howItWorksSheet}
     </>
   );
 }

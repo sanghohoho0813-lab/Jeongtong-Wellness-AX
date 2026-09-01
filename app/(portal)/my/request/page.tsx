@@ -36,7 +36,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function MyRequest() {
-  const { submitRequest, requests, branch } = usePortal();
+  const { submitRequest, requests, branch, sample } = usePortal();
   const [kind, setKind] = useState<"booking" | "inquiry">("booking");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<"morning" | "afternoon" | "evening" | undefined>();
@@ -92,8 +92,17 @@ export default function MyRequest() {
             <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-aqua-700 ring-1 ring-aqua-200">
               <CheckIcon className="h-4 w-4" />
             </span>
+            {/*
+              예시로 열려 있을 때 "매장에서 확인한 뒤 연락드립니다" 라고
+              적으면 그건 거짓말이다 — 예시에서는 매장에 아무것도 가지
+              않는다. 화면 맨 위 띠가 "예시입니다" 라고 말하고 있어도,
+              방금 누른 단추 바로 밑에 있는 이 문장이 반대로 말하면
+              사람은 가까운 쪽을 믿는다.
+            */}
             <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
-              요청을 남겼습니다. 매장에서 확인한 뒤 연락드립니다.
+              {sample
+                ? "예시 화면이라 매장으로 전달되지는 않았습니다. 실제로는 이 자리에 남긴 요청이 매장 화면에 바로 뜨고, 확인한 뒤 연락드립니다."
+                : "요청을 남겼습니다. 매장에서 확인한 뒤 연락드립니다."}
             </p>
           </div>
         </Card>

@@ -385,13 +385,13 @@ log(
 );
 
 
-// ═══ 5. 고객용 화면 차림표 (햄버거) ═══════════════════════════
+// ═══ 5. 고객용 화면 전체 메뉴 (햄버거) ═══════════════════════════
 /*
   이 화면은 폰에서 6,900px 이라 목차 없이는 두 번째 오는 분이 가격이나
-  예약을 다시 찾지 못한다. 그래서 차림표를 붙였는데, 여기서 조용히
+  예약을 다시 찾지 못한다. 그래서 전체 메뉴를 붙였는데, 여기서 조용히
   깨질 수 있는 것이 하나 있다 —
 
-    차림표의 항목은 `id` 로 자리를 찾아간다. 나중에 누가 welcome
+    전체 메뉴의 항목은 `id` 로 자리를 찾아간다. 나중에 누가 welcome
     화면에서 그 `id` 를 지우거나 이름을 바꾸면, 단추는 그대로 있고
     눌러도 **아무 일도 일어나지 않는다.** 화면은 멀쩡해 보인다.
 
@@ -416,7 +416,7 @@ await w.waitForTimeout(600);
 
 /*
   자리 이름(id)이 겹치면 getElementById 는 먼저 나오는 것 하나만
-  집는다. 구역과 그 안의 제목에 같은 이름을 붙여 두면 차림표가
+  집는다. 구역과 그 안의 제목에 같은 이름을 붙여 두면 전체 메뉴가
   엉뚱한 데로 내려가는데, 화면만 봐서는 알 수 없다.
 */
 const dupIds = await w.evaluate(() => {
@@ -427,15 +427,15 @@ const dupIds = await w.evaluate(() => {
 });
 log("고객용 화면 — 겹치는 id 가 없다", dupIds.length === 0, dupIds.join(", "));
 
-const burger = w.getByRole("button", { name: "차림표 열기" });
-log("차림표 — 폰 머리글에 있다", (await burger.count()) === 1);
+const burger = w.getByRole("button", { name: "전체 메뉴 열기" });
+log("전체 메뉴 — 폰 머리글에 있다", (await burger.count()) === 1);
 
 await burger.click();
 await w.waitForTimeout(400);
-const menu = w.locator('[role="dialog"][aria-label="차림표"]');
-log("차림표 — 열린다", (await menu.count()) === 1);
+const menu = w.locator('[role="dialog"][aria-label="전체 메뉴"]');
+log("전체 메뉴 — 열린다", (await menu.count()) === 1);
 log(
-  "차림표 — 열려 있는 동안 뒤가 안 움직인다",
+  "전체 메뉴 — 열려 있는 동안 뒤가 안 움직인다",
   (await w.evaluate(() => document.body.style.overflow)) === "hidden",
 );
 
@@ -447,16 +447,16 @@ for (const [href, label] of [
 ]) {
   const a = menu.locator(`a[href="${href}"]`);
   log(
-    `차림표 — '${label}' 이 ${href} 로 간다`,
+    `전체 메뉴 — '${label}' 이 ${href} 로 간다`,
     (await a.count()) === 1 && /\S/.test((await a.first().innerText()) || ""),
   );
 }
 
 await w.keyboard.press("Escape");
 await w.waitForTimeout(300);
-log("차림표 — ESC 로 닫힌다", (await menu.count()) === 0);
+log("전체 메뉴 — ESC 로 닫힌다", (await menu.count()) === 0);
 log(
-  "차림표 — 닫으면 잠금이 풀린다",
+  "전체 메뉴 — 닫으면 잠금이 풀린다",
   (await w.evaluate(() => document.body.style.overflow)) !== "hidden",
 );
 
@@ -480,10 +480,43 @@ await burger.click();
 await w.waitForTimeout(350);
 const jumpCount = await menu.locator("button").count();
 log(
-  "차림표 — 적어 둔 항목이 실제 항목 수와 맞는다",
-  jumpCount === JUMPS.length + 1, // + 닫기 단추
-  `단추 ${jumpCount}개 · 적어 둔 것 ${JUMPS.length}개(+닫기)`,
+  "전체 메뉴 — 적어 둔 항목이 실제 항목 수와 맞는다",
+  // + 닫기 단추 + 「어떻게 이용하게 되나요」
+  jumpCount === JUMPS.length + 2,
+  `단추 ${jumpCount}개 · 적어 둔 것 ${JUMPS.length}개(+닫기+이용안내)`,
 );
+
+/*
+  이용 안내가 실제로 열리는가.
+
+  이건 화면 안 자리로 내려가는 항목이 아니라 설명 창을 여는 항목이라
+  위 JUMPS 로는 확인되지 않는다. 따로 눌러 본다.
+*/
+await w.getByRole("button", { name: "어떻게 이용하게 되나요" }).first().click();
+await w.waitForTimeout(700);
+const guide = await w.evaluate(() => {
+  const d = document.querySelector('[role="dialog"]');
+  if (!d) return null;
+  const t = (d.innerText || "").replace(/\s+/g, " ");
+  return {
+    start: /어떻게 시작하나/.test(t),
+    loop: /다니시는 동안/.test(t),
+    build: /어떻게 만들어지고 있나/.test(t),
+    // 근거 없는 숫자를 적지 않았는가
+    numbers: (t.match(/\d+\s*(%|퍼센트|명|배)/g) || []).join(", "),
+  };
+});
+log("전체 메뉴 — 이용 안내가 열린다", !!guide);
+log("이용 안내 — 시작하는 순서가 있다", !!guide?.start);
+log("이용 안내 — 다니시는 동안이 있다", !!guide?.loop);
+log("이용 안내 — 만드는 방식이 있다", !!guide?.build);
+log(
+  "이용 안내 — 근거 없는 숫자를 적지 않았다",
+  guide?.numbers === "",
+  guide?.numbers || "없음",
+);
+await w.keyboard.press("Escape");
+await w.waitForTimeout(300);
 await w.keyboard.press("Escape");
 await w.waitForTimeout(250);
 
@@ -495,7 +528,7 @@ for (const [label, id] of JUMPS) {
 
   const row = menu.getByRole("button", { name: label, exact: false });
   if ((await row.count()) === 0) {
-    log(`차림표 — '${label}' 항목이 있다`, false, "못 찾음");
+    log(`전체 메뉴 — '${label}' 항목이 있다`, false, "못 찾음");
     await w.keyboard.press("Escape");
     await w.waitForTimeout(250);
     continue;
@@ -523,7 +556,7 @@ for (const [label, id] of JUMPS) {
     }).toString()})(${JSON.stringify(id)})`,
   );
 
-  log(`차림표 — '${label}' 자리가 화면에 있다`, !at.missing, at.missing ? "id 없음" : "");
+  log(`전체 메뉴 — '${label}' 자리가 화면에 있다`, !at.missing, at.missing ? "id 없음" : "");
   if (at.missing) continue;
 
   /*
@@ -533,13 +566,13 @@ for (const [label, id] of JUMPS) {
   */
   const landed = at.atBottom ? at.visible : at.top > 40 && at.top < 190;
   log(
-    `차림표 — '${label}' 누르면 그 자리로 간다`,
+    `전체 메뉴 — '${label}' 누르면 그 자리로 간다`,
     landed,
     `윗변 ${at.top}px · scrollY ${at.scrollY}${at.atBottom ? " (화면 끝)" : ""}`,
   );
-  log(`차림표 — '${label}' 뒤 잠금이 풀려 있다`, !at.locked);
+  log(`전체 메뉴 — '${label}' 뒤 잠금이 풀려 있다`, !at.locked);
   log(
-    `차림표 — '${label}' 주소에 조각(#)이 남지 않는다`,
+    `전체 메뉴 — '${label}' 주소에 조각(#)이 남지 않는다`,
     at.hash === "",
     at.hash || "(없음)",
   );

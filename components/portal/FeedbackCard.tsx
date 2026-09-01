@@ -41,7 +41,7 @@ export default function FeedbackCard({
   lastVisitId?: string;
   lastVisitAt?: string;
 }) {
-  const { submitFeedback, feedback } = usePortal();
+  const { submitFeedback, feedback, sample } = usePortal();
   const [score, setScore] = useState<number | null>(null);
   const [intent, setIntent] = useState<"yes" | "maybe" | "no" | null>(null);
   const [note, setNote] = useState("");
@@ -71,8 +71,11 @@ export default function FeedbackCard({
             <p className="text-[1.0625rem] font-extrabold text-ink">
               남겨 주셔서 감사합니다
             </p>
+            {/* 예시에서는 매장에 가지 않는다 — 간다고 적으면 거짓말이다 */}
             <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-sub">
-              보내 주신 내용은 매장에서 확인합니다.
+              {sample
+                ? "예시 화면이라 매장으로 전달되지는 않았습니다. 실제로는 남겨 주신 내용이 매장 화면에 그대로 도착합니다."
+                : "보내 주신 내용은 매장에서 확인합니다."}
             </p>
             {latest?.satisfaction && (
               <p className="mt-2 flex flex-wrap items-center gap-2">

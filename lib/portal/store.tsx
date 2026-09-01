@@ -97,6 +97,17 @@ interface PortalValue {
   phase: PortalPhase;
   /** 설정이 아예 없는 빌드인지 (연결 안내 문구를 다르게 낸다) */
   configured: boolean;
+  /**
+   * 지금 보이는 것이 **예시 자료**인가.
+   *
+   * demoMode 와 일부러 다른 이름을 쓴다. demoMode 는 직원 화면의 로그인
+   * 우회까지 함께 여는 스위치라, 그 하나로 이것까지 묶으면 "고객에게
+   * 예시를 보여 주고 싶다" 는 이유로 직원 화면이 열려 버린다.
+   * 이 값은 **고객 화면에 무엇을 그릴지만** 정한다.
+   */
+  sample: boolean;
+  /** 로그인 화면에서 "예시로 둘러보기" 를 눌렀을 때 */
+  enterSample: () => void;
   error: string;
   email: string;
 
@@ -150,6 +161,7 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
   const [feedback, setFeedback] = useState<MyFeedback[]>([]);
   const [requests, setRequests] = useState<MyRequest[]>([]);
   const [contentOpens, setContentOpens] = useState(0);
+  const [sample, setSample] = useState(false);
 
   const sbRef = useRef<SupabaseClient | null>(null);
   if (sbRef.current === null && typeof window !== "undefined") {
@@ -290,32 +302,55 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
     }
   }, [load]);
 
+  /**
+   * 예시 고객으로 화면을 채운다.
+   *
+   * 여기 들어오는 사람은 실존하지 않는다 (lib/portal/demo.ts — 이름 ·
+   * 연락처 · 이메일 전부 지어낸 것이고 전화번호는 통화가 되지 않는다).
+   * 그래서 이 통로로 실제 개인정보에 닿을 길은 없다. 서버에 아무것도
+   * 묻지 않고 화면만 채운다.
+   */
+  const enterSample = useCallback(() => {
+    setEmail("example@email.com");
+    setCustomer(DEMO_CUSTOMER);
+    setBranch(DEMO_BRANCH);
+    setVisits(DEMO_VISITS);
+    setMemberships(DEMO_MEMBERSHIPS);
+    setProducts(DEMO_PRODUCTS);
+    setSample(true);
+    setError("");
+    setPhase("ready");
+  }, []);
+
   // 첫 진입 — 이미 로그인돼 있으면 바로 자기 화면으로
   useEffect(() => {
     /*
-      시연 빌드에서는 견본 고객으로 바로 연다.
+      예시로 열어야 하는 두 경우.
 
-      이 화면은 로그인 뒤에만 열리는데, 그러면 대표님이 남에게 보여 줄
-      때마다 실제 고객 계정을 빌려야 하고, 만드는 쪽도 자기가 만든 화면을
-      확인할 수가 없다. 고객 화면만 유독 덜 다듬어져 있던 이유가 그것이었다.
+      ① 시연 빌드(NEXT_PUBLIC_DEMO_MODE=1)
+         대표님이 남에게 보여 줄 때 실제 고객 계정을 빌리지 않아도 되고,
+         만드는 쪽도 자기가 만든 화면을 눈으로 볼 수 있다.
 
-      NEXT_PUBLIC_DEMO_MODE=1 로 빌드했을 때만 지난다. 그 값은 빌드 시점에
-      코드에 박히므로 운영 빌드에는 이 통로가 아예 없다. 여기 들어오는
-      사람도 실존하지 않는다 (lib/portal/demo.ts).
+      ② 매장 시스템이 아직 연결되지 않은 빌드
+         전에는 이때 "아직 연결 준비 중입니다" 한 장만 띄우고 끝이었다.
+         그런데 연결 설정이 없다는 것은 **읽어 올 실제 자료가 어디에도
+         없다** 는 뜻이다. 보호할 것이 없는 자리에 막다른 길을 세워 둔
+         셈이었고, 보러 온 사람은 이 서비스가 무엇인지 알 방법이 없었다.
+         그래서 예시로 연다.
+
+      ②가 ①과 같은 스위치가 아닌 이유는 중요하다. demoMode 는 **직원
+      화면의 로그인 우회**까지 함께 여는 값이다. 고객에게 예시를 보여
+      주려고 그 값을 켜면 내부 AX 가 같이 열린다. 그래서 여기서는
+      supabaseConfigured 만 본다 — 고객 화면에 무엇을 그릴지의 문제이지
+      권한의 문제가 아니다.
     */
-    if (demoMode) {
-      setEmail("demo@example.com");
-      setCustomer(DEMO_CUSTOMER);
-      setBranch(DEMO_BRANCH);
-      setVisits(DEMO_VISITS);
-      setMemberships(DEMO_MEMBERSHIPS);
-      setProducts(DEMO_PRODUCTS);
-      setPhase("ready");
+    if (demoMode || !supabaseConfigured) {
+      enterSample();
       return;
     }
 
     const sb = sbRef.current;
-    if (!supabaseConfigured || !sb) {
+    if (!sb) {
       setPhase("anon");
       return;
     }
@@ -352,7 +387,12 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
       alive = false;
       sub.subscription.unsubscribe();
     };
-  }, [load, clearAll]);
+    /*
+      enterSample 은 useCallback([]) 이라 신원이 바뀌지 않는다. 그래도
+      의존성에 적어 둔다 — 나중에 누가 그 안에서 무언가를 참조하도록
+      고치면, 적어 두지 않은 쪽은 낡은 값을 붙든 채 조용히 어긋난다.
+    */
+  }, [load, clearAll, enterSample]);
 
   // ---------- 로그인 ----------
 
@@ -410,8 +450,24 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
 
   // ---------- 고객이 남기는 것 ----------
 
+  /**
+   * 예시로 열려 있을 때 남기는 것들.
+   *
+   * 서버가 없으니 저장은 못 한다. 그렇다고 아무 일도 하지 않으면,
+   * 예시를 보러 온 분이 예약을 남기고 "확인" 을 눌렀는데 화면이 그대로다 —
+   * 고장난 것처럼 보인다. 그래서 **이 기기 안에서만** 목록에 얹어 주고,
+   * 실제로 매장에 전달되지는 않았다는 말을 화면이 따로 적는다.
+   *
+   * 방금 만든 것에 붙일 id. 서버가 주던 값을 대신한다.
+   */
+  const sampleId = () => `sample-${Date.now().toString(36)}`;
+
   const saveProfile = useCallback(
     async (input: WellnessProfileInput) => {
+      if (sample) {
+        setProfile({ ...input, updatedAt: new Date().toISOString() });
+        return;
+      }
       const sb = sbRef.current;
       if (!sb || !customer) return;
       const { error: e } = await sb.from("customer_wellness_profiles").upsert(
@@ -430,11 +486,26 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
       if (e) throw new Error(humanError(e));
       setProfile({ ...input, updatedAt: new Date().toISOString() });
     },
-    [customer],
+    [customer, sample],
   );
 
   const submitFeedback = useCallback<PortalValue["submitFeedback"]>(
     async (input) => {
+      if (sample) {
+        setFeedback((prev) => [
+          {
+            id: sampleId(),
+            visitId: input.visitId,
+            satisfaction: input.satisfaction,
+            revisitIntent: input.revisitIntent,
+            note: input.note?.trim() || undefined,
+            homecareInterest: input.homecareInterest,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        return;
+      }
       const sb = sbRef.current;
       if (!sb || !customer) return;
       const { data, error: e } = await sb
@@ -464,11 +535,26 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
         ...prev,
       ]);
     },
-    [customer],
+    [customer, sample],
   );
 
   const submitRequest = useCallback<PortalValue["submitRequest"]>(
     async (input) => {
+      if (sample) {
+        setRequests((prev) => [
+          {
+            id: sampleId(),
+            kind: input.kind,
+            preferredDate: input.preferredDate,
+            preferredSlot: input.preferredSlot,
+            note: input.note?.trim() || undefined,
+            status: "open",
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        return;
+      }
       const sb = sbRef.current;
       if (!sb || !customer) return;
       const { data, error: e } = await sb
@@ -498,7 +584,7 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
         ...prev,
       ]);
     },
-    [customer],
+    [customer, sample],
   );
 
   /**
@@ -510,6 +596,10 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
    */
   const logContentOpen = useCallback(
     (contentId: string) => {
+      if (sample) {
+        setContentOpens((n) => n + 1);
+        return;
+      }
       const sb = sbRef.current;
       if (!sb || !customer) return;
       setContentOpens((n) => n + 1);
@@ -523,13 +613,15 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
         })
         .then(() => undefined);
     },
-    [customer],
+    [customer, sample],
   );
 
   const value = useMemo<PortalValue>(
     () => ({
       phase,
       configured: supabaseConfigured,
+      sample,
+      enterSample,
       error,
       email,
       customer,
@@ -553,6 +645,8 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       phase,
+      sample,
+      enterSample,
       error,
       email,
       customer,
