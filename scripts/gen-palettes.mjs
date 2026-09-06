@@ -91,6 +91,15 @@ const THEMES = [
   { key: "graphite", no: "04", name: "Graphite Copper", shell: "#20242A", primary: "#424A52", accent: "#C37B4A" },
   { key: "indigo",   no: "05", name: "Indigo Lavender", shell: "#25265B", primary: "#4C51BF", accent: "#B59AE7" },
   { key: "forest",   no: "06", name: "Forest Sand",     shell: "#173D32", primary: "#2E6B55", accent: "#C9A66B" },
+  /*
+    v3.0 Canonical 9 — 위 여섯에 없던 세 계열.
+    값은 Unified v3.0 §4.1 표에서 그대로 가져왔다(Shell · Primary · Accent).
+    기존 여섯은 손대지 않는다 — 이미 대비 감사를 통과했고 기본 teal 은
+    매장 브랜드색이라 바꾸면 저장된 설정을 가진 기기가 전부 달라 보인다.
+  */
+  { key: "navygold", no: "07", name: "Navy Gold",       shell: "#111A2D", primary: "#2847A7", accent: "#D0A84B" },
+  { key: "emerald",  no: "08", name: "Emerald Gold",    shell: "#11332B", primary: "#0E7663", accent: "#B4862A" },
+  { key: "steel",    no: "09", name: "Steel Platinum",  shell: "#24303B", primary: "#44647A", accent: "#4C9AAA" },
 ];
 
 /** 표면색 — 팔레트가 바꾸지 않는 중립. 대비 검사의 기준이 된다. */

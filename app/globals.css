@@ -919,3 +919,135 @@ a:active {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ══ v3.0 Canonical 9 — 07 Navy Gold · 08 Emerald Gold · 09 Steel Platinum
+   scripts/gen-palettes.mjs 가 v3.0 §4.1 표에서 생성. 대비 감사 33항목 통과. ══ */
+/* 07 Navy Gold */
+:root[data-palette="navygold"] {
+  --c-deep-950: 17 26 45; /* #111a2d */;
+  --c-deep-900: 28 38 58; /* #1c263a */;
+  --c-deep-800: 38 48 69; /* #263045 */;
+  --c-deep-700: 53 64 85; /* #354055 */;
+  --c-deep-600: 69 80 102; /* #455066 */;
+  --c-deep-sub: 177 184 197; /* #b1b8c5 */;
+  --c-deep-faint: 137 143 156; /* #898f9c */;
+  --c-aqua-300: 151 184 255; /* #97b8ff */;
+  --c-aqua-400: 106 147 250; /* #6a93fa */;
+  --c-aqua-500: 84 121 222; /* #5479de */;
+  --c-aqua-600: 70 106 205; /* #466acd */;
+  --c-aqua-650: 62 97 195; /* #3e61c3 */;
+  --c-aqua-850: 41 73 169; /* #2949a9 */;
+  --c-gold: 208 168 75; /* #D0A84B */;
+  --c-gold-lite: 235 213 166; /* #ebd5a6 */;
+  --c-aqua-50: 235 244 255; /* #ebf4ff */;
+  --c-aqua-100: 227 237 255; /* #e3edff */;
+  --c-aqua-200: 208 222 253; /* #d0defd */;
+  --c-aqua-700: 63 94 175; /* #3f5eaf */;
+  --c-aqua-800: 55 83 158; /* #37539e */;
+  --c-gold-soft: 251 239 213; /* #fbefd5 */;
+  --c-gold-deep: 125 96 24; /* #7d6018 */;
+  --c-sel: 30 47 95; /* #1e2f5f */;
+  --c-sel-ink: 255 255 255; /* #ffffff */;
+  --chart-count: #4e73d7;
+  --chart-money: #a28135;
+}
+:root[data-palette="navygold"][data-theme="dark"] {
+  --c-aqua-50: 25 42 89; /* #192a59 */;
+  --c-aqua-100: 34 53 106; /* #22356a */;
+  --c-aqua-200: 51 73 133; /* #334985 */;
+  --c-aqua-700: 137 174 255; /* #89aeff */;
+  --c-aqua-800: 163 197 255; /* #a3c5ff */;
+  --c-gold-soft: 46 34 4; /* #2e2204 */;
+  --c-gold-deep: 220 197 146; /* #dcc592 */;
+  --c-sel: 137 174 255; /* #89aeff */;
+  --c-sel-ink: 9 17 35; /* #091123 */;
+  --chart-count: #5980e5;
+  --chart-money: #aa831d;
+}
+
+/* 08 Emerald Gold */
+:root[data-palette="emerald"] {
+  --c-deep-950: 0 33 26; /* #00211a */;
+  --c-deep-900: 10 45 37; /* #0a2d25 */;
+  --c-deep-800: 22 55 47; /* #16372f */;
+  --c-deep-700: 38 71 63; /* #26473f */;
+  --c-deep-600: 54 88 79; /* #36584f */;
+  --c-deep-sub: 170 188 183; /* #aabcb7 */;
+  --c-deep-faint: 130 148 142; /* #82948e */;
+  --c-aqua-300: 139 201 185; /* #8bc9b9 */;
+  --c-aqua-400: 82 171 150; /* #52ab96 */;
+  --c-aqua-500: 55 146 126; /* #37927e */;
+  --c-aqua-600: 36 131 111; /* #24836f */;
+  --c-aqua-650: 22 122 103; /* #167a67 */;
+  --c-aqua-850: 0 98 80; /* #006250 */;
+  --c-gold: 180 134 42; /* #B4862A */;
+  --c-gold-lite: 238 212 167; /* #eed4a7 */;
+  --c-aqua-50: 234 247 243; /* #eaf7f3 */;
+  --c-aqua-100: 225 241 236; /* #e1f1ec */;
+  --c-aqua-200: 205 228 221; /* #cde4dd */;
+  --c-aqua-700: 39 114 97; /* #277261 */;
+  --c-aqua-800: 31 101 86; /* #1f6556 */;
+  --c-gold-soft: 253 238 214; /* #fdeed6 */;
+  --c-gold-deep: 129 95 28; /* #815f1c */;
+  --c-sel: 16 59 50; /* #103b32 */;
+  --c-sel-ink: 255 255 255; /* #ffffff */;
+  --chart-count: #308c78;
+  --chart-money: #a67f37;
+}
+:root[data-palette="emerald"][data-theme="dark"] {
+  --c-aqua-50: 9 54 45; /* #09362d */;
+  --c-aqua-100: 18 66 56; /* #124238 */;
+  --c-aqua-200: 36 88 76; /* #24584c */;
+  --c-aqua-700: 121 194 175; /* #79c2af */;
+  --c-aqua-800: 151 214 197; /* #97d6c5 */;
+  --c-gold-soft: 48 33 5; /* #302105 */;
+  --c-gold-deep: 224 195 147; /* #e0c393 */;
+  --c-sel: 121 194 175; /* #79c2af */;
+  --c-sel-ink: 0 23 17; /* #001711 */;
+  --chart-count: #3e9884;
+  --chart-money: #ae8022;
+}
+
+/* 09 Steel Platinum */
+:root[data-palette="steel"] {
+  --c-deep-950: 16 28 38; /* #101c26 */;
+  --c-deep-900: 28 40 50; /* #1c2832 */;
+  --c-deep-800: 38 50 61; /* #26323d */;
+  --c-deep-700: 53 65 77; /* #35414d */;
+  --c-deep-600: 69 81 93; /* #45515d */;
+  --c-deep-sub: 177 184 191; /* #b1b8bf */;
+  --c-deep-faint: 137 144 151; /* #899097 */;
+  --c-aqua-300: 165 191 209; /* #a5bfd1 */;
+  --c-aqua-400: 123 157 181; /* #7b9db5 */;
+  --c-aqua-500: 100 133 156; /* #64859c */;
+  --c-aqua-600: 86 118 141; /* #56768d */;
+  --c-aqua-650: 77 109 132; /* #4d6d84 */;
+  --c-aqua-850: 55 87 108; /* #37576c */;
+  --c-gold: 76 154 170; /* #4C9AAA */;
+  --c-gold-lite: 183 224 233; /* #b7e0e9 */;
+  --c-aqua-50: 239 244 248; /* #eff4f8 */;
+  --c-aqua-100: 231 238 243; /* #e7eef3 */;
+  --c-aqua-200: 214 224 231; /* #d6e0e7 */;
+  --c-aqua-700: 76 103 122; /* #4c677a */;
+  --c-aqua-800: 67 92 109; /* #435c6d */;
+  --c-gold-soft: 223 245 250; /* #dff5fa */;
+  --c-gold-deep: 53 109 121; /* #356d79 */;
+  --c-sel: 37 53 64; /* #253540 */;
+  --c-sel-ink: 255 255 255; /* #ffffff */;
+  --chart-count: #5e7f96;
+  --chart-money: #52919f;
+}
+:root[data-palette="steel"][data-theme="dark"] {
+  --c-aqua-50: 33 48 59; /* #21303b */;
+  --c-aqua-100: 42 60 72; /* #2a3c48 */;
+  --c-aqua-200: 60 80 94; /* #3c505e */;
+  --c-aqua-700: 152 182 202; /* #98b6ca */;
+  --c-aqua-800: 177 203 222; /* #b1cbde */;
+  --c-gold-soft: 15 40 45; /* #0f282d */;
+  --c-gold-deep: 164 208 218; /* #a4d0da */;
+  --c-sel: 152 182 202; /* #98b6ca */;
+  --c-sel-ink: 8 19 28; /* #08131c */;
+  --chart-count: #6a8ba2;
+  --chart-money: #4896a6;
+}
+

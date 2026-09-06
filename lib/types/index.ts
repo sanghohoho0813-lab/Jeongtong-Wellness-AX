@@ -416,21 +416,33 @@ export type Palette =
   | "burgundy"
   | "graphite"
   | "indigo"
-  | "forest";
+  | "forest"
+  /* v3.0 Canonical 9 — §4.1 표의 02 · 03 · 09 계열 */
+  | "navygold"
+  | "emerald"
+  | "steel";
 
 export const PALETTES: Array<{
   key: Palette;
   no: string;
   name: string;
-  /** 미리보기 점 세 개 — Shell · Primary · Accent */
-  swatch: [string, string, string];
+  /**
+   * 미리보기 점 여섯 — Shell · Deep · Primary · Accent · Highlight · Soft.
+   * v3.0 §6 "각 Palette 는 6개 Dot 또는 명확한 Preview Swatch".
+   * 값은 app/globals.css 의 실제 토큰(hex 주석)에서 뽑은 것이라
+   * 화면에 칠해지는 색과 어긋나지 않는다.
+   */
+  swatch: [string, string, string, string, string, string];
 }> = [
-  { key: "navy", no: "01", name: "이그제큐티브 네이비", swatch: ["#183151", "#2559e3", "#D4A94F"] },
-  { key: "teal", no: "02", name: "딥틸 샴페인", swatch: ["#0C3937", "#0F8280", "#C9A86A"] },
-  { key: "burgundy", no: "03", name: "버건디 골드", swatch: ["#4a2130", "#a03c5f", "#C5A15A"] },
-  { key: "graphite", no: "04", name: "그라파이트 코퍼", swatch: ["#31343a", "#5c6670", "#C37B4A"] },
-  { key: "indigo", no: "05", name: "인디고 라벤더", swatch: ["#2f3068", "#5257c9", "#B59AE7"] },
-  { key: "forest", no: "06", name: "포레스트 샌드", swatch: ["#20463a", "#357a61", "#C9A66B"] },
+  { key: "navy",     no: "01", name: "이그제큐티브 네이비", swatch: ["#183151", "#284063", "#2559e3", "#d4a94f", "#ecd4a7", "#e8f4ff"] },
+  { key: "teal",     no: "02", name: "딥틸 샴페인",         swatch: ["#0c3937", "#0f4a47", "#0f8280", "#c9a86a", "#e6d3a3", "#eaf6f5"] },
+  { key: "burgundy", no: "03", name: "버건디 골드",         swatch: ["#492230", "#5a313f", "#9f4863", "#c5a15a", "#e9d5af", "#ffeef2"] },
+  { key: "graphite", no: "04", name: "그라파이트 코퍼",     swatch: ["#2c3137", "#3c4047", "#626a73", "#c37b4a", "#f9cdb2", "#f2f4f5"] },
+  { key: "indigo",   no: "05", name: "인디고 라벤더",       swatch: ["#27295e", "#363970", "#5359c8", "#b59ae7", "#ddcffb", "#eef2ff"] },
+  { key: "forest",   no: "06", name: "포레스트 샌드",       swatch: ["#12382d", "#22483d", "#3a7660", "#c9a66b", "#e8d5b5", "#ecf6f2"] },
+  { key: "navygold", no: "07", name: "네이비 골드",         swatch: ["#263045", "#354055", "#3e61c3", "#d0a84b", "#ebd5a6", "#ebf4ff"] },
+  { key: "emerald",  no: "08", name: "에메랄드 골드",       swatch: ["#16372f", "#26473f", "#167a67", "#b4862a", "#eed4a7", "#eaf7f3"] },
+  { key: "steel",    no: "09", name: "스틸 플래티넘",       swatch: ["#26323d", "#35414d", "#4d6d84", "#4c9aaa", "#b7e0e9", "#eff4f8"] },
 ];
 
 export interface CareRuleSettings {
@@ -481,6 +493,37 @@ export interface AppSettings {
   privacyMode?: boolean;
   /** 마지막으로 전체 백업 파일을 내려받은 시각 (ISO datetime) */
   lastBackupAt?: string;
+  /**
+   * AX Owner — KPI · 데이터 품질 · 사용 교육 · 이슈를 책임지는 한 사람.
+   * (Unified v3.0 §10) 대표자와 같을 수도 다를 수도 있어 따로 둔다.
+   */
+  axOwner?: string;
+  /**
+   * 도입 전 기준선(Baseline) — 사람이 적어 넣는 값.
+   *
+   * 성과는 "도입 후 숫자" 만으로는 증명되지 않는다. 비교할 이전이 있어야
+   * 한다. 그런데 이전은 시스템에 없다 — 수기로 운영하던 시절이기 때문이다.
+   * 그래서 대표님이 아는 만큼만 적는 칸을 둔다. 비워 두면 화면은
+   * "기준선 없음 — 개선율을 계산하지 않습니다" 라고 정직하게 말한다.
+   * 지어내지 않는다 (v3.0 §4.2 TARGET: DO NOT INVENT).
+   */
+  baseline?: {
+    /** 기준선을 잰 시점 (YYYY-MM) */
+    asOf?: string;
+    /** 월평균 재방문 인원 (명) */
+    monthlyRevisitCustomers?: number;
+    /** 이용권 소진 뒤 재등록까지 평균 (일) */
+    renewalGapDays?: number;
+    /** 월평균 이용권 판매 (건) */
+    monthlyMembershipSales?: number;
+    /** 고객 1명 관리에 드는 시간 (분/주) — 전화·확인·기록 포함 */
+    minutesPerCustomerWeek?: number;
+    /** 도입 전 고객 수 · 직원 수 — 직원 1인당 관리 고객(SCALE KPI) 기준선 */
+    customersBefore?: number;
+    staffBefore?: number;
+    /** 메모 — 어떻게 셌는지 */
+    note?: string;
+  };
 }
 
 export const DEFAULT_CARE_RULES: CareRuleSettings = {

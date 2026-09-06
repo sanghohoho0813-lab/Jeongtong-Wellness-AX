@@ -12,6 +12,7 @@ import {
   StaffRole,
   Theme,
   PALETTES,
+  AppSettings,
 } from "@/lib/types";
 import {
   Button,
@@ -93,6 +94,43 @@ function RuleField({
         />
         <span className="text-sm text-ink-sub">{unit}</span>
       </div>
+    </div>
+  );
+}
+
+
+/** 기준선 숫자 칸 — 비우면 undefined (0 이 아니다. 0 은 "없음" 이 아니라 값이다) */
+const toNum = (v: string) =>
+  v.trim() === "" ? undefined : Number(v.replace(/[^\d]/g, ""));
+
+function BaselineField({
+  label,
+  hint,
+  value,
+  unit,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value?: number;
+  unit: string;
+  onChange: (v?: number) => void;
+}) {
+  return (
+    <div>
+      <FieldLabel>{label}</FieldLabel>
+      <div className="flex items-center gap-2">
+        <input
+          className={`${inputCls} nowrap-num`}
+          inputMode="numeric"
+          aria-label={label}
+          value={value ?? ""}
+          onChange={(e) => onChange(toNum(e.target.value))}
+          placeholder="모르면 비워 두기"
+        />
+        <span className="shrink-0 text-sm font-bold text-ink-sub">{unit}</span>
+      </div>
+      <p className="mt-1 text-[0.8125rem] text-ink-faint">{hint}</p>
     </div>
   );
 }
@@ -307,7 +345,7 @@ export default function SettingsPage() {
               <ul
                 role="radiogroup"
                 aria-label="색 조합"
-                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+                className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-2"
               >
                 {PALETTES.map((p) => {
                   const on = (settings.palette ?? "teal") === p.key;
@@ -324,13 +362,13 @@ export default function SettingsPage() {
                             : "bg-card-soft ring-1 ring-stone-line hover:bg-aqua-50"
                         }`}
                       >
-                        {/* 색 점 셋 — 껍데기 · 주 색 · 강조색 */}
-                        <span className="flex shrink-0 items-center -space-x-1.5">
-                          {p.swatch.map((c) => (
+                        {/* 색 점 여섯 — 껍데기 · 딥 · 주 색 · 강조 · 하이라이트 · 바탕 (v3.0 §6) */}
+                        <span className="flex shrink-0 items-center -space-x-1">
+                          {p.swatch.map((c, i) => (
                             <span
-                              key={c}
+                              key={`${c}-${i}`}
                               style={{ backgroundColor: c }}
-                              className="h-6 w-6 rounded-full ring-2 ring-card"
+                              className="h-5 w-5 rounded-full ring-2 ring-card"
                             />
                           ))}
                         </span>
@@ -406,6 +444,20 @@ export default function SettingsPage() {
               />
             </div>
             <div>
+              {/*
+                AX Owner (Unified v3.0 §10) — KPI · 데이터 품질 · 사용 교육 ·
+                이슈를 책임지는 한 사람. 대표자와 같아도 따로 적는다.
+                "모두의 일" 은 아무의 일도 아니게 되기 때문이다.
+              */}
+              <FieldLabel>AX 담당자 (KPI · 데이터 · 교육 책임)</FieldLabel>
+              <input
+                className={inputCls}
+                value={settings.axOwner ?? ""}
+                placeholder="예: 대표 본인 또는 실장"
+                onChange={(e) => updateSettings({ axOwner: e.target.value })}
+              />
+            </div>
+            <div>
               <FieldLabel>영업시간</FieldLabel>
               <input
                 className={inputCls}
@@ -414,6 +466,65 @@ export default function SettingsPage() {
               />
             </div>
           </div>
+        </Card>
+
+        {/*
+          도입 전 기준선 (Unified v3.0 §4.2 BASELINE).
+
+          성과는 "이후 숫자" 만으로 증명되지 않는다. 비교할 이전이 필요한데
+          이전은 시스템에 없다 — 수기로 운영하던 때라서. 그래서 대표님이
+          아는 만큼만 적는다. 비워 두면 성과 화면은 "기준선 없음 — 개선율을
+          계산하지 않습니다" 라고 말한다. 채우라고 재촉하되 지어내지 않는다.
+        */}
+        <Card id="set-baseline" dataTour="settings-baseline" className="scroll-mt-36 lg:scroll-mt-6">
+          <SectionTitle tone="gold">도입 전 기준선 — 아는 만큼만</SectionTitle>
+          <p className="mb-4 text-[0.9375rem] leading-relaxed text-ink-sub">
+            AX 를 쓰기 전에는 어땠는지 적어 두는 자리입니다. 성과 화면이 이
+            값과 지금을 나란히 놓고 비교합니다. 정확히 모르시면 비워 두셔도
+            됩니다 — 그러면 개선율을 계산하지 않고, 그렇다고 적습니다.
+          </p>
+          {(() => {
+            const b = settings.baseline ?? {};
+            const setB = (patch: Partial<NonNullable<AppSettings["baseline"]>>) =>
+              updateSettings({ baseline: { ...b, ...patch } });
+            return (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <FieldLabel>기준 시점</FieldLabel>
+                  <input
+                    className={inputCls}
+                    type="month"
+                    aria-label="기준 시점"
+                    value={b.asOf ?? ""}
+                    onChange={(e) => setB({ asOf: e.target.value || undefined })}
+                  />
+                  <p className="mt-1 text-[0.8125rem] text-ink-faint">이 값들이 어느 달 기준인지</p>
+                </div>
+                <BaselineField label="월평균 재방문 인원" hint="한 달에 다시 오신 분 (REVENUE)" unit="명"
+                  value={b.monthlyRevisitCustomers} onChange={(v) => setB({ monthlyRevisitCustomers: v })} />
+                <BaselineField label="이용권 소진 뒤 재등록까지" hint="다 쓰신 뒤 다시 등록까지 걸린 평균 (REVENUE)" unit="일"
+                  value={b.renewalGapDays} onChange={(v) => setB({ renewalGapDays: v })} />
+                <BaselineField label="월평균 이용권 판매" hint="한 달 이용권 판매 건수" unit="건"
+                  value={b.monthlyMembershipSales} onChange={(v) => setB({ monthlyMembershipSales: v })} />
+                <BaselineField label="고객 1명 관리 시간" hint="전화 · 확인 · 수기 정리 포함, 한 주에 (COST)" unit="분/명"
+                  value={b.minutesPerCustomerWeek} onChange={(v) => setB({ minutesPerCustomerWeek: v })} />
+                <BaselineField label="도입 전 고객 수" hint="직원 1인당 관리 고객 계산용 (SCALE)" unit="명"
+                  value={b.customersBefore} onChange={(v) => setB({ customersBefore: v })} />
+                <BaselineField label="도입 전 직원 수" hint="직원 1인당 관리 고객 계산용 (SCALE)" unit="명"
+                  value={b.staffBefore} onChange={(v) => setB({ staffBefore: v })} />
+                <div className="sm:col-span-2">
+                  <FieldLabel>어떻게 셌는지 (선택)</FieldLabel>
+                  <input
+                    className={inputCls}
+                    aria-label="어떻게 셌는지"
+                    value={b.note ?? ""}
+                    placeholder="예: 2025년 장부 기준, 대략 기억"
+                    onChange={(e) => setB({ note: e.target.value || undefined })}
+                  />
+                </div>
+              </div>
+            );
+          })()}
         </Card>
 
         {/* 직원 */}

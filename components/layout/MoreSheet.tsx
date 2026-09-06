@@ -26,6 +26,7 @@ import { MORE_ITEMS, NAV_TONE_CLASS, navItemsFor } from "./nav-items";
 import { DevicePreviewButton } from "./DevicePreview";
 import { ProfileButton } from "./UserSwitch";
 import { SurfaceSwitch } from "./SurfaceSwitch";
+import StageChip from "./StageChip";
 import { FieldLabel, SegmentedControl } from "@/components/ui";
 import {
   BookIcon,
@@ -107,6 +108,10 @@ export default function MoreSheet({
             <p className="mt-0.5 truncate text-xs text-ink-sub">
               {settings.companyName} {settings.branchName}
             </p>
+            {/* 폰에서 단계(DEMO · PILOT · PRODUCTION)를 보는 자리 (v3.0 §15) */}
+            <div className="mt-1.5">
+              <StageChip />
+            </div>
           </div>
           <button
             type="button"

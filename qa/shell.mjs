@@ -110,8 +110,8 @@ await p.mouse.click(20, 400);
 await p.waitForTimeout(400);
 log("바깥을 눌러도 닫힌다", (await dlg.count()) === 0);
 
-// ═══ 2. 색 조합 6종 ═══════════════════════════════════════════
-const KEYS = ["navy", "teal", "burgundy", "graphite", "indigo", "forest"];
+// ═══ 2. 색 조합 9종 ═══════════════════════════════════════════
+const KEYS = ["navy", "teal", "burgundy", "graphite", "indigo", "forest", "navygold", "emerald", "steel"];
 const setPalette = async (key, theme) => {
   await p.evaluate(
     ({ key, theme }) => {
@@ -160,7 +160,7 @@ for (const k of KEYS) {
 }
 for (const key of ["shell", "primary", "accent", "text", "chart"]) {
   const vals = new Set(KEYS.map((k) => seen[k][key]));
-  log(`여섯 조합의 ${key} 이 서로 다르다`, vals.size === 6, `${vals.size}종`);
+  log(`아홉 조합의 ${key} 이 서로 다르다`, vals.size === 9, `${vals.size}종`);
 }
 for (const key of ["ink", "card", "bg"]) {
   const vals = new Set(KEYS.map((k) => seen[k][key]));
@@ -192,7 +192,7 @@ log(
 await setPalette("teal", "light");
 await go(p, "/settings", 1600);
 const radios = p.locator('[role="radiogroup"][aria-label="색 조합"] [role="radio"]');
-log("설정에 색 조합 6칸이 있다", (await radios.count()) === 6, `${await radios.count()}칸`);
+log("설정에 색 조합 9칸이 있다", (await radios.count()) === 9, `${await radios.count()}칸`);
 await radios.nth(4).click();
 await p.waitForTimeout(800);
 const picked = await p.evaluate(() => ({
@@ -338,7 +338,7 @@ log(
 );
 log(
   "더보기 — 색 조합을 폰에서도 고를 수 있다",
-  (await sheet.locator('[role="radiogroup"][aria-label="색 조합"] [role="radio"]').count()) === 6,
+  (await sheet.locator('[role="radiogroup"][aria-label="색 조합"] [role="radio"]').count()) === 9,
 );
 log(
   "더보기 — 가로 넘침 0",

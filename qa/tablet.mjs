@@ -99,8 +99,10 @@ const FIND_OVERFLOW = `() => {
 */
 for (const [w, h] of [
   [360, 800],
+  [430, 932], // v3.0 Q-3 — 큰 폰(iPhone Pro Max 급)
   [768, 1024],
   [1024, 768],
+  [1280, 800], // v3.0 Q-3 — 작은 노트북
 ]) {
   const p = await (await browser.newContext({ viewport: { width: w, height: h } })).newPage();
   for (const [path, name] of PAGES) {

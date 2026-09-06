@@ -1,0 +1,66 @@
+# PROJECT_STATE — 지금 어디까지 왔나
+
+> Unified v3.0 §U-6 「프로젝트 메모리」. 새 세션이 처음 읽는 한 장.
+> 갱신: 2026-09-06 · 브랜치 `claude/youthful-goldberg-s6v1q5`
+
+## 한 줄
+
+정통대왕쑥뜸원 **WELLNESS BUSINESS AX**(직원용) + **MY WELLNESS**(고객용). Next.js 14 · TypeScript · Tailwind · Supabase(선택) · Vercel. 실명부 12명 · 방문 기록 0건 · **DELIVERY STAGE: DEMO → PILOT 진입 직전**.
+
+## 단계 (DELIVERY STAGE)
+
+| 단계 | 조건 | 지금 |
+|---|---|---|
+| DEMO | `NEXT_PUBLIC_DEMO_MODE=1` 빌드 — 견본 자료, 직원 게이트 해제, 개선율 절대 미표시 | 심사 시연용 빌드가 이것 |
+| PILOT | 실제 빌드, 기기 저장 — 실제 자료, 서버 미연결 | 매장에서 오늘 시작 가능 |
+| PRODUCTION | Supabase 연결 + 직원 연결 완료 — 서버 이중 저장 | 2호점 · 두 기기 사용 시 |
+
+단계 칩(`StageChip`)이 PC 사이드바 · 태블릿 머리글 · 폰 더보기 시트에서 지금 단계를 보여 준다. 성과 화면 KPI 계약 카드에도 같은 배지가 붙는다.
+
+## 무엇이 되어 있나 (Capability Status)
+
+| 영역 | 상태 | 비고 |
+|---|---|---|
+| 고객 명부 · 방문 기록 · 이용권 회차 · 상담 메모 원문 | **LIVE** | 기기 저장 + 서버 선택 이중 저장 · CSV/JSON 백업 · 삭제 되돌리기 |
+| 우선순위 규칙 엔진 (L1/L2) · 실행 브리핑 · 오늘 챙길 고객 | **LIVE** | `lib/scoring/priority.ts` LOCKED. 이유가 글로 보인다 |
+| 성과 화면 — 재방문율 · 프로그램별 · 매출기회 → 실재등록 | **LIVE** (방문 5건부터 계산) | 0건이면 「축적 중」 으로 비운다 |
+| **Money KPI 계약 3 (COST · REVENUE · SCALE)** | **LIVE** | 측정 지점 · 현재값 · 기준선 · 개선율 규칙이 화면에 있다 |
+| **도입 전 기준선 입력 · AX 담당자** | **LIVE** | 설정 → 「도입 전 기준선」. 출처 「수기」 로 증적에 남는다 |
+| **증적 내보내기 (BASELINE · ACTION · RESULT · ADOPTION)** | **LIVE** | 성과 화면 → CSV |
+| MY WELLNESS 고객 화면 — 홈 · 방문 요청 · 이용권 · 케어 기록 · 마이페이지 | **LIVE** (서버 연결 시) / **DEMO** (예시 모드) | 본인 자료만 · RLS · 연락처 컬럼 차단 |
+| 고객 피드백 · 방문 요청 → 직원 수신함 | **LIVE** | |
+| 고객용 화면(플랫폼) — 소개 · 프로그램 · 향후 확장 | **LIVE** | 향후 확장 5종은 「향후 확장」 배지 · 숫자 없음 · 404 없음 |
+| 사용 방법 — 첫 실행 안내 · 투어 3코스 · 시연 10걸음 | **LIVE** | `qa/tour.mjs` 가 실제로 걸어 본다 |
+| 테마 9종 · 큰 글씨 · 어두운 화면 · 화면 공유 모드 | **LIVE** | 대비 33/33 검증 |
+| 지점(본점 → 직영 → 가맹 → 본사 통합) 화면 | **READY** | 구조만. 2호점 자료 없음 |
+| 이탈 예측(ML) · 알림톡 · 자동 예약 확정 · 결제 연동 | **NEXT** | RECOMMENDATIONS 참조. 시작 조건 전에는 하지 않는다 |
+
+## 숫자 (실측만)
+
+- 실명부 고객 12명 · 직원 3명 (견본 빌드 기준 표시값) · 방문 기록 **0건**
+- Money KPI 3 — BASELINE STATUS **전부 UNKNOWN** (설정에서 수기 입력 대기)
+- 단위 테스트 175 · QA 회귀 16묶음 · 테마 대비 33/33
+- 지어낸 숫자 없음: 예상 매출 · AI 확률 · 개선율 · 이용권 유효기간 — 화면 어디에도 없음
+
+## 잠금 (LOCKED)
+
+- `lib/scoring/priority.ts` — 수정 금지. 커밋 전 `git diff --quiet lib/scoring/priority.ts` 로 확인
+- `/intro` 기획의도 — 수정 · 삭제 · 대체 금지 (위치 조정만 가능)
+- 의료 표현 · 허위 숫자 · 실제 개인정보 하드코딩(전화번호) — 금지
+
+## 다음 세션이 이어서 할 일 (조건이 오면)
+
+1. 실운영 시작 → 설정에서 「도입 전 기준선」 을 대표와 함께 적는다 (기억하는 만큼만).
+2. 방문 기록 1개월분 → 월 재방문 인원(기준선과 같은 단위) 추가 (R-08).
+3. 방문 기록 4주 → COST KPI 자동 계산 켜기 (R-07).
+4. 2호점 확정 → PRODUCTION 승격 · 설정 서버 동기화 (R-03 · R-09).
+
+## 문서 지도
+
+| 문서 | 내용 |
+|---|---|
+| `PROJECT_SPEC.md` | 전략 잠금 — AX VERDICT · PRIMARY CONSTRAINT · KPI 계약 · SSOT · AI 방법 · 증명 계획 |
+| `DECISIONS.md` | 결정 14건 — WHY · WHY NOT · REVISIT WHEN |
+| `RECOMMENDATIONS.md` | 지금 하지 않은 것 11건 + 시작 조건 |
+| `QA_REPORT.md` | 이중 점수(전략 · 제품) · Red Team · 회귀 결과 |
+| `V1_4_FINAL_GAP_AUDIT.md` · `V1_2_GAP_AUDIT.md` | 이전 판 대조표 (참고) |

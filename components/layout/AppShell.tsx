@@ -26,6 +26,7 @@ import { SurfaceSwitch } from "./SurfaceSwitch";
 import CommandPalette from "./CommandPalette";
 import { DevicePreviewButton } from "./DevicePreview";
 import LiveClock from "./LiveClock";
+import StageChip from "./StageChip";
 import MoreSheet from "./MoreSheet";
 import ErrorBoundary from "./ErrorBoundary";
 import QuickVisitModal from "@/components/visits/QuickVisitModal";
@@ -87,6 +88,10 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
       {/* 오늘 날짜와 지금 시각 — 기록할 때 폰을 꺼내 확인하지 않게 */}
       <div className="mx-3 mb-2">
         <LiveClock />
+      </div>
+      {/* 지금 보는 게 시연 자료인지 · 실제 자료인지 (v3.0 §15) */}
+      <div className="mx-3 mb-2">
+        <StageChip />
       </div>
 
       {/* 빠른 실행 — 고객 찾기가 하루 중 가장 잦은 동작이라 맨 위에 둔다.
@@ -273,8 +278,10 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
       </div>
       </div>
       {/* 날짜 · 지금 시각 — 손에 든 채로 바로 보이게 */}
-      <div className="mt-1.5">
+      <div className="relative mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
         <LiveClock variant="header" />
+        {/* 좁은 폰에서는 줄이 넘쳐 머리글이 두꺼워지므로 태블릿 폭부터만 */}
+        <StageChip compact className="hidden sm:inline-flex" />
       </div>
     </header>
   );

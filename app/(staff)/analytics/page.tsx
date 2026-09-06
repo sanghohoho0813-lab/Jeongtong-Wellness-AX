@@ -35,6 +35,10 @@ import {
 import { buildOperationInsight } from "@/lib/scoring/insight";
 import { programHeadline, summarizePrograms } from "@/lib/scoring/program";
 import ColumnChart from "@/components/charts/ColumnChart";
+import KpiContract from "@/components/analytics/KpiContract";
+import { useDeliveryStage } from "@/lib/stage";
+import { evidenceCsv } from "@/lib/utils/evidence";
+import { downloadFile } from "@/lib/utils/export";
 
 const METRIC_DOTS: Record<string, string> = {
   sky: "bg-sky-500",
@@ -101,6 +105,19 @@ export default function AnalyticsPage() {
     staff,
     isManager,
   } = useStore();
+  const stage = useDeliveryStage();
+  const exportEvidence = () =>
+    downloadFile(
+      `AX_증적_${new Date().toISOString().slice(0, 10).replace(/-/g, "")}.csv`,
+      evidenceCsv({
+        tasks: taskOverrides,
+        customers,
+        staff,
+        visits,
+        settings,
+        provenance: stage.label,
+      }),
+    );
   const summary = calcAxSummary(
     [...factsById.values()],
     taskLedger,
@@ -280,6 +297,24 @@ export default function AnalyticsPage() {
           </p>
         </InsightBanner>
         )}
+
+        {/*
+          무엇을 재기로 했는지를 숫자보다 먼저 보인다 (v3.0 §4).
+          비어 있을 때도 차 있을 때도 같은 자리에 있어야 "약속" 이 된다.
+        */}
+        <KpiContract
+          settings={settings}
+          stage={stage}
+          onExport={exportEvidence}
+          current={{
+            ready: visitCount >= 5,
+            revisitRate: summary.revisitRate,
+            customers: customers.length,
+            staff: staff.length,
+            customersPerStaff:
+              staff.length > 0 ? Math.round(customers.length / staff.length) : undefined,
+          }}
+        />
 
         {/*
           기록이 거의 없을 때는 지표·차트를 그리지 않는다.
