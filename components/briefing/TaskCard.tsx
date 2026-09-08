@@ -29,6 +29,7 @@ import {
 } from "@/components/ui";
 import MembershipForm from "@/components/customers/MembershipForm";
 import { useToast } from "@/components/ui/toast";
+import { PhoneLink } from "@/components/ui/PhoneLink";
 import { CheckIcon, ChevronRightIcon, PauseIcon } from "@/components/ui/icons";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 
@@ -396,11 +397,21 @@ export default function TaskCard({
               </div>
             </div>
           )}
-          {!compact && (
-            <p className={`mt-1 text-xs ${hero ? "text-deep-faint" : "text-ink-sub"}`}>
-              {displayPhone(customer.phone, canSeePhone)}
-            </p>
-          )}
+          {/*
+            번호가 있고 가리지 않았으면 누르는 자리(전화 걸기)로, 아니면
+            지금처럼 글로만. 권장 행동이 "연락" 인 카드에서 번호를 외워
+            전화 앱으로 옮겨 적게 하지 않는다.
+          */}
+          {!compact &&
+            (canSeePhone && customer.phone ? (
+              <div className="mt-2">
+                <PhoneLink phone={customer.phone} canSee={canSeePhone} onDark={hero} />
+              </div>
+            ) : (
+              <p className={`mt-1 text-xs ${hero ? "text-deep-faint" : "text-ink-sub"}`}>
+                {displayPhone(customer.phone, canSeePhone)}
+              </p>
+            ))}
           {/*
             종이로 뽑아 손에 들고 도는 경우 — 통화하고 나서 그 자리에 적을
             칸이 없으면 뒷면에 따로 적게 된다. 화면에는 안 보이고 종이에만 나온다.

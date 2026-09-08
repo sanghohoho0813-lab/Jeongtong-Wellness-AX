@@ -27,6 +27,7 @@ import CommandPalette from "./CommandPalette";
 import { DevicePreviewButton } from "./DevicePreview";
 import LiveClock from "./LiveClock";
 import StageChip from "./StageChip";
+import BackToTop from "./BackToTop";
 import MoreSheet from "./MoreSheet";
 import ErrorBoundary from "./ErrorBoundary";
 import QuickVisitModal from "@/components/visits/QuickVisitModal";
@@ -700,6 +701,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           )}
         </div>
       </main>
+      <BackToTop />
       <BottomNav
         onRecord={() => setSheetOpen(true)}
         onMore={() => setMoreOpen(true)}

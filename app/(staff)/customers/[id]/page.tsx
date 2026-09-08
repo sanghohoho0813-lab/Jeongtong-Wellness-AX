@@ -13,6 +13,7 @@ import {
   formatRelative,
 } from "@/lib/utils/date";
 import { displayName, displayPhone, formatKrw } from "@/lib/utils/format";
+import { PhoneLink } from "@/components/ui/PhoneLink";
 import {
   Badge,
   Button,
@@ -161,6 +162,10 @@ export default function CustomerDetailPage() {
               {formatDateKr(c.registeredAt)} · 담당{" "}
               {staffName(c.assignedStaffId)}
             </p>
+            {/* 번호가 있으면 바로 건다 — 화면 공유 모드면 자동으로 사라진다 */}
+            <div className="mt-2 empty:hidden">
+              <PhoneLink phone={c.phone} canSee={canSeePhone} />
+            </div>
           </div>
           {/*
             여기서 할 일은 대부분 '방문 기록'이다.

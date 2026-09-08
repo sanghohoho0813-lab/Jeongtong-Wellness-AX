@@ -245,7 +245,12 @@ export default function CustomersPage() {
           <span className="shrink-0 text-xs font-extrabold uppercase tracking-wider text-ink-faint">
             정렬
           </span>
-          <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
+          {/*
+            옆으로 더 있다는 것을 오른쪽 끝 흐림으로 알린다. 칩이 화면
+            끝에서 뚝 잘려 있으면 60대 눈에는 "여기까지" 로 읽힌다.
+          */}
+          <div className="relative min-w-0 flex-1">
+          <div className="no-scrollbar flex gap-2 overflow-x-auto pr-6">
             {SORTS.map((sopt) => (
               <FilterChip
                 key={sopt.key}
@@ -268,6 +273,11 @@ export default function CustomersPage() {
                 매출기회 {opportunityCount}
               </button>
             )}
+          </div>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card to-transparent"
+          />
           </div>
         </div>
         <p className="nowrap-num mt-2 text-[0.8125rem] font-bold text-ink-sub">
@@ -374,7 +384,10 @@ export default function CustomersPage() {
                   </span>
                 </div>
                 <p className="tabular mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub">
-                  방문 {d.visitCount}회 · 최근 {formatRelative(d.lastVisitDate)}
+                  방문 {d.visitCount}회 ·{" "}
+                  {d.lastVisitDate
+                    ? `최근 ${formatRelative(d.lastVisitDate)}`
+                    : "아직 방문 없음"}
                   <span className="hidden sm:inline">
                     {" · "}
                     {displayPhone(d.customer.phone, canSeePhone)}

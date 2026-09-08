@@ -855,7 +855,7 @@ export function FilterChip({
   return (
     <button
       onClick={onClick}
-      className={`touch-target rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+      className={`touch-target shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
         active
           ? activeCls
           : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"

@@ -18,6 +18,7 @@
  */
 
 import Link from "next/link";
+import { useState } from "react";
 import { Badge, Button, Card, SectionTitle } from "@/components/ui";
 import { DownloadIcon } from "@/components/ui/icons";
 import type { AppSettings } from "@/lib/types";
@@ -148,6 +149,15 @@ export default function KpiContract({
   ];
 
   const anyBaseline = rows.some((r) => r.baselineKnown);
+  /** 폰에서 펼친 줄 — PC 는 CSS 로 늘 펼쳐져 있어 이 상태를 보지 않는다 */
+  const [openRows, setOpenRows] = useState<Set<Row["kind"]>>(() => new Set());
+  const toggle = (k: Row["kind"]) =>
+    setOpenRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
 
   return (
     <Card dataTour="kpi-contract">
@@ -185,50 +195,92 @@ export default function KpiContract({
       </p>
 
       <ul className="space-y-2.5">
-        {rows.map((r) => (
-          <li
-            key={r.kind}
-            className="rounded-card bg-card-soft px-4 py-3.5 ring-1 ring-stone-line"
-          >
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="nowrap-num rounded-full bg-stone-bg-deep px-2 py-0.5 text-[0.6875rem] font-extrabold tracking-wider text-ink-sub">
-                {r.kind}
-              </span>
-              <span className="text-[0.75rem] font-bold text-ink-faint">{r.kindLabel}</span>
-              <span className="text-[1rem] font-extrabold text-ink">{r.name}</span>
-            </div>
-            <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 text-[0.875rem] sm:grid-cols-[6.5rem_1fr]">
-              <dt className="font-bold text-ink-faint">측정 지점</dt>
-              <dd className="leading-relaxed text-ink-sub">{r.where}</dd>
-              <dt className="font-bold text-ink-faint">현재값</dt>
-              <dd
-                className={`tabular-nums font-bold leading-relaxed ${
-                  r.currentTone === "ok" ? "text-ink" : "text-ink-sub"
-                }`}
-              >
-                {r.current}
-              </dd>
-              <dt className="font-bold text-ink-faint">기준선</dt>
-              <dd className="tabular-nums leading-relaxed">
-                {r.baselineKnown ? (
-                  <span className="font-bold text-ink">{r.baseline}</span>
-                ) : (
-                  <span className="text-warn-text">
-                    BASELINE STATUS: UNKNOWN —{" "}
-                    <Link
-                      href="/settings#set-baseline"
-                      className="tap-line font-bold underline underline-offset-2"
-                    >
-                      설정에서 도입 전 값 입력
-                    </Link>
+        {rows.map((r) => {
+          const open = openRows.has(r.kind);
+          /*
+            폰에서는 현재값 · 기준선만 먼저 보이고, 어디서 어떻게 재는지와
+            개선율은 눌러야 펼쳐진다. 세 줄을 다 펼치면 이 카드 하나가
+            폰 두 화면이라, 정작 봐야 할 "숫자가 있나 없나" 가 글에 묻혔다.
+            PC 는 자리가 있으므로 늘 펼친다 (sm:grid).
+          */
+          const foldCls = open ? "grid" : "hidden sm:grid";
+          // 폰에서도 라벨(현재값 · 기준선)을 값과 같은 줄에 — 줄 수를 반으로
+          const dlCls =
+            "grid grid-cols-[4.25rem_1fr] gap-x-3 gap-y-1.5 text-[0.875rem] sm:grid-cols-[6.5rem_1fr] sm:gap-x-4";
+          return (
+            <li
+              key={r.kind}
+              className="rounded-card bg-card-soft px-4 py-3.5 ring-1 ring-stone-line"
+            >
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="nowrap-num rounded-full bg-stone-bg-deep px-2 py-0.5 text-[0.6875rem] font-extrabold tracking-wider text-ink-sub">
+                  {r.kind}
+                </span>
+                <span className="text-[0.75rem] font-bold text-ink-faint">{r.kindLabel}</span>
+                <span className="text-[1rem] font-extrabold text-ink">{r.name}</span>
+              </div>
+
+              <div className="mt-2 flex flex-col gap-y-1.5">
+                {/* 측정 지점 — PC 에서는 맨 먼저, 폰에서는 펼쳤을 때 */}
+                <dl className={`${dlCls} ${foldCls} sm:order-first`}>
+                  <dt className="font-bold text-ink-faint">측정 지점</dt>
+                  <dd className="leading-relaxed text-ink-sub">{r.where}</dd>
+                </dl>
+
+                {/* 현재값 · 기준선 — 늘 보인다 */}
+                <dl className={dlCls}>
+                  <dt className="font-bold text-ink-faint">현재값</dt>
+                  <dd
+                    className={`tabular-nums font-bold leading-relaxed ${
+                      r.currentTone === "ok" ? "text-ink" : "text-ink-sub"
+                    }`}
+                  >
+                    {r.current}
+                  </dd>
+                  <dt className="font-bold text-ink-faint">기준선</dt>
+                  <dd className="tabular-nums leading-relaxed">
+                    {r.baselineKnown ? (
+                      <span className="font-bold text-ink">{r.baseline}</span>
+                    ) : (
+                      <span className="text-warn-text">
+                        <span className="font-bold">도입 전 값 없음</span>{" "}
+                        <span className="text-[0.8125rem]">(BASELINE STATUS: UNKNOWN)</span>
+                        {" — "}
+                        <Link
+                          href="/settings#set-baseline"
+                          className="tap-line font-bold underline underline-offset-2"
+                        >
+                          설정에서 도입 전 값 입력
+                        </Link>
+                      </span>
+                    )}
+                  </dd>
+                </dl>
+
+                {/* 개선율 — 폰에서는 펼쳤을 때 */}
+                <dl className={`${dlCls} ${foldCls}`}>
+                  <dt className="font-bold text-ink-faint">개선율</dt>
+                  <dd className="tabular-nums leading-relaxed text-ink-sub">{r.delta}</dd>
+                </dl>
+
+                <button
+                  type="button"
+                  onClick={() => toggle(r.kind)}
+                  aria-expanded={open}
+                  className="touch-target inline-flex w-full items-center justify-between gap-2 rounded-btn bg-card px-3 py-2 text-sm font-bold text-ink-sub ring-1 ring-stone-line sm:hidden"
+                >
+                  <span>{open ? "접기" : "어떻게 재나요 · 개선율"}</span>
+                  <span
+                    aria-hidden
+                    className={`text-ink-faint transition-transform ${open ? "rotate-90" : ""}`}
+                  >
+                    ›
                   </span>
-                )}
-              </dd>
-              <dt className="font-bold text-ink-faint">개선율</dt>
-              <dd className="tabular-nums leading-relaxed text-ink-sub">{r.delta}</dd>
-            </dl>
-          </li>
-        ))}
+                </button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       {!anyBaseline && (
