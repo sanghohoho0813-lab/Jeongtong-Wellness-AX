@@ -149,6 +149,41 @@ create table if not exists briefing_task_logs (
 create index if not exists idx_task_logs_date on briefing_task_logs(task_date);
 
 -- ---------------------------------------------------------
+-- AX Coach — 오늘 할 일 이력
+--
+-- 여기에는 **새로운 사실만** 담는다: 언제 무엇을 하자고 했고, 나중에
+-- 어떤 실제 기록이 그것을 충족했는가. 방문·과제·요청의 내용은 복사하지
+-- 않는다 (verification_ref 로 가리키기만 한다) — 두 벌이 되는 순간
+-- 어느 쪽이 진짜인지 알 수 없게 되고, 증적의 뜻이 사라진다.
+--
+-- 지금 런타임은 briefing_task_logs 와 마찬가지로 이 기기(localStorage)에
+-- 저장한다. 이 정의는 서버로 옮길 때를 위한 것이다.
+-- ---------------------------------------------------------
+
+create table if not exists ax_coach_missions (
+  id text primary key,
+  branch_id uuid not null references branches(id) on delete cascade,
+  mission_type text not null check (mission_type in
+    ('visit_record','briefing_action','task_outcome',
+     'consult_followup','membership_care','request_handle','portal_invite')),
+  evidence_area text not null check (evidence_area in
+    ('record','action','result','adoption')),
+  target_customer_id uuid references customers(id) on delete set null,
+  issued_at timestamptz not null default now(),
+  expires_at timestamptz,
+  -- 발행 시점의 충족 사건 개수 (방문처럼 저장 시각이 없는 것을 셀 때)
+  baseline int not null default 0,
+  verified_at timestamptz,
+  verification_type text check (verification_type in
+    ('visit_created','task_status_changed','task_outcome_saved',
+     'request_handled','request_created')),
+  -- 무엇이 충족했는지 가리키는 원본 기록의 id 하나 (내용 복사 금지)
+  verification_ref text
+);
+create index if not exists idx_coach_missions_issued
+  on ax_coach_missions(branch_id, issued_at);
+
+-- ---------------------------------------------------------
 -- 설정
 --
 -- 지금은 브라우저(localStorage)에 한 덩어리로 들어 있지만, 여러 기기에서
@@ -244,6 +279,7 @@ alter table briefing_task_logs   enable row level security;
 alter table visit_applied_preferences enable row level security;
 alter table branch_settings           enable row level security;
 alter table staff_display_settings    enable row level security;
+alter table ax_coach_missions         enable row level security;
 
 -- 서비스 · 이용권 상품 : 같은 지점이면 누구나 조회(직원도 가격을 알아야 한다),
 -- 가격 변경은 ADMIN 만
@@ -293,6 +329,12 @@ create policy tasks_write on briefing_task_logs for all
     and (is_admin() or handled_by_staff_id in
          (select id from staff where auth_user_id = auth.uid()))
   )
+  with check (branch_id = current_branch_id());
+
+-- AX Coach 오늘 할 일 : 매장 단위 기록이라 같은 지점이면 R/W
+--   (누가 발행했는지가 아니라 "매장이 무엇을 했는가" 를 남기는 표다)
+create policy coach_missions_all on ax_coach_missions for all
+  using (branch_id = current_branch_id())
   with check (branch_id = current_branch_id());
 
 -- 방문에서 반영한 선호 항목 : 방문 기록과 같은 범위로 본다

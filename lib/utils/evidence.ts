@@ -42,6 +42,44 @@ const day = (iso?: string) => (iso ?? "").slice(0, 10);
 const daysBetween = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000);
 
+/**
+ * RESULT 를 잇는 규칙 — 처리(ACTION) 뒤 30일 안의 실제 방문.
+ *
+ * 이 한 줄이 이 제품에서 가장 조심스러운 판정이다. "관리했더니 왔다" 는
+ * 인과가 아니라 **시간 순서**일 뿐이므로, 창(30일)과 방향(처리 뒤)을
+ * 코드 한 곳에만 두고 화면에서도 "확인됨" 이라고만 적는다.
+ *
+ * AX Coach 의 재방문 결과 계산도 이 함수를 그대로 쓴다 — 같은 사실을
+ * 두 군데서 다르게 세면 증적과 화면의 숫자가 어긋난다.
+ */
+export const RESULT_WINDOW_DAYS = 30;
+
+export function findResultVisit(
+  task: Pick<BriefingTask, "customerId" | "statusChangedAt" | "status">,
+  visits: Visit[],
+  windowDays: number = RESULT_WINDOW_DAYS,
+): Visit | undefined {
+  if (task.status !== "done" || !task.statusChangedAt) return undefined;
+  const from = day(task.statusChangedAt);
+  return visits
+    .filter(
+      (v) =>
+        v.customerId === task.customerId &&
+        v.type === "visit" &&
+        day(v.visitedAt) > from &&
+        daysBetween(from, day(v.visitedAt)) <= windowDays,
+    )
+    .sort((x, y) => x.visitedAt.localeCompare(y.visitedAt))[0];
+}
+
+/** 처리 뒤 며칠 만에 다시 왔는지 — 화면·증적 문구에 함께 적는다 */
+export function daysToResult(
+  task: Pick<BriefingTask, "statusChangedAt">,
+  visit: Visit,
+): number {
+  return daysBetween(day(task.statusChangedAt), day(visit.visitedAt));
+}
+
 /** ISO 주 키 — 같은 주의 활동을 묶는다 */
 function weekKey(isoDate: string): string {
   const d = new Date(isoDate + "T00:00:00");
@@ -96,28 +134,18 @@ export function evidenceCsv(input: {
     ]);
 
     // RESULT — 처리 뒤 30일 안의 실제 방문. 인과를 단정하지 않고 "확인됨" 만 적는다.
-    if (t.status === "done") {
-      const after = visits
-        .filter(
-          (v) =>
-            v.customerId === t.customerId &&
-            v.type === "visit" &&
-            day(v.visitedAt) > day(t.statusChangedAt) &&
-            daysBetween(day(t.statusChangedAt), day(v.visitedAt)) <= 30,
-        )
-        .sort((x, y) => x.visitedAt.localeCompare(y.visitedAt))[0];
-      if (after) {
-        rows.push([
-          "RESULT",
-          after.visitedAt.slice(0, 16).replace("T", " "),
-          name(t.customerId),
-          who(after.staffId),
-          CATEGORY[t.category] ?? t.category,
-          `처리 ${daysBetween(day(t.statusChangedAt), day(after.visitedAt))}일 뒤 재방문 확인 (${after.programName ?? "프로그램 미기재"})`,
-          "재방문",
-          provenance,
-        ]);
-      }
+    const after = findResultVisit(t, visits);
+    if (after) {
+      rows.push([
+        "RESULT",
+        after.visitedAt.slice(0, 16).replace("T", " "),
+        name(t.customerId),
+        who(after.staffId),
+        CATEGORY[t.category] ?? t.category,
+        `처리 ${daysToResult(t, after)}일 뒤 재방문 확인 (${after.programName ?? "프로그램 미기재"})`,
+        "재방문",
+        provenance,
+      ]);
     }
   }
 

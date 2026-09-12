@@ -238,6 +238,21 @@ export function buildTourSteps(
 
   const adminTail: TourStep[] = [
     ...(analyticsReady ? analyticsSteps : [ANALYTICS_EMPTY_STEP]),
+    /*
+      AX 코치 — 성과 화면 바로 뒤.
+
+      성과 화면이 "무엇이 쌓였나" 라면 코치는 "그래서 오늘 뭘 하면
+      되나" 다. 이 걸음이 없으면 새 화면이 메뉴에만 있고 아무도 열어
+      보지 않는다 (사용 방법에 없는 기능은 없는 기능과 같다).
+    */
+    {
+      route: "/coach",
+      target: "coach-summary",
+      kicker: "AX 코치",
+      title: "실제로 쓰고 있는지, 코치가 봅니다",
+      body: "방문 기록 · 고객관리 실행 · 재방문 결과 · 고객 직접사용 넷으로 나눠, 지금 어디가 비었는지 보여 드립니다. 잴 수 없는 것은 0%가 아니라 「아직 측정 전」이라고 적습니다.",
+      tip: "그 아래 「오늘 이것만 해보세요」는 누르는 것이 아니라 실제 기록이 남아야 완료됩니다",
+    },
     {
       route: "/settings",
       target: "settings-data",

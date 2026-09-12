@@ -5,6 +5,7 @@ import {
   BuildingIcon,
   ChartIcon,
   ClipboardIcon,
+  CompassIcon,
   HomeIcon,
   LeafIcon,
   MoreIcon,
@@ -63,6 +64,14 @@ export const NAV_GROUP_LABEL: Record<NavGroup, string> = {
 export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/", label: "대시보드", icon: HomeIcon, tone: "aqua", group: "today" },
   { href: "/briefing", label: "오늘의 실행 브리핑", icon: SparkIcon, tone: "teal", group: "today" },
+  /*
+    AX 코치 — 브리핑 바로 아래.
+
+    브리핑이 "오늘 누구에게" 라면 코치는 "그게 기록으로 쌓이고 있나" 다.
+    둘은 아침에 이어서 보는 화면이라 붙여 둔다. 메뉴를 새로 만들지 않고
+    설정 안에 숨기면, 60대 대표님은 이 화면이 있다는 것 자체를 모른다.
+  */
+  { href: "/coach", label: "AX 코치", icon: CompassIcon, tone: "gold", group: "today" },
   { href: "/customers", label: "고객", icon: UsersIcon, tone: "sky", group: "customer" },
   { href: "/visits", label: "방문 / 이용 기록", icon: ClipboardIcon, tone: "violet", group: "customer" },
   { href: "/retention", label: "재방문 관리", icon: RefreshIcon, tone: "amber", group: "customer" },

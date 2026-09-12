@@ -121,7 +121,7 @@ async function walk(course, buttonName, expected) {
    방문 기록이 5건 넘게 쌓인 씨앗으로 바뀌면 20 으로 되돌린다)
 */
 await walk("빠른 시작", /빠른 시작/, 4);
-await walk("전체 둘러보기", /전체 둘러보기/, 16);
+await walk("전체 둘러보기", /전체 둘러보기/, 17); // AX 코치 한 걸음 추가
 // "시연" 만으로 찾으면 단계 칩(DEMO · 시연 자료)이 먼저 잡힌 적이 있다 — 걸음 수까지 본다
 await walk("시연", /시연 · \d+걸음/, 10);
 

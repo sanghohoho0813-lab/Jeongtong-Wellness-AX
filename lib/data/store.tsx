@@ -50,6 +50,7 @@ import { detectSalesOpportunity } from "@/lib/scoring/opportunity";
 import type { BackupPayload, ImportRow } from "@/lib/utils/import";
 import { localDateOf, todayISO } from "@/lib/utils/date";
 import { StorageUsage, measureStorage } from "@/lib/utils/storage";
+import type { CoachMissionLog } from "@/lib/ax-coach/types";
 
 const STORAGE_KEY = "jeongtong-ax-v1";
 
@@ -66,9 +67,28 @@ interface PersistedState {
   settings: AppSettings;
   /** 고객별 최초 미처리 발생일 — "며칠째 미처리" 계산용 (customerId → YYYY-MM-DD) */
   taskFirstSeen?: Record<string, string>;
+  /**
+   * AX Coach 가 낸 오늘 할 일의 이력.
+   *
+   * 방문 · 과제 · 요청의 **내용은 여기 복사하지 않는다.** 원본이 이미
+   * 다른 곳에 있고 두 벌이 되면 어느 쪽이 진짜인지 알 수 없게 된다.
+   * 여기 남는 것은 "언제 무엇을 하자고 했고, 나중에 어떤 실제 기록이
+   * 그것을 충족했는가" 라는 **새로운 사실**뿐이다.
+   *
+   * 선택 항목이다 — 이 기능 이전에 저장된 자료도 그대로 열린다 (D-11).
+   */
+  coachMissions?: CoachMissionLog[];
   /** 현재 사용자 (향후 Supabase Auth 연동 시 auth 유저와 매핑) */
   currentStaffId?: string;
   seededAt?: string;
+}
+
+export interface NewCoachMissionInput {
+  type: CoachMissionLog["type"];
+  area: CoachMissionLog["area"];
+  targetCustomerId?: string;
+  /** 발행 시점의 충족 사건 개수 — 개수로 검증하는 Mission 에만 쓴다 */
+  baseline: number;
 }
 
 export interface NewCustomerInput {
@@ -212,6 +232,20 @@ interface StoreValue extends PersistedState {
     taskId: string,
     status: TaskStatus,
     extra?: { outcome?: Partial<TaskOutcome>; holdUntil?: string },
+  ) => void;
+  /**
+   * AX Coach — 오늘 할 일을 발행한다.
+   * 같은 종류를 하루에 두 번 내지 않는다 (이미 있으면 그대로 돌려준다).
+   */
+  issueCoachMission: (input: NewCoachMissionInput) => void;
+  /** AX Coach — 실제 기록으로 충족이 확인된 Mission 에 표시한다 */
+  markCoachMissionVerified: (
+    id: string,
+    v: {
+      verifiedAt: string;
+      verificationType: CoachMissionLog["verificationType"];
+      verificationRef?: string;
+    },
   ) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   updateStaff: (staff: Staff[]) => void;
@@ -1088,6 +1122,58 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [factsById, currentStaff],
   );
 
+  // ---------- AX Coach — 오늘 할 일 이력 ----------
+
+  /**
+   * 발행. 같은 종류를 하루에 두 번 내지 않는다.
+   *
+   * 하루 안에서 카드가 계속 바뀌면 "아까 그거 어디 갔지" 가 된다.
+   * 오늘 이미 낸 종류는 그대로 두고, 검증되면 그 자리에 다음 것이 온다.
+   */
+  const issueCoachMission = useCallback((input: NewCoachMissionInput) => {
+    setState((s) => {
+      const prev = s.coachMissions ?? [];
+      const today = todayISO();
+      if (
+        prev.some(
+          (m) => m.type === input.type && localDateOf(m.issuedAt) === today,
+        )
+      ) {
+        return s;
+      }
+      const now = new Date();
+      const endOfDay = new Date(now);
+      endOfDay.setHours(23, 59, 59, 999);
+      const mission: CoachMissionLog = {
+        id: `coach-${today}-${input.type}`,
+        branchId: s.branches[0]?.id ?? "branch-main",
+        type: input.type,
+        area: input.area,
+        targetCustomerId: input.targetCustomerId,
+        issuedAt: now.toISOString(),
+        expiresAt: endOfDay.toISOString(),
+        baseline: input.baseline,
+      };
+      // 이력은 끝없이 쌓지 않는다 — 리포트가 보는 범위(14일)보다 넉넉히만
+      return { ...s, coachMissions: [...prev, mission].slice(-200) };
+    });
+  }, []);
+
+  /** 실제 기록으로 충족이 확인됐을 때만 불린다 (사람이 누르는 길은 없다) */
+  const markCoachMissionVerified = useCallback<
+    StoreValue["markCoachMissionVerified"]
+  >((id, v) => {
+    setState((s) => {
+      const prev = s.coachMissions ?? [];
+      const target = prev.find((m) => m.id === id);
+      if (!target || target.verifiedAt) return s;
+      return {
+        ...s,
+        coachMissions: prev.map((m) => (m.id === id ? { ...m, ...v } : m)),
+      };
+    });
+  }, []);
+
   // ---------- 서비스 · 이용권 상품 ----------
 
   const addProduct = useCallback(
@@ -1256,6 +1342,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memberships: [],
       taskOverrides: [],
       taskFirstSeen: {},
+      // 견본 기록으로 채워진 Mission 이력도 함께 비운다 — 실제 운영의 첫날이다
+      coachMissions: [],
       seededAt: undefined,
       // 가격표는 매장 실제 자료라 샘플이 아니다 — 지우지 않는다
     }));
@@ -1297,6 +1385,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removeMembership,
     restoreMembership,
     setTaskStatus,
+    issueCoachMission,
+    markCoachMissionVerified,
     updateSettings,
     updateStaff,
     restoreBackup,

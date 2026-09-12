@@ -25,6 +25,14 @@ export const HomeIcon = (p: IconProps) => (
   </svg>
 );
 
+/** 나침반 — AX 코치. "어느 쪽으로 가야 하나" 를 가리키는 화면이다 */
+export const CompassIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m15.5 8.5-2 5-5 2 2-5z" />
+  </svg>
+);
+
 export const SparkIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />

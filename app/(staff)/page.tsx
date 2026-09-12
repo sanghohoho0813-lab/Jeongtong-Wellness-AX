@@ -6,6 +6,7 @@ import DecisionBand from "@/components/dashboard/DecisionBand";
 import FirstRunCard from "@/components/dashboard/FirstRunCard";
 import BriefingPreview from "@/components/dashboard/BriefingPreview";
 import CustomerInboxCard from "@/components/dashboard/CustomerInboxCard";
+import CoachEntryCard from "@/components/dashboard/CoachEntryCard";
 import OpportunityCard from "@/components/dashboard/OpportunityCard";
 import BodyMapCard from "@/components/dashboard/BodyMapCard";
 import SegmentCard from "@/components/dashboard/SegmentCard";
@@ -77,6 +78,12 @@ export default function DashboardPage() {
 
             {/* ② 실행 — 그 판단을 오늘 어떻게 처리하는가 */}
             <SectionRule label="실행" hint="누구에게 · 무엇을 · 어떤 순서로" />
+            {/*
+              AX 코치 — 브리핑 바로 위 한 줄. 브리핑이 "누구에게" 라면
+              코치는 "그게 기록으로 남고 있나" 다. 여기서는 준비도와
+              오늘 할 일 하나만 보이고, 자세한 건 코치 화면에서 본다.
+            */}
+            <CoachEntryCard />
             <div className="rise-stagger">
               <BriefingPreview />
             </div>

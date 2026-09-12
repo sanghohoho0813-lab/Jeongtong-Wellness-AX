@@ -27,6 +27,7 @@
  *  경로            ADMIN  STAFF   비고
  *  /               ✅      ❌      대시보드(운영 현황) — ADMIN 전용
  *  /briefing       ✅      ❌      실행 브리핑 — ADMIN 전용
+ *  /coach          ✅      ❌      AX 코치(실증 준비도·오늘 할 일) — ADMIN 전용
  *  /customers      ✅      ✅      STAFF의 유일한 업무 화면 (검색/조회/등록/수정)
  *  /customers/[id] ✅      ✅      케어 부위·다음 관리 예정일·케어 선호 기록 포함
  *  /visits         ✅      ❌      방문/이용 기록은 고객 상세에서 입력
@@ -115,6 +116,8 @@ export function canAccessRoute(role: AppRole, pathname: string): boolean {
 export const ADMIN_ONLY_ROUTES = [
   "/",
   "/briefing",
+  // AX 코치 — 매장 전체의 실증 상태를 보는 운영 화면이라 대표/관리자만
+  "/coach",
   "/visits",
   "/retention",
   "/analytics",
