@@ -1,0 +1,114 @@
+# 자동 검사 — 사람이 기억하지 않아도 돌아가게
+# ============================================
+#
+# 지금까지 단위 216건 · 회귀 18묶음 756건은 "커밋 전에 내가 기억해서" 돌았다.
+# 한 번 잊으면 그대로 나간다. 기억은 안전장치가 아니다.
+#
+# 두 갈래로 나눈다.
+#   빠른 검사  타입 · 린트 · 단위 테스트 — 푸시마다, 2~3분
+#   전체 회귀  빌드 + 브라우저 18묶음   — PR · 수동 · 매일 새벽, 15~25분
+#
+# 빠른 쪽이 푸시마다 돌아야 하는 이유는 되돌리기 비용 때문이다. 타입이
+# 깨진 채로 다섯 커밋이 쌓이면 어디서 깨졌는지 찾는 데 더 오래 걸린다.
+# 브라우저 회귀까지 푸시마다 돌리면 한 번 고칠 때마다 20분을 기다리게
+# 되므로, 합치는 시점(PR)과 하루 한 번으로 둔다.
+
+name: 검사
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # 매일 새벽 4시 (UTC 19:00 = KST 04:00) — 아침에 결과를 보고 하루를 연다
+    - cron: "0 19 * * *"
+
+# 같은 브랜치에 연달아 푸시하면 앞의 것은 멈춘다 (마지막 것만 보면 된다)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    name: 빠른 검사 (타입 · 린트 · 단위)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: 타입 검사
+        run: npx tsc --noEmit
+
+      - name: 린트
+        run: npm run lint
+
+      - name: 단위 테스트
+        run: npm test
+
+      # 잠긴 파일이 조용히 바뀌지 않게 — 사람이 확인하기 전에 여기서 막는다
+      - name: 잠금 확인 (Priority Score · 기획의도)
+        run: |
+          set -e
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            echo "비교 기준이 없어 건너뜁니다 (첫 푸시)"
+            exit 0
+          fi
+          git fetch --depth=2 origin "$base" 2>/dev/null || true
+          changed=$(git diff --name-only "$base" HEAD || true)
+          for locked in "lib/scoring/priority.ts" "app/(staff)/intro/page.tsx"; do
+            if echo "$changed" | grep -qxF "$locked"; then
+              echo "::error file=$locked::잠긴 파일이 바뀌었습니다 — PROJECT_STATE.md 「잠금」 참고"
+              exit 1
+            fi
+          done
+          echo "잠긴 파일 무변경"
+
+  regression:
+    name: 전체 회귀 (브라우저 18묶음)
+    # 푸시마다 20분을 기다리게 하지 않는다 — 합치는 시점과 하루 한 번
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Playwright 는 앱이 쓰지 않아 package.json 에 없다 (배포 빌드를
+      # 무겁게 하지 않으려고). 검사 때만 받아서 쓴다.
+      - name: 브라우저 준비
+        run: |
+          npm i -D --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: 시연 빌드
+        run: npm run build
+        env:
+          NEXT_PUBLIC_DEMO_MODE: "1"
+
+      - name: 서버 띄우기
+        run: |
+          NEXT_PUBLIC_DEMO_MODE=1 npx next start -p 4402 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:4402 && echo "떴습니다 (${i}s)" && exit 0
+            sleep 1
+          done
+          echo "::error::서버가 60초 안에 뜨지 않았습니다"
+          exit 1
+
+      - name: 회귀 18묶음
+        run: npm run qa
