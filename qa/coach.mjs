@@ -191,10 +191,119 @@ log(
   /AX 코치와 오늘의 실행 브리핑은 무엇이 다른가요/.test(pcText),
 );
 
-/* ── 8. 금칙어 — 의료 표현은 쓰지 않는다 ── */
+/* ── 8. 실증 리포트 한 장 — 심사장에서 들고 나갈 종이 ── */
+await go(p, "/coach", 1500);
+const sheetCard = p.locator('[data-tour="coach-sheet"]');
+log("한 장으로 뽑아 가는 자리가 있다", (await sheetCard.count()) === 1);
+await sheetCard.getByRole("button", { name: "실증 리포트 보기" }).click();
+await p.waitForTimeout(700);
+const sheet = (await text()).replace(/\s+/g, " ");
+log("리포트가 열린다", /AX 실증 리포트/.test(sheet));
+log("네 영역이 표로 들어 있다", /무엇이 얼마나 쌓였나/.test(sheet));
+log("최근 기간 실적이 들어 있다", /최근 \d+일에 실제로 일어난 일/.test(sheet));
+log("도입 전 기준선 칸이 있다", /도입 전 기준선/.test(sheet));
+log(
+  "기준선이 없으면 없다고 적는다 (지어내지 않는다)",
+  /도입 전 값이 아직 입력되지 않았습니다/.test(sheet),
+);
+log(
+  "종이에도 단계를 박는다 — 맥락 없이 돌아다녀도 시연 자료임을 안다",
+  /DEMO/.test(sheet) && /실제 성과가 아닙니다/.test(sheet),
+);
+log("인쇄 단추가 있다", (await p.getByRole("button", { name: "인쇄하기" }).count()) === 1);
+
+/*
+  종이에 실제로 무엇이 나가는지 — 화면에서 잘 보이는 것과 다르다.
+  리포트는 모달 안에 있어서, 걷어내기가 어긋나면 뒤 화면이 빈 종이 몇
+  장으로 먼저 나오고 리포트가 그 뒤에 찍힌다. 인쇄 매체로 바꿔 본다.
+*/
+await p.evaluate(() => {
+  const region = document.querySelector(".print-region");
+  let el = region;
+  while (el && el.parentElement !== document.body) el = el.parentElement;
+  document.body.classList.add("print-report");
+  el?.classList.add("print-root");
+});
+await p.emulateMedia({ media: "print" });
+await p.waitForTimeout(400);
+const paper = await p.evaluate(() => {
+  const r = document.querySelector(".print-region");
+  const shown = [...document.body.children].filter(
+    (c) => getComputedStyle(c).display !== "none",
+  ).length;
+  return { h: Math.round(r.getBoundingClientRect().height), shown, len: (r.innerText || "").length };
+});
+log("종이에는 리포트 하나만 나간다 (뒤 화면은 걷힌다)", paper.shown === 1, `body 자식 ${paper.shown}개`);
+log("종이 위에서 리포트가 잘리지 않는다", paper.h > 400 && paper.len > 500, `${paper.h}px · 글 ${paper.len}자`);
+await p.emulateMedia({ media: "screen" });
+await p.evaluate(() => {
+  document.body.classList.remove("print-report");
+  document.querySelector(".print-root")?.classList.remove("print-root");
+});
+log(
+  "인과를 단정하지 않는다",
+  /관리가 재방문을 만들었다는 뜻은 아니며/.test(sheet) &&
+    !/AX 로 재방문시켰|덕분에 재방문/.test(sheet),
+);
+log("예상 매출을 만들지 않는다고 적는다", /예상 매출 · AI 확률 · 개선율을 만들어 적지 않습니다/.test(sheet));
+await p.keyboard.press("Escape");
+await p.waitForTimeout(400);
+
+/* ── 9. 백업 띠 — 보이는 자리에서, 그러나 잔소리가 되지 않게 ── */
+const KEY = "jeongtong-ax-v1";
+const SNOOZE = "jt-backup-snooze";
+// 한 번도 백업하지 않은 상태로 만든다 (견본은 lastBackupAt 이 없다)
+await p.evaluate(
+  ([k, sk]) => {
+    localStorage.removeItem(sk);
+    const raw = JSON.parse(localStorage.getItem(k) || "{}");
+    if (raw.settings) delete raw.settings.lastBackupAt;
+    localStorage.setItem(k, JSON.stringify(raw));
+  },
+  [KEY, SNOOZE],
+);
+await go(p, "/", 1500);
+const banner = p.locator("[data-backup-reminder]");
+log("백업이 밀리면 화면 위에 띠가 뜬다", (await banner.count()) === 1);
+const bannerText = ((await banner.innerText().catch(() => "")) || "").replace(/\s+/g, " ");
+log(
+  "한 번도 안 받았으면 그렇게 적는다",
+  /아직 한 번도 백업 파일을 받지 않으셨습니다/.test(bannerText),
+  bannerText.slice(0, 50),
+);
+log("그 자리에서 바로 받는 단추가 있다", (await banner.getByRole("button", { name: "지금 받기" }).count()) === 1);
+
+// 받으면 사라진다 (실제로 파일이 내려오는지까지 본다)
+const [dl] = await Promise.all([
+  p.waitForEvent("download", { timeout: 15000 }).catch(() => null),
+  banner.getByRole("button", { name: "지금 받기" }).click(),
+]);
+log("누르면 백업 파일이 실제로 내려온다", !!dl);
+await p.waitForTimeout(800);
+log("받고 나면 띠가 사라진다", (await p.locator("[data-backup-reminder]").count()) === 0);
+
+// 오늘은 나중에 — 닫으면 오늘은 안 뜬다
+await p.evaluate(
+  ([k, sk]) => {
+    localStorage.removeItem(sk);
+    const raw = JSON.parse(localStorage.getItem(k) || "{}");
+    if (raw.settings) delete raw.settings.lastBackupAt;
+    localStorage.setItem(k, JSON.stringify(raw));
+  },
+  [KEY, SNOOZE],
+);
+await go(p, "/", 1300);
+await p.locator("[data-backup-reminder]").getByRole("button", { name: "오늘은 나중에" }).click();
+await p.waitForTimeout(400);
+log("「오늘은 나중에」 를 누르면 내려간다", (await p.locator("[data-backup-reminder]").count()) === 0);
+await go(p, "/customers", 1300);
+log("다른 화면으로 옮겨도 오늘은 다시 뜨지 않는다", (await p.locator("[data-backup-reminder]").count()) === 0);
+await p.evaluate((sk) => localStorage.removeItem(sk), SNOOZE);
+
+/* ── 10. 금칙어 — 의료 표현은 쓰지 않는다 ── */
 log(
   "의료 표현을 쓰지 않는다",
-  !/(치료|치유|환자|진단|처방|의학적|시술)/.test(pcText + after),
+  !/(치료|치유|환자|진단|처방|의학적|시술)/.test(pcText + after + sheet),
 );
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

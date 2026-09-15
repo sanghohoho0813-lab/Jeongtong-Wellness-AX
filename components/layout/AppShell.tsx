@@ -28,6 +28,7 @@ import { DevicePreviewButton } from "./DevicePreview";
 import LiveClock from "./LiveClock";
 import StageChip from "./StageChip";
 import BackToTop from "./BackToTop";
+import BackupReminder from "./BackupReminder";
 import MoreSheet from "./MoreSheet";
 import ErrorBoundary from "./ErrorBoundary";
 import QuickVisitModal from "@/components/visits/QuickVisitModal";
@@ -673,6 +674,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <SyncFailedBanner />
       <DroppedRecordsBanner />
       <PrivacyModeBanner />
+      {/*
+        백업이 밀렸을 때 — 리마인더가 설정 화면 안쪽에만 있으면 설정을
+        여는 사람에게만 보인다. 기록이 이 기기에만 있는 동안(PILOT)이
+        가장 위험하므로 보이는 자리에 둔다.
+      */}
+      <BackupReminder />
       <main
         id="main"
         tabIndex={-1}

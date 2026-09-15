@@ -9,6 +9,8 @@
  *   ACTION     실행 브리핑에서 직원이 처리한 과제 (언제 · 누가 · 왜 · 무엇을)
  *   RESULT     처리 뒤 30일 안에 같은 고객이 실제로 다시 온 기록
  *   ADOPTION   주별 활동일 수 — 실제로 매일 쓰는가
+ *   COACH      AX 코치가 낸 오늘 할 일과, 그것을 충족한 실제 기록
+ *              (무엇을 하자고 했고 · 실제로 무엇이 생겼는지 · 얼마 만에)
  *
  * 값을 만들지 않는다. 있는 기록을 유형별로 줄 세울 뿐이다. 출처 칸에는
  * 이 기록이 시연 자료인지 · 기기 저장인지 · 서버인지를 그대로 적는다.
@@ -21,6 +23,7 @@ import type {
   Staff,
   Visit,
 } from "@/lib/types";
+import type { CoachMissionLog } from "@/lib/ax-coach/types";
 import { toCsv } from "./export";
 
 const CATEGORY: Record<string, string> = {
@@ -36,6 +39,30 @@ const STATUS: Record<string, string> = {
   done: "처리 완료",
   hold: "보류",
   skipped: "건너뜀",
+};
+
+/** AX 코치 — 사람이 읽는 이름 (코드값을 그대로 내보내면 표가 읽히지 않는다) */
+const COACH_AREA: Record<string, string> = {
+  record: "방문·상담 기록",
+  action: "고객관리 실행",
+  result: "재방문 결과",
+  adoption: "고객 직접사용",
+};
+const COACH_MISSION: Record<string, string> = {
+  visit_record: "오늘 오신 고객 기록하기",
+  briefing_action: "오늘 챙길 고객 연락하기",
+  task_outcome: "처리 결과 남기기",
+  consult_followup: "상담 후 미예약 고객 챙기기",
+  membership_care: "이용권 잔여 임박 고객 확인",
+  request_handle: "고객 요청 처리하기",
+  portal_invite: "고객에게 MY WELLNESS 안내",
+};
+const COACH_VERIFY: Record<string, string> = {
+  visit_created: "새 방문·상담 기록",
+  task_status_changed: "브리핑 과제 처리",
+  task_outcome_saved: "처리 결과 기록",
+  request_handled: "고객 요청 처리",
+  request_created: "고객이 남긴 요청",
 };
 
 const day = (iso?: string) => (iso ?? "").slice(0, 10);
@@ -94,6 +121,8 @@ export function evidenceCsv(input: {
   staff: Staff[];
   visits: Visit[];
   settings: AppSettings;
+  /** AX 코치가 낸 오늘 할 일의 이력 (없으면 COACH 행은 나오지 않는다) */
+  coachMissions?: CoachMissionLog[];
   /** 출처 칸에 적을 말 — "DEMO · 시연 자료" 같은 단계 라벨 */
   provenance: string;
 }): string {
@@ -161,6 +190,49 @@ export function evidenceCsv(input: {
   }
   for (const [week, n] of [...byWeek.entries()].sort()) {
     rows.push(["ADOPTION", week, "", "", "주간 활동일", `${n}일 기록됨`, "", provenance]);
+  }
+
+  /*
+    COACH — 「무엇을 하자고 했고, 실제로 무엇이 생겼는가」.
+
+    이 유형이 다른 넷과 다른 점은 **그 자체가 실행 절차의 증거**라는
+    것이다. ACTION 은 "처리했다" 를, COACH 는 "처리하자고 먼저 정해
+    두었고 그것이 실제 기록으로 충족됐다" 를 보인다. 심사에서 묻는
+    「운영 체계가 있는가」 에 답하는 줄이다.
+
+    충족되지 않은 것도 숨기지 않고 그대로 적는다 — 성공만 남기면
+    그 표는 증적이 아니라 홍보물이 된다.
+  */
+  const missions = [...(input.coachMissions ?? [])].sort((a, b) =>
+    a.issuedAt.localeCompare(b.issuedAt),
+  );
+  for (const m of missions) {
+    const gap =
+      m.verifiedAt && m.verifiedAt > m.issuedAt
+        ? Math.max(
+            0,
+            Math.round(
+              (new Date(m.verifiedAt).getTime() - new Date(m.issuedAt).getTime()) /
+                3_600_000,
+            ),
+          )
+        : undefined;
+    rows.push([
+      "COACH",
+      m.issuedAt.slice(0, 16).replace("T", " "),
+      m.targetCustomerId ? name(m.targetCustomerId) : "",
+      "",
+      `${COACH_AREA[m.area] ?? m.area} · ${COACH_MISSION[m.type] ?? m.type}`,
+      m.verifiedAt
+        ? `${COACH_VERIFY[m.verificationType ?? ""] ?? "실제 기록"} 확인${
+            gap !== undefined ? ` (발행 ${gap}시간 뒤)` : ""
+          }`
+        : "아직 충족되지 않음",
+      m.verifiedAt ? "확인됨" : "미확인",
+      m.verificationRef
+        ? `${provenance} · 근거 ${m.verificationRef}`
+        : provenance,
+    ]);
   }
 
   return toCsv(

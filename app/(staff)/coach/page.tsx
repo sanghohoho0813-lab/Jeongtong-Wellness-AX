@@ -14,14 +14,16 @@
  * 방향만 알려 주고, 실제 업무 화면으로 보낸다.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import CoachSummary from "@/components/ax-coach/CoachSummary";
 import MissionCard from "@/components/ax-coach/MissionCard";
 import CoachReport from "@/components/ax-coach/CoachReport";
-import { Card, EmptyState, SectionTitle } from "@/components/ui";
-import { SparkIcon } from "@/components/ui/icons";
+import EvidenceSheet from "@/components/ax-coach/EvidenceSheet";
+import { Button, Card, EmptyState, Modal, SectionTitle } from "@/components/ui";
+import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
 import { useCoach } from "@/lib/ax-coach/useCoach";
+import { useStore } from "@/lib/data/store";
 import { buildReport, trendVsDaysAgo } from "@/lib/ax-coach/report";
 
 export default function CoachPage() {
@@ -36,6 +38,8 @@ export default function CoachPage() {
     isDemo,
     stageLabel,
   } = useCoach();
+  const { settings } = useStore();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const report7 = useMemo(
     () => buildReport(coverageInput, allMissions, 7),
@@ -101,6 +105,48 @@ export default function CoachPage() {
         </Card>
 
         <CoachReport report7={report7} report14={report14} />
+
+        {/*
+          심사장에서 필요한 것은 엑셀 700줄이 아니라 A4 한 장이다.
+          화면이 쓰는 값을 그대로 옮겨 적고, 비어 있는 칸은 비어 있다고
+          적는다 — 종이는 맥락 없이 돌아다니므로 단계 표시도 함께 박는다.
+        */}
+        <Card dataTour="coach-sheet">
+          <SectionTitle
+            icon={<PrinterIcon className="h-4 w-4" />}
+            tone="gold"
+            action={
+              <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+                <PrinterIcon className="h-4 w-4" />
+                실증 리포트 보기
+              </Button>
+            }
+          >
+            한 장으로 뽑아 가기
+          </SectionTitle>
+          <p className="text-[1rem] leading-relaxed text-ink-soft">
+            지금까지 쌓인 것을 A4 한 장으로 정리해 드립니다. 무엇을 재기로
+            했는지 · 지금 어디까지 왔는지 · 그 숫자가 어느 기록에서 나왔는지가
+            함께 적힙니다. 줄 단위 원본은 AX 도입성과 화면의{" "}
+            <b className="text-ink">증적 내보내기</b>로 받으실 수 있습니다.
+          </p>
+        </Card>
+
+        <Modal
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title="AX 실증 리포트"
+          wide
+        >
+          <EvidenceSheet
+            settings={settings}
+            coverage={coverage}
+            report={report7}
+            missions={allMissions}
+            isDemo={isDemo}
+            stageLabel={stageLabel}
+          />
+        </Modal>
 
         {/*
           이 화면이 무엇을 하지 않는지 — 브리핑과 헷갈리지 않게 한 번 적는다.

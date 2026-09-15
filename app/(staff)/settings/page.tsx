@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
+import { useBackup } from "@/lib/data/useBackup";
 import {
   CareRuleSettings,
   DEFAULT_OPPORTUNITY_RULES,
@@ -38,7 +39,6 @@ import {
   todayISO,
 } from "@/lib/utils/date";
 import {
-  buildBackupFile,
   customersCsv,
   downloadFile,
   membershipsCsv,
@@ -220,21 +220,14 @@ export default function SettingsPage() {
     toast(`${item.name} 파일을 내려받았습니다`);
   };
 
-  /** 백업한 지 7일이 지났거나 한 번도 안 했으면 안내한다 */
-  const backupStale =
-    !settings.lastBackupAt || daysAgo(settings.lastBackupAt) >= 7;
-
+  /*
+    백업은 화면 위 띠 · 명령 팔레트 · 이 화면 셋에서 부른다.
+    같은 코드를 세 벌 두지 않고 useBackup 하나로 모았다 — 한 벌이라도
+    어긋나면 "받은 줄 알았는데 안 받아진" 상태가 되는 기능이다.
+  */
+  const { stale: backupStale, exportBackup: runBackup } = useBackup();
   const exportBackup = () => {
-    const file = buildBackupFile({
-      customers,
-      visits,
-      memberships,
-      staff,
-      branches,
-      settings,
-    });
-    downloadFile(file.name, file.content, file.mime);
-    updateSettings({ lastBackupAt: new Date().toISOString() });
+    runBackup();
     toast("전체 백업 파일을 내려받았습니다");
   };
 

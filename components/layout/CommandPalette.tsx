@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useStore } from "@/lib/data/store";
+import { useBackup } from "@/lib/data/useBackup";
 import { useTour } from "@/components/docs/Tour";
 import { useToast } from "@/components/ui/toast";
 import { CustomerStatusBadge, OpportunityBadge } from "@/components/ui";
@@ -31,7 +32,6 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import { NAV_TONE_CLASS, SIDEBAR_ITEMS, navItemsFor } from "./nav-items";
-import { buildBackupFile, downloadFile } from "@/lib/utils/export";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
@@ -96,11 +96,9 @@ export default function CommandPalette({
     isManager,
     settings,
     updateSettings,
-    customers,
-    visits,
-    memberships,
-    staff,
-    branches, privacyMode } = useStore();
+    privacyMode } = useStore();
+  // 백업은 한 곳에서만 만든다 (lib/data/useBackup.ts)
+  const { exportBackup } = useBackup();
   const { startTour } = useTour();
   const toast = useToast();
 
@@ -247,35 +245,15 @@ export default function CommandPalette({
         keywords: "저장 내보내기 보관",
         icon: chip(<DownloadIcon className="h-4 w-4" />, NAV_TONE_CLASS.gold),
         run: () => {
-          const file = buildBackupFile({
-            customers,
-            visits,
-            memberships,
-            staff,
-            branches,
-            settings,
-          });
-          downloadFile(file.name, file.content, file.mime);
-          updateSettings({ lastBackupAt: new Date().toISOString() });
+          exportBackup();
           onClose();
           toast("전체 백업 파일을 내려받았습니다");
         },
       });
     }
     return list;
-  }, [
-    settings,
-    updateSettings,
-    isManager,
-    customers,
-    visits,
-    memberships,
-    staff,
-    branches,
-    onClose,
-    startTour,
-    toast,
-  ]);
+    // 고객·방문·이용권·직원·지점은 이제 useBackup 안에서만 쓰인다
+  }, [settings, updateSettings, exportBackup, isManager, onClose, startTour, toast]);
 
   // ---------- 고객 ----------
   const customerItems: Item[] = useMemo(() => {

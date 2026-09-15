@@ -104,6 +104,7 @@ export default function AnalyticsPage() {
     taskOverrides,
     staff,
     isManager,
+    coachMissions,
   } = useStore();
   const stage = useDeliveryStage();
   const exportEvidence = () =>
@@ -115,6 +116,8 @@ export default function AnalyticsPage() {
         staff,
         visits,
         settings,
+        // AX 코치가 낸 오늘 할 일과 그것을 충족한 실제 기록도 함께 나간다
+        coachMissions,
         provenance: stage.label,
       }),
     );

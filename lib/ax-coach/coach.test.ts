@@ -6,6 +6,7 @@ import { computeCoverage, hasRealOutcome, type CoverageInput } from "./coverage"
 import { buildCandidates, selectMissions } from "./missions";
 import { snapshotFor, verifyMission } from "./verify";
 import { buildReport, trendVsDaysAgo } from "./report";
+import { evidenceCsv } from "@/lib/utils/evidence";
 import type { CoachMissionLog } from "./types";
 
 /**
@@ -511,5 +512,62 @@ describe("7일 / 14일 리포트", () => {
       pendingTasks: [task()],
     });
     expect(trendVsDaysAgo(input, 7)).toBeNull();
+  });
+});
+
+/* ══════════ 증적 팩 — COACH 유형 ══════════ */
+
+describe("증적 CSV — 무엇을 하자고 했고 무엇이 생겼나", () => {
+  const settings = { companyName: "정통대왕쑥뜸원" } as never;
+  const mission = (patch: Partial<CoachMissionLog> = {}): CoachMissionLog => ({
+    id: "coach-1",
+    branchId: "b1",
+    type: "briefing_action",
+    area: "action",
+    issuedAt: `${daysFromToday(-1)}T09:00:00.000Z`,
+    expiresAt: `${daysFromToday(-1)}T23:59:59.999Z`,
+    baseline: 0,
+    ...patch,
+  });
+
+  const csvOf = (missions: CoachMissionLog[]) =>
+    evidenceCsv({
+      tasks: [],
+      customers: [],
+      staff: [],
+      visits: [],
+      settings,
+      coachMissions: missions,
+      provenance: "PILOT · 실제 자료",
+    });
+
+  it("Mission 이력이 없으면 COACH 행도 없다", () => {
+    expect(csvOf([]).split("\n").filter((l) => l.startsWith("COACH"))).toHaveLength(0);
+  });
+
+  it("사람이 읽는 이름으로 나간다 (코드값이 아니라)", () => {
+    const csv = csvOf([mission()]);
+    expect(csv).toContain("고객관리 실행 · 오늘 챙길 고객 연락하기");
+    expect(csv).not.toContain("briefing_action");
+  });
+
+  it("충족된 것은 무엇이 충족했는지와 걸린 시간을 적는다", () => {
+    const csv = csvOf([
+      mission({
+        verifiedAt: `${daysFromToday(-1)}T14:00:00.000Z`,
+        verificationType: "task_status_changed",
+        verificationRef: "task-9",
+      }),
+    ]);
+    expect(csv).toContain("브리핑 과제 처리 확인 (발행 5시간 뒤)");
+    expect(csv).toContain("확인됨");
+    // 원본 내용은 복사하지 않고 id 로만 가리킨다
+    expect(csv).toContain("근거 task-9");
+  });
+
+  it("충족되지 않은 것도 숨기지 않는다 — 성공만 남기면 홍보물이 된다", () => {
+    const csv = csvOf([mission()]);
+    expect(csv).toContain("아직 충족되지 않음");
+    expect(csv).toContain("미확인");
   });
 });
