@@ -32,7 +32,7 @@ export default function MorePage() {
         title={isManager ? "더보기" : "계정"}
         description={
           isManager
-            ? `${settings.companyName} ${settings.branchName} · 보조 · 관리 기능`
+            ? `${settings.companyName} ${settings.branchName} · 가끔 여는 화면과 설정`
             : `${settings.companyName} ${settings.branchName} · 계정 · 화면 표시`
         }
       />

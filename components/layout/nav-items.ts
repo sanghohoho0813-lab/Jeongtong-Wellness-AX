@@ -155,7 +155,13 @@ export const NAV_SECTIONS: NavSection[] = [
     root: "/",
     label: "오늘",
     tabs: [
-      { href: "/", label: "홈", icon: HomeIcon },
+      /*
+        탭 이름은 그 화면이 스스로를 부르는 이름과 **같아야 한다.**
+        처음에 '홈' 으로 적었더니 메뉴는 「오늘」, 탭은 「홈」, 화면
+        제목은 「대시보드」 — 한 화면에 이름이 셋이 됐다. 「오늘」은
+        묶음 이름이고, 그 안의 화면 이름은 「대시보드」다.
+      */
+      { href: "/", label: "대시보드", icon: HomeIcon },
       { href: "/briefing", label: "챙길 고객", icon: SparkIcon },
       { href: "/coach", label: "AX 코치", icon: CompassIcon },
     ],
