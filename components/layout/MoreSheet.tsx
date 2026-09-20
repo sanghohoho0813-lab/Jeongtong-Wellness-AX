@@ -155,6 +155,13 @@ export default function MoreSheet({
             />
           </div>
 
+          {/*
+            목차에서 내려온 화면들.
+
+            내려왔다는 것이 숨겼다는 뜻이 되면 안 된다. 이름 아래에 한 줄
+            설명을 달고 줄 높이를 키운다 — '서비스 표준' 이라는 네 글자만
+            보고 그것이 무엇인지 아는 사람은 만든 사람뿐이다.
+          */}
           {items.length > 0 && (
             <ul className="divide-y divide-stone-bg-deep overflow-hidden rounded-card ring-1 ring-stone-line">
               {items.map((item) => {
@@ -166,18 +173,25 @@ export default function MoreSheet({
                       href={item.href}
                       onClick={onClose}
                       aria-current={active ? "page" : undefined}
-                      className={`flex items-center gap-3.5 px-3.5 py-3.5 transition-colors ${
+                      className={`flex min-h-[3.75rem] items-center gap-3.5 px-3.5 py-3 transition-colors ${
                         active ? "bg-aqua-50" : "bg-card active:bg-stone-bg"
                       }`}
                     >
                       {/* 사이드바와 같은 색 배정 — PC 와 폰의 인지방식을 맞춘다 */}
                       <span
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${NAV_TONE_CLASS[item.tone]}`}
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ${NAV_TONE_CLASS[item.tone]}`}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-[1.35rem] w-[1.35rem]" />
                       </span>
-                      <span className="min-w-0 flex-1 font-bold leading-snug text-ink">
-                        {item.label}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[1.0625rem] font-extrabold leading-snug text-ink">
+                          {item.label}
+                        </span>
+                        {item.desc && (
+                          <span className="block truncate text-[0.8125rem] leading-snug text-ink-sub">
+                            {item.desc}
+                          </span>
+                        )}
                       </span>
                       <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
                     </Link>

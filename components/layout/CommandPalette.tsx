@@ -31,7 +31,7 @@ import {
   SparkIcon,
   UsersIcon,
 } from "@/components/ui/icons";
-import { NAV_TONE_CLASS, SIDEBAR_ITEMS, navItemsFor } from "./nav-items";
+import { ALL_SCREENS, NAV_TONE_CLASS, navItemsFor } from "./nav-items";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
@@ -51,6 +51,9 @@ const NAV_KEYWORDS: Record<string, string> = {
   "/customers": "명부 회원 손님 고객목록 등록",
   "/visits": "방문기록 이용기록 이력 상담",
   "/retention": "재방문 관리 이탈 장기미방문",
+  "/coach": "코치 ax코치 실증 준비도 오늘할일 미션 증적",
+  "/service": "서비스 표준 케어 순서 상담 말 프로그램",
+  "/welcome": "고객용 화면 공개 플랫폼 소개 매장소개",
   "/analytics": "분석 성과 매출 통계 지표 추이 리포트",
   "/branches": "지점 운영 매장 조직",
   "/settings": "환경 기준 백업 데이터 가져오기 직원 관리기준",
@@ -119,11 +122,12 @@ export default function CommandPalette({
 
   // ---------- 화면 ----------
   const navItems: Item[] = useMemo(() => {
-    const items = navItemsFor(SIDEBAR_ITEMS, isManager);
+    // 목차는 넷이지만 검색은 **화면 전부**를 찾는다 (nav-items.ts ALL_SCREENS)
+    const items = navItemsFor(ALL_SCREENS, isManager);
     const docs = [
-      { href: "/why", label: "Why AX", icon: SparkIcon, tone: "teal" as const },
-      { href: "/intro", label: "기획의도", icon: BookIcon, tone: "gold" as const },
-      { href: "/guide", label: "사용 방법", icon: SparkIcon, tone: "aqua" as const },
+      { href: "/why", label: "Why AX", icon: SparkIcon, tone: "brand-1" as const },
+      { href: "/intro", label: "기획의도", icon: BookIcon, tone: "doc-1" as const },
+      { href: "/guide", label: "사용 방법", icon: SparkIcon, tone: "doc-2" as const },
     ];
     return [
       ...items.map((n) => ({
@@ -173,7 +177,7 @@ export default function CommandPalette({
         label: "빠른 시작 안내 (4걸음)",
         hint: "처음 쓰실 때 — 오늘 뭘 하면 되는지만",
         keywords: "튜토리얼 도움말 사용법 처음 시작",
-        icon: chip(<SparkIcon className="h-4 w-4" />, NAV_TONE_CLASS.aqua),
+        icon: chip(<SparkIcon className="h-4 w-4" />, NAV_TONE_CLASS["brand-1"]),
         run: () => {
           onClose();
           startTour("quick");
@@ -185,7 +189,7 @@ export default function CommandPalette({
         label: "전체 둘러보기",
         hint: "화면을 옮겨 가며 기능을 하나씩 보여 드립니다",
         keywords: "튜토리얼 도움말 사용법 전체",
-        icon: chip(<SparkIcon className="h-4 w-4" />, NAV_TONE_CLASS.aqua),
+        icon: chip(<SparkIcon className="h-4 w-4" />, NAV_TONE_CLASS["brand-1"]),
         run: () => {
           onClose();
           startTour("full");
@@ -198,7 +202,7 @@ export default function CommandPalette({
         label: "시연 시작 (10걸음)",
         hint: "남에게 보여 드릴 순서 — 왜 · 무엇을 · 무엇이 남았는가",
         keywords: "시연 발표 데모 프레젠테이션 심사 소개",
-        icon: chip(<PlayIcon className="h-4 w-4" />, NAV_TONE_CLASS.gold),
+        icon: chip(<PlayIcon className="h-4 w-4" />, NAV_TONE_CLASS["doc-1"]),
         run: () => {
           onClose();
           startTour("demo");
@@ -227,7 +231,7 @@ export default function CommandPalette({
             ? "글자 크기 기본으로"
             : "글자 크게 보기",
         keywords: "글씨 크기 확대 잘 안 보임",
-        icon: chip(<BookIcon className="h-4 w-4" />, NAV_TONE_CLASS.violet),
+        icon: chip(<BookIcon className="h-4 w-4" />, NAV_TONE_CLASS["brand-3"]),
         run: () => {
           updateSettings({
             fontScale: settings.fontScale === "large" ? "default" : "large",
@@ -243,7 +247,7 @@ export default function CommandPalette({
         label: "전체 백업 내려받기",
         hint: "지금까지의 모든 기록을 파일 하나로",
         keywords: "저장 내보내기 보관",
-        icon: chip(<DownloadIcon className="h-4 w-4" />, NAV_TONE_CLASS.gold),
+        icon: chip(<DownloadIcon className="h-4 w-4" />, NAV_TONE_CLASS["doc-1"]),
         run: () => {
           exportBackup();
           onClose();

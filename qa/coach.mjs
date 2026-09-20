@@ -179,9 +179,14 @@ log("성과 화면의 KPI 계약이 그대로 있다", (await p.locator('[data-t
 /* ── 7. PC — 메뉴에 있고, 화면이 열린다 ── */
 const pc = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 await go(pc, "/", 1500);
+/*
+  목차가 넷으로 줄면서 AX 코치는 사이드바가 아니라 '오늘' 묶음의
+  큰 탭에 있다. 자리가 바뀌었을 뿐 한 번에 닿는 것은 그대로다 —
+  탭은 화면 맨 위에 늘 펼쳐져 있다 (qa/menu.mjs 가 따로 본다).
+*/
 log(
-  "PC 사이드바 '오늘' 묶음에 AX 코치가 있다",
-  (await pc.locator('aside a[href="/coach"]').count()) === 1,
+  "PC '오늘' 묶음 탭에 AX 코치가 있다",
+  (await pc.locator('[data-section-tabs] a[href="/coach"]').count()) === 1,
 );
 await go(pc, "/coach", 1500);
 const pcText = (await pc.evaluate(() => document.body.innerText)).replace(/\s+/g, " ");

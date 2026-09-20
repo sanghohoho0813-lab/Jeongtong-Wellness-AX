@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/icons";
 import {
   BOTTOM_NAV_ITEMS,
-  NAV_GROUP_LABEL,
   NAV_TONE_CLASS,
   SIDEBAR_ITEMS,
   navItemsFor,
+  sectionForPath,
 } from "./nav-items";
+import SectionTabs from "./SectionTabs";
 import { ProfileButton } from "./UserSwitch";
 import { SurfaceSwitch } from "./SurfaceSwitch";
 import CommandPalette from "./CommandPalette";
@@ -153,10 +154,11 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           </Link>
           <Link
             href="/guide"
+            /* 읽을 거리는 둘 다 금색 — 기획의도보다 한 톤 옅게만 둔다 */
             className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
               isActive(pathname, "/guide")
-                ? "bg-gradient-to-r from-aqua-650 to-deep-700 text-white shadow-sm"
-                : "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100"
+                ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                : "bg-gold/10 text-gold-deep ring-1 ring-gold/20 hover:bg-gold/20"
             }`}
           >
             <SparkIcon className="h-4 w-4 shrink-0" />
@@ -171,52 +173,66 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
       </div>
 
       {/*
-        묶음별로 끊어 그린다.
+        목차는 넷이다 (components/layout/nav-items.ts 의 설명 참고).
 
-        아홉 개를 같은 간격으로 세우면 어디까지가 매일 쓰는 것인지
-        구분되지 않는다. 묶음이 바뀌는 자리에만 아주 작은 라벨을 넣어
-        숨을 준다 — 선을 긋지는 않는다. 선까지 넣으면 왼쪽 기둥이
-        칸막이로 보여 오히려 답답해진다.
-        (직원 계정은 메뉴가 하나뿐이라 묶음 라벨이 나오지 않는다)
+        열한 줄이던 것을 넷으로 줄였으니 남은 넷은 크게 그린다. 줄 수를
+        줄여 놓고 줄 크기를 그대로 두면, 빈 자리만 생기고 누르기 쉬워지지는
+        않는다. 한 줄 아래에 그 안에 무엇이 있는지 작게 적어 둔다 —
+        '오늘' 이라는 두 글자만으로는 브리핑이 거기 있는 줄 모른다.
+
+        칠하는 기준은 **묶음**이다. /briefing 에 있어도 '오늘' 이 칠해져
+        있어야, 지금 어느 묶음 안인지가 늘 보인다.
       */}
       <nav className="flex-1 overflow-y-auto px-3">
-        {items.map((item, i) => {
-          const active = isActive(pathname, item.href);
+        {items.map((item) => {
+          const active =
+            isActive(pathname, item.href) ||
+            sectionForPath(pathname)?.root === item.href;
           const Icon = item.icon;
-          const newGroup =
-            items.length > 2 && item.group && item.group !== items[i - 1]?.group;
           return (
-            <div key={item.href} className={newGroup && i > 0 ? "mt-3" : ""}>
-              {newGroup && (
-                <p className="eyebrow px-2.5 pb-1.5 pt-0.5">
-                  {NAV_GROUP_LABEL[item.group!]}
-                </p>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`group relative mb-1.5 flex items-center gap-3 rounded-btn px-2.5 py-2.5 transition-colors ${
+                active
+                  ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
+                  : "text-nav-ink hover:bg-stone-bg"
+              }`}
+            >
+              {active && (
+                <span className="absolute -left-3 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-aqua-400" />
               )}
-              <Link
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={`group relative mb-1 flex items-center gap-2.5 rounded-btn px-2.5 py-2 text-[0.9375rem] font-bold transition-colors ${
+              {/* 메뉴 아이콘 타일 — 같은 청록, 진하기만 한 단계씩 */}
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 transition-colors ${
                   active
-                    ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
-                    : "text-nav-ink hover:bg-stone-bg"
+                    ? "bg-white/15 text-aqua-300 ring-white/20"
+                    : NAV_TONE_CLASS[item.tone]
                 }`}
               >
-                {active && (
-                  <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-aqua-400" />
-                )}
-                {/* 메뉴별 컬러 아이콘 타일 */}
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-colors ${
-                    active
-                      ? "bg-white/15 text-aqua-300 ring-white/20"
-                      : NAV_TONE_CLASS[item.tone]
-                  }`}
-                >
-                  <Icon className="h-[1.15rem] w-[1.15rem]" />
+                <Icon className="h-[1.3rem] w-[1.3rem]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[1.0625rem] font-extrabold leading-tight">
+                  {item.label}
                 </span>
-                <span className="truncate">{item.label}</span>
-              </Link>
-            </div>
+                {item.desc && (
+                  <span
+                    /*
+                      흐리게(ink-faint) 두었다가 되돌렸다. 12px 짜리 글을
+                      흐리게까지 하면 60대 눈에는 있으나 마나 한 줄이 된다 —
+                      이 줄은 장식이 아니라 "그 안에 무엇이 있는지" 를 말한다.
+                    */
+                    className={`block truncate text-[0.75rem] font-semibold leading-tight ${
+                      active ? "text-white/80" : "text-ink-sub"
+                    }`}
+                  >
+                    {item.desc}
+                  </span>
+                )}
+              </span>
+            </Link>
           );
         })}
       </nav>
@@ -348,7 +364,10 @@ function BottomNav({
         </button>
       );
     }
-    const active = isActive(pathname, item.href);
+    // 사이드바와 같은 기준 — 묶음 안에 있으면 그 묶음이 칠해진다
+    const active =
+      isActive(pathname, item.href) ||
+      sectionForPath(pathname)?.root === item.href;
     return (
       <Link key={item.href} href={item.href} className={tabCls(active)}>
         {face(item, active)}
@@ -700,9 +719,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
             방어막이 오류를 받지 못하고 앱 전체가 하얘진다.
           */}
           {ready ? (
-            <ErrorBoundary resetKey={pathname}>
-              <RouteGuard>{children}</RouteGuard>
-            </ErrorBoundary>
+            <>
+              {/*
+                묶음 안의 형제 화면들 — 목차에서 내려온 대신 여기 펼쳐 둔다.
+                방어막 바깥에 둔다. 본문이 오류로 멈춰도 다른 화면으로
+                건너갈 길은 남아 있어야 한다.
+              */}
+              <SectionTabs />
+              <ErrorBoundary resetKey={pathname}>
+                <RouteGuard>{children}</RouteGuard>
+              </ErrorBoundary>
+            </>
           ) : (
             <ContentSkeleton />
           )}
