@@ -162,9 +162,27 @@ for (const [path, label] of PAGES) {
     }
 
     const lowc = [];
+    /*
+      잎만 재면 아이콘 달린 단추가 통째로 빠진다.
+
+      `<button><svg/>지금 받기</button>` 는 자식이 있어서 여기서 계속
+      건너뛰어졌다. 실제로 백업 띠의 「지금 받기」 가 어두운 화면에서
+      1.83:1 이었는데 몇 판을 통과했다 — 아이콘과 글자가 같이 있는
+      단추는 이 화면에 스무 개가 넘는다.
+
+      그래서 「자기 글자를 직접 들고 있는 요소」 를 함께 본다. 자식
+      요소의 글자는 그 자식에서 따로 재므로 두 번 세지 않는다.
+    */
+    const ownText = (el) =>
+      [...el.childNodes]
+        .filter((n) => n.nodeType === 3)
+        .map((n) => n.textContent)
+        .join("")
+        .trim();
     for (const el of document.querySelectorAll("body *")) {
-      if (el.children.length) continue;
-      const txt = (el.textContent || "").trim();
+      const txt = el.children.length
+        ? ownText(el)
+        : (el.textContent || "").trim();
       if (!txt) continue;
       const s = getComputedStyle(el);
       const fgc = rgba(s.color);

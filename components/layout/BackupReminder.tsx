@@ -105,7 +105,16 @@ export default function BackupReminder() {
               exportBackup();
               toast("전체 백업 파일을 내려받았습니다");
             }}
-            className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-gold-deep px-3 text-[0.9375rem] font-extrabold text-white transition-opacity hover:opacity-90 sm:px-4"
+            /*
+              어두운 화면에서는 글자를 뒤집는다.
+
+              `gold-deep` 은 테마 변수라 어두운 화면에서 **밝은 금색**이
+              된다. 그 위의 흰 글자는 1.83:1 — 단추에 뭐라고 적혔는지
+              읽을 수가 없었다. 처음부터 그랬는데, 글자가 단추의 직계
+              자식이라 대비 검사기가 건너뛰고 있었다. 이번에 폰용 글자를
+              <span> 으로 감싸면서 비로소 걸렸다.
+            */
+            className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-gold-deep px-3 text-[0.9375rem] font-extrabold text-white transition-opacity hover:opacity-90 dark:text-deep-950 sm:px-4"
           >
             <DownloadIcon className="h-4 w-4 shrink-0" />
             <span className="sm:hidden">받기</span>

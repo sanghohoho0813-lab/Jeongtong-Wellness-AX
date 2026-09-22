@@ -70,7 +70,7 @@ AX 코치의 실증 준비도 옆에도 같은 배지가 붙는다 — 시연 �
 | 문서 | 내용 |
 |---|---|
 | `PROJECT_SPEC.md` | 전략 잠금 — AX VERDICT · PRIMARY CONSTRAINT · KPI 계약 · SSOT · AI 방법 · 증명 계획 |
-| `DECISIONS.md` | 결정 29건 — WHY · WHY NOT · REVISIT WHEN |
+| `DECISIONS.md` | 결정 30건 — WHY · WHY NOT · REVISIT WHEN |
 | `RECOMMENDATIONS.md` | 지금 하지 않은 것 10건 + 시작 조건 (마친 것 2건) |
 | `QA_REPORT.md` | 이중 점수(전략 · 제품) · Red Team · 회귀 결과 |
 | `V1_4_FINAL_GAP_AUDIT.md` · `V1_2_GAP_AUDIT.md` | 이전 판 대조표 (참고) |

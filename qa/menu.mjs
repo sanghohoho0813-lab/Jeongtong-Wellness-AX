@@ -165,10 +165,12 @@ const scanContrast = (page) => page.evaluate(() => {
     while (stack.length) base = over(stack.pop(), base);
     return lumOf(base);
   };
+  /* 아이콘 + 글자 단추가 빠지지 않게 (reach.mjs 와 같은 규칙) */
+  const ownText = (el) =>
+    [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
   const bad = [];
   for (const el of document.querySelectorAll("aside nav *, [data-section-tabs] *")) {
-    if (el.children.length) continue;
-    const txt = (el.textContent || "").trim();
+    const txt = el.children.length ? ownText(el) : (el.textContent || "").trim();
     if (!txt) continue;
     const s = getComputedStyle(el);
     const fgc = rgba(s.color);
