@@ -268,6 +268,136 @@ log(
   (await pc.locator('nav[aria-label="차례"]').count()) === 1,
 );
 
+// ═══ 8. 가장 좁은 폰 + 가장 큰 글씨 — 주 사용자의 실제 설정 ══════
+/*
+  이 조합을 아무도 보지 않고 있었다.
+
+  `layout.mjs` 는 390px 에서 큰 글씨를 보고, `tablet.mjs` 는 360px 을
+  기본 글씨로 본다. 그런데 60대 사용자가 실제로 쓰는 설정은 **둘을
+  겹친 쪽**이다 — 좁은 폰에 글자 크게. 그 조합에서 재 보니
+  AX 코치가 옆으로 51px 스크롤되고, 「오늘 이것만 해보세요」 가 한
+  글자씩 세로로 쌓이고, 묶음 탭이 「챙길 …」 로 잘리고, 매장 이름이
+  「정통대…」 로 잘렸다. 전부 이 조합에서만 나타났다.
+
+  여기서 보는 것은 셋이다 — 옆으로 새는가 · 글자가 잘리는가 ·
+  줄바꿈을 거부해 칸 밖으로 나가는가.
+*/
+const ALL_SCREENS = [
+  "/", "/briefing", "/coach", "/customers", "/customers/c-04", "/visits",
+  "/retention", "/analytics", "/service", "/branches", "/settings", "/more", "/guide",
+  "/my", "/my/booking", "/my/passes", "/my/care", "/my/visits", "/my/wellness",
+  "/my/content", "/my/account", "/my/more", "/my/request",
+];
+
+const big = await (
+  await browser.newContext({ viewport: { width: 360, height: 780 } })
+).newPage();
+big.on("pageerror", (e) => errs.push(String(e).slice(0, 120)));
+await go(big, "/", 1200);
+await big.evaluate(() => {
+  const k = "jeongtong-ax-v1";
+  const raw = JSON.parse(localStorage.getItem(k) || "{}");
+  raw.settings = { ...(raw.settings || {}), fontScale: "large" };
+  localStorage.setItem(k, JSON.stringify(raw));
+});
+
+const SCAN = () => {
+  const inScroller = (el) =>
+    !!el.closest(
+      "[class*='overflow-x-auto'], .no-scrollbar, [class*='overflow-x-scroll']",
+    );
+  const clipped = [];
+  const spilling = [];
+  for (const el of document.querySelectorAll("body *")) {
+    if (inScroller(el)) continue;
+    const s = getComputedStyle(el);
+    const box = el.getBoundingClientRect();
+    if (box.width < 2) continue;
+    /* 잘린 글자 — 칸보다 넓은데 숨겨 놓은 것 */
+    if (
+      el.children.length === 0 &&
+      (el.textContent || "").trim() &&
+      el.scrollWidth > el.clientWidth + 1 &&
+      /hidden|clip/.test(s.overflowX)
+    )
+      clipped.push(`"${(el.textContent || "").trim().slice(0, 18)}"`);
+    /*
+      줄바꿈을 거부해 칸 밖으로 나가는 **글자**.
+
+      처음엔 nowrap 인 요소를 전부 봤더니 SVG 아이콘 속 <path> 가
+      걸렸다 — 부모(<svg>)의 사각형이 0 으로 잡히기 때문이고, 읽을
+      글자가 있는 것도 아니다. 글자가 있는 HTML 요소만 본다.
+    */
+    if (/nowrap/.test(s.whiteSpace) && !(el instanceof SVGElement)) {
+      const txt = (el.textContent || "").trim();
+      const par = el.parentElement;
+      if (
+        txt &&
+        par &&
+        !(par instanceof SVGElement) &&
+        box.width > par.getBoundingClientRect().width + 1
+      )
+        spilling.push(`"${txt.slice(0, 18)}"`);
+    }
+  }
+  return {
+    overflow:
+      document.documentElement.scrollWidth - window.innerWidth,
+    clipped: [...new Set(clipped)].slice(0, 3),
+    spilling: [...new Set(spilling)].slice(0, 3),
+  };
+};
+
+let sideways = [];
+let cut = [];
+let spill = [];
+for (const path of ALL_SCREENS) {
+  await go(big, path, 850);
+  const r = await big.evaluate(SCAN);
+  if (r.overflow > 1) sideways.push(`${path} ${r.overflow}px`);
+  if (r.clipped.length) cut.push(`${path} ${r.clipped.join(",")}`);
+  if (r.spilling.length) spill.push(`${path} ${r.spilling.join(",")}`);
+}
+log(
+  `360px + 큰 글씨 — ${ALL_SCREENS.length}개 화면이 옆으로 새지 않는다`,
+  sideways.length === 0,
+  sideways.slice(0, 3).join(" | "),
+);
+log(
+  "360px + 큰 글씨 — 잘린 글자가 없다",
+  cut.length === 0,
+  cut.slice(0, 3).join(" | "),
+);
+log(
+  "360px + 큰 글씨 — 줄바꿈을 거부해 칸 밖으로 나가는 글자가 없다",
+  spill.length === 0,
+  spill.slice(0, 3).join(" | "),
+);
+
+/* 매장 이름은 어떤 설정에서도 잘리지 않는다 */
+await go(big, "/", 1200);
+const brand = await big.evaluate(() => {
+  const el = document.querySelector("header a span span");
+  return el ? { need: el.scrollWidth, box: el.clientWidth, txt: el.textContent } : null;
+});
+log(
+  "큰 글씨에서도 매장 이름이 다 보인다",
+  !!brand && brand.need <= brand.box + 1,
+  brand ? `${brand.txt} ${brand.need}px / 자리 ${brand.box}px` : "못 찾음",
+);
+
+/* 아이콘 단추는 글자 크기를 따라 커지지 않는다 (손끝 크기는 눈과 별개다) */
+const btnSizes = await big.evaluate(() =>
+  [...document.querySelectorAll("header button, header a")]
+    .map((b) => Math.round(b.getBoundingClientRect().height))
+    .filter((h) => h >= 30 && h <= 80),
+);
+log(
+  "머리글 아이콘 단추가 44px 로 고정돼 있다",
+  btnSizes.length > 0 && btnSizes.every((h) => h === 44),
+  btnSizes.join(" / "),
+);
+
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
 console.log(`   (기준 ${BASE})`);
 await browser.close();

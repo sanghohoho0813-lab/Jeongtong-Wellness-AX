@@ -188,7 +188,7 @@ export default function MoreSheet({
                           {item.label}
                         </span>
                         {item.desc && (
-                          <span className="block truncate text-[0.8125rem] leading-snug text-ink-sub">
+                          <span className="block text-[0.8125rem] leading-snug text-ink-sub [word-break:keep-all]">
                             {item.desc}
                           </span>
                         )}

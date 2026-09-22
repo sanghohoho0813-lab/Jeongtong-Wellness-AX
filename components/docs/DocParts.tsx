@@ -505,7 +505,8 @@ export function DocLinks({
             className={`h-9 w-1.5 shrink-0 rounded-full bg-gradient-to-b ${TONE_BAR[l.tone]}`}
           />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
+            {/* 자르지 않는다 — 좁은 폰에 큰 글씨면 「오늘의 실행 브리핑」 이 잘렸다 */}
+            <span className="block text-[1.0625rem] font-extrabold text-ink [word-break:keep-all]">
               {l.label}
             </span>
             {/* 어떤 화면인지 설명하는 줄이라 자르지 않는다 (폰에서 잘려 있었다) */}

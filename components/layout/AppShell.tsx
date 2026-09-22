@@ -47,9 +47,21 @@ function Logo() {
   return (
     <Link
       href={isManager ? "/" : STAFF_HOME}
-      className="flex min-w-0 items-center gap-2.5"
+      /* 표식과 상호 사이도 px — 글자 크기를 따라 벌어지면 이름이 밀린다 */
+      className="flex min-w-0 items-center gap-[10px]"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
+      {/*
+        상호 표식과 머리글 단추는 **px 로 못 박는다.**
+
+        「글자 크게」 는 글을 크게 읽겠다는 뜻이지 아이콘을 키우겠다는
+        뜻이 아니다. rem 으로 두었더니 크게 설정에서 표식과 단추 셋이
+        44px → 52px 로 불어나 상호 자리를 100px 에서 59px 로 밀어냈고,
+        결과적으로 매장 이름이 「정통대…」 로 잘렸다. 키워야 할 글자가
+        도리어 이름을 지운 셈이다.
+
+        44px 은 손끝이 닿는 최소치이고, 기본 설정에서 지금 쓰던 값 그대로다.
+      */}
+      <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 font-serif text-lg font-bold text-gold shadow-[0_2px_8px_rgba(10,46,44,0.35)]">
         鼎
       </span>
       {/*
@@ -264,15 +276,15 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-2.5 backdrop-blur-md lg:hidden">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-[12px]">
       <Logo />
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-[8px]">
         <button
           type="button"
           onClick={onOpenPalette}
           data-tour="quick-search"
           aria-label="고객 찾기 열기"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
+          className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
         >
           <SearchIcon className="h-5 w-5" />
         </button>
@@ -283,7 +295,7 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
         <Link
           href="/briefing"
           aria-label={`오늘 관리 대상 ${openCount}명 — 실행 브리핑으로 이동`}
-          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
+          className="relative flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
         >
           <BellIcon className="h-5 w-5" />
           {openCount > 0 && (

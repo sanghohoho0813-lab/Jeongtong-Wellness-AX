@@ -97,9 +97,23 @@ export function SectionTitle({
   hint?: ReactNode;
   className?: string;
 }) {
+  /*
+    제목과 오른쪽 단추 — 자리가 없으면 **줄을 바꾼다.**
+
+    좁은 폰(360px)에 글자 크게 설정을 켜면 이 줄이 무너졌다. 제목 칸에
+    `min-w-0` 만 주면 최소 너비가 「한 글자」 라, 옆의 단추가 줄어들기를
+    거부하는 순간 제목이 한 글자씩 세로로 쌓였다 — AX 코치의
+    「오늘 이것만 해보세요」 가 실제로 그렇게 나왔다.
+
+    그래서 제목에 **기준 너비(13rem)** 를 준다. 그 너비와 단추가 한 줄에
+    못 들어가면 단추가 아랫줄로 내려간다. 주 사용자가 60대라 「좁은 폰 +
+    큰 글씨」 는 예외가 아니라 기본 설정에 가깝다.
+  */
   return (
-    <div className={`mb-4 flex items-start justify-between gap-3 ${className}`}>
-      <div className="min-w-0">
+    <div
+      className={`mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2 ${className}`}
+    >
+      <div className="min-w-0 flex-1 basis-52">
         {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
         <h2 className="text-section-title flex min-w-0 items-center gap-2.5 text-ink">
           {icon && (

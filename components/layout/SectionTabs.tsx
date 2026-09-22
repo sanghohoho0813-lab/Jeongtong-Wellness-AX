@@ -54,14 +54,23 @@ export default function SectionTabs() {
             key={t.href}
             href={t.href}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-[3rem] min-w-0 items-center justify-center gap-1.5 rounded-btn px-1.5 text-[1.0625rem] leading-tight transition-colors ${
+            /*
+              글자를 자르지 않는다.
+
+              전에는 `truncate` 였다. 360px 에 글자 크게를 켜면 「챙길 고객」
+              이 「챙길 …」 로 잘렸고, 잘린 탭은 60대 눈에 「여기까지」 로
+              읽혀서 아무도 누르지 않는다. 자리가 모자라면 자르지 말고
+              **두 줄로 내려쓴다** — 탭이 조금 높아질 뿐 잃는 글자가 없다.
+              `keep-all` 은 한글을 낱글자가 아니라 어절 단위로 끊는다.
+            */
+            className={`flex min-h-[3rem] min-w-0 items-center justify-center gap-1.5 rounded-btn px-1.5 py-1.5 text-center text-[1.0625rem] leading-tight [word-break:keep-all] transition-colors ${
               active
                 ? "bg-gradient-to-r from-deep-700 to-deep-800 font-extrabold text-white shadow-[0_2px_8px_rgba(10,46,44,0.22)]"
                 : "font-bold text-ink-sub hover:bg-stone-bg"
             }`}
           >
             <Icon className="hidden h-[1.15rem] w-[1.15rem] shrink-0 xs:block" />
-            <span className="truncate">{t.label}</span>
+            <span className="min-w-0">{t.label}</span>
           </Link>
         );
       })}

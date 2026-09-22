@@ -312,7 +312,8 @@ export function DevicePreviewButton({
         type="button"
         onClick={open}
         aria-label={label}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card transition-colors hover:text-aqua-700 dark:border-white/10 ${className}`}
+        /* 머리글 아이콘 단추는 글자 크기를 따라 커지지 않는다 (AppShell Logo 주석 참고) */
+        className={`flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card transition-colors hover:text-aqua-700 dark:border-white/10 ${className}`}
       >
         <Icon className="h-5 w-5" />
       </button>

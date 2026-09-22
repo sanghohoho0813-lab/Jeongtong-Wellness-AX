@@ -122,7 +122,16 @@ export default function CoachSummary({
             <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-soft">
               {a.message}
             </p>
-            <p className="nowrap-num mt-0.5 text-[0.875rem] leading-relaxed text-ink-sub">
+            {/*
+              `nowrap-num` 이 아니라 `tabular-nums` 다.
+
+              이 줄은 「최근 4주 8건 / 목표 20건」 같은 숫자일 때도 있고
+              「고객 화면이 매장 계정과 아직 연결되지 않았습니다」 같은
+              문장일 때도 있다. 줄바꿈 금지를 걸어 두었더니 문장일 때
+              360px 화면을 51px 밀어내 **화면이 옆으로 스크롤**됐다.
+              숫자 정렬만 가져오고 줄바꿈은 막지 않는다.
+            */}
+            <p className="mt-0.5 text-[0.875rem] leading-relaxed text-ink-sub tabular-nums">
               {a.detail}
             </p>
             {a.unmeasurableReason && (
