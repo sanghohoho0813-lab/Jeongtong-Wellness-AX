@@ -58,18 +58,21 @@ export default function CoachPage() {
     <div>
       <PageHeader
         title="AX 코치"
-        description="실제 기록이 쌓이고 있는지 보고, 오늘 할 일을 알려 드립니다."
+        description="오늘 할 일을 먼저 알려 드리고, 실제 기록이 얼마나 쌓였는지 보여 드립니다."
       />
 
       <div className="flex flex-col card-gap">
-        <CoachSummary
-          coverage={coverage}
-          isDemo={isDemo}
-          stageLabel={stageLabel}
-          before={trend7?.before ?? null}
-          beforeDays={7}
-        />
+        {/*
+          오늘 할 일이 먼저다.
 
+          준비도를 위에 두었더니 폰에서 첫 Mission 이 1,482px — 화면 밖
+          둘째 장에 있었다. 이 화면을 아침에 여는 이유는 「오늘 뭐 하면
+          되나」 이지 「우리가 몇 퍼센트인가」 가 아니다. 점수는 그 일을
+          하고 나서 보는 것이다.
+
+          준비도를 접거나 줄이지는 않았다 — 목표치와 검산 숫자가 이
+          화면의 정직성 장치다(D-18). 자리만 바꿨다.
+        */}
         <Card dataTour="coach-missions">
           <SectionTitle
             icon={<SparkIcon className="h-4 w-4" />}
@@ -103,6 +106,15 @@ export default function CoachPage() {
             </ul>
           )}
         </Card>
+
+        <CoachSummary
+          coverage={coverage}
+          isDemo={isDemo}
+          stageLabel={stageLabel}
+          before={trend7?.before ?? null}
+          beforeDays={7}
+        />
+
 
         <CoachReport report7={report7} report14={report14} />
 

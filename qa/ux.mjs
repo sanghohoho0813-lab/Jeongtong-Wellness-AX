@@ -72,7 +72,12 @@ log(
 );
 
 /* ── 3. 맨 위로 — 내려가야 나오고, 누르면 올라가고, 올라가면 사라진다 ── */
-await go(p, "/settings", 1200);
+/*
+  예전에는 설정 화면에서 쟀다. 설정이 폰에서 열 화면이던 시절 이야기다.
+  이제 설정은 접힌 목록(2.3화면)이라 2,500px 까지 내려갈 수가 없다.
+  늘 긴 화면인 「사용 방법」 으로 옮긴다 — 기능이 아니라 잴 자리가 바뀐 것이다.
+*/
+await go(p, "/guide", 1400);
 log("맨 위로 — 첫 화면에는 없다", (await p.locator("[data-back-to-top]").count()) === 0);
 await p.evaluate(() => window.scrollTo(0, 2500));
 await p.waitForTimeout(400);

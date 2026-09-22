@@ -14,6 +14,7 @@ import {
 import { Button, Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
 import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
 import AiReadyNote from "@/components/ui/AiReadyNote";
+import ChipRow from "@/components/ui/ChipRow";
 
 /** 한 번에 그리는 과제 수 — 나머지는 [더 보기]로 이어 그린다 */
 const PAGE_SIZE = 40;
@@ -93,6 +94,15 @@ export default function BriefingPage() {
   const holdCount = briefingTasks.filter((t) => t.status === "hold").length;
   const total = briefingTasks.length + closedByVisit;
   const progress = total > 0 ? doneCount / total : 0;
+
+  /*
+    유형별 미처리 건수.
+    히어로 칩과 거르개 칩이 같은 값을 쓴다 — 두 곳에서 따로 세면
+    언젠가 한쪽만 틀린다.
+  */
+  const openByCategory: Record<string, number> = {};
+  for (const t of openTasks)
+    openByCategory[t.category] = (openByCategory[t.category] ?? 0) + 1;
 
   // 카테고리별 미처리 분포 (많은 순)
   const byCategory = CATEGORY_FILTERS.filter((c) => c !== "all")
@@ -189,8 +199,16 @@ export default function BriefingPage() {
             </div>
           </div>
         </div>
+        {/*
+          유형별 미처리 — **폰에서는 접는다.**
+
+          바로 아래 거르개 칩과 같은 말을 두 번 하고 있었다. 그 두 벌이
+          390px 에서 네 줄을 차지해, 정작 오늘 챙길 첫 고객이 화면 밖
+          (1,012px) 에 있었다. 대신 아래 거르개 칩에 건수를 붙여
+          잃는 것이 없게 했다. 자리가 있는 태블릿 이상에서는 그대로 둔다.
+        */}
         {byCategory.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+          <div className="mt-4 hidden flex-wrap gap-2 border-t border-white/10 pt-4 sm:flex">
             {byCategory.map((x) => (
               <button
                 key={x.key}
@@ -215,7 +233,7 @@ export default function BriefingPage() {
       {/* 화면에서 목록을 좁히는 도구 — 종이에는 필요 없다 */}
       <Card className="no-print mb-4 !py-4">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-2">
+          <ChipRow ariaLabel="관리 유형으로 거르기">
             {CATEGORY_FILTERS.map((c) => {
               const active = category === c;
               const dot = c === "all" ? "" : CATEGORY_DOTS[c];
@@ -223,7 +241,7 @@ export default function BriefingPage() {
                 <button
                   key={c}
                   onClick={() => setCategory(c)}
-                  className={`touch-target inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
+                  className={`touch-target inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
                     active
                       ? "bg-sel text-sel-ink shadow-sm"
                       : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
@@ -235,11 +253,16 @@ export default function BriefingPage() {
                     />
                   )}
                   {c === "all" ? "전체 유형" : TASK_CATEGORY_LABELS[c]}
+                  {c !== "all" && openByCategory[c] > 0 && (
+                    <span className="nowrap-num font-extrabold opacity-90">
+                      {openByCategory[c]}
+                    </span>
+                  )}
                 </button>
               );
             })}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
+          </ChipRow>
+          <ChipRow ariaLabel="처리 상태로 거르기">
             {STATUS_FILTERS.map((s) => (
               <FilterChip
                 key={s}
@@ -258,7 +281,7 @@ export default function BriefingPage() {
             {opportunityTotal > 0 && (
               <button
                 onClick={() => setOnlyOpportunity((v) => !v)}
-                className={`touch-target nowrap-num ml-auto rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                className={`touch-target nowrap-num shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors sm:ml-auto ${
                   onlyOpportunity
                     ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
                     : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
@@ -267,7 +290,7 @@ export default function BriefingPage() {
                 매출기회 {opportunityTotal}
               </button>
             )}
-          </div>
+          </ChipRow>
         </div>
       </Card>
 

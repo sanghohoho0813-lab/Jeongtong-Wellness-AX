@@ -17,8 +17,9 @@
 import { useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { useStaffLink } from "@/lib/supabase/StaffLink";
-import { Badge, Button, Card, FieldLabel, SectionTitle, inputCls } from "@/components/ui";
-import { BuildingIcon, RefreshIcon } from "@/components/ui/icons";
+import { Badge, Button, FieldLabel, inputCls } from "@/components/ui";
+import SettingsSection from "./SettingsSection";
+import { RefreshIcon } from "@/components/ui/icons";
 import { formatDateTimeKr } from "@/lib/utils/date";
 
 export default function SupabaseLinkCard() {
@@ -54,11 +55,17 @@ export default function SupabaseLinkCard() {
     }
   };
 
+  /*
+    다른 설정 칸과 똑같이 폰에서는 접힌다. 여기만 늘 펼쳐져 있으면
+    아홉 줄짜리 목록 한가운데에 긴 카드가 하나 끼어 있는 꼴이 되고,
+    「연결 안 함」 이 기본인 매장에서는 볼 일 없는 입력칸이 먼저 보인다.
+  */
   return (
-    <Card id="set-link">
-      <SectionTitle icon={<BuildingIcon className="h-4 w-4" />}>
-        매장 계정 연결
-      </SectionTitle>
+    <SettingsSection
+      id="set-link"
+      title="매장 계정 연결"
+      summary="여러 기기에서 같은 기록 보기 · 고객 화면 열기"
+    >
 
       {phase === "checking" && (
         <p className="-mt-2 text-sm leading-relaxed text-ink-sub">
@@ -226,6 +233,6 @@ export default function SupabaseLinkCard() {
           </Button>
         </>
       )}
-    </Card>
+    </SettingsSection>
   );
 }

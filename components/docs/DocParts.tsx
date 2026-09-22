@@ -123,15 +123,37 @@ export function DocToc({
   phoneHint?: string;
 }) {
   return (
-    <nav className="card rise-in !py-5" aria-label="차례">
+    <>
+      {/*
+        폰에서는 차례를 따로 그리지 않는다.
+
+        `phoneHint` 가 붙은 문서(사용 방법 · Why AX)는 폰에서 절이 전부
+        접혀 있다. 그러면 **접힌 제목 열여덟 줄이 곧 차례**다. 같은 목록을
+        위에 한 벌 더 두면 390px 에서 1,100px 을 더 내려가야 하고, 사용
+        방법 화면은 본문이 시작되기도 전에 2,446px 지점이었다.
+
+        차례가 본문보다 짧지 않으면 그건 차례가 아니다.
+        (넓은 화면에서는 두세 단으로 접혀 짧으므로 그대로 둔다)
+      */}
+      {phoneHint && (
+        <div className="card rise-in !py-4 md:hidden">
+          <p className="rounded-btn bg-aqua-50 px-3.5 py-2.5 text-[0.9375rem] font-semibold leading-relaxed text-aqua-800 ring-1 ring-aqua-100">
+            {phoneHint}
+          </p>
+          {flow && (
+            <p className="mt-2.5 rounded-btn bg-gradient-to-r from-aqua-50 to-card px-4 py-3 text-[0.9375rem] font-semibold leading-relaxed text-ink-soft ring-1 ring-aqua-100">
+              {flow}
+            </p>
+          )}
+        </div>
+      )}
+      <nav
+        className={`card rise-in !py-5 ${phoneHint ? "hidden md:block" : ""}`}
+        aria-label="차례"
+      >
       <p className="mb-3 text-sm font-extrabold uppercase tracking-wider text-aqua-700">
         차례
       </p>
-      {phoneHint && (
-        <p className="mb-3 rounded-btn bg-aqua-50 px-3.5 py-2.5 text-[0.9375rem] font-semibold leading-relaxed text-aqua-800 ring-1 ring-aqua-100 md:hidden">
-          {phoneHint}
-        </p>
-      )}
       <ol className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((i) => (
           <li key={i.href}>
@@ -154,7 +176,8 @@ export function DocToc({
           {flow}
         </p>
       )}
-    </nav>
+      </nav>
+    </>
   );
 }
 

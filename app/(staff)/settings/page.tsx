@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
+import SettingsSection from "@/components/settings/SettingsSection";
 import { useStore } from "@/lib/data/store";
 import { useBackup } from "@/lib/data/useBackup";
 import {
@@ -20,7 +21,6 @@ import {
   Card,
   FieldLabel,
   Modal,
-  SectionTitle,
   SegmentedControl,
   inputCls,
 } from "@/components/ui";
@@ -244,8 +244,11 @@ export default function SettingsPage() {
 
       {/*
         섹션 바로가기.
-        설정은 폰에서 여섯 화면 반쯤 된다. 영업시간 하나 고치려고 매번
-        아래로 쓸어내리는 대신, 여기서 눌러 바로 그 자리로 간다.
+
+        폰에서는 아래 칸들이 접혀 있다 (`SettingsSection`). 여기서 누르면
+        그 칸으로 가면서 **열린 채로** 도착한다 — 주소 조각(#set-store)을
+        각 칸이 듣고 있다. 눌렀는데 제목만 나오고 또 눌러야 하면,
+        바로가기가 아니라 일을 하나 늘린 것이다.
       */}
       {isManager && (
         <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
@@ -273,8 +276,7 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 card-gap xl:grid-cols-2 xl:items-start">
         {/* 화면 */}
-        <Card id="set-screen" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>화면</SectionTitle>
+        <SettingsSection id="set-screen" title="화면" summary="글자 크기 · 밝기 · 색 조합 · 화면 밀도">
           <div className="space-y-5">
             <div>
               <FieldLabel>글자 크기</FieldLabel>
@@ -391,7 +393,7 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
-        </Card>
+        </SettingsSection>
 
         {/* 직원 계정: 화면 설정만 노출 */}
         {!isManager && (
@@ -407,8 +409,7 @@ export default function SettingsPage() {
         {isManager && (
           <>
         {/* 매장 */}
-        <Card id="set-store" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>매장</SectionTitle>
+        <SettingsSection id="set-store" title="매장" summary="상호 · 지점명 · 영업시간">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <FieldLabel>회사명</FieldLabel>
@@ -459,7 +460,7 @@ export default function SettingsPage() {
               />
             </div>
           </div>
-        </Card>
+        </SettingsSection>
 
         {/*
           도입 전 기준선 (Unified v3.0 §4.2 BASELINE).
@@ -469,8 +470,13 @@ export default function SettingsPage() {
           아는 만큼만 적는다. 비워 두면 성과 화면은 "기준선 없음 — 개선율을
           계산하지 않습니다" 라고 말한다. 채우라고 재촉하되 지어내지 않는다.
         */}
-        <Card id="set-baseline" dataTour="settings-baseline" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle tone="gold">도입 전 기준선 — 아는 만큼만</SectionTitle>
+        <SettingsSection
+          id="set-baseline"
+          dataTour="settings-baseline"
+          tone="gold"
+          title="도입 전 기준선 — 아는 만큼만"
+          summary="AX 쓰기 전 숫자 — 성과 비교의 기준"
+        >
           <p className="mb-4 text-[0.9375rem] leading-relaxed text-ink-sub">
             AX 를 쓰기 전에는 어땠는지 적어 두는 자리입니다. 성과 화면이 이
             값과 지금을 나란히 놓고 비교합니다. 정확히 모르시면 비워 두셔도
@@ -518,24 +524,24 @@ export default function SettingsPage() {
               </div>
             );
           })()}
-        </Card>
+        </SettingsSection>
 
         {/* 직원 */}
-        <Card id="set-staff" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle
-            action={
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setStaffModal(true)}
-              >
-                <PlusIcon className="h-4 w-4" />
-                직원 추가
-              </Button>
-            }
-          >
-            직원
-          </SectionTitle>
+        <SettingsSection
+          id="set-staff"
+          title="직원"
+          summary="직원 이름 · 역할 · 계정"
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setStaffModal(true)}
+            >
+              <PlusIcon className="h-4 w-4" />
+              직원 추가
+            </Button>
+          }
+        >
           <ul className="divide-y divide-stone-bg-deep">
             {staff.map((s) => (
               <li
@@ -588,7 +594,7 @@ export default function SettingsPage() {
               </li>
             ))}
           </ul>
-        </Card>
+        </SettingsSection>
 
         {/* 고객관리 기준 */}
         {/*
@@ -598,8 +604,7 @@ export default function SettingsPage() {
           그때 이름과 연락처가 그대로 나가면 되돌릴 수가 없다.
           저장된 자료는 건드리지 않고 보이는 것만 가린다.
         */}
-        <Card id="set-privacy" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>화면 공유</SectionTitle>
+        <SettingsSection id="set-privacy" title="화면 공유" summary="고객 이름과 연락처를 화면에서 가리기">
           {/*
             네모 체크박스 대신 누르는 단추로 둔다.
             체크박스는 실제 그림이 20px 라 손끝으로 겨냥하기 어렵고,
@@ -637,11 +642,14 @@ export default function SettingsPage() {
               </span>
             </span>
           </button>
-        </Card>
+        </SettingsSection>
 
         {/* 서비스 · 이용권 상품 (매장 가격표) */}
-        <Card id="set-product" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>서비스 · 이용권 상품</SectionTitle>
+        <SettingsSection
+          id="set-product"
+          title="서비스 · 이용권 상품"
+          summary="매장이 파는 프로그램과 이용권 가격"
+        >
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
             매장이 실제로 판매하는 것과 금액입니다. 여기 적어 둔 내용을 이용권
             등록 화면과 방문 기록의 프로그램 목록이 그대로 읽습니다. 가격을
@@ -649,19 +657,21 @@ export default function SettingsPage() {
             그때 팔린 금액 그대로 남습니다.
           </p>
           <ProductTable />
-        </Card>
+        </SettingsSection>
 
         {/*
           매장 계정 연결 — 여러 기기가 같은 기록을 보게 하고, 고객 화면
           (MY WELLNESS)을 여는 스위치다. 연결하지 않으면 지금까지처럼
           이 기기 안에서만 저장된다.
         */}
-        <div className="scroll-mt-36 lg:scroll-mt-6">
-          <SupabaseLinkCard />
-        </div>
+        <SupabaseLinkCard />
 
-        <Card id="set-rules" dataTour="settings-rules" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>고객관리 기준</SectionTitle>
+        <SettingsSection
+          id="set-rules"
+          dataTour="settings-rules"
+          title="고객관리 기준"
+          summary="브리핑과 재방문이 대상을 가려내는 숫자"
+        >
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
             오늘의 실행 브리핑과 재방문 관리가 이 기준으로 대상을 가려냅니다.
             숫자를 바꾸면 <b>저장하기 전에</b> 대상이 어떻게 달라지는지 아래에서
@@ -790,11 +800,14 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
-        </Card>
+        </SettingsSection>
 
         {/* 매출기회 기준 — Priority 기준과 분리된 별도 카드 */}
-        <Card id="set-opp" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>AX 매출기회 기준</SectionTitle>
+        <SettingsSection
+          id="set-opp"
+          title="AX 매출기회 기준"
+          summary="재방문 · 재등록 기회를 판단하는 숫자"
+        >
           <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
             재방문 · 이용권 재등록 기회를 판단하는 기준입니다. 위의 고객관리
             기준(우선순위 계산)과는 별개이며, 이 값만 바꿔도 우선순위 점수는
@@ -823,11 +836,15 @@ export default function SettingsPage() {
           <div className="mt-4">
             <AiReadyNote subject="opportunity" />
           </div>
-        </Card>
+        </SettingsSection>
 
         {/* 데이터 */}
-        <Card id="set-data" dataTour="settings-data" className="scroll-mt-36 lg:scroll-mt-6">
-          <SectionTitle>데이터</SectionTitle>
+        <SettingsSection
+          id="set-data"
+          dataTour="settings-data"
+          title="데이터"
+          summary="전체 백업 내려받기 · 불러오기 · 초기화"
+        >
           <p className="-mt-2 mb-3 text-sm leading-relaxed text-ink-sub">
             지금까지 쌓인 기록을 파일로 내려받습니다. 운영 성과 보고 자료로 쓰거나,
             실제 데이터베이스로 옮길 때 그대로 사용할 수 있습니다.
@@ -932,7 +949,7 @@ export default function SettingsPage() {
               샘플 데이터로 초기화
             </Button>
           </div>
-        </Card>
+        </SettingsSection>
           </>
         )}
       </div>
