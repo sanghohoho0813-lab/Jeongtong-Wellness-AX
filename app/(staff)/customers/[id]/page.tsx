@@ -521,7 +521,7 @@ export default function CustomerDetailPage() {
                       onClick={() => {
                         updateCustomer(c.id, { focusBodyParts: draftParts });
                         setEditingParts(false);
-                        toast(`${c.name} 고객의 집중 케어 부위를 저장했습니다`);
+                        toast(`${displayName(c.name, privacyMode)} 고객의 집중 케어 부위를 저장했습니다`);
                       }}
                     >
                       저장
@@ -711,7 +711,7 @@ export default function CustomerDetailPage() {
 
         {/* 케어 선호 · 특이사항 (고객 감동 포인트) */}
         {/* 고객이 MY WELLNESS 에서 남긴 것 — 매장 계정 연결 시에만 나온다 */}
-        <CustomerVoiceCard customerId={c.id} customerName={c.name} />
+        <CustomerVoiceCard customerId={c.id} customerName={displayName(c.name, privacyMode)} />
 
         <CarePreferenceCard
           customerId={c.id}
@@ -872,7 +872,7 @@ export default function CustomerDetailPage() {
       <Modal
         open={openVisit}
         onClose={() => setOpenVisit(false)}
-        title={`${c.name} — 방문 · 상담 ${editingVisit ? "기록 수정" : "기록"}`}
+        title={`${displayName(c.name, privacyMode)} — 방문 · 상담 ${editingVisit ? "기록 수정" : "기록"}`}
         wide
       >
         <VisitForm
@@ -890,7 +890,7 @@ export default function CustomerDetailPage() {
       <Modal
         open={openProfile}
         onClose={() => setOpenProfile(false)}
-        title={`${c.name} — 고객 정보 수정`}
+        title={`${displayName(c.name, privacyMode)} — 고객 정보 수정`}
         wide
       >
         <CustomerForm
@@ -904,7 +904,7 @@ export default function CustomerDetailPage() {
       <Modal
         open={openMembership}
         onClose={() => setOpenMembership(false)}
-        title={`${c.name} — 이용권 ${editingMembership ? "수정" : "등록"}`}
+        title={`${displayName(c.name, privacyMode)} — 이용권 ${editingMembership ? "수정" : "등록"}`}
         wide
       >
         <MembershipForm
@@ -960,7 +960,7 @@ export default function CustomerDetailPage() {
       <Modal
         open={openReport}
         onClose={() => setOpenReport(false)}
-        title={`${c.name} 님 케어 리포트`}
+        title={`${displayName(c.name, privacyMode)} 님 케어 리포트`}
         wide
       >
         <CareReport customer={c} />

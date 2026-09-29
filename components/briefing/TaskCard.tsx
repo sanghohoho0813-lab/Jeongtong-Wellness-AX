@@ -209,20 +209,20 @@ export default function TaskCard({
       },
     });
     setPanel(null);
-    toast(`${customer.name} · 처리 결과가 저장되었습니다`);
+    toast(`${displayName(customer.name, privacyMode)} · 처리 결과가 저장되었습니다`);
   };
 
   const saveHold = () => {
     setTaskStatus(task.id, "hold", { holdUntil });
     setPanel(null);
-    toast(`${customer.name} · 보류 — ${formatDateKr(holdUntil)} 재확인 예정`, "info");
+    toast(`${displayName(customer.name, privacyMode)} · 보류 — ${formatDateKr(holdUntil)} 재확인 예정`, "info");
   };
 
   /** 이미 처리된 상태에서 버튼을 다시 누르면 대기로 되돌린다 */
   const revertToPending = () => {
     setTaskStatus(task.id, "pending");
     setPanel(null);
-    toast(`${customer.name} · ${STATUS_TOAST.pending}`, "info");
+    toast(`${displayName(customer.name, privacyMode)} · ${STATUS_TOAST.pending}`, "info");
   };
 
   const panelShell = hero
@@ -674,7 +674,7 @@ export default function TaskCard({
           <Modal
             open={openMembership}
             onClose={() => setOpenMembership(false)}
-            title={`${customer.name} — 이용권 등록`}
+            title={`${displayName(customer.name, privacyMode)} — 이용권 등록`}
             wide
           >
             <MembershipForm

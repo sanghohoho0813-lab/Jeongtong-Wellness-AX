@@ -4,6 +4,7 @@
 
 import { useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import { BodyPartRecord, Customer } from "@/lib/types";
 import { daysFromToday } from "@/lib/utils/date";
 import {
@@ -30,7 +31,7 @@ export default function CustomerForm({
   onSaved: (customerId: string) => void;
   onCancel: () => void;
 }) {
-  const { staff, settings, customers, addCustomer, updateCustomer } = useStore();
+  const { staff, settings, customers, addCustomer, updateCustomer, privacyMode } = useStore();
   const toast = useToast();
   const editing = !!customer;
   const [name, setName] = useState(customer?.name ?? initialName ?? "");
@@ -118,7 +119,7 @@ export default function CustomerForm({
       nextManageDate: nextManage || undefined,
       nextManageTime: nextManage ? nextManageTime : undefined,
     });
-    toast(`${c.name} 고객을 등록했습니다`);
+    toast(`${displayName(c.name, privacyMode)} 고객을 등록했습니다`);
     onSaved(c.id);
   };
 

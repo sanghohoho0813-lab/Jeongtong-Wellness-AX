@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import {
   BodyPartRecord,
   PREFERENCE_CATEGORY_LABELS,
@@ -55,6 +56,7 @@ export default function VisitForm({
     factsById,
     visits,
     products,
+    privacyMode,
   } = useStore();
   const toast = useToast();
   /**
@@ -231,7 +233,7 @@ export default function VisitForm({
             <option value="">고객을 선택하세요</option>
             {sortedCustomers.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name}
+                {displayName(c.name, privacyMode)}
               </option>
             ))}
           </select>

@@ -12,6 +12,7 @@
 
 import { useRef } from "react";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 import { buildCareReport } from "@/lib/scoring/care-report";
 import { Customer } from "@/lib/types";
 import {
@@ -60,7 +61,7 @@ function Heading({ children }: { children: React.ReactNode }) {
 }
 
 export default function CareReport({ customer }: { customer: Customer }) {
-  const { visits, memberships, settings } = useStore();
+  const { visits, memberships, settings, privacyMode } = useStore();
   const r = buildCareReport(customer, visits, memberships);
 
   const regionRef = useRef<HTMLDivElement>(null);
@@ -83,7 +84,7 @@ export default function CareReport({ customer }: { customer: Customer }) {
             </p>
             <p className="mt-1 text-2xl font-extrabold tracking-tight text-ink">
               {/* 이 종이는 고객 본인에게 보여 드리는 것이라 이름을 가리지 않는다 */}
-              {r.customer.name} 님
+              {displayName(r.customer.name, privacyMode)} 님
             </p>
           </div>
           <p className="nowrap-num shrink-0 text-sm text-ink-sub">

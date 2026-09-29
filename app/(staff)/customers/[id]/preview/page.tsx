@@ -21,11 +21,12 @@ import CustomerPortalPreview from "@/components/staff/CustomerPortalPreview";
 import { Button, Card } from "@/components/ui";
 import { ChevronLeftIcon } from "@/components/ui/icons";
 import { useStore } from "@/lib/data/store";
+import { displayName } from "@/lib/utils/format";
 
 export default function CustomerPreviewPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
-  const { factsById, branches, settings } = useStore();
+  const { factsById, branches, settings, privacyMode } = useStore();
 
   const facts = id ? factsById.get(id) : undefined;
 
@@ -67,8 +68,19 @@ export default function CustomerPreviewPage() {
         description="이 고객의 MY WELLNESS 화면이 어떻게 보이는지 그대로 확인하실 수 있습니다."
       />
 
+      {/*
+        화면 공유 모드면 이름을 가린 채로 넘긴다. 미리보기는 고객 화면을
+        「그대로」 그리므로 안쪽 여러 곳(인사 · 안내문)에 이름이 들어간다 —
+        한 곳씩 고치지 않고 들어가는 값 하나를 가린다.
+      */}
       <CustomerPortalPreview
-        facts={facts}
+        facts={{
+          ...facts,
+          customer: {
+            ...facts.customer,
+            name: displayName(facts.customer.name, privacyMode),
+          },
+        }}
         branchName={branchName}
         backHref={`/customers/${facts.customer.id}`}
       />
