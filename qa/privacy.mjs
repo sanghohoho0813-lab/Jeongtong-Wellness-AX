@@ -7,7 +7,7 @@
  *
  * 그런데 새고 있었다. 설명 영상을 찍으려고 모드를 켜고 화면을 돌다가
  * 알았다 — 목록과 카드는 「김○연」 인데, 방문 기록 창을 여니 제목이
- * 「김수연 — 방문 · 상담 기록」 이었다. 창 제목 · 저장 알림 · 케어
+ * 「(실명 그대로) — 방문 · 상담 기록」 이었다. 창 제목 · 저장 알림 · 케어
  * 리포트 · 고객 화면 미리보기 · 방문 입력칸의 고객 고르기, 모두
  * 실명을 그대로 쓰고 있었다.
  *
@@ -22,14 +22,14 @@ const browser = await launch();
 const errs = [];
 
 /*
-  견본 명부의 실명 (lib/data/mock/seed.ts — D-07: 매장 실제 명부의 이름).
-  가림 규칙은 「첫 글자 · ○ · 끝 글자」 라서, 가린 뒤에도 이 문자열이
-  그대로 나오면 가려지지 않은 것이다.
+  실명 목록은 **코드에 적지 않는다.** 이 저장소는 공개 저장소다.
+  화면 공유 모드를 켜기 전에, 앱이 실제로 들고 있는 고객 명부에서
+  이름을 읽어 온다 — 명부가 바뀌어도 검사가 따라간다.
+  (가림 규칙은 「첫 글자 · ○ · 끝 글자」 라서, 가린 뒤에도 이 문자열이
+  그대로 나오면 가려지지 않은 것이다. 두 글자 이하 이름은 가림 뒤에도
+  원래 글자와 겹칠 수 있어 뺀다.)
 */
-const REAL = [
-  "옥윤용", "김청하", "김윤정", "김수연", "오화순", "조미숙",
-  "김효자", "노순자", "소피아최", "김혜숙", "김율희",
-];
+let REAL = [];
 
 const p = await (
   await browser.newContext({ viewport: { width: 390, height: 844 } })
@@ -37,6 +37,11 @@ const p = await (
 p.on("pageerror", (e) => errs.push(String(e).slice(0, 120)));
 
 await go(p, "/", 1200);
+REAL = await p.evaluate(() => {
+  const raw = JSON.parse(localStorage.getItem("jeongtong-ax-v1") || "{}");
+  return [...new Set((raw.customers || []).map((c) => c.name).filter((n) => n && n.length >= 3))];
+});
+log("전제 — 앱 명부에서 확인할 이름을 읽었다", REAL.length >= 5, `${REAL.length}명`);
 await p.evaluate(() => {
   const k = "jeongtong-ax-v1";
   const raw = JSON.parse(localStorage.getItem(k) || "{}");
