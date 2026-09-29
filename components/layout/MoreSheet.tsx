@@ -153,6 +153,17 @@ export default function MoreSheet({
               desc="이 시스템을 만든 이유"
               tone="gold"
             />
+            {/* 영상 두 편 — 폰으로 보는 분이 대부분이라 여기서도 바로 */}
+            <div className="xs:col-span-2">
+              <SheetDoc
+                href="/videos"
+                onClose={onClose}
+                icon={<PlayIcon className="h-5 w-5" />}
+                title="안내 영상"
+                desc="사용법 3분 · 기술 소개 2분 — 세로 영상 두 편"
+                tone="aqua"
+              />
+            </div>
           </div>
 
           {/*

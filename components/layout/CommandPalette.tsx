@@ -60,6 +60,7 @@ const NAV_KEYWORDS: Record<string, string> = {
   "/why": "why ax 우리매장 이야기 무엇이달라지나 스토리 발표 심사",
   "/intro": "왜 배경 소개 기획",
   "/guide": "도움말 설명서 매뉴얼 사용법 안내",
+  "/videos": "영상 동영상 비디오 안내영상 사용법영상 기술소개 특허 심사 릴스",
 };
 
 interface Item {
@@ -128,6 +129,7 @@ export default function CommandPalette({
       { href: "/why", label: "Why AX", icon: SparkIcon, tone: "brand-1" as const },
       { href: "/intro", label: "기획의도", icon: BookIcon, tone: "doc-1" as const },
       { href: "/guide", label: "사용 방법", icon: SparkIcon, tone: "doc-2" as const },
+      { href: "/videos", label: "안내 영상", icon: PlayIcon, tone: "brand-2" as const },
     ];
     return [
       ...items.map((n) => ({

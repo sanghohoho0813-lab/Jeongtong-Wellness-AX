@@ -104,7 +104,7 @@ export default function LiveClock({
         {now ? clockText(now) : "  :  :  "}
       </p>
       {settings.openHours && (
-        <p className="nowrap-num mt-1 truncate text-[0.6875rem] text-ink-faint">
+        <p data-open-hours className="nowrap-num mt-1 truncate text-[0.6875rem] text-ink-faint">
           영업 {settings.openHours}
         </p>
       )}

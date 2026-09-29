@@ -184,7 +184,7 @@ export const NAV_SECTIONS: NavSection[] = [
     root: "/more",
     label: "더보기",
     tabs: [{ href: "/more", label: "더보기", icon: MoreIcon }],
-    extra: ["/settings", "/service", "/branches", "/welcome", "/guide", "/why", "/intro"],
+    extra: ["/settings", "/service", "/branches", "/welcome", "/guide", "/why", "/intro", "/videos"],
   },
 ];
 

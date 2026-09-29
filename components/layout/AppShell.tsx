@@ -10,6 +10,7 @@ import { canAccessRoute, STAFF_HOME } from "@/lib/auth/permissions";
 import {
   BellIcon,
   BookIcon,
+  PlayIcon,
   PlusIcon,
   SearchIcon,
   SparkIcon,
@@ -95,13 +96,23 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
   const { isManager } = useStore();
   const items = navItemsFor(SIDEBAR_ITEMS, isManager);
   return (
+    /*
+      키 낮은 화면(노트북 900px 이하)에서는 위쪽을 조금씩 조인다.
+
+      영상 단추 한 줄을 더하자 1440×900 에서 목차 '더보기' 가 바닥 밖으로
+      밀려났다 (그 전에도 10px 잘려 있었다). 목차는 넷뿐이라 넷이 다
+      보여야 한다. 그래서 키가 960px 이하일 때만 머리 여백 · 문서 단추
+      · 목차 줄 높이를 한 단계씩 줄이고, 시계 아래 영업시간 줄을 접는다
+      (영업 중 · 준비 중 표시는 시계 옆에 그대로 있다). 목차 줄은 줄여도
+      56px — 손끝 기준(44px)보다 크다.
+    */
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/[0.05] bg-card/85 backdrop-blur-md lg:flex">
-      <div className="px-5 pb-3 pt-6">
+      <div className="px-5 pb-3 pt-6 [@media(max-height:960px)]:pb-2 [@media(max-height:960px)]:pt-4">
         <Logo />
       </div>
 
       {/* 오늘 날짜와 지금 시각 — 기록할 때 폰을 꺼내 확인하지 않게 */}
-      <div className="mx-3 mb-2">
+      <div className="mx-3 mb-2 [@media(max-height:960px)]:[&_[data-open-hours]]:hidden">
         <LiveClock />
       </div>
       {/* 지금 보는 게 시연 자료인지 · 실제 자료인지 (v3.0 §15) */}
@@ -136,7 +147,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
       <div className="mx-3 mb-2 space-y-2">
         <Link
           href="/why"
-          className={`flex items-center gap-2 rounded-btn px-3 py-2.5 text-sm font-extrabold transition-colors ${
+          className={`flex items-center gap-2 rounded-btn px-3 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
             isActive(pathname, "/why")
               ? "bg-gradient-to-r from-deep-700 to-deep-900 text-white shadow-sm"
               : "bg-gradient-to-r from-deep-700/10 to-transparent text-deep-800 ring-1 ring-deep-700/20 hover:from-deep-700/20 dark:text-aqua-400"
@@ -155,7 +166,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         <div className="grid grid-cols-2 gap-2">
           <Link
             href="/intro"
-            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
+            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
               isActive(pathname, "/intro")
                 ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
                 : "bg-gold-soft text-gold-deep ring-1 ring-gold/30 hover:bg-gold/20"
@@ -167,7 +178,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           <Link
             href="/guide"
             /* 읽을 거리는 둘 다 금색 — 기획의도보다 한 톤 옅게만 둔다 */
-            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors ${
+            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
               isActive(pathname, "/guide")
                 ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
                 : "bg-gold/10 text-gold-deep ring-1 ring-gold/20 hover:bg-gold/20"
@@ -176,6 +187,39 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             <SparkIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">사용 방법</span>
           </Link>
+        </div>
+
+        {/*
+          안내 영상 두 편 — 글을 읽기보다 틀어 보는 편이 빠른 분들이 있다.
+          대표님 내외는 사용법 영상을, 심사 · 발표 자리에서는 기술 소개
+          영상을 먼저 튼다. 둘 다 같은 화면(/videos)으로 가고, 누른 쪽
+          영상이 바로 보이도록 주소 끝에 표식(#guide · #tech)을 붙인다.
+
+          처음에는 한 줄씩 두 줄로 세웠다가 되돌렸다. 900px 높이 화면에서
+          목차 '더보기' 가 바닥 밖으로 밀려났다 — 목차보다 앞설 만큼
+          자주 누르는 단추가 아니다. 위 줄(기획의도 · 사용 방법)과 같은
+          반 칸 둘로 둔다. 재생 표시(▶)가 영상이라는 것을 말한다.
+        */}
+        <div data-sidebar-videos className="grid grid-cols-2 gap-2">
+          {[
+            { href: "/videos#guide", label: "사용법", full: "사용법 영상 3분 29초" },
+            { href: "/videos#tech", label: "기술 소개", full: "기술 소개 영상 2분 42초" },
+          ].map((v) => (
+            <Link
+              key={v.href}
+              href={v.href}
+              aria-label={v.full}
+              title={v.full}
+              className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
+                isActive(pathname, "/videos")
+                  ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-sm"
+                  : "bg-deep-700/[0.07] text-deep-800 ring-1 ring-deep-700/15 hover:bg-deep-700/[0.14] dark:text-aqua-400"
+              }`}
+            >
+              <PlayIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{v.label}</span>
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -206,7 +250,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`group relative mb-1.5 flex items-center gap-3 rounded-btn px-2.5 py-2.5 transition-colors ${
+              className={`group relative mb-1.5 flex items-center gap-3 rounded-btn px-2.5 py-2.5 transition-colors [@media(max-height:960px)]:mb-1 [@media(max-height:960px)]:py-2 ${
                 active
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
                   : "text-nav-ink hover:bg-stone-bg"
