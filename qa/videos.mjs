@@ -47,7 +47,7 @@ const side = pc.locator("aside [data-sidebar-videos] a");
 log("왼쪽 목차에 영상 단추가 둘 있다", (await side.count()) === 2);
 const sideText = (await side.allInnerTexts()).join(" ");
 const sideNames = (await side.evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")))).join(" ");
-log("단추 이름 — 사용법 · 기술 소개 (읽어 주는 이름은 '영상' 과 길이까지)", /사용법/.test(sideText) && /기술 소개/.test(sideText) && /사용법 영상 3분 29초/.test(sideNames) && /기술 소개 영상 2분 42초/.test(sideNames), sideText + " / " + sideNames);
+log("단추 이름 — 사용법 · 기술 소개 (읽어 주는 이름은 '영상' 과 길이까지)", /사용법/.test(sideText) && /기술 소개/.test(sideText) && /사용법 영상 \d+분 \d+초/.test(sideNames) && /기술 소개 영상 \d+분 \d+초/.test(sideNames), sideText + " / " + sideNames);
 const navBottom = await pc.evaluate(() => {
   const a = [...document.querySelectorAll("aside nav a")].pop();
   const n = document.querySelector("aside nav");
@@ -122,8 +122,19 @@ if (h264) {
   meta = { guide: await mp4Info("/videos/guide.mp4"), tech: await mp4Info("/videos/tech.mp4") };
 }
 const how = h264 ? "브라우저가 읽은 값" : "파일 안의 값 (이 크로미움은 H.264 를 못 틂)";
-log(`사용법 영상 길이 3분 29초 — ${how}`, Math.abs((meta.guide?.d ?? 0) - 209) < 2, JSON.stringify(meta.guide));
-log(`기술 소개 영상 길이 2분 42초 — ${how}`, Math.abs((meta.tech?.d ?? 0) - 162) < 2, JSON.stringify(meta.tech));
+/*
+  화면에 적힌 길이(「3분 1초」)와 파일의 실제 길이가 맞는가 — 영상을 다시 만들고
+  화면의 길이 표기를 안 고치면 여기서 걸린다. 숫자를 이 검사에 박아 두지 않는다.
+*/
+const label = await pc.evaluate(() => Object.fromEntries(["guide", "tech"].map((id) => {
+  const m = (document.getElementById(`${id}-title`)?.innerText || "").match(/(\d+)분\s*(\d+)초/);
+  return [id, m ? +m[1] * 60 + +m[2] : null];
+})));
+const sideLabel = await pc.evaluate(() => [...document.querySelectorAll("aside [data-sidebar-videos] a")]
+  .map((a) => { const m = (a.getAttribute("aria-label") || "").match(/(\d+)분 (\d+)초/); return m ? +m[1] * 60 + +m[2] : null; }));
+log(`사용법 영상 — 화면 표기 ${label.guide}초 = 파일 길이 (${how})`, label.guide && Math.abs((meta.guide?.d ?? 0) - label.guide) < 1.5, JSON.stringify(meta.guide));
+log(`기술 소개 영상 — 화면 표기 ${label.tech}초 = 파일 길이 (${how})`, label.tech && Math.abs((meta.tech?.d ?? 0) - label.tech) < 1.5, JSON.stringify(meta.tech));
+log("왼쪽 목차의 길이 표기도 같다", sideLabel[0] === label.guide && sideLabel[1] === label.tech, JSON.stringify(sideLabel));
 log(
   "둘 다 세로 영상이다 (1080 × 1920)",
   meta.guide?.w === 1080 && meta.guide?.h === 1920 && meta.tech?.w === 1080 && meta.tech?.h === 1920,

@@ -40,7 +40,7 @@ const VIDEOS: Video[] = [
     src: "/videos/guide.mp4",
     poster: "/videos/guide-poster.jpg",
     title: "사용 안내",
-    length: "3분 29초",
+    length: "3분 1초",
     who: "처음 쓰시는 분 · 대표님 내외",
     points: [
       "아침 — 오늘 챙길 손님 보기",
@@ -54,7 +54,7 @@ const VIDEOS: Video[] = [
     src: "/videos/tech.mp4",
     poster: "/videos/tech-poster.jpg",
     title: "기술 소개",
-    length: "2분 42초",
+    length: "2분 34초",
     who: "심사 · 투자 · 외부 발표 자리",
     points: [
       "특허 출원 ① 3층 온열 구조체",

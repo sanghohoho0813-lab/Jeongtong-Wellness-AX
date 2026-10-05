@@ -202,8 +202,8 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         */}
         <div data-sidebar-videos className="grid grid-cols-2 gap-2">
           {[
-            { href: "/videos#guide", label: "사용법", full: "사용법 영상 3분 29초" },
-            { href: "/videos#tech", label: "기술 소개", full: "기술 소개 영상 2분 42초" },
+            { href: "/videos#guide", label: "사용법", full: "사용법 영상 3분 1초" },
+            { href: "/videos#tech", label: "기술 소개", full: "기술 소개 영상 2분 34초" },
           ].map((v) => (
             <Link
               key={v.href}
