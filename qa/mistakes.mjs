@@ -68,7 +68,7 @@ await openNew();
   await p.waitForTimeout(2300);
 }
 log("저장하고 닫을 때는 묻지 않는다", !(await asked()));
-log("저장하면 그 고객 화면으로 간다", /\/customers\/c-/.test(p.url()), p.url().replace(BASE, ""));
+log("저장하면 그 고객 화면으로 간다", /\/customers\/[0-9a-f]{8}-[0-9a-f-]{27}$/.test(p.url()), p.url().replace(BASE, ""));
 
 // ── 입력칸이 없는 확인 창은 그대로 닫힌다
 await go(p, "/customers/c-01", 2000);

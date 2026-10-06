@@ -323,7 +323,8 @@ const phone = form
 if ((await phone.count()) > 0) await phone.fill("01099998888");
 await form.getByRole("button", { name: "고객 등록", exact: true }).last().click();
 await p.waitForTimeout(2500);
-log("새 고객이 등록된다", /\/customers\/c-/.test(p.url()), p.url().replace(BASE, ""));
+// 새 기록 id 는 uuid 다 (D-42) — 예전 `c-시각` 이 아니다
+log("새 고객이 등록된다", /\/customers\/[0-9a-f]{8}-[0-9a-f-]{27}$/.test(p.url()), p.url().replace(BASE, ""));
 log("등록 직후 화면이 비어 보이지 않는다", /첫 기록|방문 · 상담 기록/.test(await bodyText(p)));
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
