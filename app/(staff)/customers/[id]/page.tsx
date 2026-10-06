@@ -48,6 +48,7 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import MembershipForm from "@/components/customers/MembershipForm";
 import CareReport from "@/components/customers/CareReport";
 import CustomerVoiceCard from "@/components/customers/CustomerVoiceCard";
+import MergeCustomerNotice from "@/components/customers/MergeCustomerNotice";
 import AiReadyNote from "@/components/ui/AiReadyNote";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 
@@ -221,6 +222,8 @@ export default function CustomerDetailPage() {
       </Card>
 
       <div className="flex flex-col card-gap">
+        {/* 같은 분이 또 등록돼 있으면 한 줄로 알린다 — 없으면 아무것도 안 그린다 */}
+        <MergeCustomerNotice customer={c} />
         {/*
           상태 요약 — 최근 방문 → 다음 관리일 → 이용권 잔여 → 우선도 순.
 

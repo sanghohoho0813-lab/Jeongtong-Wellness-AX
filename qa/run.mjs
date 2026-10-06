@@ -22,6 +22,7 @@ const BASE = process.env.QA_BASE || "http://localhost:4402";
 const SUITES = [
   ["기능 회귀", "functional.mjs", []],
   ["하루 업무 (실제 순서 · 저장된 자료)", "daily.mjs", []],
+  ["현장 운영 (이용권 챙길 분 · 고객 합치기 · 마감 정산)", "ops.mjs", []],
   ["키보드 · 초점", "keyboard.mjs", []],
   ["사람이 하는 실수", "mistakes.mjs", []],
   ["화면 무너짐 (기본 글씨)", "layout.mjs", []],

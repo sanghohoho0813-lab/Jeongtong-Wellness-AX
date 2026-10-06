@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import VisitForm from "@/components/visits/VisitForm";
+import SettlementSheet from "@/components/visits/SettlementSheet";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
 import { daysAgo, formatDateKr, formatRelative, todayISO } from "@/lib/utils/date";
@@ -19,7 +20,7 @@ import {
   SummaryTile,
   inputCls,
 } from "@/components/ui";
-import { PlusIcon, SearchIcon } from "@/components/ui/icons";
+import { ClipboardIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
 import { Visit } from "@/lib/types";
 
@@ -62,6 +63,8 @@ export default function VisitsPage() {
   const [type, setType] = useState<TypeFilter>("all");
   const [period, setPeriod] = useState<PeriodFilter>("30");
   const [staffFilter, setStaffFilter] = useState<string>("all");
+  /** 마감 정산 창 — 열려 있으면 그날 날짜 */
+  const [settleDay, setSettleDay] = useState<string | undefined>();
 
   const customerName = (id: string) =>
     customers.find((c) => c.id === id)?.name ?? "삭제된 고객";
@@ -105,15 +108,22 @@ export default function VisitsPage() {
         title="방문 / 이용 기록"
         description="방문·상담 기록이 시간순으로 쌓입니다."
         action={
-          <Button
-            onClick={() => {
-              setEditingVisit(undefined);
-              setOpenForm(true);
-            }}
-          >
-            <PlusIcon className="h-4 w-4" />
-            방문 기록
-          </Button>
+          <div className="flex gap-2">
+            {/* 저녁 마감 — 오늘 받은 돈 · 기록을 한 장으로 */}
+            <Button variant="secondary" onClick={() => setSettleDay(todayISO())}>
+              <ClipboardIcon className="h-4 w-4" />
+              마감 정산
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingVisit(undefined);
+                setOpenForm(true);
+              }}
+            >
+              <PlusIcon className="h-4 w-4" />
+              방문 기록
+            </Button>
+          </div>
         }
       />
 
@@ -288,7 +298,7 @@ export default function VisitsPage() {
               얼마였지」 를 마감 때 손으로 세지 않게. 합계는 적어 둔 결제
               금액만 더한다(지어내는 숫자 없음). 이용권은 차감된 횟수.
             */}
-            {newDay && <DayHeader day={day} rows={rows} />}
+            {newDay && <DayHeader day={day} rows={rows} onSettle={() => setSettleDay(day)} />}
             <Card className="relative overflow-hidden !py-4 !pl-5">
               <span
                 className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${st.strip}`}
@@ -371,6 +381,15 @@ export default function VisitsPage() {
       )}
 
       <Modal
+        open={!!settleDay}
+        onClose={() => setSettleDay(undefined)}
+        title="마감 정산"
+        wide
+      >
+        {settleDay && <SettlementSheet day={settleDay} onDayChange={setSettleDay} />}
+      </Modal>
+
+      <Modal
         open={openForm}
         onClose={() => setOpenForm(false)}
         title={editingVisit ? "방문 · 상담 기록 수정" : "방문 · 상담 기록"}
@@ -429,7 +448,15 @@ export default function VisitsPage() {
 }
 
 /** 하루 머리글 — 날짜 · 방문/상담 수 · 그날 적힌 결제 합계 · 이용권 차감 수 */
-function DayHeader({ day, rows }: { day: string; rows: Visit[] }) {
+function DayHeader({
+  day,
+  rows,
+  onSettle,
+}: {
+  day: string;
+  rows: Visit[];
+  onSettle: () => void;
+}) {
   const list = rows.filter((v) => v.visitedAt.slice(0, 10) === day);
   const visitN = list.filter((v) => v.type === "visit").length;
   const consultN = list.filter((v) => v.type === "consult").length;
@@ -453,6 +480,14 @@ function DayHeader({ day, rows }: { day: string; rows: Visit[] }) {
           .filter(Boolean)
           .join(" · ")}
       </p>
+      {/* 그날 정산 한 장 — 지난 날도 여기서 바로 */}
+      <button
+        type="button"
+        onClick={onSettle}
+        className="touch-target ml-auto inline-flex items-center rounded-full px-3 text-sm font-bold text-aqua-700 hover:bg-aqua-50 dark:text-aqua-400"
+      >
+        정산 보기
+      </button>
     </div>
   );
 }

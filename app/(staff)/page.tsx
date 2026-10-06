@@ -8,6 +8,7 @@ import BriefingPreview from "@/components/dashboard/BriefingPreview";
 import CustomerInboxCard from "@/components/dashboard/CustomerInboxCard";
 import CoachEntryCard from "@/components/dashboard/CoachEntryCard";
 import OpportunityCard from "@/components/dashboard/OpportunityCard";
+import PassFollowUpCard from "@/components/dashboard/PassFollowUpCard";
 import BodyMapCard from "@/components/dashboard/BodyMapCard";
 import SegmentCard from "@/components/dashboard/SegmentCard";
 import RevisitPreview from "@/components/dashboard/RevisitPreview";
@@ -87,6 +88,11 @@ export default function DashboardPage() {
             <div className="rise-stagger">
               <BriefingPreview />
             </div>
+            {/*
+              이용권 기한 · 잔여 · 소진 — 브리핑에 안 오른 분도 이용권 기록만
+              보고 고른다. 고를 분이 없으면 스스로 숨는다.
+            */}
+            <PassFollowUpCard />
             <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
               <OpportunityCard />
               <RevisitPreview />

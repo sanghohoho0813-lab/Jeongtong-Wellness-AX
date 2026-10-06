@@ -52,6 +52,7 @@ import {
   visitToRow,
 } from "./mappers";
 import { toUuid } from "./ids";
+import type { MergePlan } from "./merge";
 
 export interface SyncData {
   branches: Branch[];
@@ -350,6 +351,68 @@ export async function pushAll(
   await upsertChunked(sb, "customer_preferences", prefRows);
 
   await deleteMissing(sb, bid, data, admin);
+}
+
+/**
+ * 합친 결과(merge.ts 의 planSync) 를 서버에 반영한다.
+ *
+ * pushAll 과 달리 **바뀐 줄만** 올리고, **이 기기가 지운 줄만** 지운다.
+ * 서버에 있는 다른 줄은 쳐다보지 않는다 — 받아 온 뒤 올리기 전 몇 초
+ * 사이에 다른 기기가 새로 적은 기록이 있어도 건드리지 않는다.
+ *
+ * 순서는 pushAll 과 같다. 넣을 때는 지점 → 직원 → 고객 → 이용권 → 방문,
+ * 지울 때는 그 반대(방문이 이용권 · 고객을 가리키므로 방문부터).
+ */
+export async function pushPlan(
+  sb: SupabaseClient,
+  branchId: string,
+  plan: Pick<MergePlan, "upserts" | "deletes">,
+  opts: { isAdmin: boolean },
+): Promise<void> {
+  const bid = toUuid(branchId);
+  const { upserts: up, deletes: del } = plan;
+  const admin = opts.isAdmin;
+
+  if (admin) {
+    for (const b of up.branches) {
+      const { id: _id, ...patch } = branchToRow(b);
+      void _id;
+      const { error } = await sb.from("branches").update(patch).eq("id", toUuid(b.id));
+      if (error) throw error;
+    }
+    await upsertChunked(sb, "staff", up.staff.map(staffToRow));
+  }
+  await saveCustomers(sb, bid, up.customers);
+  if (admin) {
+    await upsertChunked(sb, "service_products", up.products.map(productToRow));
+  }
+  await upsertChunked(sb, "memberships", up.memberships.map(membershipToRow));
+  await upsertChunked(sb, "visits", up.visits.map(visitToRow));
+  await upsertChunked(
+    sb,
+    "customer_preferences",
+    up.customers.flatMap((c) =>
+      (c.preferences ?? []).map((p) => preferenceToRow(p, c.id, c.branchId)),
+    ),
+  );
+
+  const order: Array<[string, string[]]> = [
+    ["visits", del.visits],
+    ["memberships", del.memberships],
+    ["customer_preferences", del.preferences],
+    ["customers", del.customers],
+    ...(admin ? ([["service_products", del.products]] as Array<[string, string[]]>) : []),
+  ];
+  for (const [table, ids] of order) {
+    for (let i = 0; i < ids.length; i += 200) {
+      const { error } = await sb
+        .from(table)
+        .delete()
+        .eq("branch_id", bid)
+        .in("id", ids.slice(i, i + 200));
+      if (error) throw error;
+    }
+  }
 }
 
 /**

@@ -6,7 +6,8 @@
  *
  * 이 파일이 하는 일은 셋이다.
  *   1) 매장 계정 로그인 상태를 들고 있는다
- *   2) 연결돼 있으면 이 기기의 자료를 서버에 밀어 넣는다 (바뀔 때마다, 잠깐 뒤에)
+ *   2) 연결돼 있으면 서버 것을 받아 이 기기 것과 합친 뒤 바뀐 것만 올린다
+ *      (바뀔 때마다 잠깐 뒤에, 화면으로 돌아올 때, 그리고 1분마다 — merge.ts)
  *   3) 고객이 남긴 피드백·요청을 받아 와 직원 화면에 넘긴다
  *
  * 연결하지 않으면 아무 일도 하지 않는다. 그 상태가 지금까지의 동작 그대로다.
@@ -43,7 +44,16 @@ import {
   pullAll,
   pullCustomerInbox,
   pushAll,
+  pushPlan,
 } from "./sync";
+import {
+  clearBase,
+  hasWork,
+  makeBase,
+  planSync,
+  readBase,
+  writeBase,
+} from "./merge";
 
 export type LinkPhase =
   | "off" // 설정 없음 — 이 빌드는 서버를 모른다
@@ -81,6 +91,10 @@ const Ctx = createContext<LinkValue | null>(null);
 
 /** 상태가 멎은 뒤에 한 번만 올린다 — 타이핑 한 글자마다 보내지 않게 */
 const PUSH_DELAY_MS = 2500;
+/** 다른 기기가 적은 것을 받아 오는 간격 — 화면을 보고 있을 때만 */
+const PULL_EVERY_MS = 60_000;
+/** 창을 오갈 때마다 부르지 않게 — 이보다 짧게는 다시 받지 않는다 */
+const MIN_GAP_MS = 10_000;
 
 /**
  * "이 기기는 이미 연결을 마쳤다" 는 표시.
@@ -155,6 +169,61 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     [customers, visits, memberships, products, staff, branches],
   );
 
+  /** 서버에서 받아 온 직후 합칠 때 쓰는 「지금 이 순간」 의 자료 */
+  const localRef = useRef(currentData());
+  localRef.current = { customers, visits, memberships, products, staff, branches };
+  const running = useRef(false);
+  const rerun = useRef(false);
+  const lastCycleAt = useRef(0);
+
+  /**
+   * 받아서 합치고, 바뀐 것만 올린다 — 이 앱의 저장 한 바퀴.
+   *
+   * 예전에는 「이 기기 것을 통째로 올리고 서버에만 있는 줄은 지운다」 였고,
+   * 그래서 다른 기기가 막 적은 방문이 지워졌다. 자세한 규칙은 merge.ts.
+   * 한 번에 한 바퀴만 돈다. 도는 중에 또 바뀌면 끝나고 한 번 더 돈다.
+   */
+  const runCycle = useCallback(
+    async (sb: SupabaseClient, who: StaffIdentity) => {
+      if (running.current) {
+        rerun.current = true;
+        return;
+      }
+      running.current = true;
+      lastCycleAt.current = Date.now();
+      const admin = who.role === "owner" || who.role === "manager";
+      try {
+        const server = await pullAll(sb, who.branchId);
+        const base = readBase(who.branchId);
+        if (!base) {
+          // 이 방식으로 처음 맞추는 기기 — 지금까지처럼 서버를 기준으로 삼는다
+          skipNextPush.current = true;
+          applyRemote(server, { keepTasks: true });
+          writeBase(who.branchId, makeBase(server));
+        } else {
+          const plan = planSync(localRef.current, server, base);
+          if (plan.localChanged) {
+            skipNextPush.current = true;
+            applyRemote(plan.merged, { keepTasks: true });
+          }
+          if (hasWork(plan)) await pushPlan(sb, who.branchId, plan, { isAdmin: admin });
+          writeBase(who.branchId, makeBase(plan.merged));
+        }
+        setLastSyncedAt(new Date().toISOString());
+        setError("");
+      } finally {
+        running.current = false;
+        if (rerun.current) {
+          rerun.current = false;
+          setTimeout(() => {
+            void runCycle(sb, who).catch((e) => setError(humanError(e)));
+          }, 0);
+        }
+      }
+    },
+    [applyRemote],
+  );
+
   const loadInbox = useCallback(async (sb: SupabaseClient, branchId: string) => {
     try {
       const inbox = await pullCustomerInbox(sb, branchId);
@@ -203,10 +272,8 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
        */
       if (readLinked() === id.branchId) {
         setPhase("syncing");
-        const data = await pullAll(sb, id.branchId);
-        skipNextPush.current = true;
-        applyRemote(data);
-        setLastSyncedAt(new Date().toISOString());
+        // 받아서 합친다 — 지난번에 못 올린 이 기기 기록도 잃지 않는다
+        await runCycle(sb, id);
         setPhase("linked");
         void loadInbox(sb, id.branchId);
         return;
@@ -222,7 +289,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
       setPhase("choosing");
       void loadInbox(sb, id.branchId);
     },
-    [loadInbox, applyRemote, setAuthStaff],
+    [loadInbox, runCycle, setAuthStaff],
   );
 
   useEffect(() => {
@@ -265,8 +332,15 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
           const data = await pullAll(sb, identity.branchId);
           skipNextPush.current = true;
           applyRemote(data);
+          writeBase(identity.branchId, makeBase(data));
         } else {
+          // 「이 기기 것을 살린다」 를 고른 경우만 통째로 올린다
           await pushAll(sb, identity.branchId, currentData(), { isAdmin });
+          // 올린 것을 서버 모양(uuid)으로 다시 받아 기준으로 삼는다
+          const data = await pullAll(sb, identity.branchId);
+          skipNextPush.current = true;
+          applyRemote(data, { keepTasks: true });
+          writeBase(identity.branchId, makeBase(data));
         }
         writeLinked(identity.branchId);
         setLastSyncedAt(new Date().toISOString());
@@ -284,16 +358,14 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     const sb = sbRef.current;
     if (!sb || !identity || phase !== "linked") return;
     try {
-      await pushAll(sb, identity.branchId, currentData(), { isAdmin });
-      setLastSyncedAt(new Date().toISOString());
-      // 올라갔으면 경고를 거둔다. 안 거두면 "다시 시도" 를 눌러 성공해도
-      // 화면은 계속 빨간 채로 남아, 원장님은 아직 고장 났다고 읽는다.
-      setError("");
+      // 성공하면 runCycle 이 경고를 거둔다. 안 거두면 "다시 시도" 를 눌러
+      // 성공해도 화면이 계속 빨간 채로 남아, 원장님은 아직 고장 났다고 읽는다.
+      await runCycle(sb, identity);
       await loadInbox(sb, identity.branchId);
     } catch (e) {
       setError(humanError(e));
     }
-  }, [identity, isAdmin, phase, currentData, loadInbox]);
+  }, [identity, phase, runCycle, loadInbox]);
 
   // ---------- 바뀌면 잠시 뒤 올린다 ----------
 
@@ -308,17 +380,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
 
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(() => {
-      pushAll(
-        sb,
-        identity.branchId,
-        { customers, visits, memberships, products, staff, branches },
-        { isAdmin },
-      )
-        .then(() => {
-          setLastSyncedAt(new Date().toISOString());
-          setError("");
-        })
-        .catch((e) => setError(humanError(e)));
+      runCycle(sb, identity).catch((e) => setError(humanError(e)));
     }, PUSH_DELAY_MS);
 
     return () => {
@@ -328,7 +390,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     ready,
     phase,
     identity,
-    isAdmin,
+    runCycle,
     customers,
     visits,
     memberships,
@@ -336,6 +398,35 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     staff,
     branches,
   ]);
+
+  /*
+   * 다른 기기가 적은 것을 받아 온다.
+   *
+   * 아무것도 안 고치고 화면만 보고 있는 기기(카운터 태블릿)는 위의 「바뀌면
+   * 올린다」 가 한 번도 돌지 않아, 폰에서 적은 방문을 하루 종일 모른다.
+   * 그래서 화면으로 돌아올 때 한 번, 보고 있는 동안 1분마다 한 번 받는다.
+   * 화면이 꺼져 있을 때는 받지 않는다.
+   */
+  useEffect(() => {
+    if (!ready || phase !== "linked" || !identity) return;
+    const sb = sbRef.current;
+    if (!sb) return;
+    const visible = () =>
+      typeof document === "undefined" || document.visibilityState === "visible";
+    const tick = () => {
+      if (!visible()) return;
+      if (Date.now() - lastCycleAt.current < MIN_GAP_MS) return;
+      runCycle(sb, identity).catch((e) => setError(humanError(e)));
+    };
+    const t = setInterval(tick, PULL_EVERY_MS);
+    document.addEventListener("visibilitychange", tick);
+    window.addEventListener("focus", tick);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", tick);
+      window.removeEventListener("focus", tick);
+    };
+  }, [ready, phase, identity, runCycle]);
 
   // 고객이 남긴 것은 이쪽에서 알 길이 없으니 주기적으로 확인한다.
   // 5분이면 "오늘 남긴 것을 오늘 본다" 에는 충분하고, 서버 호출도 적다.
@@ -367,6 +458,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     const sb = sbRef.current;
     clearLinked();
+    if (identity) clearBase(identity.branchId);
     if (sb) await sb.auth.signOut();
     setIdentity(undefined);
     // 권한도 함께 내려놓는다 — 세션만 지우고 role 을 남겨 두면 안 된다
@@ -381,7 +473,7 @@ export function StaffLinkProvider({ children }: { children: React.ReactNode }) {
     setRequests([]);
     setLastSyncedAt(undefined);
     setPhase(supabaseConfigured ? "signed_out" : "off");
-  }, [setAuthStaff]);
+  }, [identity, setAuthStaff]);
 
   // ---------- 고객 연결코드 · 수신함 처리 ----------
 

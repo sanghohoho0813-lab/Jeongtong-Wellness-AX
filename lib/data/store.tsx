@@ -49,6 +49,16 @@ import {
 import { detectSalesOpportunity } from "@/lib/scoring/opportunity";
 import type { BackupPayload, ImportRow } from "@/lib/utils/import";
 import { localDateOf, todayISO } from "@/lib/utils/date";
+/*
+ * 새 기록의 id 는 처음부터 uuid 다. 예전의 `v-시각` 은 서버에 올라가며 다른
+ * uuid 로 바뀌어, 두 기기가 같은 기록을 서로 다른 이름으로 들고 있게 됐다.
+ * 이미 저장된 짧은 id 는 그대로 읽힌다 (toUuid 가 같은 값으로 바꿔 준다).
+ */
+import { newId } from "@/lib/supabase/ids";
+import {
+  type CustomerMergeUndo,
+  mergeCustomerRecords,
+} from "@/lib/data/merge-customers";
 import { StorageUsage, measureStorage } from "@/lib/utils/storage";
 import type { CoachMissionLog } from "@/lib/ax-coach/types";
 
@@ -206,6 +216,12 @@ interface StoreValue extends PersistedState {
   removePreference: (customerId: string, preferenceId: string) => void;
   addCustomer: (input: NewCustomerInput) => Customer;
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
+  /**
+   * 같은 분이 두 번 등록됐을 때 — dropId 의 방문 · 이용권 · 케어 선호를 keepId
+   * 에게 옮기고 dropId 를 명부에서 뺀다. 되돌리기용 정보를 돌려준다.
+   */
+  mergeCustomers: (keepId: string, dropId: string) => CustomerMergeUndo | undefined;
+  undoMergeCustomers: (undo: CustomerMergeUndo) => void;
   addVisit: (input: NewVisitInput) => Visit;
   /** 방문/상담 기록 수정 — 이용권 차감도 함께 정정한다 */
   updateVisit: (id: string, input: NewVisitInput) => void;
@@ -260,14 +276,22 @@ interface StoreValue extends PersistedState {
    * 쓴다. 백업 복원(restoreBackup)과 달리 상품 가격표까지 함께 바꾸고,
    * 설정은 건드리지 않는다 — 글자 크기·테마는 기기마다 다른 값이다.
    */
-  applyRemote: (data: {
-    customers: Customer[];
-    visits: Visit[];
-    memberships: Membership[];
-    products: ServiceProduct[];
-    staff: Staff[];
-    branches: Branch[];
-  }) => void;
+  applyRemote: (
+    data: {
+      customers: Customer[];
+      visits: Visit[];
+      memberships: Membership[];
+      products: ServiceProduct[];
+      staff: Staff[];
+      branches: Branch[];
+    },
+    /**
+     * keepTasks — 브리핑 처리 상태(완료 · 보류)를 그대로 둔다.
+     * 다른 기기 것을 받아 와 합칠 때는 늘 켠다. 끄면 새로고침 한 번에
+     * 오늘 처리한 과제가 전부 「처리대기」 로 돌아간다.
+     */
+    opts?: { keepTasks?: boolean },
+  ) => void;
   /**
    * 고객 명부 일괄 등록.
    * mode "skip" 은 이미 있는 연락처를 건너뛰고, "update" 는 비어 있던 항목만 채운다.
@@ -698,7 +722,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       input: { category: PreferenceCategory; note: string; pinned?: boolean },
     ) => {
       const pref: CarePreference = {
-        id: `pref-${Date.now().toString(36)}`,
+        id: newId(),
         category: input.category,
         note: input.note.trim(),
         createdAt: new Date().toISOString(),
@@ -757,7 +781,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addCustomer = useCallback((input: NewCustomerInput): Customer => {
     const customer: Customer = {
-      id: `c-${Date.now().toString(36)}`,
+      id: newId(),
       branchId: state.branches[0]?.id ?? "branch-main",
       name: input.name.trim(),
       phone: input.phone.trim(),
@@ -795,10 +819,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const mergeCustomers = useCallback(
+    (keepId: string, dropId: string): CustomerMergeUndo | undefined => {
+      if (keepId === dropId) return undefined;
+      const keep = state.customers.find((c) => c.id === keepId);
+      const drop = state.customers.find((c) => c.id === dropId);
+      if (!keep || !drop) return undefined;
+      const undo: CustomerMergeUndo = {
+        keepBefore: keep,
+        dropped: drop,
+        movedVisitIds: state.visits.filter((v) => v.customerId === dropId).map((v) => v.id),
+        movedMembershipIds: state.memberships
+          .filter((m) => m.customerId === dropId)
+          .map((m) => m.id),
+      };
+      const merged = mergeCustomerRecords(keep, drop);
+      setState((s) => {
+        const firstSeen = { ...(s.taskFirstSeen ?? {}) };
+        delete firstSeen[dropId];
+        return {
+          ...s,
+          customers: s.customers
+            .filter((c) => c.id !== dropId)
+            .map((c) => (c.id === keepId ? merged : c)),
+          visits: s.visits.map((v) =>
+            v.customerId === dropId ? { ...v, customerId: keepId } : v,
+          ),
+          memberships: s.memberships.map((m) =>
+            m.customerId === dropId ? { ...m, customerId: keepId } : m,
+          ),
+          // 빠지는 분의 과제 상태는 의미가 없다 — 남는 분 기준으로 다시 세운다
+          taskOverrides: s.taskOverrides.filter((t) => t.customerId !== dropId),
+          taskFirstSeen: firstSeen,
+          coachMissions: s.coachMissions?.map((m) =>
+            m.targetCustomerId === dropId ? { ...m, targetCustomerId: keepId } : m,
+          ),
+        };
+      });
+      return undo;
+    },
+    [state.customers, state.visits, state.memberships],
+  );
+
+  const undoMergeCustomers = useCallback((undo: CustomerMergeUndo) => {
+    const visitIds = new Set(undo.movedVisitIds);
+    const msIds = new Set(undo.movedMembershipIds);
+    const dropId = undo.dropped.id;
+    setState((s) => ({
+      ...s,
+      customers: [
+        ...s.customers.map((c) => (c.id === undo.keepBefore.id ? undo.keepBefore : c)),
+        ...(s.customers.some((c) => c.id === dropId) ? [] : [undo.dropped]),
+      ],
+      visits: s.visits.map((v) =>
+        visitIds.has(v.id) ? { ...v, customerId: dropId } : v,
+      ),
+      memberships: s.memberships.map((m) =>
+        msIds.has(m.id) ? { ...m, customerId: dropId } : m,
+      ),
+    }));
+  }, []);
+
   const addVisit = useCallback((input: NewVisitInput): Visit => {
     const now = new Date();
     const visit: Visit = {
-      id: `v-${Date.now().toString(36)}`,
+      id: newId(),
       branchId: state.branches[0]?.id ?? "branch-main",
       customerId: input.customerId,
       staffId: input.staffId,
@@ -971,7 +1056,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         input.remainingCount ?? input.totalCount,
       );
       const membership: Membership = {
-        id: `m-${Date.now().toString(36)}`,
+        id: newId(),
         branchId: state.branches[0]?.id ?? "branch-main",
         customerId: input.customerId,
         programName: input.programName.trim(),
@@ -1181,7 +1266,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const branchId = state.branches[0]?.id ?? "branch-main";
       const product: ServiceProduct = {
         ...input,
-        id: `prod-${Date.now().toString(36)}`,
+        id: newId(),
         branchId,
         sortOrder: state.products.length + 1,
         source: "manual",
@@ -1222,7 +1307,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
    * 화면 표시 설정처럼 이 기기에서 쓰던 값은 백업에 있을 때만 덮어쓴다.
    * 브리핑 과제 상태는 기록이 통째로 바뀌면 의미가 없으므로 비운다.
    */
-  const applyRemote = useCallback<StoreValue["applyRemote"]>((data) => {
+  const applyRemote = useCallback<StoreValue["applyRemote"]>((data, opts) => {
     setState((s) => ({
       ...s,
       customers: data.customers,
@@ -1231,9 +1316,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       products: data.products.length ? data.products : s.products,
       staff: data.staff.length ? data.staff : s.staff,
       branches: data.branches.length ? data.branches : s.branches,
-      // 과제 상태는 날짜별 계산 결과라 자료가 바뀌면 다시 세운다
-      taskOverrides: [],
-      taskFirstSeen: {},
+      // 자료를 통째로 갈아 끼울 때만 과제 상태를 다시 세운다
+      ...(opts?.keepTasks ? {} : { taskOverrides: [], taskFirstSeen: {} }),
     }));
   }, []);
 
@@ -1271,7 +1355,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const byId = new Map(s.customers.map((c) => [c.id, c]));
         const fresh: Customer[] = [];
 
-        rows.forEach((row, i) => {
+        rows.forEach((row) => {
           if (row.existingId && byId.has(row.existingId)) {
             if (mode !== "update") return;
             const cur = byId.get(row.existingId)!;
@@ -1299,7 +1383,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             return;
           }
           fresh.push({
-            id: `c-i${Date.now().toString(36)}-${i}`,
+            id: newId(),
             branchId,
             name: row.name,
             phone: row.phone,
@@ -1373,6 +1457,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removePreference,
     addCustomer,
     updateCustomer,
+    mergeCustomers,
+    undoMergeCustomers,
     addVisit,
     updateVisit,
     removeVisit,
