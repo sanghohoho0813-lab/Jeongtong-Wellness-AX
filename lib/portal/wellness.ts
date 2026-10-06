@@ -20,7 +20,7 @@
 
 import type { Membership, Visit } from "@/lib/types";
 import { calcAvgCycleDays } from "@/lib/scoring/priority";
-import { daysAgo, localDateOf, todayISO } from "@/lib/utils/date";
+import { diffDays, localDateOf, todayISO } from "@/lib/utils/date";
 
 // ---------------------------------------------------------
 // 이용 요약
@@ -71,7 +71,8 @@ export function summarizeUsage(visits: Visit[], today = todayISO()): UsageSummar
   return {
     visitCount: list.length,
     lastVisitDate,
-    daysSinceLastVisit: lastVisitDate ? daysAgo(lastVisitDate) : undefined,
+    // 받은 「오늘」 로 센다 — 시계의 오늘로 세면 지난 날짜로 계산할 때 어긋난다
+    daysSinceLastVisit: lastVisitDate ? diffDays(today, lastVisitDate) : undefined,
     avgCycleDays: calcAvgCycleDays(list),
     latestGapDays,
     visitsLast90Days: dates.filter((d) => d >= cutoff).length,

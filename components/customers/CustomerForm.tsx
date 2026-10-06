@@ -4,7 +4,7 @@
 
 import { useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
-import { displayName } from "@/lib/utils/format";
+import { displayName, displayPhone } from "@/lib/utils/format";
 import { BodyPartRecord, Customer } from "@/lib/types";
 import { daysFromToday } from "@/lib/utils/date";
 import {
@@ -31,7 +31,7 @@ export default function CustomerForm({
   onSaved: (customerId: string) => void;
   onCancel: () => void;
 }) {
-  const { staff, settings, customers, addCustomer, updateCustomer, privacyMode } = useStore();
+  const { staff, settings, customers, addCustomer, updateCustomer, privacyMode, canSeePhone } = useStore();
   const toast = useToast();
   const editing = !!customer;
   const [name, setName] = useState(customer?.name ?? initialName ?? "");
@@ -80,10 +80,24 @@ export default function CustomerForm({
     );
   })();
 
+  /*
+    같은 이름이 이미 있는가 — 연락처 없이 등록하는 분이 생기면 연락처만으로는
+    중복을 못 잡는다. 동명이인도 있으니 막지는 않고 알리기만 한다.
+  */
+  const sameName = (() => {
+    const n = name.trim();
+    if (!n || duplicate) return undefined;
+    return customers.find((c) => c.id !== customer?.id && c.name.trim() === n);
+  })();
+
   const submit = () => {
     if (!name.trim()) return fail("고객명을 입력하세요.", nameRef);
-    if (!phone.trim()) return fail("연락처를 입력하세요.", phoneRef);
-    if (!isValidPhone(phone))
+    /*
+      연락처는 필수가 아니다. 현장에서 번호를 주기 싫어하시는 분도 있는데,
+      필수로 두면 그분은 등록 자체가 안 되고 방문 기록도 남길 수 없었다.
+      적었다면 형식은 확인한다.
+    */
+    if (phone.trim() && !isValidPhone(phone))
       return fail("연락처를 확인해 주세요. 예: 010-1234-5678", phoneRef);
     clear();
 
@@ -101,7 +115,7 @@ export default function CustomerForm({
         nextManageDate: nextManage || undefined,
         nextManageTime: nextManage ? nextManageTime : undefined,
       });
-      toast(`${name.trim()} 고객 정보를 수정했습니다`);
+      toast(`${displayName(name.trim(), privacyMode)} 고객 정보를 수정했습니다`);
       onSaved(customer.id);
       return;
     }
@@ -135,9 +149,16 @@ export default function CustomerForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="예: 김영희"
           />
+          {sameName && (
+            <p className="mt-1.5 text-[0.8125rem] font-bold text-warn-text">
+              같은 이름의 고객이 이미 있습니다
+              {sameName.phone ? ` (${displayPhone(sameName.phone, canSeePhone)})` : ""}.
+              같은 분이면 새로 등록하지 말고 그분을 찾아 기록하세요.
+            </p>
+          )}
         </div>
         <div>
-          <FieldLabel>연락처 *</FieldLabel>
+          <FieldLabel>연락처</FieldLabel>
           <input
             ref={phoneRef}
             className={inputCls}
@@ -147,6 +168,11 @@ export default function CustomerForm({
             inputMode="tel"
             maxLength={13}
           />
+          {!phone.trim() && !customer && (
+            <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
+              비워 두어도 등록됩니다. 번호가 있어야 전화 걸기 · 고객 화면 연결이 됩니다.
+            </p>
+          )}
           {duplicate && (
             <p className="mt-1.5 text-[0.8125rem] font-bold text-warn-text">
               같은 연락처의 <b>{duplicate.name}</b> 고객이 이미 있습니다. 중복

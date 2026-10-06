@@ -7,7 +7,8 @@ import VisitForm from "@/components/visits/VisitForm";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
 import { daysAgo, formatDateKr, formatRelative, todayISO } from "@/lib/utils/date";
-import { displayName, formatKrw } from "@/lib/utils/format";
+import { displayName, formatWon } from "@/lib/utils/format";
+import { matchesQuery } from "@/lib/utils/hangul";
 import {
   Badge,
   Button,
@@ -86,7 +87,8 @@ export default function VisitsPage() {
         if (staffFilter !== "all" && (v.staffId ?? "") !== staffFilter)
           return false;
         if (!q) return true;
-        return customerName(v.customerId).includes(q);
+        // 다른 화면과 같이 초성(ㅇㅇㅇ)으로도 찾는다
+        return matchesQuery(customerName(v.customerId), q);
       })
       .sort((a, b) => b.visitedAt.localeCompare(a.visitedAt));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,7 +132,11 @@ export default function VisitsPage() {
           (v) => daysAgo(v.visitedAt) <= 7 && v.bodyParts.length > 0,
         ).length;
         return (
-          <div className="rise-stagger mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          /*
+            폰에서는 숨긴다. 칸 넷이 첫 화면을 다 차지해 정작 기록이 둘째
+            화면에서야 시작했다. 「오늘 몇 건」 은 아래 날짜 머리글이 말해 준다.
+          */
+          <div className="rise-stagger mb-4 hidden grid-cols-2 gap-2.5 sm:grid sm:gap-3 lg:grid-cols-4">
             <SummaryTile label="오늘 방문" value={todayVisits} unit="건" tone="aqua" />
             <SummaryTile label="오늘 상담" value={todayConsults} unit="건" tone="gold" />
             <SummaryTile label="최근 7일 방문" value={week} unit="건" tone="sky" />
@@ -176,8 +182,9 @@ export default function VisitsPage() {
         </div>
 
         {/* 기간 · 담당 직원 */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-line pt-3">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-ink-faint">
+        {/* 폰에서는 한 줄로 옆으로 넘긴다 — 세 줄로 접히면 목록이 그만큼 내려간다 */}
+        <div className="no-scrollbar -mx-1 mt-3 flex flex-nowrap items-center gap-2 overflow-x-auto border-t border-stone-line px-1 pt-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          <span className="shrink-0 text-xs font-extrabold uppercase tracking-wider text-ink-faint">
             기간
           </span>
           {PERIODS.map((f) => (
@@ -189,7 +196,7 @@ export default function VisitsPage() {
               {f.label}
             </FilterChip>
           ))}
-          <span className="ml-2 text-xs font-extrabold uppercase tracking-wider text-ink-faint">
+          <span className="ml-2 shrink-0 text-xs font-extrabold uppercase tracking-wider text-ink-faint">
             담당
           </span>
           <FilterChip
@@ -209,7 +216,7 @@ export default function VisitsPage() {
                 {st.name}
               </FilterChip>
             ))}
-          <span className="nowrap-num ml-auto text-sm font-bold text-ink-sub">
+          <span className="nowrap-num ml-auto shrink-0 pl-2 text-sm font-bold text-ink-sub">
             {rows.length}건
           </span>
         </div>
@@ -270,10 +277,19 @@ export default function VisitsPage() {
         )
       ) : (
         <div className="rise-stagger space-y-2.5">
-          {visibleRows.map((v) => {
+          {visibleRows.map((v, i) => {
             const st = programStyle(v.programName, v.type === "consult");
+            const day = v.visitedAt.slice(0, 10);
+            const newDay = i === 0 || visibleRows[i - 1].visitedAt.slice(0, 10) !== day;
             return (
-            <Card key={v.id} className="relative overflow-hidden !py-4 !pl-5">
+            <div key={v.id} className="space-y-2.5">
+            {/*
+              하루 단위로 묶는다 — 「오늘 누가 다녀가셨지」, 「오늘 결제가
+              얼마였지」 를 마감 때 손으로 세지 않게. 합계는 적어 둔 결제
+              금액만 더한다(지어내는 숫자 없음). 이용권은 차감된 횟수.
+            */}
+            {newDay && <DayHeader day={day} rows={rows} />}
+            <Card className="relative overflow-hidden !py-4 !pl-5">
               <span
                 className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${st.strip}`}
               />
@@ -288,9 +304,9 @@ export default function VisitsPage() {
                   {v.type === "consult" ? "상담" : (v.programName ?? "방문")}
                 </Badge>
               </div>
-              {/* 날짜는 아래 줄로 — 이름·프로그램과 한 줄에 두면 폰에서 늘 줄이 넘친다 */}
+              {/* 날짜는 위 머리글에 있으니 여기는 시각만 */}
               <p className="nowrap-num mt-0.5 text-[0.8125rem] font-bold text-ink-soft">
-                {formatDateKr(v.visitedAt)} ({formatRelative(v.visitedAt)})
+                {timeKr(v.visitedAt)}
               </p>
               {v.bodyParts.length > 0 && (
                 <div className="mt-2">
@@ -307,7 +323,7 @@ export default function VisitsPage() {
               */}
               <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
                 담당 {staffName(v.staffId)}
-                {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
+                {v.amount ? ` · 결제 ${formatWon(v.amount)}` : ""}
                 {v.membershipId ? " · 이용권 차감" : ""}
                 {v.nextManageDate
                   ? ` · 다음 관리 예정일 ${formatDateKr(v.nextManageDate)}`
@@ -331,6 +347,7 @@ export default function VisitsPage() {
                 </button>
               </div>
             </Card>
+            </div>
             );
           })}
 
@@ -376,7 +393,7 @@ export default function VisitsPage() {
         title="방문 기록 삭제"
       >
         <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
-          {confirmDelete && customerName(confirmDelete.customerId)} 고객의{" "}
+          {confirmDelete && displayName(customerName(confirmDelete.customerId), privacyMode)} 고객의{" "}
           {confirmDelete && formatDateKr(confirmDelete.visitedAt)} 기록을
           삭제합니다.
           {confirmDelete?.membershipId
@@ -394,7 +411,7 @@ export default function VisitsPage() {
               if (!confirmDelete) return;
               const removed = removeVisit(confirmDelete.id);
               toast(
-                `${customerName(confirmDelete.customerId)} 고객의 방문 기록을 삭제했습니다`,
+                `${displayName(customerName(confirmDelete.customerId), privacyMode)} 고객의 방문 기록을 삭제했습니다`,
                 "info",
                 removed
                   ? { label: "되돌리기", onAction: () => restoreVisit(removed) }
@@ -410,3 +427,41 @@ export default function VisitsPage() {
     </div>
   );
 }
+
+/** 하루 머리글 — 날짜 · 방문/상담 수 · 그날 적힌 결제 합계 · 이용권 차감 수 */
+function DayHeader({ day, rows }: { day: string; rows: Visit[] }) {
+  const list = rows.filter((v) => v.visitedAt.slice(0, 10) === day);
+  const visitN = list.filter((v) => v.type === "visit").length;
+  const consultN = list.filter((v) => v.type === "consult").length;
+  const paid = list.reduce((sum, v) => sum + (v.amount ?? 0), 0);
+  const used = list.filter((v) => v.membershipId).length;
+  const today = todayISO();
+  const rel = day === today ? "오늘" : formatRelative(day);
+  return (
+    <div data-day-header={day} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 px-1 pt-2">
+      <h2 className="nowrap-num text-[1.0625rem] font-extrabold text-ink">
+        {formatDateKr(day)}
+        <span className="ml-1.5 text-[0.9375rem] font-bold text-aqua-700 dark:text-aqua-400">{rel}</span>
+      </h2>
+      <p className="nowrap-num text-[0.875rem] font-bold text-ink-sub">
+        {[
+          visitN ? `방문 ${visitN}` : "",
+          consultN ? `상담 ${consultN}` : "",
+          used ? `이용권 ${used}회` : "",
+          paid ? `결제 ${formatWon(paid)}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+      </p>
+    </div>
+  );
+}
+
+/** "2026-10-06T14:05:00" → "오후 2:05" */
+function timeKr(iso: string): string {
+  const t = iso.slice(11, 16);
+  if (!/^\d{2}:\d{2}$/.test(t)) return "";
+  const [h, m] = t.split(":").map(Number);
+  return `${h < 12 ? "오전" : "오후"} ${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, "0")}`;
+}
+

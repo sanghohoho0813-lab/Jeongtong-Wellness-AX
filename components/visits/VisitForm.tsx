@@ -7,7 +7,9 @@ import { useStore } from "@/lib/data/store";
 import { displayName } from "@/lib/utils/format";
 import {
   BodyPartRecord,
+  Membership,
   PREFERENCE_CATEGORY_LABELS,
+  ServiceProduct,
   Visit,
   VisitType,
 } from "@/lib/types";
@@ -33,6 +35,46 @@ import BodyMap from "@/components/body-map/BodyMap";
  * 여기 적어 두면 매장이 파는 것과 화면에 뜨는 것이 어긋난다.
  */
 const OTHER_PROGRAM = "기타";
+
+/** 이용권 이름(「대왕쑥뜸 10회권」) → 프로그램 이름(「대왕쑥뜸」) — 매장 가격표 기준 */
+function serviceOf(membershipName: string, products: ServiceProduct[]): string | undefined {
+  const p = products.find((x) => x.name === membershipName);
+  if (p) return p.serviceName;
+  // 가격표에서 지워진 옛 이용권 — 이름 앞부분이 프로그램 이름인 경우가 대부분이다
+  return products.find((x) => membershipName.startsWith(x.serviceName))?.serviceName;
+}
+
+/**
+ * 이번 방문에 쓸 이용권 고르기 — 사용 중 · 잔여 있음 · 기한 안 지남.
+ * 이번 프로그램과 맞는 것 → 기한이 먼저 끝나는 것 → 먼저 산 것 순.
+ */
+function pickMembership(
+  customerId: string,
+  program: string,
+  memberships: Membership[],
+  products: ServiceProduct[],
+): Membership | undefined {
+  const today = todayISO();
+  const usable = memberships.filter(
+    (m) =>
+      m.customerId === customerId &&
+      m.status === "active" &&
+      m.remainingCount > 0 &&
+      (!m.expiresAt || m.expiresAt >= today),
+  );
+  const rank = (m: Membership) => [
+    serviceOf(m.programName, products) === program ? 0 : 1,
+    m.expiresAt ?? "9999",
+    m.purchasedAt,
+  ];
+  return usable.sort((a, b) => {
+    const ra = rank(a), rb = rank(b);
+    for (let i = 0; i < ra.length; i++) {
+      if (ra[i] !== rb[i]) return ra[i] < rb[i] ? -1 : 1;
+    }
+    return 0;
+  })[0];
+}
 
 export default function VisitForm({
   customerId: fixedCustomerId,
@@ -112,6 +154,8 @@ export default function VisitForm({
     visit?.nextManageTime,
   );
   const [staffId, setStaffId] = useState(visit?.staffId ?? "");
+  /** 고객을 고르면서 자동으로 고른 이용권 — 안내 문구를 붙이는 데만 쓴다 */
+  const [autoMembershipId, setAutoMembershipId] = useState("");
   const [appliedPrefs, setAppliedPrefs] = useState<string[]>(
     visit?.appliedPreferenceIds ?? [],
   );
@@ -153,13 +197,39 @@ export default function VisitForm({
     if (editing || !customerId) return;
     const c = customers.find((x) => x.id === customerId);
     if (!c) return;
-    setProgramName(lastVisit?.programName ?? defaultProgram);
+    let program = lastVisit?.programName ?? defaultProgram;
+    /*
+      이용권이 있는 분이면 **1회 차감이 기본**이다.
+
+      예전에는 「사용 안 함」 이 기본이라, 10회권을 가진 분이 와도 손으로
+      바꾸지 않으면 잔여가 그대로 10회였다. 바쁜 날 한 번만 잊어도 남은
+      횟수가 실제보다 많아지고, 그 숫자를 믿고 재등록 안내 시기를 놓친다.
+      현장 결제인 날만 「사용 안 함」 으로 바꾸면 된다.
+    */
+    const m = pickMembership(customerId, program, memberships, products);
+    if (m && !lastVisit) {
+      // 첫 이용이면 프로그램도 그 이용권의 프로그램으로
+      const service = serviceOf(m.programName, products);
+      if (service && programOptions.includes(service)) program = service;
+    }
+    setProgramName(program);
+    setMembershipId(m?.id ?? "");
+    setAutoMembershipId(m?.id ?? "");
     setParts(
       lastVisit && lastVisit.bodyParts.length > 0
         ? lastVisit.bodyParts
         : (c.focusBodyParts ?? []),
     );
     setStaffId(c.assignedStaffId ?? lastVisit?.staffId ?? "");
+    /*
+      다음 관리일 — 이 분의 실제 이용주기로 계산한 날을 기본값으로.
+      (예전에는 매장 기본 주기가 기본이고 「추천일 적용」 을 따로 눌러야 했다)
+    */
+    const rec = recommendNextManageDate(factsById.get(customerId), settings.careRules);
+    if (rec.date) {
+      setNextManage(rec.date);
+      setNextManageTime(undefined);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId]);
 
@@ -171,6 +241,28 @@ export default function VisitForm({
     (m) =>
       m.customerId === customerId &&
       (m.status === "active" || (editing && m.id === visit?.membershipId)),
+  );
+
+  /*
+    같은 날 같은 분 기록이 이미 있는가.
+
+    바쁠 때 「저장이 됐나?」 싶어 한 번 더 기록하는 일이 실제로 생긴다.
+    그러면 방문이 두 번으로 세어지고 이용권도 두 번 빠진다. 막지는
+    않는다(하루 두 번 오시는 분도 있다) — 저장 전에 눈에 띄게 알린다.
+  */
+  const sameDay = useMemo(
+    () =>
+      customerId && visitDate
+        ? visits
+            .filter(
+              (v) =>
+                v.customerId === customerId &&
+                v.id !== visit?.id &&
+                v.visitedAt.slice(0, 10) === visitDate,
+            )
+            .sort((a, b) => a.visitedAt.localeCompare(b.visitedAt))
+        : [],
+    [visits, customerId, visitDate, visit?.id],
   );
 
   // AX 추천 다음 관리일 (선택된 고객의 기존 방문주기 기반)
@@ -207,14 +299,34 @@ export default function VisitForm({
       staffId: staffId || undefined,
       appliedPreferenceIds: appliedPrefs,
     };
-    const name = customers.find((c) => c.id === customerId)?.name ?? "고객";
+    const name = displayName(
+      customers.find((c) => c.id === customerId)?.name ?? "고객",
+      privacyMode,
+    );
     const kind = type === "consult" ? "상담" : "방문";
     if (visit) {
       updateVisit(visit.id, payload);
       toast(`${name} · ${kind} 기록을 수정했습니다`);
     } else {
       addVisit(payload);
-      toast(`${name} · ${kind} 기록을 저장했습니다`);
+      /*
+        이용권을 썼으면 남은 횟수까지 알려 준다 — 손님께 바로 말씀드릴 수
+        있고, 거의 다 썼으면 재등록 안내를 그 자리에서 할 수 있다.
+      */
+      const used = payload.membershipId
+        ? memberships.find((m) => m.id === payload.membershipId)
+        : undefined;
+      if (used) {
+        const left = Math.max(0, used.remainingCount - 1);
+        toast(
+          left <= 1
+            ? `${name} · 이용권 ${left}회 남음 — 재등록 안내를 챙기세요`
+            : `${name} · 방문 기록 저장 · 이용권 ${left}회 남음`,
+          left <= 1 ? "info" : "success",
+        );
+      } else {
+        toast(`${name} · ${kind} 기록을 저장했습니다`);
+      }
     }
     onSaved();
   };
@@ -262,6 +374,22 @@ export default function VisitForm({
         {visitDate && visitDate < todayISO() && (
           <p className="mt-1.5 text-[0.8125rem] font-bold text-warn-text">
             {formatDateKr(visitDate)} 방문으로 기록됩니다 (지난 날짜)
+          </p>
+        )}
+        {sameDay.length > 0 && (
+          <p
+            role="status"
+            data-same-day
+            className="mt-2 rounded-btn bg-warn/10 px-3 py-2.5 text-[0.9375rem] font-bold leading-snug text-warn-text ring-1 ring-warn/40"
+          >
+            {visitDate === todayISO() ? "오늘" : formatDateKr(visitDate)}{" "}
+            {sameDay
+              .map((v) => splitIsoDateTime(v.visitedAt).time ?? "")
+              .filter(Boolean)
+              .join(" · ")}
+            {sameDay.some((v) => splitIsoDateTime(v.visitedAt).time) ? "에 " : ""}
+            이미 {sameDay[0].type === "consult" ? "상담" : "방문"} 기록이 있습니다.
+            같은 방문이면 저장하지 마세요.
           </p>
         )}
       </div>
@@ -342,6 +470,11 @@ export default function VisitForm({
                     {Math.max(0, m.remainingCount - 1)}회
                   </span>{" "}
                   남음
+                  {m.id === autoMembershipId && (
+                    <span className="mt-1 block font-semibold text-ink-sub">
+                      이용권이 있어 미리 골랐습니다. 현장 결제면 「사용 안 함」 으로 바꾸세요.
+                    </span>
+                  )}
                 </p>
               );
             })()}
@@ -504,7 +637,9 @@ export default function VisitForm({
         </div>
         {type === "visit" && (
           <div className="sm:col-span-2">
-            <FieldLabel>현장 결제 금액 (원, 선택)</FieldLabel>
+            <FieldLabel>
+              {membershipId ? "추가 결제 금액 (원, 선택)" : "현장 결제 금액 (원, 선택)"}
+            </FieldLabel>
             <input
               className={inputCls}
               value={amount}

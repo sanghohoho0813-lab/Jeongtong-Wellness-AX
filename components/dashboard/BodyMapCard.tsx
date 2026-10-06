@@ -34,7 +34,7 @@ export default function BodyMapCard() {
     if (!customerId) return;
     updateCustomer(customerId, { focusBodyParts: parts });
     const c = customers.find((x) => x.id === customerId);
-    toast(`${c?.name} 고객의 집중 케어 부위를 저장했습니다`);
+    toast(`${displayName(c?.name ?? "고객", privacyMode)} 고객의 집중 케어 부위를 저장했습니다`);
   };
 
   return (

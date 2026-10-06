@@ -83,12 +83,17 @@ export default function RecordSheet({
 
     return filtered
       .map((d) => {
-        // 오늘 오기로 한 분, 예정일이 지난 분을 위로
+        // 오늘 오기로 한 분, 예정일이 지난 분을 위로.
+        // 오늘 이미 기록한 분은 끝난 일이라 아래로 — 두 번 기록하는 실수를 줄인다.
         const due = d.customer.nextManageDate;
-        const dueRank = due ? (due <= today ? 0 : 1) : 2;
-        return { d, dueRank, last: d.lastVisitDate ?? "" };
+        const doneToday = (d.lastVisitDate ?? "").slice(0, 10) === today;
+        const dueRank = doneToday ? 3 : due ? (due <= today ? 0 : 1) : 2;
+        // 이름을 그대로 쳤으면 그분이 맨 위 — 「옥윤용」 을 찾는데 「옥윤용2」 가 먼저 뜨면 안 된다
+        const exact = q && d.customer.name === q ? 0 : 1;
+        return { d, dueRank, exact, last: d.lastVisitDate ?? "" };
       })
       .sort((a, b) => {
+        if (a.exact !== b.exact) return a.exact - b.exact;
         if (a.dueRank !== b.dueRank) return a.dueRank - b.dueRank;
         // 예정일이 같은 무리 안에서는 최근에 온 분부터 (기억이 생생한 순)
         return b.last.localeCompare(a.last);
@@ -160,7 +165,9 @@ export default function RecordSheet({
           <ul className="min-h-0 flex-1 overflow-y-auto">
             {rows.map(({ d }) => {
               const due = d.customer.nextManageDate;
-              const isDue = !!due && due <= today;
+              const doneToday = (d.lastVisitDate ?? "").slice(0, 10) === today;
+              const isDue = !doneToday && !!due && due <= today;
+              const m = d.activeMembership;
               return (
                 <li key={d.customer.id}>
                   <button
@@ -176,18 +183,29 @@ export default function RecordSheet({
                         <span className="min-w-0 truncate text-[1.0625rem] font-extrabold text-ink">
                           {displayName(d.customer.name, privacyMode)}
                         </span>
-                        {isDue && (
+                        {doneToday ? (
+                          <span className="shrink-0 rounded-full bg-stone-bg-deep px-2 py-0.5 text-[0.6875rem] font-extrabold text-ink-sub">
+                            오늘 기록함
+                          </span>
+                        ) : isDue ? (
                           <span className="shrink-0 rounded-full bg-aqua-500 px-2 py-0.5 text-[0.6875rem] font-extrabold text-white">
                             오늘 예정
                           </span>
+                        ) : (
+                          <CustomerStatusBadge status={d.status} />
                         )}
-                        {!isDue && <CustomerStatusBadge status={d.status} />}
                       </span>
                       <span className="tabular mt-0.5 block line-clamp-2 text-[0.8125rem] leading-snug text-ink-sub">
                         {displayPhone(d.customer.phone, canSeePhone)}
                         {d.lastVisitDate
                           ? ` · 최근 ${formatRelative(d.lastVisitDate)}`
                           : " · 방문 이력 없음"}
+                        {/* 카운터에서 「몇 번 남았어요?」 에 바로 답한다 */}
+                        {m && (
+                          <span className="font-bold text-aqua-800 dark:text-aqua-400">
+                            {` · 이용권 ${m.remainingCount}회`}
+                          </span>
+                        )}
                       </span>
                     </span>
                   </button>

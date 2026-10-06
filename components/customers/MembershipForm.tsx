@@ -10,7 +10,7 @@ import { useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { Membership } from "@/lib/types";
 import { todayISO } from "@/lib/utils/date";
-import { formatWon } from "@/lib/utils/format";
+import { displayName, formatWon } from "@/lib/utils/format";
 import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { useFormError } from "@/lib/utils/form";
 import { DateTimeField } from "@/components/ui/DateTimeField";
@@ -37,7 +37,7 @@ export default function MembershipForm({
   onSaved: () => void;
   onCancel: () => void;
 }) {
-  const { addMembership, updateMembership, customers, products } = useStore();
+  const { addMembership, updateMembership, customers, products, privacyMode } = useStore();
   /** 매장 가격표 — 판매 중인 것만, 적어 둔 순서대로 */
   const presets = products
     .filter((p) => p.active)
@@ -60,8 +60,11 @@ export default function MembershipForm({
   const { error, fail, clear } = useFormError();
   const programRef = useRef<HTMLInputElement>(null);
 
-  const customerName =
-    customers.find((c) => c.id === customerId)?.name ?? "고객";
+  // 알림에 쓰는 이름 — 화면 공유 모드면 가린다
+  const customerName = displayName(
+    customers.find((c) => c.id === customerId)?.name ?? "고객",
+    privacyMode,
+  );
   const priceNum = Number(price.replace(/\D/g, "")) || 0;
   const perVisit = totalCount > 0 ? Math.round(priceNum / totalCount) : 0;
 
