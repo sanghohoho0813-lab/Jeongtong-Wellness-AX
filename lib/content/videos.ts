@@ -95,7 +95,7 @@ export const VIDEOS: Record<VideoId, VideoInfo> = {
     length: "4분 27초",
     files: {
       "9x16": { src: "/videos/tech.mp4", poster: "/videos/tech-poster.jpg", mb: 26 },
-      "16x9": { src: "/videos/tech-wide.mp4", poster: "/videos/tech-wide-poster.jpg", mb: 0 },
+      "16x9": { src: "/videos/tech-wide.mp4", poster: "/videos/tech-wide-poster.jpg", mb: 27 },
     },
     chapters: [
       { at: 0, label: "소개 — 두 가지 기술 · 특허 두 건" },
