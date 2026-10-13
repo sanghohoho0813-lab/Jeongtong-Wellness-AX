@@ -47,7 +47,9 @@ export function Hint({
   const id = useId();
   const wrap = useRef<HTMLSpanElement>(null);
   const timer = useRef<number | undefined>(undefined);
-  const [pos, setPos] = useState<{ x: number; y: number; side: Side } | null>(null);
+  const [pos, setPos] = useState<{ x: number; y: number; side: Side; start?: boolean } | null>(
+    null,
+  );
 
   const anchor = () => wrap.current?.firstElementChild as HTMLElement | null;
 
@@ -62,9 +64,15 @@ export function Hint({
       // 오른쪽 자리가 모자라면 아래로
       if (s === "right" && r.right + 280 > window.innerWidth) s = "bottom";
       if (s === "bottom" && r.bottom + 120 > window.innerHeight) s = "top";
+      /*
+        접는 칸 제목 줄처럼 넓은 단추는 가운데가 제목에서 멀다 — 그때는
+        말풍선을 제목이 시작하는 왼쪽 끝에 붙인다 (어느 칸의 설명인지 바로 보이게).
+      */
+      const start = r.width > 320;
+      const x = start ? r.left + 8 : r.left + r.width / 2;
       if (s === "right") setPos({ x: r.right + 12, y: r.top + r.height / 2, side: s });
-      else if (s === "top") setPos({ x: r.left + r.width / 2, y: r.top - 10, side: s });
-      else setPos({ x: r.left + r.width / 2, y: r.bottom + 10, side: s });
+      else if (s === "top") setPos({ x, y: r.top - 10, side: s, start });
+      else setPos({ x, y: r.bottom + 10, side: s, start });
     };
     if (now) go();
     else timer.current = window.setTimeout(go, 220);
@@ -129,8 +137,12 @@ export function Hint({
                 pos.side === "right"
                   ? "translateY(-50%)"
                   : pos.side === "top"
-                    ? "translate(-50%, -100%)"
-                    : "translateX(-50%)",
+                    ? pos.start
+                      ? "translateY(-100%)"
+                      : "translate(-50%, -100%)"
+                    : pos.start
+                      ? "none"
+                      : "translateX(-50%)",
             }}
             className="pointer-events-none fixed z-[90] block w-max max-w-[17rem] rounded-xl bg-deep-900 px-3.5 py-2.5 text-left text-[0.9375rem] font-semibold leading-snug text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] ring-1 ring-white/10 [word-break:keep-all]"
           >
