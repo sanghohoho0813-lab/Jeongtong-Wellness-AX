@@ -157,11 +157,16 @@ export default function CustomerDetailPage() {
                 </Badge>
               ))}
             </div>
+            {/* 빈 값(번호 없음 · 담당 미지정)은 적지 않는다 — 줄 앞에 「·」 만 남거나 「미지정」 이 늘 붙어 있었다 */}
             <p className="mt-1 text-sm text-ink-sub">
-              {displayPhone(c.phone, canSeePhone)}
-              {c.ageGroup ? ` · ${c.ageGroup}` : ""} · 등록일{" "}
-              {formatDateKr(c.registeredAt)} · 담당{" "}
-              {staffName(c.assignedStaffId)}
+              {[
+                displayPhone(c.phone, canSeePhone),
+                c.ageGroup ?? "",
+                `등록일 ${formatDateKr(c.registeredAt)}`,
+                c.assignedStaffId ? `담당 ${staffName(c.assignedStaffId)}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
             {/* 번호가 있으면 바로 건다 — 화면 공유 모드면 자동으로 사라진다 */}
             <div className="mt-2 empty:hidden">
@@ -456,7 +461,13 @@ export default function CustomerDetailPage() {
             )}
           </div>
 
-          {/* ③ 다음 행동 — 결론은 색으로 묶는다 */}
+          {/*
+            ③ 다음 행동 — 결론은 색으로 묶는다.
+            오늘 브리핑에 이 고객 과제가 있으면 바로 아래 「지금 할 일」 카드가
+            같은 문장을 처리완료 · 보류 단추와 함께 보여 준다. 여기서 또 쓰면
+            한 화면에 같은 결론이 두 번 나온다 — 그때는 아래 카드에 맡긴다.
+          */}
+          {!task && (
           <div
             style={{ "--rail": "rgb(var(--c-gold))" } as never}
             className="rail rail-strong bg-gold-soft/50 px-5 py-4 pl-6"
@@ -472,6 +483,7 @@ export default function CustomerDetailPage() {
               </p>
             )}
           </div>
+          )}
         </div>
 
         {/*
@@ -500,7 +512,7 @@ export default function CustomerDetailPage() {
             >
               지금 할 일
             </SectionTitle>
-            <TaskCard task={task} compact showReasons={false} />
+            <TaskCard task={task} compact showReasons={false} hideDetailLink />
           </Card>
         )}
 
@@ -539,7 +551,7 @@ export default function CustomerDetailPage() {
                       setEditingParts(true);
                     }}
                   >
-                    부위 수정
+                    {c.focusBodyParts.length ? "부위 수정" : "부위 고르기"}
                   </Button>
                 )
               }
@@ -552,6 +564,21 @@ export default function CustomerDetailPage() {
             </p>
             {editingParts ? (
               <BodyMap value={draftParts} onChange={setDraftParts} compactChips />
+            ) : c.focusBodyParts.length === 0 ? (
+              /*
+                아무 부위도 고르지 않았으면 빈 사람 그림 두 장(폰에서 화면 한 장
+                가까이)을 그리지 않는다. 한 줄로 알리고, 누르면 그림이 열린다.
+              */
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftParts(c.focusBodyParts);
+                  setEditingParts(true);
+                }}
+                className="flex min-h-[3.25rem] w-full items-center justify-center rounded-card border border-dashed border-stone-line bg-card-soft px-4 text-[0.9375rem] font-bold text-ink-sub transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+              >
+                아직 고른 부위가 없습니다 · 눌러서 그림에서 고르기
+              </button>
             ) : (
               // 읽기 모드에서는 그림 + 고른 부위 칩만 (아래 태그는 같은 내용이라 뺀다)
               <BodyMap value={c.focusBodyParts} readOnly compactChips />
@@ -837,9 +864,13 @@ export default function CustomerDetailPage() {
                   )}
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <p className="min-w-0 text-xs text-ink-sub">
-                      담당 {staffName(v.staffId)}
-                      {v.amount ? ` · 결제 ${formatKrw(v.amount)}` : ""}
-                      {v.membershipId ? " · 이용권 차감" : ""}
+                      {[
+                        v.staffId ? `담당 ${staffName(v.staffId)}` : "",
+                        v.amount ? `결제 ${formatKrw(v.amount)}` : "",
+                        v.membershipId ? "이용권 차감" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                     {/*
                       이 둘은 45×26 이었다. 폰에서 손가락 끝은 그보다 크고,

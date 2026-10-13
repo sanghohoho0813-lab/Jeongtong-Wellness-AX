@@ -192,6 +192,8 @@ export default function RetentionPage() {
   };
 
   const groups = [dueGroup, atRiskGroup, dormantGroup, lowGroup];
+  const filledGroups = groups.filter((g) => g.rows.length > 0);
+  const emptyGroups = groups.filter((g) => g.rows.length === 0);
 
   // AX 매출기회 대상 수 — 재방문/재등록 기회가 있는 고객 (Priority 와 별개)
   const opportunityCount = all.filter(
@@ -307,30 +309,34 @@ export default function RetentionPage() {
         />
       </div>
 
-      <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
-        {groups.map((g) => (
-          <Card key={g.key} className="relative overflow-hidden">
-            <span
-              className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${GROUP_ACCENT[g.key]}`}
-            />
-            <SectionTitle
-              tone={GROUP_ICON_TONE[g.key]}
-              icon={<RefreshIcon className="h-4 w-4" />}
-              action={
-                <Badge tone={g.tone} dot>
-                  {g.rows.length}명
-                </Badge>
-              }
-            >
-              {g.title}
-            </SectionTitle>
-            <p className="-mt-2 mb-3 text-sm text-ink-sub">{g.description}</p>
-            {g.rows.length === 0 ? (
-              <p className="rounded-card bg-card-soft px-4 py-6 text-center text-sm leading-relaxed text-ink-sub">
-                지금 이 구간에 해당하는 고객이 없습니다. 잘못된 것이 아니라
-                챙길 것이 없다는 뜻입니다.
-              </p>
-            ) : (
+      {/*
+        빈 구간은 한 장으로 모은다.
+
+        예전에는 구간 넷이 저마다 카드를 열고 "지금 이 구간에 해당하는
+        고객이 없습니다. 잘못된 것이 아니라…" 를 네 번 되풀이했다. 폰에서
+        그 네 장이 화면 두 장을 먹었고, 정작 챙길 분이 있는 구간은 그 사이에
+        섞여 찾아야 했다. 챙길 분이 있는 구간만 카드로 펴고, 빈 구간은
+        아래 한 장에 한 줄씩 「0명」 으로 적는다.
+      */}
+      {filledGroups.length > 0 && (
+        <div className="rise-stagger mb-4 grid grid-cols-1 card-gap xl:grid-cols-2">
+          {filledGroups.map((g) => (
+            <Card key={g.key} className="relative overflow-hidden">
+              <span
+                className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${GROUP_ACCENT[g.key]}`}
+              />
+              <SectionTitle
+                tone={GROUP_ICON_TONE[g.key]}
+                icon={<RefreshIcon className="h-4 w-4" />}
+                action={
+                  <Badge tone={g.tone} dot>
+                    {g.rows.length}명
+                  </Badge>
+                }
+              >
+                {g.title}
+              </SectionTitle>
+              <p className="-mt-2 mb-3 text-sm text-ink-sub">{g.description}</p>
               <div className="space-y-2">
                 {(expanded.has(g.key) ? g.rows : g.rows.slice(0, 8)).map(
                   (r) => (
@@ -362,10 +368,35 @@ export default function RetentionPage() {
                   </button>
                 )}
               </div>
-            )}
+            </Card>
+          ))}
+        </div>
+      )}
+      {emptyGroups.length > 0 && (
+        <div data-retention-empty>
+          <Card lift={false}>
+            <p className="text-[1rem] font-extrabold text-ink">
+              지금 챙길 분이 없는 구간
+            </p>
+            <p className="mt-0.5 text-sm text-ink-sub">
+              잘못된 것이 아니라 오늘은 챙길 것이 없다는 뜻입니다.
+            </p>
+            <ul className="mt-3 divide-y divide-stone-bg-deep">
+              {emptyGroups.map((g) => (
+                <li key={g.key} className="flex items-center gap-3 py-2.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-bold text-ink">{g.title}</span>
+                    <span className="block text-[0.8125rem] leading-snug text-ink-sub">
+                      {g.description}
+                    </span>
+                  </span>
+                  <Badge tone="gray">0명</Badge>
+                </li>
+              ))}
+            </ul>
           </Card>
-        ))}
-      </div>
+        </div>
+      )}
         </>
       )}
     </div>

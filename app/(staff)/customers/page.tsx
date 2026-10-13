@@ -384,9 +384,13 @@ export default function CustomersPage() {
                   </span>
                 </div>
                 <p className="tabular mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub">
-                  방문 {d.visitCount}회 ·{" "}
-                  {d.lastVisitDate
-                    ? `최근 ${formatRelative(d.lastVisitDate)}`
+                  {/* 0회 · 방문 없음 은 같은 말을 두 번 하는 것 — 한 번만 */}
+                  {d.visitCount > 0
+                    ? `방문 ${d.visitCount}회 · ${
+                        d.lastVisitDate
+                          ? `최근 ${formatRelative(d.lastVisitDate)}`
+                          : "최근 방문일 없음"
+                      }`
                     : "아직 방문 없음"}
                   <span className="hidden sm:inline">
                     {" · "}
@@ -410,6 +414,8 @@ export default function CustomersPage() {
                   저절로 눈에 걸린다. 숫자는 지우지 않고 옆에 그대로 둔다 —
                   막대는 빠르게, 숫자는 정확하게 읽는 자리다.
                 */}
+                {/* 이용권도 예정일도 없으면(막 등록한 분) 「없음 · 미정」 줄을 그리지 않는다 */}
+                {(d.activeMembership || d.customer.nextManageDate) && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                   {d.activeMembership ? (
                     (() => {
@@ -471,6 +477,7 @@ export default function CustomersPage() {
                     );
                   })()}
                 </div>
+                )}
                 {(() => {
                   const opp = opportunityById.get(d.customer.id);
                   const hasOpp = opp && opp.type !== "none";

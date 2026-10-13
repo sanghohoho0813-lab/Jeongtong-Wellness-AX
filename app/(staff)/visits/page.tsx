@@ -331,14 +331,22 @@ export default function VisitsPage() {
                 한 줄에 섞어 두면 좁은 화면에서 글이 길어질 때마다 단추가
                 제멋대로 다음 줄로 밀려나 위치가 매번 달라진다.
               */}
-              <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
-                담당 {staffName(v.staffId)}
-                {v.amount ? ` · 결제 ${formatWon(v.amount)}` : ""}
-                {v.membershipId ? " · 이용권 차감" : ""}
-                {v.nextManageDate
-                  ? ` · 다음 관리 예정일 ${formatDateKr(v.nextManageDate)}`
-                  : ""}
-              </p>
+              {/* 비어 있는 칸(담당 미지정 등)은 적지 않는다 — 모든 줄에 같은 「미지정」 이 붙으면 읽을 것만 늘어난다 */}
+              {(() => {
+                const meta = [
+                  v.staffId ? `담당 ${staffName(v.staffId)}` : "",
+                  v.amount ? `결제 ${formatWon(v.amount)}` : "",
+                  v.membershipId ? "이용권 차감" : "",
+                  v.nextManageDate
+                    ? `다음 관리 예정일 ${formatDateKr(v.nextManageDate)}`
+                    : "",
+                ].filter(Boolean);
+                return meta.length > 0 ? (
+                  <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
+                    {meta.join(" · ")}
+                  </p>
+                ) : null;
+              })()}
               <div className="-mb-1.5 mt-0.5 flex items-center justify-end gap-1.5">
                 <button
                   onClick={() => {

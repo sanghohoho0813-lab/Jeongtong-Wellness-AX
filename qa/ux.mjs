@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2차 (칩 · 문구 · KPI 접기 · 맨 위로 · 전화)");
+const { log, finish } = recorder("UI/UX 2·3차 (칩 · 문구 · KPI 접기 · 맨 위로 · 전화 · 겹친 말 · 빈 칸)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -139,6 +139,29 @@ log(
   "PC — 폰용 펼침 단추는 보이지 않는다",
   (await pc.locator('[data-tour="kpi-contract"]').getByRole("button", { name: "어떻게 재나요 · 개선율" }).count()) === 0,
 );
+
+/* ── 6. 3차 — 같은 말 두 번 · 빈 칸의 「미지정」 · 빈 구간 넷 ── */
+await go(p, "/customers", 1000);
+log("고객 줄 — 「방문 0회 · 아직 방문 없음」 처럼 같은 말을 두 번 하지 않는다", !/방문 0회 · 아직 방문 없음/.test(await text()));
+log("고객 줄 — 이용권도 예정일도 없는 분에게 「이용권 없음 · 예정일 미정」 줄을 그리지 않는다", !/이용권 없음 예정일 미정/.test(await text()));
+await go(p, "/visits", 1000);
+log("방문 기록 — 담당이 없으면 「담당 미지정」 을 적지 않는다", !/담당 미지정/.test(await text()));
+await go(p, "/retention", 1200);
+const emptyCards = await p.locator("[data-retention-empty]").count();
+const sameLine = ((await text()).match(/잘못된 것이 아니라/g) || []).length;
+log("재방문 — 빈 구간은 한 장으로 모은다 (같은 안내는 한 번만)", emptyCards <= 1 && sameLine <= 1, `빈 구간 카드 ${emptyCards} · 안내 ${sameLine}번`);
+// 오늘 과제가 있는 고객 — 결론(다음에 할 일)이 한 번만 나온다
+await go(p, "/briefing", 1000);
+const taskHref = await p.evaluate(() => [...document.querySelectorAll('main a[href^="/customers/"]')].map((a) => a.getAttribute("href")).find((h) => h.split("/").length === 3));
+if (taskHref) {
+  await go(p, taskHref, 1300);
+  const body = await text();
+  log("고객 상세 — 오늘 과제가 있으면 「다음에 할 일」 과 「지금 할 일」 이 겹쳐 나오지 않는다", /지금 할 일/.test(body) && !/다음에 할 일/.test(body));
+  log("고객 상세 — 그 고객 화면 안에서는 「고객 상세」 로 가는 링크가 없다", (await p.locator(`main a[href="${taskHref}"]`).count()) === 0);
+  log("고객 상세 — 머리줄이 「·」 로 시작하거나 「담당 미지정」 을 적지 않는다", !/^\s*·/.test((await p.locator("main h1").first().evaluate((h) => h.parentElement?.parentElement?.querySelector("p.mt-1")?.textContent || ""))) && !/담당 미지정/.test(body));
+} else {
+  log("오늘 과제가 있는 고객을 찾았다", false, "브리핑에 고객 링크 없음");
+}
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
 console.log(`   (기준 ${BASE})`);

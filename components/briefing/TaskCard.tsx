@@ -117,6 +117,7 @@ export default function TaskCard({
   compact = false,
   variant = "light",
   showReasons = true,
+  hideDetailLink = false,
 }: {
   task: BriefingTask;
   rank?: number;
@@ -131,6 +132,8 @@ export default function TaskCard({
    * 그 화면에서만 끈다. 브리핑에서는 위에 설명이 없으므로 켜 둔다.
    */
   showReasons?: boolean;
+  /** 그 고객의 상세 화면 안에서는 「고객 상세」 링크가 제자리로 가는 길이라 감춘다 */
+  hideDetailLink?: boolean;
 }) {
   const { customers, staff, setTaskStatus, canSeePhone, privacyMode } = useStore();
   const toast = useToast();
@@ -269,6 +272,11 @@ export default function TaskCard({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            {hideDetailLink ? (
+              <span className="truncate text-[1.0625rem] font-extrabold text-ink">
+                {displayName(customer.name, privacyMode)}
+              </span>
+            ) : (
             <Link
               href={`/customers/${customer.id}`}
               className={`tap-line truncate text-[1.0625rem] font-extrabold ${
@@ -277,6 +285,7 @@ export default function TaskCard({
             >
               {displayName(customer.name, privacyMode)}
             </Link>
+            )}
             <Badge tone={hero ? "on-dark" : CATEGORY_TONES[task.category]} dot>
               {TASK_CATEGORY_LABELS[task.category]}
             </Badge>
@@ -460,6 +469,7 @@ export default function TaskCard({
                 결과 수정
               </button>
             )}
+            {!hideDetailLink && (
             <Link
               href={`/customers/${customer.id}`}
               className={`touch-target ml-auto inline-flex items-center gap-0.5 text-sm font-bold ${
@@ -471,6 +481,7 @@ export default function TaskCard({
               고객 상세
               <ChevronRightIcon className="h-4 w-4" />
             </Link>
+            )}
           </div>
 
           {/* 처리완료 결과 입력 — [처리완료] 직후 이 자리에서 바로 기록 */}
