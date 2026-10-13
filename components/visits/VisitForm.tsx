@@ -99,8 +99,15 @@ export default function VisitForm({
     visits,
     products,
     privacyMode,
+    currentStaff,
   } = useStore();
   const toast = useToast();
+  /**
+   * 지금 이 기기를 쓰는 사람 — 담당이 정해지지 않은 고객의 기록은 이 사람으로
+   * 시작한다. 예전에는 「미지정」 으로 시작해 매번 골라야 했고, 안 고르면
+   * 마감 정산의 직원별 칸에 「담당 미지정」 이 쌓였다. 바꾸려면 바꾸면 된다.
+   */
+  const me = staff.find((s) => s.id === currentStaff?.id && s.active)?.id ?? "";
   /**
    * 고를 수 있는 프로그램 — 매장 가격표에 있는 서비스 이름들.
    * 예전 기록에 적힌 이름(지금은 안 파는 것)도 그대로 남겨야 수정할 때
@@ -153,7 +160,7 @@ export default function VisitForm({
   const [nextManageTime, setNextManageTime] = useState<string | undefined>(
     visit?.nextManageTime,
   );
-  const [staffId, setStaffId] = useState(visit?.staffId ?? "");
+  const [staffId, setStaffId] = useState(visit ? (visit.staffId ?? "") : me);
   /** 고객을 고르면서 자동으로 고른 이용권 — 안내 문구를 붙이는 데만 쓴다 */
   const [autoMembershipId, setAutoMembershipId] = useState("");
   const [appliedPrefs, setAppliedPrefs] = useState<string[]>(
@@ -220,7 +227,7 @@ export default function VisitForm({
         ? lastVisit.bodyParts
         : (c.focusBodyParts ?? []),
     );
-    setStaffId(c.assignedStaffId ?? lastVisit?.staffId ?? "");
+    setStaffId(c.assignedStaffId ?? lastVisit?.staffId ?? me);
     /*
       다음 관리일 — 이 분의 실제 이용주기로 계산한 날을 기본값으로.
       (예전에는 매장 기본 주기가 기본이고 「추천일 적용」 을 따로 눌러야 했다)
@@ -576,6 +583,7 @@ export default function VisitForm({
         <div>
           <FieldLabel>담당 직원</FieldLabel>
           <select
+            data-field="staff"
             className={inputCls}
             value={staffId}
             onChange={(e) => setStaffId(e.target.value)}
@@ -606,34 +614,54 @@ export default function VisitForm({
               setNextManageTime(t);
             }}
           />
-          {/* AX 추천 다음 관리일 — 기존 방문주기 데이터 기반 (예측 모델 아님) */}
-          <div className="mt-2 rounded-btn bg-card-soft px-3 py-2 ring-1 ring-stone-line">
-            <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-              AI 추천일
-            </p>
-            {recommendation.date ? (
-              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+          {/*
+            AX 추천 다음 관리일 — 기존 방문주기 데이터 기반 (예측 모델 아님).
+
+            추천일이 이미 들어가 있으면 날짜를 한 번 더 적지 않는다. 예전에는
+            바로 위 칸과 이 상자가 같은 날짜를 두 번 보여 주고, 「적용됨」 이라는
+            눌리지 않는 단추까지 있었다. 그때는 근거 한 줄만. 날짜를 바꿨을
+            때만 추천일과 되돌리는 단추를 보인다.
+          */}
+          {recommendation.date ? (
+            nextManage === recommendation.date ? (
+              <p
+                data-rec-state="applied"
+                className="mt-1.5 flex items-start gap-1.5 text-[0.8125rem] leading-snug text-ink-sub"
+              >
+                <span className="mt-[0.45em] h-1.5 w-1.5 shrink-0 rounded-full bg-aqua-500" />
+                <span>
+                  <b className="font-bold text-aqua-800 dark:text-aqua-400">AI 추천일</b>
+                  {" · "}
+                  {recommendation.basis}
+                </span>
+              </p>
+            ) : (
+              <div
+                data-rec-state="changed"
+                className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-btn bg-card-soft px-3 py-2 ring-1 ring-stone-line"
+              >
+                <span className="text-[0.8125rem] font-bold text-ink-sub">AI 추천일</span>
                 <span className="nowrap-num text-sm font-extrabold text-deep-800 dark:text-aqua-700">
                   {formatDateKr(recommendation.date)}
                 </span>
-                <span className="text-xs text-ink-sub">
-                  {recommendation.basis}
-                </span>
+                <span className="text-xs text-ink-sub">{recommendation.basis}</span>
                 <button
                   type="button"
-                  onClick={() => setNextManage(recommendation.date!)}
-                  disabled={nextManage === recommendation.date}
-                  className="ml-auto rounded-full bg-aqua-50 px-3 py-1 text-xs font-bold text-aqua-800 ring-1 ring-aqua-200 transition-colors hover:bg-aqua-100 disabled:opacity-50"
+                  onClick={() => {
+                    setNextManage(recommendation.date!);
+                    setNextManageTime(undefined);
+                  }}
+                  className="touch-target ml-auto rounded-full bg-aqua-50 px-3 text-xs font-bold text-aqua-800 ring-1 ring-aqua-200 transition-colors hover:bg-aqua-100"
                 >
-                  {nextManage === recommendation.date ? "적용됨" : "추천일 적용"}
+                  추천일 적용
                 </button>
               </div>
-            ) : (
-              <p className="mt-1 text-xs text-ink-sub">
-                {recommendation.basis}
-              </p>
-            )}
-          </div>
+            )
+          ) : (
+            <p className="mt-1.5 text-[0.8125rem] leading-snug text-ink-sub">
+              {recommendation.basis}
+            </p>
+          )}
         </div>
         {type === "visit" && (
           <div className="sm:col-span-2">

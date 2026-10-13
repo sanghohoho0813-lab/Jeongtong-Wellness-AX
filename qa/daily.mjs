@@ -64,8 +64,13 @@ log("이름을 그대로 치면 그분이 맨 위", rowText.includes(NAME) && !r
 const sel = await dlg().locator("select").evaluateAll((els) => els.map((e) => e.options[e.selectedIndex]?.text || ""));
 log("기록 창 — 이용권이 미리 골라져 있다 (사용 안 함이 기본이 아님)", sel.some((t) => /잔여 10회/.test(t)), sel.join(" / "));
 log("기록 창 — 미리 고른 이유를 알려 준다", /이용권이 있어 미리 골랐습니다/.test(await dlg().innerText()));
-const recBtn = dlg().getByRole("button", { name: /^(적용됨|추천일 적용)$/ });
-log("다음 관리일 — 추천일이 기본값 (따로 누를 필요 없음)", (await recBtn.innerText().catch(() => "")) === "적용됨");
+log(
+  "다음 관리일 — 추천일이 기본값 (따로 누를 필요 없음 · 날짜를 두 번 적지 않는다)",
+  (await dlg().locator('[data-rec-state="applied"]').count()) === 1 &&
+    (await dlg().getByRole("button", { name: /^(적용됨|추천일 적용)$/ }).count()) === 0,
+);
+const staffSel = await dlg().locator('select[data-field="staff"]').evaluate((e) => e.options[e.selectedIndex]?.text || "").catch(() => "");
+log("기록 창 — 담당 직원이 「미지정」 으로 시작하지 않는다 (지금 쓰는 사람 · 담당 · 지난 담당)", !!staffSel && staffSel !== "미지정", staffSel);
 await dlg().getByRole("button", { name: "기록 저장" }).click();
 await p.waitForTimeout(400);
 const t1 = await toastText();

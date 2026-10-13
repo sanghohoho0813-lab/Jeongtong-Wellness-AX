@@ -18,6 +18,9 @@ import { DateTimeField } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
+/** 연령대 — 주 고객층(50대 이상 여성)부터 넓혀 가는 범위 */
+const AGE_GROUPS = ["30대", "40대", "50대", "60대", "70대", "80대 이상"];
+
 export default function CustomerForm({
   customer,
   initialName,
@@ -182,27 +185,59 @@ export default function CustomerForm({
         </div>
         <div>
           <FieldLabel>성별</FieldLabel>
-          <select
-            className={inputCls}
-            value={gender}
-            onChange={(e) => setGender(e.target.value as typeof gender)}
-          >
-            <option value="">선택 안 함</option>
-            <option value="female">여성</option>
-            <option value="male">남성</option>
-          </select>
+          {/* 고를 것이 셋뿐이면 펼쳐 두고 한 번에 누른다 — 목록 창을 열고 닫는 두 번이 줄어든다 */}
+          <div role="group" aria-label="성별" className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ["", "선택 안 함"],
+                ["female", "여성"],
+                ["male", "남성"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={label}
+                type="button"
+                data-gender={v || "none"}
+                aria-pressed={gender === v}
+                onClick={() => setGender(v)}
+                className={`min-h-[48px] rounded-btn text-[0.9375rem] font-bold transition-colors ${
+                  gender === v
+                    ? "bg-deep-800 text-white shadow-sm"
+                    : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-stone-bg"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         <div>
           <FieldLabel>연령대</FieldLabel>
-          <input
-            className={inputCls}
-            value={ageGroup}
-            onChange={(e) => setAgeGroup(e.target.value)}
-            placeholder="예: 60대"
-            maxLength={10}
-          />
+          {/*
+            타자 대신 누르기. 예전에는 「60대」 를 손으로 쳐야 했다. 이미
+            다른 말(「60대 초반」 등)로 적혀 있던 분은 그 값을 한 칸 더 보여
+            그대로 둔다. 고른 칸을 한 번 더 누르면 비운다.
+          */}
+          <div role="group" aria-label="연령대" className="flex flex-wrap gap-2">
+            {[...AGE_GROUPS, ...(ageGroup && !AGE_GROUPS.includes(ageGroup) ? [ageGroup] : [])].map((a) => (
+              <button
+                key={a}
+                type="button"
+                data-age={a}
+                aria-pressed={ageGroup === a}
+                onClick={() => setAgeGroup(ageGroup === a ? "" : a)}
+                className={`nowrap-num min-h-[44px] rounded-full px-4 text-[0.9375rem] font-bold transition-colors ${
+                  ageGroup === a
+                    ? "bg-deep-800 text-white shadow-sm"
+                    : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-stone-bg"
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
           <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
-            정확한 생년을 여쭙기 어려울 때 적어 두는 칸입니다.
+            정확한 생년을 여쭙기 어려울 때 골라 두는 칸입니다.
           </p>
         </div>
         <div>

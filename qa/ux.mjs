@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2·3차 (칩 · 문구 · KPI 접기 · 맨 위로 · 전화 · 겹친 말 · 빈 칸)");
+const { log, finish } = recorder("UI/UX 2·3·4차 (칩 · 문구 · KPI 접기 · 맨 위로 · 전화 · 겹친 말 · 빈 칸 · 누르는 입력)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -162,6 +162,21 @@ if (taskHref) {
 } else {
   log("오늘 과제가 있는 고객을 찾았다", false, "브리핑에 고객 링크 없음");
 }
+
+/* ── 7. 4차 — 고객 등록: 성별 · 연령대는 누르기 (타자 없이) ── */
+await go(p, "/customers", 1000);
+await p.getByRole("button", { name: /고객 등록/ }).first().click();
+await p.waitForTimeout(700);
+const form = p.locator('[role="dialog"]').last();
+log("고객 등록 — 성별이 펼쳐진 단추 셋이다 (목록 창 없음)", (await form.locator("[data-gender]").count()) === 3);
+log("고객 등록 — 연령대가 누르는 단추다 (30대 ~ 80대 이상)", (await form.locator("[data-age]").count()) >= 6 && (await form.getByPlaceholder("예: 60대").count()) === 0);
+await form.locator('[data-age="60대"]').click();
+log("연령대 — 누르면 골라진다", (await form.locator('[data-age="60대"]').getAttribute("aria-pressed")) === "true");
+await form.locator('[data-age="60대"]').click();
+log("연령대 — 한 번 더 누르면 비운다", (await form.locator('[data-age="60대"][aria-pressed="true"]').count()) === 0);
+const ageBtn = await form.locator('[data-age="60대"]').boundingBox();
+log("연령대 단추가 손끝 크기다 (높이 44px 이상)", !!ageBtn && ageBtn.height >= 44, ageBtn ? `${Math.round(ageBtn.width)}×${Math.round(ageBtn.height)}` : "없음");
+await p.keyboard.press("Escape");
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
 console.log(`   (기준 ${BASE})`);
