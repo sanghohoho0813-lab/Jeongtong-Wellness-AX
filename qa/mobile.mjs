@@ -147,7 +147,8 @@ await phone.waitForTimeout(300);
 
 // ═══ 4. 설정 — 접히고, 펴지고, 바로가기가 열면서 데려간다 ══════
 await go(phone, "/settings", 1500);
-const heads = phone.locator("main button[aria-expanded]");
+// 칸 손잡이만 (제목 옆 ⓘ 설명 단추는 빼고)
+const heads = phone.locator("main button[aria-expanded]:not([data-info])");
 const headCount = await heads.count();
 log("설정이 접힌 목록으로 열린다 (아홉 칸)", headCount >= 8, `${headCount}칸`);
 /*

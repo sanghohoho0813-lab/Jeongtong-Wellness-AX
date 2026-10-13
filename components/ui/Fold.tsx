@@ -50,7 +50,7 @@ export function InfoButton({
         aria-expanded={open}
         aria-label={`${title ?? ""} 설명 ${open ? "닫기" : "보기"}`.trim()}
         data-info
-        className={`-m-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-aqua-700 ${className}`}
+        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-aqua-700 ${className}`}
       >
         {/* 「i」 는 글자가 아니라 그림으로 — 제목 글(innerText)에 「i」 가 섞이지 않게 */}
         <span
@@ -158,7 +158,8 @@ export function Fold({
                 {icon}
               </span>
             )}
-            <span className="min-w-0 truncate text-[1.0625rem] font-extrabold text-ink">
+            {/* 제목은 자르지 않는다 — 좁은 폰 + 큰 글씨에서는 두 줄로 내려쓴다 */}
+            <span className="min-w-0 text-[1.0625rem] font-extrabold leading-snug text-ink [word-break:keep-all]">
               {title}
             </span>
             {badge !== undefined && badge !== null && badge !== "" && (

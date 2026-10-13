@@ -72,6 +72,12 @@ log("저장하면 그 고객 화면으로 간다", /\/customers\/[0-9a-f]{8}-[0-
 
 // ── 입력칸이 없는 확인 창은 그대로 닫힌다
 await go(p, "/customers/c-01", 2000);
+// 이력은 접는 칸 — 먼저 편다 (D-52)
+const hist = p.locator('[data-fold="detail-history"]');
+if ((await hist.getAttribute("data-open").catch(() => null)) === "false") {
+  await hist.locator("button[aria-controls]").click();
+  await p.waitForTimeout(300);
+}
 const del = p.getByRole("button", { name: /기록 삭제/ }).first();
 if ((await del.count()) > 0) {
   await del.click();

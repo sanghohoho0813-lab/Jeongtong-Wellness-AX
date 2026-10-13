@@ -51,13 +51,19 @@ log(
   sideLabels.join(" / "),
 );
 
-/* 이름 두 글자만으로는 안에 무엇이 있는지 모른다 — 한 줄 설명이 붙어 있는가 */
+/*
+  이름 두 글자만으로는 안에 무엇이 있는지 모른다 — 설명이 있는가.
+  예전에는 이름 밑에 작은 글씨 한 줄로 늘 적었다. 대표님 요청(「글씨가
+  너무 많으면 안 돼 — 커서를 대면 보이게」)으로 그 줄은 말풍선이 됐다
+  (D-52). 그래서 이제는 「설명이 연결돼 있는가(aria-describedby)」 를 본다.
+*/
 const hasDesc = await pc.evaluate(() =>
-  [...document.querySelectorAll("aside nav a")].every(
-    (a) => a.querySelectorAll("span > span").length >= 2,
-  ),
+  [...document.querySelectorAll("aside nav a")].every((a) => {
+    const id = a.getAttribute("aria-describedby");
+    return !!id && (document.getElementById(id)?.textContent || "").trim().length > 4;
+  }),
 );
-log("목차마다 안에 무엇이 있는지 한 줄로 적혀 있다", hasDesc);
+log("목차마다 안에 무엇이 있는지 설명이 붙어 있다 (마우스를 올리면 말풍선)", hasDesc);
 
 /* 손가락·눈 — 넷으로 줄였으면 남은 넷은 커야 한다 */
 const sideBoxes = [];

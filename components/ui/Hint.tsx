@@ -89,11 +89,12 @@ export function Hint({
   const canHover = () =>
     typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  const child = isValidElement(children)
-    ? cloneElement(children as ReactElement<Record<string, unknown>>, {
-        "aria-describedby": `${id}-d`,
-      })
-    : children;
+  const child =
+    isValidElement(children) && typeof text === "string"
+      ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+          "aria-describedby": `${id}-d`,
+        })
+      : children;
 
   return (
     <span
@@ -109,10 +110,13 @@ export function Hint({
       onClick={hide}
     >
       {child}
-      <span id={`${id}-d`} className="sr-only">
-        {title ? `${title} — ` : ""}
-        {text}
-      </span>
+      {/* 읽어 주는 프로그램용 설명 — 글만 (단추 같은 것을 숨은 자리에 한 벌 더 만들지 않는다) */}
+      {typeof text === "string" && (
+        <span id={`${id}-d`} className="sr-only">
+          {title ? `${title} — ` : ""}
+          {text}
+        </span>
+      )}
       {pos &&
         createPortal(
           <span

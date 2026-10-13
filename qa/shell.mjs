@@ -232,7 +232,8 @@ async function walk(startLabel, expect, courseName) {
     });
     if (!info) break;
     seen.push(info);
-    await p
+    // 안내 카드 안의 단추만 — 화면의 다른 단추(예: 「다음」 이 들어간 접힌 절 제목)를 누르지 않게
+    await card
       .getByRole("button", { name: /다음|마치기|끝/ })
       .first()
       .click()

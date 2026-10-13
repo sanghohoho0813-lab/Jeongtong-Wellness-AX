@@ -117,29 +117,19 @@ export default function BriefingPage() {
     <div>
       <PageHeader
         title="오늘의 실행 브리핑"
-        description={
-          <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-            오늘 챙길 고객을 우선순위대로 정리했습니다.
-            {/*
-              순서가 무엇으로 정해지는지 — 설명 바로 옆에 둔다.
-              아래에 홀로 떠 있으면 무엇에 대한 표시인지 흐려진다.
-              인쇄물에는 넣지 않는다: 고객과 함께 보는 종이에 시스템
-              설명이 끼어들 이유가 없다.
-            */}
-            <span className="no-print">
-              <AiReadyNote subject="priority" />
-            </span>
-          </span>
-        }
+        description="오늘 챙길 고객을 우선순위대로 정리했습니다."
         action={
-          <Button
-            variant="secondary"
-            className="no-print"
-            onClick={() => window.print()}
-          >
-            <PrinterIcon className="h-4 w-4" />
-            오늘 할 일 인쇄
-          </Button>
+          /*
+            순서가 무엇으로 정해지는지(AI READY) — 설명 글이 ⓘ 로 접힌 뒤에도
+            눈에 보이게 인쇄 단추 옆에 둔다. 인쇄물에는 넣지 않는다.
+          */
+          <div className="no-print flex flex-wrap items-center justify-end gap-2">
+            <AiReadyNote subject="priority" />
+            <Button variant="secondary" onClick={() => window.print()}>
+              <PrinterIcon className="h-4 w-4" />
+              오늘 할 일 인쇄
+            </Button>
+          </div>
         }
       />
 
