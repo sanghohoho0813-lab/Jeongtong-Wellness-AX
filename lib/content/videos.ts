@@ -48,9 +48,9 @@ export interface VideoInfo {
   tone: "aqua" | "gold";
 }
 
-export const RATIO_LABEL: Record<Ratio, { short: string; long: string }> = {
-  "9x16": { short: "세로 9:16", long: "세로(9:16)" },
-  "16x9": { short: "가로 16:9", long: "가로(16:9)" },
+export const RATIO_LABEL: Record<Ratio, { short: string }> = {
+  "9x16": { short: "세로 9:16" },
+  "16x9": { short: "가로 16:9" },
 };
 
 export const VIDEOS: Record<VideoId, VideoInfo> = {
@@ -80,10 +80,9 @@ export const VIDEOS: Record<VideoId, VideoInfo> = {
     ],
     notesTitle: "보시기 전에",
     notes: [
-      "소리를 켜 주세요 — 자막도 영상 안에 들어 있어 소리 없이도 읽힙니다.",
-      "폰으로 보실 때는 세로, PC · TV 로 보실 때는 가로가 화면에 꽉 찹니다.",
-      "다시 보실 때는 1.25배 · 1.5배로 빠르게 보실 수 있습니다.",
-      "영상 속 고객 이름 · 숫자는 예시 데이터입니다.",
+      "소리를 켜고 보세요. 자막도 들어 있습니다.",
+      "폰은 세로, PC · TV 는 가로가 꽉 찹니다.",
+      "영상 속 이름 · 숫자는 예시입니다.",
     ],
     tone: "aqua",
   },
@@ -115,11 +114,9 @@ export const VIDEOS: Record<VideoId, VideoInfo> = {
     ],
     notesTitle: "보여드리기 전에",
     notes: [
-      "소리를 켜 주세요 — 자막도 영상 안에 들어 있어 소리 없이도 읽힙니다.",
-      "회의실 화면 · 노트북은 가로 16:9, 폰으로 보낼 때는 세로 9:16 을 고르세요.",
-      "특허 두 건은 「출원 완료」로만 나옵니다 — 등록된 특허처럼 말하지 않습니다.",
-      "운영 AX 는 「주요 화면 · 기능 구현 완료, 본점에서 검증은 이제부터」로 나옵니다 — 성과처럼 말하지 않습니다.",
-      "마지막 말은 「감사합니다」입니다. 영상 속 앱 화면의 이름 · 숫자는 예시 데이터입니다.",
+      "회의실 화면 · 노트북은 가로, 폰으로 보낼 때는 세로를 고르세요.",
+      "특허는 「출원 완료」, 운영 AX 는 「구현 완료 · 본점에서 검증 예정」으로만 말합니다.",
+      "마지막 말은 「감사합니다」입니다. 영상 속 이름 · 숫자는 예시입니다.",
     ],
     tone: "gold",
   },

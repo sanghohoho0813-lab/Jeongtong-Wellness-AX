@@ -128,6 +128,23 @@ log(
 );
 await phone.evaluate((sk) => localStorage.setItem(sk, new Date().toISOString().slice(0, 10)), SNOOZE);
 
+// ═══ 3-2. 첫 화면 — 아침에 볼 것만 펴 두고, 나머지는 「더 보기」 하나로 ═══
+await phone.evaluate(() => localStorage.removeItem("jeongtong-dash-reference-open"));
+await go(phone, "/", 1500);
+const fold = phone.locator("[data-dash-reference] > button");
+const homeH = await phone.evaluate(() => document.documentElement.scrollHeight);
+log("첫 화면 — 부위 기록 · 고객 구성 · 지점 현황은 「더 보기」 단추 하나로 접혀 있다", (await fold.count()) === 1 && (await fold.getAttribute("aria-expanded")) === "false" && !(await phone.locator("main").innerText()).includes("부위 선택 기록하기"));
+log("첫 화면 — 빈 카드(볼 사람이 없는 재방문 예정)는 자리를 차지하지 않는다", !(await phone.locator("main").innerText()).includes("현재 도래한 재방문 예정 고객이 없습니다"));
+await fold.click();
+await phone.waitForTimeout(400);
+log("「더 보기」 를 누르면 그 자리에서 펴진다", (await fold.getAttribute("aria-expanded")) === "true" && (await phone.locator("main").innerText()).includes("부위 선택 기록하기"));
+const homeOpenH = await phone.evaluate(() => document.documentElement.scrollHeight);
+log("접어 둔 첫 화면이 편 것보다 한 화면 이상 짧다", homeOpenH - homeH > 844, `${homeH}px / 펴면 ${homeOpenH}px`);
+await go(phone, "/", 1200);
+log("연 사람은 다음에도 열린 채로 본다", (await fold.getAttribute("aria-expanded")) === "true");
+await fold.click();
+await phone.waitForTimeout(300);
+
 // ═══ 4. 설정 — 접히고, 펴지고, 바로가기가 열면서 데려간다 ══════
 await go(phone, "/settings", 1500);
 const heads = phone.locator("main button[aria-expanded]");

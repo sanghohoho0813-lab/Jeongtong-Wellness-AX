@@ -31,13 +31,16 @@ export default function OpportunityCard() {
   const summary = summarizeOpportunities(briefingTasks);
   const open = rows.filter((t) => t.status !== "done");
   const name = (id: string) =>
-    displayName(customers.find((c) => c.id === id)?.name ?? "고객", privacyMode);
+    displayName(
+      customers.find((c) => c.id === id)?.name ?? "고객",
+      privacyMode,
+    );
+
+  // 볼 분이 없으면 숨는다 — 빈 카드는 첫 화면만 길게 만든다 (위 '오늘의 판단' 이 0명이라고 이미 말한다)
+  if (summary.total === 0) return null;
 
   return (
-    <Card
-      dataTour="dash-opportunity"
-      className="relative overflow-hidden"
-    >
+    <Card dataTour="dash-opportunity" className="relative overflow-hidden">
       <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold via-emerald-400 to-positive" />
       <SectionTitle
         tone="gold"
@@ -57,86 +60,74 @@ export default function OpportunityCard() {
         오늘의 매출기회
       </SectionTitle>
 
-      {summary.total === 0 ? (
-        <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm text-ink-sub">
-          지금은 재방문 · 재등록 기회로 볼 만한 고객이 없습니다. 방문 기록이
-          쌓이면 자동으로 표시됩니다.
-        </p>
-      ) : (
-        <>
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="rounded-card bg-gradient-to-br from-gold-soft to-card p-3 ring-1 ring-gold/20">
-              <p className="text-[0.8125rem] font-bold leading-snug text-gold-deep">
-                재등록<span className="hidden sm:inline"> 기회</span>
-              </p>
-              <p className="nowrap-num mt-1 text-2xl font-extrabold text-ink">
-                {summary.renewal}
-                <span className="ml-0.5 text-base font-bold text-ink-sub">
-                  명
-                </span>
-              </p>
-            </div>
-            <div className="rounded-card bg-gradient-to-br from-emerald-500/[0.09] to-card p-3 ring-1 ring-emerald-500/20">
-              <p className="text-[0.8125rem] font-bold leading-snug text-emerald-600 dark:text-emerald-300">
-                재방문<span className="hidden sm:inline"> 기회</span>
-              </p>
-              <p className="nowrap-num mt-1 text-2xl font-extrabold text-ink">
-                {summary.revisit}
-                <span className="ml-0.5 text-base font-bold text-ink-sub">
-                  명
-                </span>
-              </p>
-            </div>
-            <div className="rounded-card bg-card-soft p-3 ring-1 ring-stone-line">
-              <p className="text-[0.8125rem] font-bold text-ink-sub">
-                오늘 처리
-              </p>
-              <p className="nowrap-num mt-1 text-2xl font-extrabold text-ink">
-                {summary.handled}
-                <span className="text-base font-bold text-ink-sub">
-                  /{summary.total}
-                </span>
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="rounded-card bg-gradient-to-br from-gold-soft to-card p-3 ring-1 ring-gold/20">
+          <p className="text-[0.8125rem] font-bold leading-snug text-gold-deep">
+            재등록<span className="hidden sm:inline"> 기회</span>
+          </p>
+          <p className="nowrap-num mt-1 text-2xl font-extrabold text-ink">
+            {summary.renewal}
+            <span className="ml-0.5 text-base font-bold text-ink-sub">명</span>
+          </p>
+        </div>
+        <div className="rounded-card bg-gradient-to-br from-emerald-500/[0.09] to-card p-3 ring-1 ring-emerald-500/20">
+          <p className="text-[0.8125rem] font-bold leading-snug text-emerald-600 dark:text-emerald-300">
+            재방문<span className="hidden sm:inline"> 기회</span>
+          </p>
+          <p className="nowrap-num mt-1 text-2xl font-extrabold text-ink">
+            {summary.revisit}
+            <span className="ml-0.5 text-base font-bold text-ink-sub">명</span>
+          </p>
+        </div>
+        <div className="rounded-card bg-card-soft p-3 ring-1 ring-stone-line">
+          <p className="text-[0.8125rem] font-bold text-ink-sub">오늘 처리</p>
+          <p className="nowrap-num mt-1 text-2xl font-extrabold text-ink">
+            {summary.handled}
+            <span className="text-base font-bold text-ink-sub">
+              /{summary.total}
+            </span>
+          </p>
+        </div>
+      </div>
 
-          {/*
+      {/*
             대상 고객 미리보기.
             이름·배지·근거를 한 줄에 두었더니 폰에서 근거가 '반신 …' 처럼
             첫 글자만 남았다. 폰에서는 근거를 아랫줄로 내린다.
           */}
-          <ul className="mt-3 space-y-1.5">
-            {(open.length > 0 ? open : rows).slice(0, 3).map((t) => (
-              <li key={t.id}>
-                <Link
-                  href={`/customers/${t.customerId}`}
-                  className="row-accent flex items-center gap-2.5 rounded-card bg-card-soft px-3.5 py-2.5 pl-4 ring-1 ring-black/[0.04] transition-colors hover:bg-aqua-50"
-                >
-                  <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
-                    <span className="flex min-w-0 items-center gap-2">
-                      {/* 긴 이름이 배지를 화면 밖으로 밀지 않게 — 이름은 접히고 배지는 남는다 */}
-                      <span className="min-w-0 break-words font-extrabold text-ink">
-                        {name(t.customerId)}
-                      </span>
-                      <OpportunityBadge opportunity={t.opportunity!} size="sm" />
-                    </span>
-                    <span className="min-w-0 line-clamp-2 text-sm leading-snug text-ink-sub sm:flex-1 sm:truncate">
-                      {t.opportunity!.reasons[0]}
-                    </span>
+      <ul className="mt-3 space-y-1.5">
+        {(open.length > 0 ? open : rows).slice(0, 3).map((t) => (
+          <li key={t.id}>
+            <Link
+              href={`/customers/${t.customerId}`}
+              className="row-accent flex items-center gap-2.5 rounded-card bg-card-soft px-3.5 py-2.5 pl-4 ring-1 ring-black/[0.04] transition-colors hover:bg-aqua-50"
+            >
+              <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
+                <span className="flex min-w-0 items-center gap-2">
+                  {/* 긴 이름이 배지를 화면 밖으로 밀지 않게 — 이름은 접히고 배지는 남는다 */}
+                  <span className="min-w-0 break-words font-extrabold text-ink">
+                    {name(t.customerId)}
                   </span>
-                  <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-center text-xs font-bold text-ink-sub">
-            {rows.length > 3 ? `외 ${rows.length - 3}명 · ` : ""}
-            <Link href="/briefing" className="tap-line text-aqua-700 underline-offset-4 hover:underline">
-              실행 브리핑에서 전체 확인
+                  <OpportunityBadge opportunity={t.opportunity!} size="sm" />
+                </span>
+                <span className="min-w-0 line-clamp-2 text-sm leading-snug text-ink-sub sm:flex-1 sm:truncate">
+                  {t.opportunity!.reasons[0]}
+                </span>
+              </span>
+              <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
             </Link>
-          </p>
-        </>
-      )}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-center text-xs font-bold text-ink-sub">
+        {rows.length > 3 ? `외 ${rows.length - 3}명 · ` : ""}
+        <Link
+          href="/briefing"
+          className="tap-line text-aqua-700 underline-offset-4 hover:underline"
+        >
+          실행 브리핑에서 전체 확인
+        </Link>
+      </p>
     </Card>
   );
 }

@@ -21,6 +21,9 @@ export default function RevisitPreview() {
     .sort((a, b) => b.over - a.over)
     .slice(0, 5);
 
+  // 다가온 분이 없으면 숨는다 — 재방문 관리 화면은 목차 '고객' 에서 늘 열 수 있다
+  if (due.length === 0) return null;
+
   return (
     <Card>
       <SectionTitle
@@ -41,32 +44,26 @@ export default function RevisitPreview() {
           재방문 예정 고객
         </span>
       </SectionTitle>
-      {due.length === 0 ? (
-        <p className="rounded-card bg-card-soft py-8 text-center text-sm text-ink-sub">
-          현재 도래한 재방문 예정 고객이 없습니다.
-        </p>
-      ) : (
-        <ul className="divide-y divide-stone-bg-deep">
-          {due.map(({ c, over }) => (
-            <li key={c.id}>
-              <Link
-                href={`/customers/${c.id}`}
-                className="flex items-center gap-3 py-2.5 hover:bg-card-soft"
-              >
-                <span className="min-w-0 flex-1 truncate font-semibold text-ink">
-                  {displayName(c.name, privacyMode)}
-                </span>
-                <Badge tone={over > 0 ? "danger" : "aqua"}>
-                  {over > 0
-                    ? `${over}일 경과`
-                    : `관리일 ${formatRelative(c.nextManageDate)}`}
-                </Badge>
-                <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="divide-y divide-stone-bg-deep">
+        {due.map(({ c, over }) => (
+          <li key={c.id}>
+            <Link
+              href={`/customers/${c.id}`}
+              className="flex items-center gap-3 py-2.5 hover:bg-card-soft"
+            >
+              <span className="min-w-0 flex-1 truncate font-semibold text-ink">
+                {displayName(c.name, privacyMode)}
+              </span>
+              <Badge tone={over > 0 ? "danger" : "aqua"}>
+                {over > 0
+                  ? `${over}일 경과`
+                  : `관리일 ${formatRelative(c.nextManageDate)}`}
+              </Badge>
+              <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-faint" />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

@@ -15,6 +15,54 @@ import RevisitPreview from "@/components/dashboard/RevisitPreview";
 import BranchSummaryCard from "@/components/dashboard/BranchSummaryCard";
 import { useStore } from "@/lib/data/store";
 import { SectionRule } from "@/components/ui";
+import { ChevronRightIcon } from "@/components/ui/icons";
+import { ReactNode, useEffect, useState } from "react";
+
+const FOLD_KEY = "jeongtong-dash-reference-open";
+
+function FoldedReference({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try {
+      setOpen(localStorage.getItem(FOLD_KEY) === "1");
+    } catch {
+      /* 기억 못 해도 접힌 채로 시작하면 된다 */
+    }
+  }, []);
+  const toggle = () => {
+    setOpen((v) => {
+      try {
+        localStorage.setItem(FOLD_KEY, v ? "0" : "1");
+      } catch {
+        /* 지금 화면만 바뀐다 */
+      }
+      return !v;
+    });
+  };
+  return (
+    <div data-dash-reference>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        className="flex min-h-[3.25rem] w-full items-center gap-3 rounded-card bg-card px-4 text-left shadow-card ring-1 ring-stone-line transition-colors hover:bg-stone-bg"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-[1.0625rem] font-extrabold text-ink">
+            {open ? "접기" : "더 보기"}
+          </span>
+          <span className="block text-[0.875rem] leading-snug text-ink-sub">
+            부위 기록 · 고객 구성 · 지점 현황
+          </span>
+        </span>
+        <ChevronRightIcon
+          className={`h-5 w-5 shrink-0 text-ink-faint transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
+        />
+      </button>
+      {open && <div className="mt-4">{children}</div>}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { settings, customers, visits } = useStore();
@@ -120,13 +168,20 @@ export default function DashboardPage() {
             <div data-tour="dash-kpi">
               <KpiRow />
             </div>
-            <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
-              <BodyMapCard />
-              <div className="flex flex-col card-gap">
-                <SegmentCard />
-                <BranchSummaryCard />
+            {/*
+              부위 기록 · 고객 구성 · 지점 현황 — 아침마다 볼 것은 아니다.
+              늘 펼쳐 두었더니 폰에서 첫 화면이 여섯 화면 길이가 됐다.
+              단추 하나로 접어 두고, 연 사람은 다음에도 열린 채로 본다.
+            */}
+            <FoldedReference>
+              <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
+                <BodyMapCard />
+                <div className="flex flex-col card-gap">
+                  <SegmentCard />
+                  <BranchSummaryCard />
+                </div>
               </div>
-            </div>
+            </FoldedReference>
           </>
         )}
       </div>

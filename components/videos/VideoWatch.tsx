@@ -150,16 +150,16 @@ export default function VideoWatch({ id }: { id: VideoId }) {
 
   return (
     <div data-video-page={v.id}>
-      {/* 머리 — 누구를 위한 영상 · 제목 · 한 줄 요약 */}
+      {/* 머리 — 누구를 위한 영상 · 제목과 길이. 나머지(비율 · 자막)는 아래 단추와 안내가 말한다 */}
       <header className="mb-4 lg:mb-6">
         <p
-          className={`text-[0.8125rem] font-extrabold tracking-[0.16em] ${accent}`}
+          className={`text-[0.875rem] font-extrabold tracking-[0.12em] ${accent}`}
         >
           {v.eyebrow}
         </p>
         <h1
           id="video-title"
-          className="text-page-title mt-1 flex items-center gap-2.5 text-ink"
+          className="text-page-title mt-1 flex flex-wrap items-center gap-x-2.5 text-ink"
         >
           <span
             className={`hidden h-6 w-1.5 shrink-0 rounded-full sm:block ${
@@ -169,12 +169,10 @@ export default function VideoWatch({ id }: { id: VideoId }) {
             }`}
           />
           {v.title}
+          <span className="nowrap-num text-[1rem] font-bold text-ink-sub">
+            {v.length}
+          </span>
         </h1>
-        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub [word-break:keep-all]">
-          {v.summary} ·{" "}
-          <span className="nowrap-num font-bold text-ink">{v.length}</span> ·{" "}
-          {RATIOS.map((r) => RATIO_LABEL[r].long).join(" · ")} · 자막 포함
-        </p>
       </header>
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_23rem]">
@@ -253,7 +251,7 @@ export default function VideoWatch({ id }: { id: VideoId }) {
             >
               <span className="mr-0.5 flex items-center gap-1 text-[0.9375rem] font-bold text-ink-sub">
                 <GaugeIcon className="h-4 w-4" />
-                재생 속도
+                속도
               </span>
               {RATES.map((r) => (
                 <button
@@ -286,7 +284,7 @@ export default function VideoWatch({ id }: { id: VideoId }) {
           {/* 내려받기 — 두 비율 다 */}
           <div className="mt-4 border-t border-stone-line pt-3 text-center sm:mt-5 sm:pt-4">
             <p className="text-[0.875rem] font-bold text-ink-sub">
-              파일로 내려받기 · 카카오톡 전송용
+              파일로 받기 · 카카오톡으로 보낼 때
             </p>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
               {RATIOS.map((r) => (
@@ -321,7 +319,7 @@ export default function VideoWatch({ id }: { id: VideoId }) {
               영상 흐름
             </h2>
             <p className="mt-0.5 text-[0.875rem] text-ink-sub">
-              누르면 그 장면부터 재생합니다.
+              누르면 그 장면부터 나옵니다.
             </p>
             <ol className="mt-3 space-y-1" data-chapters>
               {v.chapters.map((c, i) => {
