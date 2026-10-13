@@ -86,7 +86,13 @@ if ((await rep.count()) > 0) {
 // ── 3. 방문 기록 수정 · 삭제 · 되돌리기
 await go(p, "/customers/c-01");
 const beforeVisits = (await bodyText(p)).match(/누적 (\d+)회/)?.[1];
-const editBtn = p.getByRole("button", { name: /수정/ }).last();
+// 이력은 접는 칸 — 사람이 하듯 먼저 편다 (D-52)
+const histFold = p.locator('[data-fold="detail-history"]');
+if ((await histFold.getAttribute("data-open")) === "false") {
+  await histFold.locator("button[aria-controls]").click();
+  await p.waitForTimeout(300);
+}
+const editBtn = histFold.getByRole("button", { name: /기록 수정/ }).first();
 if ((await editBtn.count()) > 0) {
   await editBtn.click();
   await p.waitForTimeout(1200);
@@ -96,7 +102,7 @@ if ((await editBtn.count()) > 0) {
   await p.waitForTimeout(600);
 } else log("방문 수정 단추가 있다", false);
 
-const delBtn = p.getByRole("button", { name: /삭제/ }).first();
+const delBtn = histFold.getByRole("button", { name: /기록 삭제/ }).first();
 if ((await delBtn.count()) > 0) {
   await delBtn.click();
   await p.waitForTimeout(1000);
