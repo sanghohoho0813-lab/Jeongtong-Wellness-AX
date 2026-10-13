@@ -63,7 +63,7 @@ export const VIDEOS: Record<VideoId, VideoInfo> = {
     length: "3분 40초",
     files: {
       "9x16": { src: "/videos/guide.mp4", poster: "/videos/guide-poster.jpg", mb: 29 },
-      "16x9": { src: "/videos/guide-wide.mp4", poster: "/videos/guide-wide-poster.jpg", mb: 0 },
+      "16x9": { src: "/videos/guide-wide.mp4", poster: "/videos/guide-wide-poster.jpg", mb: 28 },
     },
     chapters: [
       { at: 0, label: "인사 · 이 영상은" },
