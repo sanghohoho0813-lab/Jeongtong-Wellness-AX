@@ -21,10 +21,11 @@ import MissionCard from "@/components/ax-coach/MissionCard";
 import CoachReport from "@/components/ax-coach/CoachReport";
 import EvidenceSheet from "@/components/ax-coach/EvidenceSheet";
 import { Button, Card, EmptyState, Modal, SectionTitle } from "@/components/ui";
-import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
+import { BookIcon, PrinterIcon, SparkIcon } from "@/components/ui/icons";
 import { useCoach } from "@/lib/ax-coach/useCoach";
 import { useStore } from "@/lib/data/store";
 import { buildReport, trendVsDaysAgo } from "@/lib/ax-coach/report";
+import { Fold } from "@/components/ui/Fold";
 
 export default function CoachPage() {
   const {
@@ -77,6 +78,7 @@ export default function CoachPage() {
           <SectionTitle
             icon={<SparkIcon className="h-4 w-4" />}
             tone="aqua"
+            hint="평소 업무를 하시면 실증자료도 같이 쌓입니다. 누르는 것으로 완료되지 않고, 실제 기록이 남아야 완료됩니다."
             action={
               todayIssued.length > 0 ? (
                 <span className="nowrap-num text-[0.9375rem] font-bold text-ink-sub">
@@ -87,11 +89,6 @@ export default function CoachPage() {
           >
             오늘 이것만 해보세요
           </SectionTitle>
-
-          <p className="mb-3 text-[1rem] leading-relaxed text-ink-soft">
-            평소 업무를 하시면 실증자료도 같이 쌓입니다. 누르는 것으로
-            완료되지 않고, 실제 기록이 남아야 완료됩니다.
-          </p>
 
           {missions.length === 0 ? (
             <EmptyState
@@ -127,6 +124,7 @@ export default function CoachPage() {
           <SectionTitle
             icon={<PrinterIcon className="h-4 w-4" />}
             tone="gold"
+            hint="지금까지 쌓인 것을 A4 한 장으로 — 무엇을 재기로 했는지 · 어디까지 왔는지 · 어느 기록에서 나왔는지. 줄 단위 원본은 AX 도입성과의 증적 내보내기로."
             action={
               <Button variant="secondary" onClick={() => setSheetOpen(true)}>
                 <PrinterIcon className="h-4 w-4" />
@@ -136,12 +134,6 @@ export default function CoachPage() {
           >
             한 장으로 뽑아 가기
           </SectionTitle>
-          <p className="text-[1rem] leading-relaxed text-ink-soft">
-            지금까지 쌓인 것을 A4 한 장으로 정리해 드립니다. 무엇을 재기로
-            했는지 · 지금 어디까지 왔는지 · 그 숫자가 어느 기록에서 나왔는지가
-            함께 적힙니다. 줄 단위 원본은 AX 도입성과 화면의{" "}
-            <b className="text-ink">증적 내보내기</b>로 받으실 수 있습니다.
-          </p>
         </Card>
 
         <Modal
@@ -163,18 +155,20 @@ export default function CoachPage() {
         {/*
           이 화면이 무엇을 하지 않는지 — 브리핑과 헷갈리지 않게 한 번 적는다.
         */}
-        <Card lift={false} className="!bg-card-soft">
-          <p className="text-[1rem] font-extrabold text-ink">
-            AX 코치와 오늘의 실행 브리핑은 무엇이 다른가요
-          </p>
-          <p className="mt-1.5 text-[1rem] leading-relaxed text-ink-soft">
+        <Fold
+          id="coach-vs-briefing"
+          icon={<BookIcon className="h-[1.1rem] w-[1.1rem]" />}
+          title="AX 코치와 오늘의 실행 브리핑은 무엇이 다른가요"
+          hint="브리핑은 누구에게 연락할지, 코치는 그 관리가 기록으로 쌓이는지를 봅니다"
+        >
+          <p className="text-[1rem] leading-relaxed text-ink-soft">
             <b className="text-ink">오늘의 실행 브리핑</b>은 <b>누구에게</b>{" "}
             연락할지를 순서대로 알려 드립니다.{" "}
             <b className="text-ink">AX 코치</b>는 그 관리가 실제 기록으로
             쌓이고 있는지를 보고 <b>어느 쪽</b> 일이 비었는지 알려 드립니다.
             고객 명단은 브리핑에서 정합니다.
           </p>
-        </Card>
+        </Fold>
       </div>
     </div>
   );

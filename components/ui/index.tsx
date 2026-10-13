@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { InfoButton } from "./Fold";
 import { CustomerStatus, SalesOpportunity, TaskStatus } from "@/lib/types";
 import { SparkIcon, XIcon } from "./icons";
 
@@ -109,6 +110,7 @@ export function SectionTitle({
     못 들어가면 단추가 아랫줄로 내려간다. 주 사용자가 60대라 「좁은 폰 +
     큰 글씨」 는 예외가 아니라 기본 설정에 가깝다.
   */
+  const [hintOpen, setHintOpen] = useState(false);
   return (
     <div
       className={`mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2 ${className}`}
@@ -124,8 +126,17 @@ export function SectionTitle({
             </span>
           )}
           <span className="min-w-0">{children}</span>
+          {/* 칸 설명은 ⓘ 로 — 올리면 말풍선, 누르면 제목 아래 한 줄 (글씨를 늘 깔아 두지 않는다) */}
+          {hint && (
+            <InfoButton
+              text={hint}
+              title={typeof children === "string" ? children : undefined}
+              open={hintOpen}
+              onToggle={() => setHintOpen((v) => !v)}
+            />
+          )}
         </h2>
-        {hint && (
+        {hint && hintOpen && (
           <p className="mt-1.5 text-[0.875rem] leading-relaxed text-ink-sub">
             {hint}
           </p>

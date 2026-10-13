@@ -13,7 +13,8 @@
  */
 
 import { useState } from "react";
-import { Card, SectionTitle } from "@/components/ui";
+import { Fold } from "@/components/ui/Fold";
+import { ChartIcon } from "@/components/ui/icons";
 import type { CoachReport as Report } from "@/lib/ax-coach/report";
 
 const ROWS = (r: Report) => [
@@ -35,11 +36,13 @@ export default function CoachReport({
   const r = days === 7 ? report7 : report14;
 
   return (
-    <Card dataTour="coach-report">
-      <SectionTitle
-        tone="aqua"
-        action={
-          <div
+    <Fold
+      id="coach-report"
+      dataTour="coach-report"
+      icon={<ChartIcon className="h-[1.1rem] w-[1.1rem]" />}
+      title={`최근 ${days}일에 쌓인 것`}
+      hint="최근 7일 · 14일 동안 쌓인 기록 · 달라진 점 · 아직 더 필요한 것"
+      action={<div
             role="radiogroup"
             aria-label="기간"
             className="flex gap-1.5"
@@ -60,11 +63,8 @@ export default function CoachReport({
                 최근 {d}일
               </button>
             ))}
-          </div>
-        }
-      >
-        최근 {days}일에 쌓인 것
-      </SectionTitle>
+          </div>}
+    >
 
       <ul className="divide-y divide-stone-line">
         {ROWS(r).map((row) => (
@@ -93,7 +93,7 @@ export default function CoachReport({
         기록이 있었다는 뜻입니다. 관리가 재방문을 만들었다는 뜻은
         아닙니다 — 일어난 순서만 적습니다.
       </p>
-    </Card>
+    </Fold>
   );
 }
 

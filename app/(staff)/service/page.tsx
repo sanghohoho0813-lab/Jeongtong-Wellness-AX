@@ -21,8 +21,9 @@ import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
 import { formatWon } from "@/lib/utils/format";
-import { Card, SectionTitle } from "@/components/ui";
-import { ChevronRightIcon } from "@/components/ui/icons";
+// 칸은 모두 접는 칸(Fold) — 카드 · 제목 부품은 더 쓰지 않는다
+import { BookIcon, BuildingIcon, ChevronRightIcon, LeafIcon, TicketIcon } from "@/components/ui/icons";
+import { Fold } from "@/components/ui/Fold";
 
 /** 실제 제품 사진 — 쑥뜸 제품자료에서 옮긴 것 */
 const PHOTOS = [
@@ -67,13 +68,15 @@ export default function ServicePage() {
       />
 
       {/* 1) 구성 — 무엇으로 이루어져 있는가 */}
-      <Card className="mb-4 lg:mb-5">
-        <SectionTitle>정통대왕쑥뜸 구성</SectionTitle>
-        <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
-          피부 위에 거즈를 깔고, 그 위에 특제 반죽을 넓게 편 다음, 쑥을 올려
-          온열을 전달하는 방식입니다. 몸 한 곳이 아니라 복부·등처럼 넓은 부위에
-          쓸 수 있습니다.
-        </p>
+      <Fold
+        id="svc-layers"
+        className="mb-4 lg:mb-5"
+        defaultOpen
+        icon={<LeafIcon className="h-[1.1rem] w-[1.1rem]" />}
+        title="정통대왕쑥뜸 구성"
+        badge="3층"
+        hint="거즈 → 특제 반죽 → 쑥 순서로 올려 온열을 전달합니다. 복부 · 등처럼 넓은 부위에 씁니다."
+      >
         <ol className="space-y-2">
           {LAYERS.map((l) => (
             <li
@@ -92,14 +95,17 @@ export default function ServicePage() {
             </li>
           ))}
         </ol>
-      </Card>
+      </Fold>
 
       {/* 2) 실제 제품 사진 */}
-      <Card className="mb-4 lg:mb-5">
-        <SectionTitle>실제 제품</SectionTitle>
-        <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
-          매장에서 실제로 쓰는 재료와 완성된 모습입니다.
-        </p>
+      <Fold
+        id="svc-photos"
+        className="mb-4 lg:mb-5"
+        icon={<BookIcon className="h-[1.1rem] w-[1.1rem]" />}
+        title="실제 제품"
+        badge={`사진 ${PHOTOS.length}장`}
+        hint="매장에서 실제로 쓰는 재료와 완성된 모습"
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {PHOTOS.map((ph) => (
             <figure key={ph.src} className="min-w-0">
@@ -121,15 +127,18 @@ export default function ServicePage() {
             </figure>
           ))}
         </div>
-      </Card>
+      </Fold>
 
       {/* 3) 판매 기준 — 설정의 가격표를 그대로 읽는다 */}
-      <Card className="mb-4 lg:mb-5">
-        <SectionTitle>판매 중인 이용권</SectionTitle>
-        <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
-          설정 → 서비스 · 이용권 상품에 적어 둔 가격표입니다. 이용권 등록
-          화면도 같은 값을 읽습니다.
-        </p>
+      <Fold
+        id="svc-prices"
+        className="mb-4 lg:mb-5"
+        defaultOpen
+        icon={<TicketIcon className="h-[1.1rem] w-[1.1rem]" />}
+        title="판매 중인 이용권"
+        badge={`${sold.length}종`}
+        hint="설정 → 서비스 · 이용권 상품에 적어 둔 가격표 — 이용권 등록 화면도 같은 값을 읽습니다"
+      >
         {sold.length === 0 ? (
           <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm text-ink-sub">
             판매 중인 상품이 없습니다.
@@ -160,11 +169,15 @@ export default function ServicePage() {
           유효기간 · 할인 규정은 매장에서 정한 내용이 없어 시스템에 두지
           않았습니다. 정하시면 그때 반영합니다.
         </p>
-      </Card>
+      </Fold>
 
       {/* 4) 매장 정보 */}
-      <Card>
-        <SectionTitle>매장</SectionTitle>
+      <Fold
+        id="svc-store"
+        icon={<BuildingIcon className="h-[1.1rem] w-[1.1rem]" />}
+        title="매장"
+        hint="상호 · 지점 · 주소 · 연락처 · 영업시간 — 설정에서 고칩니다"
+      >
         <dl className="divide-y divide-stone-line">
           {[
             { k: "상호", v: settings.companyName },
@@ -193,7 +206,7 @@ export default function ServicePage() {
           설정에서 수정
           <ChevronRightIcon className="h-4 w-4" />
         </Link>
-      </Card>
+      </Fold>
     </div>
   );
 }

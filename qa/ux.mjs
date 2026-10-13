@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2·3·4차 (칩 · 문구 · KPI 접기 · 맨 위로 · 전화 · 겹친 말 · 빈 칸 · 누르는 입력)");
+const { log, finish } = recorder("UI/UX 2~5차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -177,6 +177,51 @@ log("연령대 — 한 번 더 누르면 비운다", (await form.locator('[data-
 const ageBtn = await form.locator('[data-age="60대"]').boundingBox();
 log("연령대 단추가 손끝 크기다 (높이 44px 이상)", !!ageBtn && ageBtn.height >= 44, ageBtn ? `${Math.round(ageBtn.width)}×${Math.round(ageBtn.height)}` : "없음");
 await p.keyboard.press("Escape");
+
+/* ── 8. 대폭 개선 — 글씨는 줄이고, 마우스를 올리면 설명 · 접었다 펴기 ── */
+const pc2 = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+pc2.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+await go(pc2, "/customers", 1200);
+const navLines = await pc2.evaluate(() => [...document.querySelectorAll("aside nav a")].map((a) => a.innerText.trim().split("\n").filter(Boolean).length));
+log("왼쪽 목차 — 이름 한 줄만 (밑의 작은 설명 글이 없다)", navLines.length === 4 && navLines.every((n) => n === 1), JSON.stringify(navLines));
+await pc2.locator('aside nav a[href="/"]').hover();
+await pc2.waitForTimeout(500);
+const navTip = await pc2.locator("[data-hint]").innerText().catch(() => "");
+log("목차에 마우스를 올리면 무슨 화면인지 말풍선이 뜬다", /오늘/.test(navTip) && /챙길 고객/.test(navTip), navTip.replace(/\n/g, " / "));
+await pc2.mouse.move(900, 600);
+await pc2.waitForTimeout(300);
+log("마우스를 떼면 말풍선이 사라진다", (await pc2.locator("[data-hint]").count()) === 0);
+await pc2.locator('[data-section-tabs] a[href="/retention"]').hover();
+await pc2.waitForTimeout(500);
+log("위쪽 탭에도 말풍선이 뜬다", /늦어지는/.test(await pc2.locator("[data-hint]").innerText().catch(() => "")));
+await pc2.locator('aside a[href="/why"]').hover();
+await pc2.waitForTimeout(500);
+log("문서 단추(Why AX)도 말풍선으로 설명한다 — 옆에 작은 글씨가 없다", /달라지는가/.test(await pc2.locator("[data-hint]").innerText().catch(() => "")) && !/우리 매장 이야기/.test(await pc2.locator('aside a[href="/why"]').innerText()));
+await pc2.mouse.move(900, 600);
+// 화면 설명 — 제목 아래에 늘 깔지 않고 ⓘ 로
+const info = pc2.locator("main h1 [data-info]").first();
+log("화면 제목 옆에 ⓘ 가 있고, 설명 글은 접혀 있다", (await info.count()) === 1 && (await info.getAttribute("aria-expanded")) === "false");
+await info.click();
+await pc2.waitForTimeout(300);
+log("ⓘ 를 누르면 제목 아래에 설명이 한 줄로 펴진다", (await info.getAttribute("aria-expanded")) === "true" && /우선 관리/.test(await pc2.locator("main").innerText()));
+// 고객 상세 — 접는 칸
+await pc2.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("jeongtong-fold:")).forEach((k) => localStorage.removeItem(k)));
+const anyCustomer = await pc2.evaluate(() => [...document.querySelectorAll('main a[href^="/customers/"]')].map((a) => a.getAttribute("href")).find((h) => h.split("/").length === 3));
+await go(pc2, anyCustomer, 1400);
+const folds = await pc2.evaluate(() => [...document.querySelectorAll("[data-fold]")].map((f) => ({ id: f.dataset.fold, open: f.dataset.open })));
+log("고객 상세 — 칸이 제목 한 줄로 접혀 있다 (부위 · 선호 · 이력 등)", folds.length >= 4 && folds.filter((f) => f.open === "false").length >= 3, JSON.stringify(folds));
+const hist = pc2.locator('[data-fold="detail-history"] button[aria-controls]');
+log("접힌 칸 제목 옆에 몇 건인지 보인다", /\d+건/.test(await hist.innerText()));
+await hist.hover();
+await pc2.waitForTimeout(500);
+log("접힌 칸에 마우스를 올리면 무엇이 들어 있는지 보인다", /방문/.test(await pc2.locator("[data-hint]").innerText().catch(() => "")));
+await hist.click();
+await pc2.waitForTimeout(300);
+log("누르면 펴진다", (await pc2.locator('[data-fold="detail-history"]').getAttribute("data-open")) === "true");
+await go(pc2, anyCustomer, 1200);
+log("편 칸은 다음에 열어도 펴져 있다 (그 기기에 기억)", (await pc2.locator('[data-fold="detail-history"]').getAttribute("data-open")) === "true");
+await pc2.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("jeongtong-fold:")).forEach((k) => localStorage.removeItem(k)));
+await pc2.context().close();
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
 console.log(`   (기준 ${BASE})`);

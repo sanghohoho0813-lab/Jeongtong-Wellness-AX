@@ -25,6 +25,7 @@ import { usePathname } from "next/navigation";
 import { useStore } from "@/lib/data/store";
 import { canAccessRoute } from "@/lib/auth/permissions";
 import { isUnder, sectionForPath } from "./nav-items";
+import { Hint } from "@/components/ui/Hint";
 
 export default function SectionTabs() {
   const pathname = usePathname();
@@ -50,8 +51,8 @@ export default function SectionTabs() {
         const active = isUnder(pathname, t.href);
         const Icon = t.icon;
         return (
+          <Hint key={t.href} title={t.label} text={t.hint ?? t.label}>
           <Link
-            key={t.href}
             href={t.href}
             aria-current={active ? "page" : undefined}
             /*
@@ -72,6 +73,7 @@ export default function SectionTabs() {
             <Icon className="hidden h-[1.15rem] w-[1.15rem] shrink-0 xs:block" />
             <span className="min-w-0">{t.label}</span>
           </Link>
+          </Hint>
         );
       })}
     </nav>

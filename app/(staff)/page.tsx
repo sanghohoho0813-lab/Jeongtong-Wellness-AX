@@ -15,54 +15,8 @@ import RevisitPreview from "@/components/dashboard/RevisitPreview";
 import BranchSummaryCard from "@/components/dashboard/BranchSummaryCard";
 import { useStore } from "@/lib/data/store";
 import { SectionRule } from "@/components/ui";
-import { ChevronRightIcon } from "@/components/ui/icons";
-import { ReactNode, useEffect, useState } from "react";
-
-const FOLD_KEY = "jeongtong-dash-reference-open";
-
-function FoldedReference({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    try {
-      setOpen(localStorage.getItem(FOLD_KEY) === "1");
-    } catch {
-      /* 기억 못 해도 접힌 채로 시작하면 된다 */
-    }
-  }, []);
-  const toggle = () => {
-    setOpen((v) => {
-      try {
-        localStorage.setItem(FOLD_KEY, v ? "0" : "1");
-      } catch {
-        /* 지금 화면만 바뀐다 */
-      }
-      return !v;
-    });
-  };
-  return (
-    <div data-dash-reference>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        className="flex min-h-[3.25rem] w-full items-center gap-3 rounded-card bg-card px-4 text-left shadow-card ring-1 ring-stone-line transition-colors hover:bg-stone-bg"
-      >
-        <span className="min-w-0 flex-1">
-          <span className="block text-[1.0625rem] font-extrabold text-ink">
-            {open ? "접기" : "더 보기"}
-          </span>
-          <span className="block text-[0.875rem] leading-snug text-ink-sub">
-            부위 기록 · 고객 구성 · 지점 현황
-          </span>
-        </span>
-        <ChevronRightIcon
-          className={`h-5 w-5 shrink-0 text-ink-faint transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
-        />
-      </button>
-      {open && <div className="mt-4">{children}</div>}
-    </div>
-  );
-}
+import { ChartIcon } from "@/components/ui/icons";
+import { Fold } from "@/components/ui/Fold";
 
 export default function DashboardPage() {
   const { settings, customers, visits } = useStore();
@@ -119,14 +73,11 @@ export default function DashboardPage() {
               ① 판단 — 오늘 무엇을 봐야 하는가
               숫자 · 그렇게 본 이유 · 지금 갈 곳이 한 칸에 함께 있다.
             */}
-            <SectionRule
-              label="오늘의 판단"
-              hint="지금 화면을 열어야 하는 이유 세 가지"
-            />
+            <SectionRule label="오늘의 판단" />
             <DecisionBand />
 
             {/* ② 실행 — 그 판단을 오늘 어떻게 처리하는가 */}
-            <SectionRule label="실행" hint="누구에게 · 무엇을 · 어떤 순서로" />
+            <SectionRule label="실행" />
             {/*
               AX 코치 — 브리핑 바로 위 한 줄. 브리핑이 "누구에게" 라면
               코치는 "그게 기록으로 남고 있나" 다. 여기서는 준비도와
@@ -161,27 +112,34 @@ export default function DashboardPage() {
               읽어도 오늘 뭘 할지는 안 나오기 때문이다. 판단 아래로 내리고,
               카드에서 한 판 안의 칸으로 낮췄다.
             */}
-            <SectionRule
-              label="근거"
-              hint="위 판단이 어떤 숫자 위에 서 있는지"
-            />
-            <div data-tour="dash-kpi">
-              <KpiRow />
-            </div>
             {/*
-              부위 기록 · 고객 구성 · 지점 현황 — 아침마다 볼 것은 아니다.
-              늘 펼쳐 두었더니 폰에서 첫 화면이 여섯 화면 길이가 됐다.
-              단추 하나로 접어 두고, 연 사람은 다음에도 열린 채로 본다.
+              ③ 근거 — 위 판단이 어떤 숫자 위에 서 있는지.
+
+              매일 아침 볼 것은 아니다. 숫자 넉 장 · 부위 그림 · 고객 구성 ·
+              지점 현황을 제목 한 줄로 접어 둔다 (대표님: 「글씨가 너무 많으면
+              안 돼」). 마우스를 올리면 무엇이 들어 있는지 보이고, 한 번 편
+              사람은 다음에도 펴진 채로 본다.
             */}
-            <FoldedReference>
-              <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
-                <BodyMapCard />
-                <div className="flex flex-col card-gap">
-                  <SegmentCard />
-                  <BranchSummaryCard />
+            <Fold
+              id="dash-reference"
+              variant="plain"
+              icon={<ChartIcon className="h-[1.15rem] w-[1.15rem]" />}
+              title="매장 숫자 · 더 보기"
+              hint="최근 상담 · 재방문 예정 · 방문 · 매출 숫자, 부위 기록, 고객 구성, 지점 현황"
+            >
+              <div className="flex flex-col card-gap">
+                <div data-tour="dash-kpi">
+                  <KpiRow />
+                </div>
+                <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
+                  <BodyMapCard />
+                  <div className="flex flex-col card-gap">
+                    <SegmentCard />
+                    <BranchSummaryCard />
+                  </div>
                 </div>
               </div>
-            </FoldedReference>
+            </Fold>
           </>
         )}
       </div>

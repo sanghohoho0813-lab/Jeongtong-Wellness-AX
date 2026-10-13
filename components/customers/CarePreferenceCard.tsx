@@ -16,7 +16,8 @@ import {
 } from "@/lib/types";
 import { PREFERENCE_PRESETS } from "@/lib/data/preference-presets";
 import { formatDateKr } from "@/lib/utils/date";
-import { Badge, Button, SectionTitle, inputCls } from "@/components/ui";
+import { Badge, Button, inputCls } from "@/components/ui";
+import { Fold } from "@/components/ui/Fold";
 import { useToast } from "@/components/ui/toast";
 import { PlusIcon, SparkIcon, XIcon } from "@/components/ui/icons";
 
@@ -168,15 +169,14 @@ export default function CarePreferenceCard({
   };
 
   return (
-    <div
-      data-tour="care-pref"
-      className="card-accent card-lift group flex flex-col"
-    >
-      <SectionTitle
-        tone="gold"
-        icon={<SparkIcon className="icon-pop h-4 w-4" />}
-        action={
-          <Button
+    <Fold
+      id="detail-carepref"
+      dataTour="care-pref"
+      icon={<SparkIcon className="h-[1.1rem] w-[1.1rem]" />}
+      title="케어 선호 · 특이사항"
+      badge={sorted.length ? `${sorted.length}건` : "없음"}
+      hint="고객이 좋아하는 방식 · 기억할 점 — 남겨 두면 다음 방문 기록 때 먼저 보입니다"
+      action={<Button
             variant={open ? "ghost" : "secondary"}
             size="sm"
             onClick={() => setOpen((v) => !v)}
@@ -189,15 +189,8 @@ export default function CarePreferenceCard({
                 기록 추가
               </>
             )}
-          </Button>
-        }
-      >
-        케어 선호 · 특이사항
-      </SectionTitle>
-      <p className="-mt-2 mb-3 text-[0.875rem] leading-relaxed text-ink-sub">
-        고객이 좋아하는 방식과 기억해야 할 점을 남겨두면, 다음 방문 기록 시
-        먼저 확인할 수 있습니다.
-      </p>
+          </Button>}
+    >
 
       {open && (
         <div className="mb-3 rounded-card bg-card px-3.5 py-3 ring-1 ring-black/[0.06] dark:ring-white/10">
@@ -287,6 +280,6 @@ export default function CarePreferenceCard({
           ))}
         </ul>
       )}
-    </div>
+    </Fold>
   );
 }

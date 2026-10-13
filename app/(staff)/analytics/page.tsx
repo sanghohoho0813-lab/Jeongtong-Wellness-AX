@@ -25,7 +25,7 @@ import {
   SectionTitle,
   SummaryTile,
 } from "@/components/ui";
-import { CheckIcon, ChevronRightIcon, TrendUpIcon } from "@/components/ui/icons";
+import { BookIcon, ChartIcon, CheckIcon, ChevronRightIcon, TrendUpIcon, UsersIcon } from "@/components/ui/icons";
 import {
   monthlyOpportunityResults,
   renewalRevenueAfterHandling,
@@ -39,6 +39,7 @@ import KpiContract from "@/components/analytics/KpiContract";
 import { useDeliveryStage } from "@/lib/stage";
 import { evidenceCsv } from "@/lib/utils/evidence";
 import { downloadFile } from "@/lib/utils/export";
+import { Fold } from "@/components/ui/Fold";
 
 const METRIC_DOTS: Record<string, string> = {
   sky: "bg-sky-500",
@@ -533,15 +534,13 @@ export default function AnalyticsPage() {
         />
 
         {/* AX 매출기회 현황 — 대상 → 실행 → 결과 흐름 (추정치 없음) */}
-        <Card dataTour="analytics-opportunity">
-          <SectionTitle tone="gold" icon={<TrendUpIcon className="h-4 w-4" />}>
-            AX 매출기회 현황
-          </SectionTitle>
-          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
-            기존 고객의 이용 데이터에서 재방문 · 재등록으로 이어질 수 있는
-            관리 대상과, 실제 실행 결과를 셉니다. 전환율이나 예상 매출은
-            추정하지 않습니다.
-          </p>
+        <Fold
+          id="ana-opportunity"
+          dataTour="analytics-opportunity"
+          icon={<TrendUpIcon className="h-[1.1rem] w-[1.1rem]" />}
+          title="AX 매출기회 현황"
+          hint="재방문 · 재등록으로 이어질 수 있는 관리 대상과 실제 실행 결과 — 전환율 · 예상 매출은 추정하지 않습니다"
+        >
 
           {opp.total === 0 ? (
             <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm text-ink-sub">
@@ -701,16 +700,16 @@ export default function AnalyticsPage() {
               )}
             </>
           )}
-        </Card>
+        </Fold>
 
         {/* 프로그램별 성과 — 무엇을 권할지 판단할 근거 (실제 기록 집계) */}
-        <Card dataTour="analytics-program">
-          <SectionTitle>프로그램별 성과</SectionTitle>
-          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
-            어떤 프로그램이 다음 방문으로 이어졌는지를 실제 기록에서 셉니다.
-            프로그램이 원인이라는 뜻은 아니며, 이용 이후 방문 기록이 있었다는
-            사실만 보여 드립니다.
-          </p>
+        <Fold
+          id="ana-program"
+          dataTour="analytics-program"
+          icon={<ChartIcon className="h-[1.1rem] w-[1.1rem]" />}
+          title="프로그램별 성과"
+          hint="어떤 프로그램 뒤에 다음 방문이 있었는지 실제 기록으로 — 프로그램이 원인이라는 뜻은 아닙니다"
+        >
 
           {programs.length === 0 ? (
             <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm leading-relaxed text-ink-sub">
@@ -787,16 +786,16 @@ export default function AnalyticsPage() {
               </p>
             </>
           )}
-        </Card>
+        </Fold>
 
         {/* 담당자별 실행 현황 — 누가 얼마나 관리했는지 (평가가 아니라 배분 점검용) */}
-        <Card dataTour="analytics-staff">
-          <SectionTitle>담당자별 실행 현황</SectionTitle>
-          <p className="-mt-2 mb-4 text-sm leading-relaxed text-ink-sub">
-            실행 브리핑에서 관리과제를 처리한 기록을 담당자별로 셉니다. 평가를
-            위한 순위가 아니라, 관리가 한 사람에게 쏠려 있거나 비어 있는지를
-            확인하기 위한 지표입니다.
-          </p>
+        <Fold
+          id="ana-staff"
+          dataTour="analytics-staff"
+          icon={<UsersIcon className="h-[1.1rem] w-[1.1rem]" />}
+          title="담당자별 실행 현황"
+          hint="브리핑에서 처리한 관리과제를 담당자별로 — 평가 순위가 아니라 한 사람에게 쏠렸는지 보는 칸"
+        >
 
           {staffActivity.length === 0 ? (
             <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center text-sm leading-relaxed text-ink-sub">
@@ -857,16 +856,20 @@ export default function AnalyticsPage() {
               관리과제가 없습니다. 업무가 한쪽에 몰려 있지 않은지 확인해 보세요.
             </p>
           )}
-        </Card>
+        </Fold>
 
-        <Card className="border-l-4 border-gold">
-          <p className="font-bold text-ink">Before / After 비교 안내</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+        <Fold
+          id="ana-beforeafter"
+          icon={<BookIcon className="h-[1.1rem] w-[1.1rem]" />}
+          title="Before / After 비교 안내"
+          hint="도입 전후를 어떻게 나눠 비교하는지"
+        >
+          <p className="text-sm leading-relaxed text-ink-soft">
             AX 도입 시점 이후 데이터가 축적되면 위 월별 추이에서 도입 전후
             기간을 나누어 비교할 수 있습니다. 최근 {formatMonthKr(monthly[0].month)}
             부터의 기록이 기준이며, 성과 수치는 실제 기록에서만 산출됩니다.
           </p>
-        </Card>
+        </Fold>
         </>
         )}
       </div>

@@ -61,6 +61,8 @@ export interface NavItem {
   label: string;
   /** 이름만으로 모르는 화면에 붙는 한 줄 설명 */
   desc?: string;
+  /** 왼쪽 목차에 마우스를 올리면 뜨는 말풍선 — 그 안에 무엇이 있는지 */
+  hint?: string;
   icon: ComponentType<{ className?: string }>;
   tone: NavTone;
 }
@@ -90,6 +92,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   {
     href: "/",
     label: "오늘",
+    hint: "아침에 여는 화면 — 오늘 챙길 고객 · 할 일 · AX 코치",
     desc: "할 일 · 챙길 고객 · 코치",
     icon: HomeIcon,
     tone: "brand-1",
@@ -97,6 +100,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   {
     href: "/customers",
     label: "고객",
+    hint: "고객 명부 · 방문 기록 · 재방문 관리",
     desc: "명부 · 방문 기록 · 재방문",
     icon: UsersIcon,
     tone: "brand-2",
@@ -104,6 +108,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   {
     href: "/analytics",
     label: "성과",
+    hint: "AX 도입 성과 — 기록이 쌓인 만큼 숫자로 보여 드립니다",
     desc: "AX 도입성과 · 증적",
     icon: ChartIcon,
     tone: "brand-3",
@@ -111,6 +116,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   {
     href: "/more",
     label: "더보기",
+    hint: "설정 · 서비스 표준 · 지점 · 고객 화면 · 안내 영상",
     desc: "설정 · 표준 · 지점 · 고객화면",
     icon: MoreIcon,
     tone: "brand-4",
@@ -130,6 +136,8 @@ export const BOTTOM_NAV_ITEMS: NavItem[] = SIDEBAR_ITEMS;
 export interface SectionTab {
   href: string;
   label: string;
+  /** 마우스를 올리면 뜨는 말풍선 */
+  hint?: string;
   icon: ComponentType<{ className?: string }>;
 }
 
@@ -161,29 +169,29 @@ export const NAV_SECTIONS: NavSection[] = [
         제목은 「대시보드」 — 한 화면에 이름이 셋이 됐다. 「오늘」은
         묶음 이름이고, 그 안의 화면 이름은 「대시보드」다.
       */
-      { href: "/", label: "대시보드", icon: HomeIcon },
-      { href: "/briefing", label: "챙길 고객", icon: SparkIcon },
-      { href: "/coach", label: "AX 코치", icon: CompassIcon },
+      { href: "/", label: "대시보드", icon: HomeIcon, hint: "오늘 판단 세 가지와 오늘 할 일 — 아침에 한 번" },
+      { href: "/briefing", label: "챙길 고객", icon: SparkIcon, hint: "오늘 연락할 고객을 순서대로 — 처리완료 · 보류" },
+      { href: "/coach", label: "AX 코치", icon: CompassIcon, hint: "기록이 성과로 쌓이고 있는지 · 오늘 할 일 하나" },
     ],
   },
   {
     root: "/customers",
     label: "고객",
     tabs: [
-      { href: "/customers", label: "고객 목록", icon: UsersIcon },
-      { href: "/visits", label: "방문 기록", icon: ClipboardIcon },
-      { href: "/retention", label: "재방문", icon: RefreshIcon },
+      { href: "/customers", label: "고객 목록", icon: UsersIcon, hint: "고객 찾기 · 등록 · 먼저 챙길 분부터" },
+      { href: "/visits", label: "방문 기록", icon: ClipboardIcon, hint: "날짜별 방문 · 상담 기록과 마감 정산" },
+      { href: "/retention", label: "재방문", icon: RefreshIcon, hint: "다음 방문이 늦어지는 고객을 모아 봅니다" },
     ],
   },
   {
     root: "/analytics",
     label: "성과",
-    tabs: [{ href: "/analytics", label: "AX 도입성과", icon: ChartIcon }],
+    tabs: [{ href: "/analytics", label: "AX 도입성과", icon: ChartIcon, hint: "기록으로 계산한 재방문 · 재등록 성과" }],
   },
   {
     root: "/more",
     label: "더보기",
-    tabs: [{ href: "/more", label: "더보기", icon: MoreIcon }],
+    tabs: [{ href: "/more", label: "더보기", icon: MoreIcon, hint: "가끔 여는 화면과 설정" }],
     extra: ["/settings", "/service", "/branches", "/welcome", "/guide", "/why", "/intro", "/videos"],
   },
 ];

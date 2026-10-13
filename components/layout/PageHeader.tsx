@@ -1,7 +1,8 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useDocumentTitle } from "@/lib/utils/title";
+import { InfoButton } from "@/components/ui/Fold";
 
 export default function PageHeader({
   title,
@@ -14,6 +15,7 @@ export default function PageHeader({
 }) {
   // 화면 제목이 곧 탭 이름이다 — 탭을 여러 개 열어 두면 여기서 구분한다
   useDocumentTitle(title);
+  const [info, setInfo] = useState(false);
 
   /**
    * 제목과 단추를 **한 줄에** 둔다.
@@ -29,10 +31,24 @@ export default function PageHeader({
         <h1 className="text-page-title flex min-w-0 items-center gap-2.5 text-ink">
           <span className="hidden h-6 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-aqua-400 to-deep-700 sm:block" />
           {title}
+          {/*
+            화면 설명은 제목 아래에 늘 적지 않는다 — 대표님 말씀 「글씨가
+            너무 많으면 안 돼」. 제목 옆 ⓘ 에 마우스를 올리면 말풍선으로,
+            누르면(폰) 제목 아래 한 줄로 편다.
+          */}
+          {description && (
+            <InfoButton
+              text={description}
+              title={title}
+              open={info}
+              onToggle={() => setInfo((v) => !v)}
+              className="ml-0.5"
+            />
+          )}
         </h1>
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      {description && (
+      {description && info && (
         <p className="mt-1 text-sm leading-relaxed text-ink-sub sm:text-[0.9375rem]">
           {description}
         </p>

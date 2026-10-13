@@ -30,10 +30,13 @@ import {
   BodyIcon,
   BookIcon,
   CalendarIcon,
+  ChatIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ClipboardIcon,
   PlusIcon,
   SparkIcon,
+  TicketIcon,
 } from "@/components/ui/icons";
 import TaskCard from "@/components/briefing/TaskCard";
 import { DateTimePanel } from "@/components/ui/DateTimeField";
@@ -51,6 +54,7 @@ import CustomerVoiceCard from "@/components/customers/CustomerVoiceCard";
 import MergeCustomerNotice from "@/components/customers/MergeCustomerNotice";
 import AiReadyNote from "@/components/ui/AiReadyNote";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
+import { Fold } from "@/components/ui/Fold";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
@@ -293,9 +297,9 @@ export default function CustomerDetailPage() {
             className="stat-cell min-w-0 cursor-pointer text-left"
             onClick={() => {
               if (derived.activeMembership) {
-                document
-                  .querySelector('[data-tour="memberships"]')
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                const box = document.querySelector('[data-tour="memberships"]');
+                box?.dispatchEvent(new Event("fold:open"));
+                box?.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
               }
               setEditingMembership(undefined);
@@ -517,12 +521,15 @@ export default function CustomerDetailPage() {
         )}
 
         <div className="grid grid-cols-1 card-gap xl:grid-cols-2">
-          {/* 집중 케어 부위 — 주요 기능 */}
-          <div data-tour="body-map" className="card-accent">
-            <SectionTitle
-              icon={<BodyIcon className="h-4 w-4" />}
-              action={
-                editingParts ? (
+          {/* 집중 케어 부위 — 접어 두고, 고른 부위 수만 제목 옆에 */}
+          <Fold
+            id="detail-bodymap"
+            dataTour="body-map"
+            icon={<BodyIcon className="h-[1.1rem] w-[1.1rem]" />}
+            title="주요 케어 부위"
+            badge={c.focusBodyParts.length ? `${c.focusBodyParts.length}곳` : "없음"}
+            hint="고객이 평소 집중 관리를 원하는 부위 — 방문마다 실제로 한 부위는 아래 이력에 쌓입니다"
+            action={editingParts ? (
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
@@ -553,15 +560,8 @@ export default function CustomerDetailPage() {
                   >
                     {c.focusBodyParts.length ? "부위 수정" : "부위 고르기"}
                   </Button>
-                )
-              }
-            >
-              주요 케어 부위
-            </SectionTitle>
-            <p className="-mt-2 mb-3 text-xs text-ink-sub">
-              고객 프로필 기준 — 평소 집중 관리를 원하는 부위입니다. 방문별
-              실제 케어 부위는 아래 이용 이력에서 확인하세요.
-            </p>
+                )}
+          >
             {editingParts ? (
               <BodyMap value={draftParts} onChange={setDraftParts} compactChips />
             ) : c.focusBodyParts.length === 0 ? (
@@ -583,13 +583,24 @@ export default function CustomerDetailPage() {
               // 읽기 모드에서는 그림 + 고른 부위 칩만 (아래 태그는 같은 내용이라 뺀다)
               <BodyMap value={c.focusBodyParts} readOnly compactChips />
             )}
-          </div>
+          </Fold>
 
-          {/* 이용권 현황 */}
-          <Card dataTour="memberships">
-            <SectionTitle
-              action={
-                <Button
+          {/* 이용권 현황 — 쓰는 이용권이 있으면 펴 두고, 없으면 접어 둔다 */}
+          <Fold
+            id="detail-passes"
+            dataTour="memberships"
+            icon={<TicketIcon className="h-[1.1rem] w-[1.1rem]" />}
+            title="이용권 현황"
+            defaultOpen={!!derived.activeMembership}
+            badge={
+              derived.activeMembership
+                ? `잔여 ${derived.activeMembership.remainingCount}회`
+                : facts.memberships.length
+                  ? `${facts.memberships.length}건`
+                  : "없음"
+            }
+            hint="이용권 잔여 · 기한 · 재구매 상담 시점 — 등록 · 수정 · 만료 처리"
+            action={<Button
                   variant="secondary"
                   size="sm"
                   onClick={() => {
@@ -599,11 +610,8 @@ export default function CustomerDetailPage() {
                 >
                   <PlusIcon className="h-4 w-4" />
                   이용권 등록
-                </Button>
-              }
-            >
-              이용권 현황
-            </SectionTitle>
+                </Button>}
+          >
             {facts.memberships.length === 0 ? (
               <div className="rounded-card border border-dashed border-stone-line bg-card-soft py-8 text-center">
                 <p className="text-sm text-ink-sub">
@@ -736,7 +744,7 @@ export default function CustomerDetailPage() {
                 </li>
               </ul>
             )}
-          </Card>
+          </Fold>
         </div>
 
         {/* 케어 선호 · 특이사항 (고객 감동 포인트) */}
@@ -759,25 +767,29 @@ export default function CustomerDetailPage() {
           (3) 우선순위·매출기회 계산에는 넣지 않는다.
         */}
         {c.consultationNote && (
-          <Card>
-            <SectionTitle>고객 원문 상담메모</SectionTitle>
+          <Fold
+            id="detail-consultnote"
+            icon={<ClipboardIcon className="h-[1.1rem] w-[1.1rem]" />}
+            title="고객 원문 상담메모"
+            hint="처음 상담에서 고객이 말한 그대로 — 시스템은 이 글을 해석하지 않고, 우선순위 · 매출기회 판단에도 쓰지 않습니다"
+          >
             <blockquote className="rounded-card border-l-4 border-aqua-400 bg-aqua-50 px-4 py-3.5 dark:bg-aqua-500/10">
               <p className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-ink-soft">
                 {c.consultationNote}
               </p>
             </blockquote>
-            <p className="mt-2.5 text-[0.8125rem] leading-relaxed text-ink-sub">
-              처음 상담에서 <b>고객이 말한 그대로</b> 옮겨 둔 내용입니다.
-              시스템은 이 글을 해석하지 않으며, 관리 우선순위나 매출기회
-              판단에도 사용하지 않습니다.
-            </p>
-          </Card>
+          </Fold>
         )}
 
         {/* 최근 상담/메모 */}
         {(consultNotes.length > 0 || c.memo) && (
-          <Card>
-            <SectionTitle>최근 상담 · 고객 반응</SectionTitle>
+          <Fold
+            id="detail-notes"
+            icon={<ChatIcon className="h-[1.1rem] w-[1.1rem]" />}
+            title="최근 상담 · 고객 반응"
+            badge={`${consultNotes.length + (c.memo ? 1 : 0)}건`}
+            hint="기본 메모와 방문 · 상담 때 남긴 고객 반응"
+          >
             <ul className="space-y-3">
               {c.memo && (
                 <li className="rounded-card border border-gold/25 bg-gold-soft/60 p-3.5 text-sm text-ink-soft">
@@ -800,12 +812,17 @@ export default function CustomerDetailPage() {
                 </li>
               ))}
             </ul>
-          </Card>
+          </Fold>
         )}
 
         {/* 이용 이력 */}
-        <Card>
-          <SectionTitle>방문 · 이용 이력</SectionTitle>
+        <Fold
+          id="detail-history"
+          icon={<CalendarIcon className="h-[1.1rem] w-[1.1rem]" />}
+          title="방문 · 이용 이력"
+          badge={`${visits.length}건`}
+          hint="지금까지의 방문 · 상담 — 프로그램 · 부위 · 반응 · 결제 · 수정 · 삭제"
+        >
           {visits.length === 0 ? (
             <p className="rounded-card bg-card-soft px-4 py-8 text-center text-sm leading-relaxed text-ink-sub">
               아직 방문 기록이 없습니다. 위의 <b>방문 · 상담 기록</b>으로 첫
@@ -900,7 +917,7 @@ export default function CustomerDetailPage() {
               ))}
             </ol>
           )}
-        </Card>
+        </Fold>
       </div>
 
       <Modal

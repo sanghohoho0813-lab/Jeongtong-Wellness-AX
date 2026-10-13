@@ -38,6 +38,7 @@ import RecordSheet from "@/components/visits/RecordSheet";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { Modal } from "@/components/ui";
 import { VIDEOS } from "@/lib/content/videos";
+import { Hint } from "@/components/ui/Hint";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -146,6 +147,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         오시는 분(투자·심사 자리 포함)이 가장 먼저 눌러야 할 것이 이것이다.
       */}
       <div className="mx-3 mb-2 space-y-2">
+        <Hint side="right" title="Why AX" text="우리 매장에 무엇이 달라지는가 — 열네 개의 짧은 이야기">
         <Link
           href="/why"
           className={`flex items-center gap-2 rounded-btn px-3 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
@@ -156,15 +158,10 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         >
           <SparkIcon className="h-4 w-4 shrink-0" />
           <span className="min-w-0 flex-1 truncate">Why AX</span>
-          <span
-            className={`shrink-0 text-[0.6875rem] font-bold ${
-              isActive(pathname, "/why") ? "text-white/70" : "text-ink-faint"
-            }`}
-          >
-            우리 매장 이야기
-          </span>
         </Link>
+        </Hint>
         <div className="grid grid-cols-2 gap-2">
+          <Hint side="right" title="기획의도" text="이 시스템을 왜 만들었는지 — 한 장으로">
           <Link
             href="/intro"
             className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
@@ -176,6 +173,8 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             <BookIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">기획의도</span>
           </Link>
+          </Hint>
+          <Hint side="right" title="사용 방법" text="화면별 사용법 — 따라 하는 안내도 여기서 시작합니다">
           <Link
             href="/guide"
             /* 읽을 거리는 둘 다 금색 — 기획의도보다 한 톤 옅게만 둔다 */
@@ -188,6 +187,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             <SparkIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">사용 방법</span>
           </Link>
+          </Hint>
         </div>
 
         {/*
@@ -204,15 +204,15 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         */}
         <div data-sidebar-videos className="grid grid-cols-2 gap-2">
           {[
-            { href: VIDEOS.guide.href, label: "사용법", full: `사용법 영상 ${VIDEOS.guide.length}` },
-            { href: VIDEOS.tech.href, label: "기술 소개", full: `기술 소개 영상 ${VIDEOS.tech.length}` },
+            { href: VIDEOS.guide.href, label: "사용법", full: `사용법 영상 ${VIDEOS.guide.length}`, hint: "처음 쓰시는 분을 위한 영상 — 세로 · 가로 · 배속" },
+            { href: VIDEOS.tech.href, label: "기술 소개", full: `기술 소개 영상 ${VIDEOS.tech.length}`, hint: "심사 · 발표 자리에서 트는 영상 — 특허 출원 두 건" },
           ].map((v) => (
+            <Hint key={v.href} side="right" title={v.full} text={v.hint}>
             <Link
               key={v.href}
               href={v.href}
               aria-label={v.full}
               aria-current={isActive(pathname, v.href) ? "page" : undefined}
-              title={v.full}
               className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
                 isActive(pathname, v.href)
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-sm"
@@ -222,13 +222,16 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
               <PlayIcon className="h-4 w-4 shrink-0" />
               <span className="truncate">{v.label}</span>
             </Link>
+            </Hint>
           ))}
         </div>
       </div>
 
       {/* 지금 이 화면이 폰에서 어떻게 보이는지 — 메뉴 바로 위에 둔다 */}
       <div className="mx-3 mb-2">
-        <DevicePreviewButton />
+        <Hint side="right" title="폰에서 보기" text="지금 이 화면이 폰에서 어떻게 보이는지 미리 봅니다">
+          <DevicePreviewButton />
+        </Hint>
       </div>
 
       {/*
@@ -249,8 +252,8 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             sectionForPath(pathname)?.root === item.href;
           const Icon = item.icon;
           return (
+            <Hint key={item.href} side="right" title={item.label} text={item.hint ?? item.desc ?? item.label}>
             <Link
-              key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={`group relative mb-1.5 flex items-center gap-3 rounded-btn px-2.5 py-2.5 transition-colors [@media(max-height:960px)]:mb-1 [@media(max-height:960px)]:py-2 ${
@@ -276,22 +279,9 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
                 <span className="block truncate text-[1.0625rem] font-extrabold leading-tight">
                   {item.label}
                 </span>
-                {item.desc && (
-                  <span
-                    /*
-                      흐리게(ink-faint) 두었다가 되돌렸다. 12px 짜리 글을
-                      흐리게까지 하면 60대 눈에는 있으나 마나 한 줄이 된다 —
-                      이 줄은 장식이 아니라 "그 안에 무엇이 있는지" 를 말한다.
-                    */
-                    className={`block truncate text-[0.75rem] font-semibold leading-tight ${
-                      active ? "text-white/80" : "text-ink-sub"
-                    }`}
-                  >
-                    {item.desc}
-                  </span>
-                )}
               </span>
             </Link>
+            </Hint>
           );
         })}
       </nav>
@@ -304,7 +294,9 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         빼내 여기 스위치로 세운다 — 지금 어느 쪽인지가 늘 보인다.
       */}
       <div className="m-3 space-y-2.5">
-        <SurfaceSwitch current="staff" className="w-full !justify-stretch [&>a]:flex-1 [&>a]:justify-center" />
+        <Hint side="right" title="화면 바꾸기" text="내부 AX 는 직원이 쓰는 화면, MY WELLNESS 는 고객에게 보이는 화면입니다">
+          <SurfaceSwitch current="staff" className="w-full !justify-stretch [&>a]:flex-1 [&>a]:justify-center" />
+        </Hint>
         <ProfileButton />
       </div>
     </aside>

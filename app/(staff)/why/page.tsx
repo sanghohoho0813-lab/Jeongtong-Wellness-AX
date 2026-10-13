@@ -166,7 +166,7 @@ export default function WhyAxPage() {
 
         {/* 01 ─────────────────────────────────────────── */}
         <DocSection
-          id="w1"
+          id="w1" hint="지금 매장이 손님을 어떻게 맞고 기록하는지"
           no="01"
           kicker="현재"
           title="지금 이 매장은 이렇게 돌아갑니다"
@@ -214,7 +214,7 @@ export default function WhyAxPage() {
 
         {/* 02 ─────────────────────────────────────────── */}
         <DocSection
-          id="w2"
+          id="w2" hint="손님이 처음 오셔서 다시 오시기까지 걷는 길"
           no="02"
           kicker="고객 쪽"
           title="고객은 이런 길을 걷습니다"
@@ -245,7 +245,7 @@ export default function WhyAxPage() {
 
         {/* 03 ─────────────────────────────────────────── */}
         <DocSection
-          id="w3"
+          id="w3" hint="대표님 · 직원이 매일 하는 일과 기억에 기대는 부분"
           no="03"
           kicker="내부"
           title="매장 안에서는 이런 일이 벌어집니다"
@@ -285,7 +285,7 @@ export default function WhyAxPage() {
 
         {/* 04 ─────────────────────────────────────────── */}
         <DocSection
-          id="w4"
+          id="w4" hint="손님 · 시간 · 매출이 어디서 새고 있었는지"
           no="04"
           kicker="손실"
           title="그래서 어디서 새고 있었는가"
@@ -325,7 +325,7 @@ export default function WhyAxPage() {
 
         {/* 05 ─────────────────────────────────────────── */}
         <DocSection
-          id="w5"
+          id="w5" hint="왜 프로그램(AX)이고, 왜 고객 화면까지 만드는지"
           no="05"
           kicker="선택"
           title="왜 AX 이고, 왜 고객 화면까지인가"
@@ -369,7 +369,7 @@ export default function WhyAxPage() {
 
         {/* 06 ─────────────────────────────────────────── */}
         <DocSection
-          id="w6"
+          id="w6" hint="손님이 자기 이용권 · 기록을 직접 볼 때 달라지는 것"
           no="06"
           kicker="고객 화면"
           title="고객 화면이 바꾸는 것"
@@ -408,7 +408,7 @@ export default function WhyAxPage() {
 
         {/* 07 ─────────────────────────────────────────── */}
         <DocSection
-          id="w7"
+          id="w7" hint="직원 화면이 아침 · 손님 응대 · 연락을 어떻게 바꾸는지"
           no="07"
           kicker="내부 AX"
           title="내부 AX 가 바꾸는 것"
@@ -456,7 +456,7 @@ export default function WhyAxPage() {
 
         {/* 08 ─────────────────────────────────────────── */}
         <DocSection
-          id="w8"
+          id="w8" hint="직원 화면과 고객 화면이 같은 기록으로 이어지는 방식"
           no="08"
           kicker="다리"
           title="두 화면을 잇는 다리"
@@ -503,7 +503,7 @@ export default function WhyAxPage() {
 
         {/* 09 ─────────────────────────────────────────── */}
         <DocSection
-          id="w9"
+          id="w9" hint="판단을 돕는 단계 — 지금 어디까지 왔고 무엇이 남았는지"
           no="09"
           kicker="판단"
           title="판단을 돕는 층 — 지금 어디까지 와 있는가"
@@ -547,7 +547,7 @@ export default function WhyAxPage() {
 
         {/* 10 ─────────────────────────────────────────── */}
         <DocSection
-          id="w10"
+          id="w10" hint="도입 전과 후, 하루가 어떻게 달라지는지"
           no="10"
           kicker="이전 / 이후"
           title="하루가 어떻게 달라지는가"
@@ -584,7 +584,7 @@ export default function WhyAxPage() {
 
         {/* 11 ─────────────────────────────────────────── */}
         <DocSection
-          id="w11"
+          id="w11" hint="기록 → 연락 → 재방문 → 재등록으로 도는 고리"
           no="11"
           kicker="매출"
           title="재방문이 도는 고리"
@@ -641,7 +641,7 @@ export default function WhyAxPage() {
 
         {/* 12 ─────────────────────────────────────────── */}
         <DocSection
-          id="w12"
+          id="w12" hint="덜 적고, 덜 찾고, 덜 잊는 만큼 줄어드는 손"
           no="12"
           kicker="효율"
           title="손이 덜 가는 만큼"
@@ -670,7 +670,7 @@ export default function WhyAxPage() {
 
         {/* 13 ─────────────────────────────────────────── */}
         <DocSection
-          id="w13"
+          id="w13" hint="쌓인 기록이 매장의 자산이 되는 구조"
           no="13"
           kicker="자산"
           title="기록이 매장의 자산이 되는 구조"
@@ -701,7 +701,7 @@ export default function WhyAxPage() {
 
         {/* 14 ─────────────────────────────────────────── */}
         <DocSection
-          id="w14"
+          id="w14" hint="여기서 더 갈 수 있는 곳 — 지점 · 고객 화면 확장"
           no="14"
           kicker="다음"
           title="여기서 더 갈 수 있는 곳"

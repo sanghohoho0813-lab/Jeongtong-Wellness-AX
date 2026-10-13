@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { ReactNode, useEffect, useState } from "react";
 import { ChevronRightIcon } from "@/components/ui/icons";
+import { Hint } from "@/components/ui/Hint";
 
 export type DocTone = "aqua" | "teal" | "sky" | "violet" | "amber" | "emerald" | "gold";
 
@@ -193,27 +194,25 @@ export function DocToc({
  * 차례에서 한 항목을 누르면(해시가 바뀌면) 그 절만 열린다.
  */
 function useSectionOpen(id: string, collapsible: boolean) {
-  /** 서버·첫 그림에서는 늘 펼친 상태 — 폰 여부는 그려진 뒤에야 알 수 있다 */
-  const [phone, setPhone] = useState(false);
+  /*
+    접을 수 있는 절은 **PC 에서도** 접어 둔다 (예전에는 폰에서만).
+    대표님: 「글씨가 너무 많으면 안 돼 — 접어 뒀다가 펼치고, 커서를 대면
+    무슨 내용인지 보이게.」 제목에 마우스를 올리면 말풍선이 뜬다.
+    서버 · 첫 그림에서는 펼친 상태 — 그려진 뒤에 접는다.
+  */
+  const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
     if (!collapsible) return;
-    const mq = window.matchMedia("(max-width: 767px)");
-    const sync = () => {
-      setPhone(mq.matches);
-      setOpen(!mq.matches || window.location.hash === `#${id}`);
-    };
+    const sync = () => setOpen(window.location.hash === `#${id}`);
     sync();
-    mq.addEventListener("change", sync);
+    setReady(true);
     window.addEventListener("hashchange", sync);
-    return () => {
-      mq.removeEventListener("change", sync);
-      window.removeEventListener("hashchange", sync);
-    };
+    return () => window.removeEventListener("hashchange", sync);
   }, [collapsible, id]);
 
-  return { folded: collapsible && phone, open, setOpen };
+  return { folded: collapsible && ready, open, setOpen };
 }
 
 /** 본문 한 절 */
@@ -224,6 +223,7 @@ export function DocSection({
   title,
   tone = "aqua",
   collapsible = false,
+  hint,
   children,
 }: {
   id: string;
@@ -231,8 +231,10 @@ export function DocSection({
   kicker: string;
   title: string;
   tone?: DocTone;
-  /** 폰에서 접을 수 있게 한다 (기본은 끔 — 기획의도 화면은 그대로 둔다) */
+  /** 접어 둘 수 있게 한다 (기본은 끔 — 기획의도 화면은 그대로 둔다) */
   collapsible?: boolean;
+  /** 접힌 제목에 마우스를 올리면 뜨는 말풍선 — 이 절에 무엇이 있는지 */
+  hint?: string;
   children: ReactNode;
 }) {
   const { folded, open, setOpen } = useSectionOpen(id, collapsible);
@@ -273,15 +275,17 @@ export function DocSection({
         className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${TONE_BAR[tone]}`}
       />
       {folded ? (
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls={`${id}-body`}
-          className="-mx-1 block w-[calc(100%+0.5rem)] rounded-btn px-1 text-left"
-        >
-          {head}
-        </button>
+        <Hint text={hint ?? `${kicker} — 눌러서 펼칩니다`} title={title}>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls={`${id}-body`}
+            className="-mx-1 block w-[calc(100%+0.5rem)] rounded-btn px-1 text-left"
+          >
+            {head}
+          </button>
+        </Hint>
       ) : (
         head
       )}

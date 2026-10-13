@@ -129,11 +129,11 @@ log(
 await phone.evaluate((sk) => localStorage.setItem(sk, new Date().toISOString().slice(0, 10)), SNOOZE);
 
 // ═══ 3-2. 첫 화면 — 아침에 볼 것만 펴 두고, 나머지는 「더 보기」 하나로 ═══
-await phone.evaluate(() => localStorage.removeItem("jeongtong-dash-reference-open"));
+await phone.evaluate(() => localStorage.removeItem("jeongtong-fold:dash-reference"));
 await go(phone, "/", 1500);
-const fold = phone.locator("[data-dash-reference] > button");
+const fold = phone.locator('[data-fold="dash-reference"] button[aria-controls]');
 const homeH = await phone.evaluate(() => document.documentElement.scrollHeight);
-log("첫 화면 — 부위 기록 · 고객 구성 · 지점 현황은 「더 보기」 단추 하나로 접혀 있다", (await fold.count()) === 1 && (await fold.getAttribute("aria-expanded")) === "false" && !(await phone.locator("main").innerText()).includes("부위 선택 기록하기"));
+log("첫 화면 — 숫자 · 부위 기록 · 고객 구성 · 지점 현황은 「더 보기」 한 줄로 접혀 있다", (await fold.count()) === 1 && (await fold.getAttribute("aria-expanded")) === "false" && !(await phone.locator("main").innerText()).includes("부위 선택 기록하기"));
 log("첫 화면 — 빈 카드(볼 사람이 없는 재방문 예정)는 자리를 차지하지 않는다", !(await phone.locator("main").innerText()).includes("현재 도래한 재방문 예정 고객이 없습니다"));
 await fold.click();
 await phone.waitForTimeout(400);

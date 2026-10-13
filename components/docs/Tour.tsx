@@ -22,6 +22,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/data/store";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/components/ui/icons";
+import { revealInFolds } from "@/components/ui/Fold";
 
 export interface TourStep {
   /** 이 단계를 보여줄 화면 경로 */
@@ -473,12 +474,14 @@ const PAD = 10;
 function findTourTarget(name: string | undefined): Element | null {
   if (!name) return null;
   const all = [...document.querySelectorAll(`[data-tour="${name}"]`)];
-  return (
+  const seen =
     all.find((el) => {
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0;
-    }) ?? null
-  );
+    }) ?? null;
+  // 접힌 칸 안에 있으면 그 칸을 편다 — 다음 찾기(120ms 뒤)에서 보인다
+  if (!seen) all.some((el) => revealInFolds(el));
+  return seen;
 }
 
 interface Box {

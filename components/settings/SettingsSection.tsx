@@ -93,7 +93,7 @@ export default function SettingsSection({
 
       {/* 넓은 화면에서는 늘 쓰던 제목 그대로 */}
       <div className="hidden lg:block">
-        <SectionTitle tone={tone} action={action}>
+        <SectionTitle tone={tone} action={action} hint={summary}>
           {title}
         </SectionTitle>
       </div>
