@@ -23,6 +23,7 @@ import {
   PlayIcon,
   SparkIcon,
 } from "@/components/ui/icons";
+import { VIDEO_LIST } from "@/lib/content/videos";
 
 export default function MorePage() {
   const { settings, isManager, updateSettings } = useStore();
@@ -95,23 +96,42 @@ export default function MorePage() {
           </span>
           <ChevronRightIcon className="h-5 w-5 shrink-0 text-gold-deep" />
         </Link>
-        <Link
-          href="/videos"
-          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-aqua-50 to-card px-4 py-4 shadow-card ring-1 ring-aqua-200 transition-colors active:bg-aqua-100 sm:col-span-2"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-500 to-deep-700 text-white shadow-sm">
-            <PlayIcon className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
-              안내 영상
-            </span>
-            <span className="block text-[0.875rem] leading-snug text-aqua-800 dark:text-aqua-400">
-              사용법 3분 · 기술 소개 2분 — 세로 영상 두 편
-            </span>
-          </span>
-          <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-        </Link>
+        {/* 영상 두 편 — 한 편씩 자기 화면으로 간다 (누르면 그 영상만 나온다) */}
+        {VIDEO_LIST.map((v) => {
+          const gold = v.tone === "gold";
+          return (
+            <Link
+              key={v.id}
+              href={v.href}
+              className={`flex items-center gap-3.5 rounded-card bg-gradient-to-br px-4 py-4 shadow-card ring-1 transition-colors ${
+                gold
+                  ? "from-gold-soft to-card ring-gold/25 active:bg-gold/10"
+                  : "from-aqua-50 to-card ring-aqua-200 active:bg-aqua-100"
+              }`}
+            >
+              <span
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm ${
+                  gold ? "from-gold to-gold-deep" : "from-aqua-500 to-deep-700"
+                }`}
+              >
+                <PlayIcon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
+                  {v.title}
+                </span>
+                <span
+                  className={`block text-[0.875rem] leading-snug ${
+                    gold ? "text-gold-deep" : "text-aqua-800 dark:text-aqua-400"
+                  }`}
+                >
+                  {v.length} · 세로 · 가로
+                </span>
+              </span>
+              <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
+            </Link>
+          );
+        })}
       </div>
 
       {/*

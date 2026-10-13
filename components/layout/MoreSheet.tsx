@@ -36,6 +36,7 @@ import {
   XIcon,
 } from "@/components/ui/icons";
 import { useTour } from "@/components/docs/Tour";
+import { VIDEOS } from "@/lib/content/videos";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -153,17 +154,26 @@ export default function MoreSheet({
               desc="이 시스템을 만든 이유"
               tone="gold"
             />
-            {/* 영상 두 편 — 폰으로 보는 분이 대부분이라 여기서도 바로 */}
-            <div className="xs:col-span-2">
-              <SheetDoc
-                href="/videos"
-                onClose={onClose}
-                icon={<PlayIcon className="h-5 w-5" />}
-                title="안내 영상"
-                desc="사용법 3분 · 기술 소개 2분 — 세로 영상 두 편"
-                tone="aqua"
-              />
-            </div>
+            {/*
+              영상 두 편 — 폰으로 보는 분이 대부분이라 여기서도 바로.
+              한 편씩 따로 둔다: 누르면 그 영상 하나만 나오는 화면으로 간다.
+            */}
+            <SheetDoc
+              href={VIDEOS.guide.href}
+              onClose={onClose}
+              icon={<PlayIcon className="h-5 w-5" />}
+              title="사용법 영상"
+              desc={`${VIDEOS.guide.length} · 세로 · 가로`}
+              tone="aqua"
+            />
+            <SheetDoc
+              href={VIDEOS.tech.href}
+              onClose={onClose}
+              icon={<PlayIcon className="h-5 w-5" />}
+              title="기술 소개 영상"
+              desc={`${VIDEOS.tech.length} · 세로 · 가로`}
+              tone="gold"
+            />
           </div>
 
           {/*

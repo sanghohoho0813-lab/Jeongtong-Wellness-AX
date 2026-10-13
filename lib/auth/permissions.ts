@@ -40,7 +40,7 @@
  *  /guide          ✅      ✅      사용 가이드 (문서)
  *  /intro          ✅      ✅      기획의도 (문서)
  *  /why            ✅      ✅      Why AX — 우리 매장 이야기 (문서)
- *  /videos         ✅      ✅      안내 영상 — 사용법 · 기술 소개 (세로 영상 두 편)
+ *  /videos/*       ✅      ✅      안내 영상 — /videos/guide 사용법 · /videos/tech 기술 소개 (세로 · 가로)
  *
  *  STAFF는 네비게이션에 '고객' 하나만 노출되며, 그 외 경로로 직접 접근하면
  *  /customers 로 되돌린다 (AppShell 의 RouteGuard).

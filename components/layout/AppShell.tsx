@@ -37,6 +37,7 @@ import QuickVisitModal from "@/components/visits/QuickVisitModal";
 import RecordSheet from "@/components/visits/RecordSheet";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { Modal } from "@/components/ui";
+import { VIDEOS } from "@/lib/content/videos";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -192,8 +193,9 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         {/*
           안내 영상 두 편 — 글을 읽기보다 틀어 보는 편이 빠른 분들이 있다.
           대표님 내외는 사용법 영상을, 심사 · 발표 자리에서는 기술 소개
-          영상을 먼저 튼다. 둘 다 같은 화면(/videos)으로 가고, 누른 쪽
-          영상이 바로 보이도록 주소 끝에 표식(#guide · #tech)을 붙인다.
+          영상을 먼저 튼다. 한 편마다 자기 화면이 있다 (/videos/guide ·
+          /videos/tech) — '사용법' 을 누르면 사용법만, '기술 소개' 를 누르면
+          기술 소개만 보인다. 칠하는 것도 누른 단추 하나다.
 
           처음에는 한 줄씩 두 줄로 세웠다가 되돌렸다. 900px 높이 화면에서
           목차 '더보기' 가 바닥 밖으로 밀려났다 — 목차보다 앞설 만큼
@@ -202,16 +204,17 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         */}
         <div data-sidebar-videos className="grid grid-cols-2 gap-2">
           {[
-            { href: "/videos#guide", label: "사용법", full: "사용법 영상 3분 40초" },
-            { href: "/videos#tech", label: "기술 소개", full: "기술 소개 영상 4분 27초" },
+            { href: VIDEOS.guide.href, label: "사용법", full: `사용법 영상 ${VIDEOS.guide.length}` },
+            { href: VIDEOS.tech.href, label: "기술 소개", full: `기술 소개 영상 ${VIDEOS.tech.length}` },
           ].map((v) => (
             <Link
               key={v.href}
               href={v.href}
               aria-label={v.full}
+              aria-current={isActive(pathname, v.href) ? "page" : undefined}
               title={v.full}
               className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
-                isActive(pathname, "/videos")
+                isActive(pathname, v.href)
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-sm"
                   : "bg-deep-700/[0.07] text-deep-800 ring-1 ring-deep-700/15 hover:bg-deep-700/[0.14] dark:text-aqua-400"
               }`}

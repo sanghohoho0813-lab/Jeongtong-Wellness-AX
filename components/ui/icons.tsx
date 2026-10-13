@@ -266,6 +266,30 @@ export const PlayIcon = (p: IconProps) => (
   </svg>
 );
 
+/** 네 귀퉁이 — 전체 화면 */
+export const ExpandIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
+  </svg>
+);
+
+/** 계기판 — 재생 속도 */
+export const GaugeIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4.2 17.5a9 9 0 1 1 15.6 0" />
+    <path d="m12 13.5 3.6-4.2" />
+    <circle cx="12" cy="13.5" r="1.3" />
+  </svg>
+);
+
+/** 차례 — 영상 흐름 (줄 셋 + 재생 표시) */
+export const ListPlayIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 6.5h11M4 12h8M4 17.5h6" />
+    <path d="M15.5 13.5v6l5-3z" />
+  </svg>
+);
+
 /** 팔레트 — 색 조합 */
 export const PaletteIcon = (p: IconProps) => (
   <svg {...base(p)}>
