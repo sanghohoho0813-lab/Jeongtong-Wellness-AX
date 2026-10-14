@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import {
   BriefingTask,
@@ -152,8 +152,9 @@ export default function TaskCard({
   >();
   const [note, setNote] = useState("");
   const [holdUntil, setHoldUntil] = useState(() => daysFromToday(3));
-  /** 폰에서 '판단 이유 · 매출기회 근거'를 펼쳤는지 (PC 는 항상 펼침) */
+  /** '판단 이유 · 매출기회 근거'를 펼쳤는지 (종이에는 늘 펼쳐 찍는다) */
   const [detailOpen, setDetailOpen] = useState(false);
+  const reasonsId = `${useId()}-why`;
 
   const customer = customers.find((c) => c.id === task.customerId);
   if (!customer) return null;
@@ -258,9 +259,13 @@ export default function TaskCard({
         className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${CATEGORY_STRIPS[task.category]} ${hero ? "opacity-80" : ""}`}
       />
       <div className="flex items-start gap-3">
+        {/*
+          순번 — 폰(밝은 카드)에서는 이름 줄 안으로 들어간다. 왼쪽 칸을 비워
+          두면 그 44px 만큼 단추 줄이 두 줄로 접혔다.
+        */}
         {rank !== undefined && (
           <span
-            className={`icon-pop mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold shadow-sm ${
+            className={`icon-pop mt-0.5 ${hero ? "flex" : "hidden sm:flex"} h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold shadow-sm ${
               hero
                 ? "bg-aqua-400 text-deep-900 shadow-[0_0_0_4px_rgba(42,179,175,0.18)]"
                 : (RANK_COLORS[(rank - 1) % RANK_COLORS.length] ??
@@ -272,6 +277,15 @@ export default function TaskCard({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            {rank !== undefined && !hero && (
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.75rem] font-extrabold sm:hidden ${
+                  RANK_COLORS[(rank - 1) % RANK_COLORS.length] ?? "bg-deep-800 text-white"
+                }`}
+              >
+                {rank}
+              </span>
+            )}
             {hideDetailLink ? (
               <span className="truncate text-[1.0625rem] font-extrabold text-ink">
                 {displayName(customer.name, privacyMode)}
@@ -279,17 +293,25 @@ export default function TaskCard({
             ) : (
             <Link
               href={`/customers/${customer.id}`}
-              className={`tap-line truncate text-[1.0625rem] font-extrabold ${
+              className={`tap-line max-w-full text-[1.0625rem] font-extrabold ${
                 hero ? "text-white hover:text-aqua-200" : "text-ink hover:text-aqua-700"
               }`}
             >
-              {displayName(customer.name, privacyMode)}
+              {/* 긴 이름은 이름만 말줄임 — 옆의 › 는 밀려나지 않는다 */}
+              <span className="min-w-0 truncate">
+                {displayName(customer.name, privacyMode)}
+              </span>
+              {/* 폰 — 「고객 상세」 단추 대신 이름 옆 › (이름이 곧 그 길) */}
+              {!hero && (
+                <ChevronRightIcon className="ml-0.5 h-4 w-4 shrink-0 text-ink-faint sm:hidden" />
+              )}
             </Link>
             )}
             <Badge tone={hero ? "on-dark" : CATEGORY_TONES[task.category]} dot>
               {TASK_CATEGORY_LABELS[task.category]}
             </Badge>
-            {!hero && <TaskStatusBadge status={task.status} />}
+            {/* 「대기」 는 적지 않는다 — 목록이 이미 「미처리」 다. 처리완료 · 보류만 표시 */}
+            {!hero && task.status !== "pending" && <TaskStatusBadge status={task.status} />}
             {opp && opp.type !== "none" && (
               <OpportunityBadge opportunity={opp} size="sm" />
             )}
@@ -328,84 +350,109 @@ export default function TaskCard({
                 </p>
               )}
             </>
-          ) : (
-            /**
-             * 폰에서는 **할 일**만 먼저 보이고, 왜 그런지는 눌러야 펼쳐진다.
-             *
-             * 한 화면에 근거까지 다 펼치면 카드 하나가 폰 화면의 3/4을 먹어서
-             * 열 명만 넘어가도 한참을 쓸어내려야 한다. 실제로 필요한 건
-             * "누구에게 무엇을" 이고, 근거는 확인하고 싶을 때만 본다.
-             * PC 는 자리가 넉넉하므로 늘 펼친 상태로 둔다(lg:block).
-             */
-            <div className="mt-2 space-y-2">
-              <div className="rounded-btn bg-aqua-50 px-3 py-2 dark:bg-aqua-500/10">
-                {/* 작은 대문자 라벨이라 한 단계 진하게 — 아쿠아 배경 위 5.75 */}
-                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-sub">
-                  권장 행동
-                </p>
-                <p className="mt-0.5 text-[0.9375rem] font-bold leading-relaxed text-aqua-800">
+          ) : null}
+          {/*
+            할 일 한 줄 + 단추 줄 — 넓은 PC(xl)에서는 한 줄에 나란히 선다.
+            카드 한 장이 200px → 140px. 폰 · 좁은 PC 에서는 위아래로.
+          */}
+          <div className={hero ? "" : "xl:flex xl:items-start xl:gap-4"}>
+            {!hero && (
+              /**
+               * **할 일**만 먼저 보이고, 왜 그런지는 눌러야 펼쳐진다 — PC 도.
+               *
+               * 한 화면에 근거까지 다 펼치면 카드 하나가 폰 화면의 3/4을 먹어서
+               * 열 명만 넘어가도 한참을 쓸어내려야 한다. 실제로 필요한 건
+               * "누구에게 무엇을" 이고, 근거는 확인하고 싶을 때만 본다.
+               * 예전에는 PC 에서 늘 펴 두었는데, 다섯 명이면 근거만 400px 이었다
+               * (대표님: 「오늘에 너무 많이 펼쳐져 있어 집중이 안 된다」).
+               * 펼치는 단추는 처리완료 · 보류 옆에 있다. 종이에는 늘 펴서 찍는다.
+               *
+               * 「권장 행동」 이라는 머리 글자는 읽어 주는 프로그램에만 두고,
+               * 화면에는 할 일 한 줄만 (→).
+               */
+              <p className="mt-2 flex items-start gap-1.5 rounded-btn bg-aqua-50 px-3 py-2 text-[0.9375rem] font-bold leading-relaxed text-aqua-800 dark:bg-aqua-500/10 xl:mt-3 xl:min-w-0 xl:flex-1">
+                <span aria-hidden className="shrink-0">→</span>
+                <span className="min-w-0">
+                  <span className="sr-only">권장 행동: </span>
                   {task.suggestedAction}
-                </p>
-              </div>
-
-              {/* 폰 전용 — 근거 펼치기 */}
-              {showReasons && (
-              <button
-                type="button"
-                onClick={() => setDetailOpen((v) => !v)}
-                aria-expanded={detailOpen}
-                className="no-print touch-target inline-flex w-full items-center justify-between gap-2 rounded-btn bg-card px-3 py-2 text-sm font-bold text-ink-sub ring-1 ring-stone-line lg:hidden"
-              >
-                <span>{detailOpen ? "판단 이유 접기" : "왜 이 고객인가요?"}</span>
-                <ChevronRightIcon
-                  className={`h-4 w-4 shrink-0 transition-transform ${detailOpen ? "rotate-90" : ""}`}
-                />
-              </button>
+                </span>
+              </p>
+            )}
+            <div className="no-print mt-3 flex flex-wrap items-center gap-2 xl:shrink-0">
+              {NEXT_ACTIONS.map((a) => {
+                const active = task.status === a.status;
+                const activeCls =
+                  a.status === "done"
+                    ? "bg-aqua-500 text-white shadow-sm"
+                    : "bg-warn text-white shadow-sm";
+                const idleCls = hero
+                  ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
+                  : "bg-card text-ink-soft ring-1 ring-black/[0.06] hover:bg-aqua-50 dark:ring-white/10";
+                const open = panel === a.status;
+                return (
+                  <button
+                    key={a.status}
+                    onClick={() => {
+                      if (open) return setPanel(null);
+                      if (active) return revertToPending();
+                      // 상태를 바로 바꾸지 않고 입력 패널을 먼저 연다
+                      if (a.status === "done") openDonePanel();
+                      else openHoldPanel();
+                    }}
+                    className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${active || open ? activeCls : idleCls}`}
+                  >
+                    {a.status === "done" && <CheckIcon className="h-4 w-4" />}
+                    {a.status === "hold" && <PauseIcon className="h-4 w-4" />}
+                    {a.label}
+                  </button>
+                );
+              })}
+              {/* 왜 이 고객인가 — 눌러야 편다 (PC · 폰 같음) */}
+              {showReasons && !hero && (
+                <button
+                  type="button"
+                  onClick={() => setDetailOpen((v) => !v)}
+                  aria-expanded={detailOpen}
+                  aria-controls={reasonsId}
+                  className="touch-target inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+                >
+                  {detailOpen ? (
+                    "이유 접기"
+                  ) : (
+                    <>
+                      <span className="sm:hidden">이유</span>
+                      <span className="hidden sm:inline">왜 이 고객?</span>
+                    </>
+                  )}
+                  <ChevronRightIcon
+                    className={`h-4 w-4 shrink-0 transition-transform ${detailOpen ? "-rotate-90" : "rotate-90"}`}
+                  />
+                </button>
               )}
-
-              <div
-                className={`print-open space-y-2 ${showReasons ? (detailOpen ? "block" : "hidden lg:block") : "hidden"}`}
+              {/* 처리완료 상태에서 결과를 다시 열어 수정 */}
+              {finished && panel !== "done" && (
+                <button
+                  onClick={openDonePanel}
+                  className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-aqua-200 hover:text-white" : "text-aqua-700 hover:text-aqua-800"}`}
+                >
+                  결과 수정
+                </button>
+              )}
+              {!hideDetailLink && (
+              <Link
+                href={`/customers/${customer.id}`}
+                className={`touch-target ml-auto items-center gap-0.5 text-sm font-bold ${
+                  hero
+                    ? "inline-flex text-aqua-200 hover:text-white"
+                    : "hidden text-ink-sub hover:text-aqua-700 sm:inline-flex"
+                }`}
               >
-                <div>
-                  <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
-                    판단 이유
-                  </p>
-                  <ul className="mt-0.5 space-y-0.5">
-                    {task.reason.split(" · ").map((r, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
-                      >
-                        <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
-                        {r}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                {opp && opp.type !== "none" && (
-                  <div className="rounded-btn bg-gold-soft/70 px-3 py-2">
-                    <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
-                      매출기회 · {opp.label}
-                    </p>
-                    <ul className="mt-0.5 space-y-0.5">
-                      {opp.reasons.slice(0, 3).map((r, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
-                        >
-                          <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
-                          {r}
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="mt-1 text-sm font-bold text-gold-deep">
-                      → {opp.action}
-                    </p>
-                  </div>
-                )}
-              </div>
+                고객 상세
+                <ChevronRightIcon className="h-4 w-4" />
+              </Link>
+              )}
             </div>
-          )}
+          </div>
           {/*
             번호가 있고 가리지 않았으면 누르는 자리(전화 걸기)로, 아니면
             지금처럼 글로만. 권장 행동이 "연락" 인 카드에서 번호를 외워
@@ -431,58 +478,51 @@ export default function TaskCard({
             <span className="ml-4">메모</span>
             <span className="ml-1 inline-block w-56 border-b border-stone-line align-bottom" />
           </div>
-          <div className="no-print mt-3 flex flex-wrap items-center gap-2">
-            {NEXT_ACTIONS.map((a) => {
-              const active = task.status === a.status;
-              const activeCls =
-                a.status === "done"
-                  ? "bg-aqua-500 text-white shadow-sm"
-                  : "bg-warn text-white shadow-sm";
-              const idleCls = hero
-                ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
-                : "bg-card text-ink-soft ring-1 ring-black/[0.06] hover:bg-aqua-50 dark:ring-white/10";
-              const open = panel === a.status;
-              return (
-                <button
-                  key={a.status}
-                  onClick={() => {
-                    if (open) return setPanel(null);
-                    if (active) return revertToPending();
-                    // 상태를 바로 바꾸지 않고 입력 패널을 먼저 연다
-                    if (a.status === "done") openDonePanel();
-                    else openHoldPanel();
-                  }}
-                  className={`touch-target inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors ${active || open ? activeCls : idleCls}`}
-                >
-                  {a.status === "done" && <CheckIcon className="h-4 w-4" />}
-                  {a.status === "hold" && <PauseIcon className="h-4 w-4" />}
-                  {a.label}
-                </button>
-              );
-            })}
-            {/* 처리완료 상태에서 결과를 다시 열어 수정 */}
-            {finished && panel !== "done" && (
-              <button
-                onClick={openDonePanel}
-                className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-aqua-200 hover:text-white" : "text-aqua-700 hover:text-aqua-800"}`}
-              >
-                결과 수정
-              </button>
-            )}
-            {!hideDetailLink && (
-            <Link
-              href={`/customers/${customer.id}`}
-              className={`touch-target ml-auto inline-flex items-center gap-0.5 text-sm font-bold ${
-                hero
-                  ? "text-aqua-200 hover:text-white"
-                  : "text-ink-sub hover:text-aqua-700"
-              }`}
-            >
-              고객 상세
-              <ChevronRightIcon className="h-4 w-4" />
-            </Link>
+          {/* 판단 이유 · 매출기회 근거 — 「왜 이 고객?」 을 눌렀을 때 (종이에는 늘) */}
+          {!hero && (
+          <div
+            id={reasonsId}
+            className={`print-open mt-3 space-y-2 ${showReasons && detailOpen ? "block" : "hidden"}`}
+          >
+            <div>
+              <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                판단 이유
+              </p>
+              <ul className="mt-0.5 space-y-0.5">
+                {task.reason.split(" · ").map((r, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                  >
+                    <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-aqua-400" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {opp && opp.type !== "none" && (
+              <div className="rounded-btn bg-gold-soft/70 px-3 py-2">
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-gold-deep">
+                  매출기회 · {opp.label}
+                </p>
+                <ul className="mt-0.5 space-y-0.5">
+                  {opp.reasons.slice(0, 3).map((r, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft"
+                    >
+                      <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-gold" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-sm font-bold text-gold-deep">
+                  → {opp.action}
+                </p>
+              </div>
             )}
           </div>
+          )}
 
           {/* 처리완료 결과 입력 — [처리완료] 직후 이 자리에서 바로 기록 */}
           {panel === "done" && (

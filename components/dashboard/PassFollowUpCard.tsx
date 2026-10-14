@@ -22,7 +22,7 @@ import {
   describePassFollowUp,
   findPassFollowUps,
 } from "@/lib/scoring/pass-followup";
-import { Card, SectionTitle } from "@/components/ui";
+import { Fold } from "@/components/ui/Fold";
 import { PhoneLink } from "@/components/ui/PhoneLink";
 import { CheckIcon, TicketIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
@@ -74,19 +74,23 @@ export default function PassFollowUpCard() {
   };
 
   return (
-    <Card dataTour="dash-pass-followup">
-      <SectionTitle
-        tone="gold"
-        icon={<TicketIcon className="h-4 w-4" />}
-        hint={
-          todo > 0
-            ? `연락할 분 ${todo}명 · 기한 · 잔여 · 소진을 이용권 기록에서 골랐습니다`
-            : "이번 주에 모두 연락했습니다"
-        }
-      >
-        이용권 챙길 분
-      </SectionTitle>
-
+    /*
+      접는 칸 — 오늘 연락할 분이 남아 있으면 펴 둔 채로 시작한다(그날 할 일).
+      모두 연락했으면 제목 한 줄(「모두 연락함」)로 접혀 자리를 내준다.
+    */
+    <Fold
+      id="dash-pass-followup"
+      dataTour="dash-pass-followup"
+      defaultOpen={todo > 0}
+      icon={<TicketIcon className="h-[1.1rem] w-[1.1rem]" />}
+      title="이용권 챙길 분"
+      badge={todo > 0 ? `연락할 분 ${todo}명` : "모두 연락함"}
+      hint={
+        todo > 0
+          ? `연락할 분 ${todo}명 · 기한 임박 · 기한 지남 · 다 쓰심 · 잔여 적음을 이용권 기록에서 골랐습니다`
+          : "이번 주에 모두 연락했습니다 — 펴면 누구에게 언제 연락했는지 보입니다"
+      }
+    >
       <ul className="space-y-2" data-pass-followup>
         {shown.map((r) => {
           const c = byId.get(r.customerId);
@@ -158,6 +162,6 @@ export default function PassFollowUpCard() {
           {all ? "접기" : `${rows.length - SHOW}명 더 보기`}
         </button>
       )}
-    </Card>
+    </Fold>
   );
 }

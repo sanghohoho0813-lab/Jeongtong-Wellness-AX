@@ -9,10 +9,11 @@
  */
 
 import Link from "next/link";
+import { Fold } from "@/components/ui/Fold";
 import { useStore } from "@/lib/data/store";
 import { displayName } from "@/lib/utils/format";
 import { summarizeOpportunities } from "@/lib/scoring/opportunity";
-import { Card, OpportunityBadge, SectionTitle } from "@/components/ui";
+import { OpportunityBadge } from "@/components/ui";
 import { ChevronRightIcon, TrendUpIcon } from "@/components/ui/icons";
 
 export default function OpportunityCard() {
@@ -40,26 +41,28 @@ export default function OpportunityCard() {
   if (summary.total === 0) return null;
 
   return (
-    <Card dataTour="dash-opportunity" className="relative overflow-hidden">
-      <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold via-emerald-400 to-positive" />
-      <SectionTitle
-        tone="gold"
-        icon={<TrendUpIcon className="icon-pop h-4 w-4" />}
-        /* 폰에서는 이 단추가 제목을 두 줄로 밀어낸다 —
-           카드 맨 아래 '실행 브리핑에서 전체 확인' 안내가 같은 곳으로 데려간다 */
-        action={
-          <Link
-            href="/briefing"
-            className="touch-target -my-1 hidden shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-gold-soft px-3.5 text-sm font-bold text-gold-deep ring-1 ring-gold/25 transition-colors hover:bg-gold/20 sm:inline-flex"
-          >
-            실행 브리핑
-            <ChevronRightIcon className="h-4 w-4" />
-          </Link>
-        }
-      >
-        오늘의 매출기회
-      </SectionTitle>
-
+    /*
+      접는 칸 — 위 「재등록 상담 기회」 칸과 브리핑이 같은 분들을 이미
+      보여 준다. 여기는 재등록 · 재방문을 나눠 보는 자리라 평소에는
+      제목과 건수만 둔다.
+    */
+    <Fold
+      id="dash-opportunity"
+      dataTour="dash-opportunity"
+      icon={<TrendUpIcon className="h-[1.1rem] w-[1.1rem]" />}
+      title="오늘의 매출기회"
+      badge={`${summary.handled}/${summary.total}`}
+      hint={`재등록 기회 ${summary.renewal}명 · 재방문 기회 ${summary.revisit}명 · 오늘 처리 ${summary.handled}건 — 대상 고객 세 분까지`}
+      action={
+        <Link
+          href="/briefing"
+          className="touch-target hidden shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-gold-soft px-3.5 text-sm font-bold text-gold-deep ring-1 ring-gold/25 transition-colors hover:bg-gold/20 sm:inline-flex"
+        >
+          실행 브리핑
+          <ChevronRightIcon className="h-4 w-4" />
+        </Link>
+      }
+    >
       <div className="grid grid-cols-3 gap-2.5">
         <div className="rounded-card bg-gradient-to-br from-gold-soft to-card p-3 ring-1 ring-gold/20">
           <p className="text-[0.8125rem] font-bold leading-snug text-gold-deep">
@@ -128,6 +131,6 @@ export default function OpportunityCard() {
           실행 브리핑에서 전체 확인
         </Link>
       </p>
-    </Card>
+    </Fold>
   );
 }

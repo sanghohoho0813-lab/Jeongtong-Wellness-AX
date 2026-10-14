@@ -26,6 +26,7 @@ import { useCoach } from "@/lib/ax-coach/useCoach";
 import { useStore } from "@/lib/data/store";
 import { buildReport, trendVsDaysAgo } from "@/lib/ax-coach/report";
 import { Fold } from "@/components/ui/Fold";
+import { Hint } from "@/components/ui/Hint";
 
 export default function CoachPage() {
   const {
@@ -60,6 +61,24 @@ export default function CoachPage() {
       <PageHeader
         title="AX 코치"
         description="오늘 할 일을 먼저 알려 드리고, 실제 기록이 얼마나 쌓였는지 보여 드립니다."
+        action={
+          /*
+            심사장에서 필요한 것은 엑셀 700줄이 아니라 A4 한 장이다.
+            예전에는 맨 아래 따로 카드 한 장(「한 장으로 뽑아 가기」)이었는데,
+            단추 하나를 위해 110px 을 썼다. 제목 옆으로 올렸다 — 찾기도 쉽다.
+          */
+          <span data-tour="coach-sheet" className="no-print inline-flex">
+            <Hint
+              title="한 장으로 뽑아 가기"
+              text="지금까지 쌓인 것을 A4 한 장으로 — 무엇을 재기로 했는지 · 어디까지 왔는지 · 어느 기록에서 나왔는지. 줄 단위 원본은 AX 도입성과의 증적 내보내기로."
+            >
+              <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+                <PrinterIcon className="h-4 w-4" />
+                실증 리포트 보기
+              </Button>
+            </Hint>
+          </span>
+        }
       />
 
       <div className="flex flex-col card-gap">
@@ -114,27 +133,6 @@ export default function CoachPage() {
 
 
         <CoachReport report7={report7} report14={report14} />
-
-        {/*
-          심사장에서 필요한 것은 엑셀 700줄이 아니라 A4 한 장이다.
-          화면이 쓰는 값을 그대로 옮겨 적고, 비어 있는 칸은 비어 있다고
-          적는다 — 종이는 맥락 없이 돌아다니므로 단계 표시도 함께 박는다.
-        */}
-        <Card dataTour="coach-sheet">
-          <SectionTitle
-            icon={<PrinterIcon className="h-4 w-4" />}
-            tone="gold"
-            hint="지금까지 쌓인 것을 A4 한 장으로 — 무엇을 재기로 했는지 · 어디까지 왔는지 · 어느 기록에서 나왔는지. 줄 단위 원본은 AX 도입성과의 증적 내보내기로."
-            action={
-              <Button variant="secondary" onClick={() => setSheetOpen(true)}>
-                <PrinterIcon className="h-4 w-4" />
-                실증 리포트 보기
-              </Button>
-            }
-          >
-            한 장으로 뽑아 가기
-          </SectionTitle>
-        </Card>
 
         <Modal
           open={sheetOpen}

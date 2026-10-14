@@ -7,7 +7,8 @@ import { useStore } from "@/lib/data/store";
 import { displayName } from "@/lib/utils/format";
 import { daysAgo } from "@/lib/utils/date";
 import { formatRelative } from "@/lib/utils/date";
-import { Badge, Card, SectionTitle } from "@/components/ui";
+import { Badge } from "@/components/ui";
+import { Fold } from "@/components/ui/Fold";
 import { ChevronRightIcon, RefreshIcon } from "@/components/ui/icons";
 
 export default function RevisitPreview() {
@@ -25,25 +26,23 @@ export default function RevisitPreview() {
   if (due.length === 0) return null;
 
   return (
-    <Card>
-      <SectionTitle
-        action={
-          <Link
-            href="/retention"
-            className="touch-target -my-2.5 inline-flex items-center gap-0.5 text-sm font-semibold text-aqua-700 hover:text-aqua-800 whitespace-nowrap"
-          >
-            재방문 관리
-            <ChevronRightIcon className="h-4 w-4" />
-          </Link>
-        }
-      >
-        <span className="inline-flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400/15 text-amber-600 ring-1 ring-amber-400/20 dark:text-amber-300">
-            <RefreshIcon className="h-4 w-4" />
-          </span>
-          재방문 예정 고객
-        </span>
-      </SectionTitle>
+    /* 접는 칸 — 다가온 분 수만 제목 옆에. 브리핑에도 「재방문 예정」 으로 오른다 */
+    <Fold
+      id="dash-revisit"
+      icon={<RefreshIcon className="h-[1.1rem] w-[1.1rem]" />}
+      title="재방문 예정 고객"
+      badge={`${due.length}명`}
+      hint="다음 관리 예정일이 지났거나 다가온 분 — 다섯 분까지. 전체는 재방문 관리 화면에서"
+      action={
+        <Link
+          href="/retention"
+          className="touch-target inline-flex items-center gap-0.5 whitespace-nowrap text-sm font-semibold text-aqua-700 hover:text-aqua-800"
+        >
+          재방문 관리
+          <ChevronRightIcon className="h-4 w-4" />
+        </Link>
+      }
+    >
       <ul className="divide-y divide-stone-bg-deep">
         {due.map(({ c, over }) => (
           <li key={c.id}>
@@ -64,6 +63,6 @@ export default function RevisitPreview() {
           </li>
         ))}
       </ul>
-    </Card>
+    </Fold>
   );
 }

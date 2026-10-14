@@ -34,6 +34,7 @@
 
 import Link from "next/link";
 import { ReactNode } from "react";
+import { Hint } from "@/components/ui/Hint";
 import { useStore } from "@/lib/data/store";
 import { summarizeOpportunities } from "@/lib/scoring/opportunity";
 import { TASK_CATEGORY_LABELS } from "@/lib/types";
@@ -87,7 +88,7 @@ function Decision({
   label: string;
   count: number;
   unit: string;
-  reason: ReactNode;
+  reason: string;
   href: string;
   cta: string;
   /** 0 명일 때 — 숫자를 크게 쓰지 않고 조용히 넘어간다 */
@@ -96,92 +97,69 @@ function Decision({
   const t = TONE[tone];
   return (
     /*
-      폰과 PC 에서 배치가 다르다 — 줄이는 것이 아니라 다시 놓는다.
+      작은 칸 셋을 **폰에서도 한 줄**에 세운다.
 
-      PC 는 세 칸이 나란히 서므로 세로로 쌓는다(라벨 → 숫자 → 이유 → 할 일).
-      폰에서 그대로 쌓으면 한 칸이 230px 이 되고, 셋이면 700px —
-      첫 화면이 판단 셋으로 꽉 차서 그 아래 실행이 보이지 않는다.
+      예전에는 칸마다 라벨 · 큰 숫자 · 이유 두 줄 · 「지금 처리하기」 가
+      있어서 폰에서 셋이 370px, PC 에서도 210px 이었다. 대표님 말씀:
+      「오늘에 너무 많이 펼쳐져 있어서 오히려 집중이 안 된다.」
 
-      그래서 폰에서는 **가로 한 줄**로 눕힌다. 숫자를 오른쪽 끝으로 보내면
-      셋이 세로로 정렬되어 서로 견주기도 쉽고, 한 칸이 100px 로 줄어든다.
-      지워지는 정보는 없다.
+      그래서 칸에는 **이름 · 숫자 · 갈 곳(›)** 만 남긴다. 칸 전체가 누르는
+      자리라 갈 곳은 그대로다. 「왜 그렇게 봤는지」 한 줄은
+        - PC: 칸 아래 한 줄 (자리가 있다) + 마우스를 올리면 말풍선
+        - 폰: 누르고 들어간 화면(브리핑)의 카드마다 이유가 있다
+      로 옮겼다. 읽어 주는 프로그램에는 늘 같이 읽힌다(Hint).
     */
-    <Link
-      href={href}
-      style={{ "--rail": quiet ? "rgb(var(--c-line))" : t.rail } as never}
-      className="rail card card-lift group flex min-w-0 items-center gap-3.5 !py-4 !pl-5 md:flex-col md:items-stretch md:gap-0"
-    >
-      {/* 아이콘 — 폰에서는 줄 맨 앞 */}
-      <span
-        className={`icon-pop flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 md:hidden ${
-          quiet ? "bg-stone-bg-deep text-ink-faint ring-black/[0.04]" : t.tile
-        }`}
+    <Hint text={reason} title={label}>
+      <Link
+        href={href}
+        aria-label={`${label} ${count}${unit} — ${cta}`}
+        style={{ "--rail": quiet ? "rgb(var(--c-line))" : t.rail } as never}
+        className="rail card card-lift group flex min-w-0 flex-col !py-3 !pl-4 !pr-3 sm:!py-4 sm:!pl-5"
       >
-        {icon}
-      </span>
-
-      <div className="hidden items-center gap-2.5 md:flex">
-        <span
-          className={`icon-pop flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ${
-            quiet ? "bg-stone-bg-deep text-ink-faint ring-black/[0.04]" : t.tile
-          }`}
-        >
-          {icon}
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-bold tracking-wide text-ink-sub">
-          {label}
-        </span>
-      </div>
-
-      <div className="min-w-0 flex-1 md:contents">
-        <span className="block truncate text-[0.8125rem] font-bold tracking-wide text-ink-sub md:hidden">
-          {label}
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            className={`icon-pop hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 sm:flex ${
+              quiet ? "bg-stone-bg-deep text-ink-faint ring-black/[0.04]" : t.tile
+            }`}
+          >
+            {icon}
+          </span>
+          <span className="min-w-0 text-[0.8125rem] font-bold leading-tight text-ink-sub [word-break:keep-all] sm:text-[0.875rem]">
+            {label}
+          </span>
         </span>
 
         {/*
           숫자와 단위는 한 줄에 붙여 둔다. '4' 와 '명' 이 다른 줄로 찢어지면
           읽는 사람이 한 번 멈칫한다 (.nowrap-num).
         */}
-        <p className="nowrap-num tabular hidden md:mt-2.5 md:block">
+        <span className="mt-1.5 flex items-end justify-between gap-1">
+          <span className="nowrap-num tabular">
+            <span
+              className={`text-[1.75rem] font-extrabold leading-none tracking-tight sm:text-[2rem] ${
+                quiet ? "text-ink-faint" : t.num
+              }`}
+            >
+              {count}
+            </span>
+            <span className="ml-0.5 text-[0.9375rem] font-bold text-ink-sub">{unit}</span>
+          </span>
           <span
-            className={`text-[2.125rem] font-extrabold leading-none tracking-tight ${
-              quiet ? "text-ink-faint" : t.num
+            className={`mb-0.5 inline-flex shrink-0 items-center gap-0.5 text-[0.875rem] font-extrabold ${
+              quiet ? "text-ink-faint" : t.cta
             }`}
           >
-            {count}
+            <span className="hidden lg:inline">{cta}</span>
+            <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </span>
-          <span className="ml-1 text-[1rem] font-bold text-ink-sub">{unit}</span>
-        </p>
+        </span>
 
-        {/* 왜 그렇게 봤는지 — 폰은 두 줄, PC 는 자리를 고정해 세 칸 높이를 맞춘다 */}
-        <p className="mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub md:mt-1.5 md:min-h-[2.4em]">
+        {/* 왜 그렇게 봤는지 — 자리가 있는 PC 에서만 한 줄 */}
+        <span className="mt-1.5 hidden truncate text-[0.875rem] text-ink-sub md:block">
           {reason}
-        </p>
-
-        <span
-          className={`mt-1.5 inline-flex items-center gap-0.5 self-start rounded-btn -ml-2 px-2 py-1 text-[0.875rem] font-extrabold transition-colors md:mt-3 ${
-            quiet ? "text-ink-faint hover:bg-stone-bg" : t.cta
-          }`}
-        >
-          {cta}
-          <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </span>
-      </div>
-
-      {/* 폰 — 숫자는 오른쪽 끝. 셋이 세로로 맞춰져 견주기 쉽다 */}
-      <p className="nowrap-num tabular shrink-0 text-right md:hidden">
-        <span
-          className={`text-[2rem] font-extrabold leading-none tracking-tight ${
-            quiet ? "text-ink-faint" : t.num
-          }`}
-        >
-          {count}
-        </span>
-        <span className="ml-0.5 text-[0.9375rem] font-bold text-ink-sub">
-          {unit}
-        </span>
-      </p>
-    </Link>
+      </Link>
+    </Hint>
   );
 }
 
@@ -229,7 +207,7 @@ export default function DecisionBand() {
   ).length;
 
   return (
-    <div className="rise-stagger grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+    <div data-decision-band className="rise-stagger grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
       <Decision
         tone="aqua"
         icon={<SparkIcon className="h-[1.15rem] w-[1.15rem]" />}

@@ -95,23 +95,10 @@ export default function BriefingPage() {
   const total = briefingTasks.length + closedByVisit;
   const progress = total > 0 ? doneCount / total : 0;
 
-  /*
-    유형별 미처리 건수.
-    히어로 칩과 거르개 칩이 같은 값을 쓴다 — 두 곳에서 따로 세면
-    언젠가 한쪽만 틀린다.
-  */
+  /* 유형별 미처리 건수 — 거르개 칩에 붙는다 */
   const openByCategory: Record<string, number> = {};
   for (const t of openTasks)
     openByCategory[t.category] = (openByCategory[t.category] ?? 0) + 1;
-
-  // 카테고리별 미처리 분포 (많은 순)
-  const byCategory = CATEGORY_FILTERS.filter((c) => c !== "all")
-    .map((c) => ({
-      key: c as TaskCategory,
-      count: openTasks.filter((t) => t.category === c).length,
-    }))
-    .filter((x) => x.count > 0)
-    .sort((a, b) => b.count - a.count);
 
   return (
     <div>
@@ -190,34 +177,10 @@ export default function BriefingPage() {
           </div>
         </div>
         {/*
-          유형별 미처리 — **폰에서는 접는다.**
-
-          바로 아래 거르개 칩과 같은 말을 두 번 하고 있었다. 그 두 벌이
-          390px 에서 네 줄을 차지해, 정작 오늘 챙길 첫 고객이 화면 밖
-          (1,012px) 에 있었다. 대신 아래 거르개 칩에 건수를 붙여
-          잃는 것이 없게 했다. 자리가 있는 태블릿 이상에서는 그대로 둔다.
+          유형별 미처리 칩은 여기서 뺐다 — 바로 아래 거르개 칩이 같은 이름에
+          같은 건수를 붙여 이미 보여 준다. 두 벌이면 PC 에서도 한 줄을 통째로
+          먹는다 (대표님: 「오늘에 너무 많이 펼쳐져 있어 집중이 안 된다」).
         */}
-        {byCategory.length > 0 && (
-          <div className="mt-4 hidden flex-wrap gap-2 border-t border-white/10 pt-4 sm:flex">
-            {byCategory.map((x) => (
-              <button
-                key={x.key}
-                onClick={() =>
-                  setCategory(category === x.key ? "all" : x.key)
-                }
-                className={`touch-target inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-bold transition-all ${
-                  category === x.key
-                    ? "bg-white text-deep-900"
-                    : "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20"
-                }`}
-              >
-                <span className={`h-2 w-2 rounded-full ${CATEGORY_DOTS[x.key]}`} />
-                {TASK_CATEGORY_LABELS[x.key]}{" "}
-                <span className="nowrap-num opacity-80">{x.count}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </HeroCard>
 
       {/* 화면에서 목록을 좁히는 도구 — 종이에는 필요 없다 */}

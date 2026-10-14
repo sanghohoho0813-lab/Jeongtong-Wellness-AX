@@ -12,7 +12,9 @@
  * 있다. 색이 안 보이는 분도 같은 정보를 읽는다.
  */
 
+import { useState } from "react";
 import { Badge, Card } from "@/components/ui";
+import { InfoButton } from "@/components/ui/Fold";
 import type { CoverageResult } from "@/lib/ax-coach/types";
 
 function Bar({ percent }: { percent: number | null }) {
@@ -54,11 +56,36 @@ export default function CoachSummary({
   const { overall, areas, measurableAreas } = coverage;
   const delta = overall !== null && before !== null ? overall - before : null;
 
+  const [info, setInfo] = useState(false);
+  const explain = `실제 방문과 고객관리 기록이 쌓이면 자동으로 올라갑니다.${
+    measurableAreas < areas.length
+      ? ` 지금은 ${measurableAreas}개 영역만 잴 수 있어 그 평균입니다.`
+      : ""
+  }`;
+
   return (
+    /*
+      준비도는 접지 않는다 — 목표치 · 검산 숫자 · 시연 자료 표시가 이 화면의
+      정직성 장치다(D-18). 대신 자리를 줄였다.
+        - 큰 숫자 옆에 DEMO 표시를 같은 줄로
+        - 「어떻게 올라가나」 설명 문단은 ⓘ 로 (올리면 말풍선 · 누르면 한 줄)
+        - 네 영역은 PC 에서 두 줄 두 칸, 상태 말과 숫자를 한 줄로
+      PC 에서 740px → 약 400px.
+    */
     <Card dataTour="coach-summary">
-      <p className="text-[0.9375rem] font-bold text-ink-sub">
+      <p className="flex items-center text-[0.9375rem] font-bold text-ink-sub">
         우리 매장 AX 실증 준비도
+        <InfoButton
+          text={explain}
+          title="AX 실증 준비도"
+          open={info}
+          onToggle={() => setInfo((v) => !v)}
+          className="-my-2"
+        />
       </p>
+      {info && (
+        <p className="text-[0.9375rem] leading-relaxed text-ink-soft">{explain}</p>
+      )}
 
       <div className="mt-1 flex flex-wrap items-end gap-x-4 gap-y-2">
         <p className="nowrap-num text-[3rem] font-extrabold leading-none text-ink">
@@ -79,31 +106,20 @@ export default function CoachSummary({
             </b>
           </p>
         )}
+        {/* 시연 자료인지 아닌지를 숫자 바로 옆에 적는다 (v3.0 §15) */}
+        <p className="flex flex-wrap items-center gap-2 pb-1 text-[0.9375rem] text-ink-sub">
+          <Badge tone={isDemo ? "gold" : "positive"} dot>
+            {stageLabel}
+          </Badge>
+          <span>
+            {isDemo
+              ? "시연 자료로 센 숫자입니다 — 실제 성과가 아닙니다."
+              : "실제 매장 기록으로 센 숫자입니다."}
+          </span>
+        </p>
       </div>
 
-      <p className="mt-2 text-[1rem] leading-relaxed text-ink-soft">
-        실제 방문과 고객관리 기록이 쌓이면 자동으로 올라갑니다.
-        {measurableAreas < areas.length && (
-          <>
-            {" "}
-            지금은 {measurableAreas}개 영역만 잴 수 있어 그 평균입니다.
-          </>
-        )}
-      </p>
-
-      {/* 시연 자료인지 아닌지를 숫자 바로 옆에 적는다 (v3.0 §15) */}
-      <p className="mt-2.5 flex flex-wrap items-center gap-2 text-[0.9375rem] text-ink-sub">
-        <Badge tone={isDemo ? "gold" : "positive"} dot>
-          {stageLabel}
-        </Badge>
-        <span>
-          {isDemo
-            ? "시연 자료로 센 숫자입니다 — 실제 성과가 아닙니다."
-            : "실제 매장 기록으로 센 숫자입니다."}
-        </span>
-      </p>
-
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
         {areas.map((a) => (
           <li key={a.area} data-coach-area={a.area}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
@@ -119,20 +135,16 @@ export default function CoachSummary({
               </span>
             </div>
             <Bar percent={a.percent} />
-            <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-soft">
-              {a.message}
-            </p>
             {/*
-              `nowrap-num` 이 아니라 `tabular-nums` 다.
-
-              이 줄은 「최근 4주 8건 / 목표 20건」 같은 숫자일 때도 있고
-              「고객 화면이 매장 계정과 아직 연결되지 않았습니다」 같은
-              문장일 때도 있다. 줄바꿈 금지를 걸어 두었더니 문장일 때
-              360px 화면을 51px 밀어내 **화면이 옆으로 스크롤**됐다.
-              숫자 정렬만 가져오고 줄바꿈은 막지 않는다.
+              상태 말과 검산 숫자를 한 줄에. `nowrap-num` 이 아니라
+              `tabular-nums` 다 — 이 줄은 「최근 4주 8건 / 목표 20건」 같은
+              숫자일 때도 있고 「고객 화면이 매장 계정과 아직 연결되지
+              않았습니다」 같은 문장일 때도 있다. 줄바꿈 금지를 걸면 문장일 때
+              360px 화면을 옆으로 밀어낸다.
             */}
-            <p className="mt-0.5 text-[0.875rem] leading-relaxed text-ink-sub tabular-nums">
-              {a.detail}
+            <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-soft tabular-nums">
+              <b className="font-bold text-ink-soft">{a.message}</b>
+              <span className="text-ink-sub"> · {a.detail}</span>
             </p>
             {a.unmeasurableReason && (
               <p className="mt-0.5 text-[0.875rem] leading-relaxed text-warn-text">

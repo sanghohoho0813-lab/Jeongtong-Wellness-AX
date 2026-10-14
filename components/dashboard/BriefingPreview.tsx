@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { displayName } from "@/lib/utils/format";
 import { HeroCard } from "@/components/ui";
+import { Hint } from "@/components/ui/Hint";
 import { ChevronRightIcon, SparkIcon } from "@/components/ui/icons";
 import TaskCard from "@/components/briefing/TaskCard";
 import { BriefingTask, TASK_CATEGORY_LABELS } from "@/lib/types";
@@ -106,17 +107,23 @@ export default function BriefingPreview() {
         폰에서는 짧은 이름으로, 자리가 있는 화면에서만 긴 이름으로 쓴다.
       */}
       <div className="flex items-center justify-between gap-3">
+        {/* 「무엇을 하는 칸인지」 는 글 한 줄 대신 제목에 올리면 뜨는 말풍선으로 */}
+        <Hint
+          title="오늘의 실행 브리핑"
+          text="고객 · 이용 기록을 보고 오늘 먼저 챙길 분을 순서대로 골랐습니다. [처리] 를 누르면 그 자리에서 결과를 남깁니다."
+        >
         <h2 className="flex min-w-0 items-center gap-2.5 text-[1.125rem] font-extrabold tracking-tight text-white sm:text-[1.25rem]">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-400/25 text-aqua-300 ring-1 ring-aqua-300/30">
             <SparkIcon className="h-5 w-5" />
           </span>
           <span className="min-w-0">
-            <span className="sm:hidden">오늘의 실행 브리핑</span>
+            <span className="sm:hidden">실행 브리핑</span>
             <span className="hidden sm:inline">
               AI 고객관리 · 오늘의 실행 브리핑
             </span>
           </span>
         </h2>
+        </Hint>
         <Link
           href="/briefing"
           className="touch-target inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
@@ -125,10 +132,6 @@ export default function BriefingPreview() {
           <ChevronRightIcon className="h-4 w-4" />
         </Link>
       </div>
-
-      <p className="mt-2 text-[0.8125rem] leading-relaxed text-deep-sub">
-        고객·이용 데이터를 분석해 오늘 우선적으로 처리할 업무를 제안합니다.
-      </p>
 
       {/* 진행 요약 */}
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">

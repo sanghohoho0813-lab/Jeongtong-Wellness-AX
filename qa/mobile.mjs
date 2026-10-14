@@ -27,9 +27,9 @@ const errs = [];
 
 /** 화면 장수 상한 — 360px 기준(가장 좁은 폰). 실측 + 여유 15% */
 const MAX_SCREENS = {
-  "/": 7,
-  "/briefing": 4.5,
-  "/coach": 6,
+  "/": 2.2, // 오늘 간소화 — 판단 칸 · 시작하기 · 코치 줄을 줄이고 접었다 (상한 7 → 2.2)
+  "/briefing": 3, // 과제 카드의 판단 이유를 접었다 (4.5 → 3)
+  "/coach": 3.1, // Mission 가로 · 준비도 두 칸 · 리포트 단추를 제목 옆으로 (6 → 3.1)
   "/customers": 4,
   "/visits": 4,
   "/retention": 5,
@@ -348,7 +348,13 @@ const SCAN = () => {
     */
     if (/nowrap/.test(s.whiteSpace) && !(el instanceof SVGElement)) {
       const txt = (el.textContent || "").trim();
-      const par = el.parentElement;
+      /*
+        말풍선(Hint)은 단추를 `display: contents` 상자로 감싼다. 그 상자는
+        자기 사각형이 0 이라, 그대로 견주면 멀쩡한 단추가 「칸 밖」 으로
+        잡힌다. 사각형이 있는 가장 가까운 조상과 견준다.
+      */
+      let par = el.parentElement;
+      while (par && getComputedStyle(par).display === "contents") par = par.parentElement;
       if (
         txt &&
         par &&

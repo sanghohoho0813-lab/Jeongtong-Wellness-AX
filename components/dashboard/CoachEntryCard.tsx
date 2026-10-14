@@ -24,14 +24,20 @@ export default function CoachEntryCard() {
   const allDone = todayIssued.length > 0 && todayVerified === todayIssued.length;
 
   return (
-    <Card dataTour="coach-entry">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-soft text-gold-deep ring-1 ring-gold/20">
-          <CompassIcon className="h-6 w-6" />
+    /*
+      한 줄짜리 자리 — 줄 전체가 코치 화면으로 가는 단추다.
+      예전에는 폰에서 아이콘 · 두 줄 글 · 큰 「AX 코치 열기」 단추로 190px
+      이었다. 갈 곳은 그대로 두고, 높이만 한 줄로 줄였다.
+    */
+    <Card dataTour="coach-entry" className="!py-0">
+      <Link href="/coach" className="group flex min-h-[64px] items-center gap-3 py-2.5">
+        {/* 폰에서는 아이콘을 빼서 글이 한 줄에 들어갈 자리를 만든다 */}
+        <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft text-gold-deep ring-1 ring-gold/20 sm:flex">
+          <CompassIcon className="h-5 w-5" />
         </span>
 
-        <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="text-[1.0625rem] font-extrabold text-ink">AX 코치</span>
             <span className="nowrap-num text-[0.9375rem] text-ink-sub">
               실증 준비도{" "}
@@ -40,28 +46,34 @@ export default function CoachEntryCard() {
               </b>
             </span>
             {todayIssued.length > 0 && (
-              <Badge tone={allDone ? "positive" : "gray"} dot>
-                오늘 {todayIssued.length}개 중 {todayVerified}개 완료
-              </Badge>
+              <span className="hidden sm:inline-flex">
+                <Badge tone={allDone ? "positive" : "gray"} dot>
+                  오늘 {todayIssued.length}개 중 {todayVerified}개 완료
+                </Badge>
+              </span>
             )}
-          </p>
-          <p className="mt-1 text-[1rem] leading-relaxed text-ink-soft">
+          </span>
+          <span className="mt-0.5 block truncate text-[0.9375rem] text-ink-sub">
+            {/* 폰 — 완료 수는 배지 대신 둘째 줄 앞에 짧게 */}
+            {todayIssued.length > 0 && (
+              <b className="nowrap-num font-bold text-ink-soft sm:hidden">
+                {todayVerified}/{todayIssued.length} 완료 ·{" "}
+              </b>
+            )}
             {allDone
               ? "오늘 할 일을 모두 마치셨습니다."
               : first
                 ? first.candidate.title
                 : "오늘 따로 챙길 것이 없습니다."}
-          </p>
-        </div>
+          </span>
+        </span>
 
-        <Link
-          href="/coach"
-          className="inline-flex min-h-[48px] w-full items-center justify-center gap-1 rounded-btn bg-card-soft px-5 text-[1rem] font-extrabold text-ink-soft ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800 sm:w-auto"
-        >
-          AX 코치 열기
-          <ChevronRightIcon className="h-5 w-5" />
-        </Link>
-      </div>
+        {/* 폰에서는 「열기」 만 — 읽어 주는 프로그램에는 늘 「AX 코치 열기」 */}
+        <span className="inline-flex shrink-0 items-center gap-0.5 text-[0.9375rem] font-extrabold text-ink-soft transition-colors group-hover:text-aqua-800">
+          <span className="sr-only sm:not-sr-only">AX 코치 </span>열기
+          <ChevronRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </Link>
     </Card>
   );
 }

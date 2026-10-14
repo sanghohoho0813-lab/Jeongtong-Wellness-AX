@@ -14,7 +14,6 @@ import SegmentCard from "@/components/dashboard/SegmentCard";
 import RevisitPreview from "@/components/dashboard/RevisitPreview";
 import BranchSummaryCard from "@/components/dashboard/BranchSummaryCard";
 import { useStore } from "@/lib/data/store";
-import { SectionRule } from "@/components/ui";
 import { ChartIcon } from "@/components/ui/icons";
 import { Fold } from "@/components/ui/Fold";
 
@@ -62,7 +61,7 @@ export default function DashboardPage() {
         {justStarted ? (
           <>
             {/* 아직 아무것도 없을 때는 시작 안내가 곧 오늘 할 일이다 */}
-            <FirstRunCard />
+            <FirstRunCard defaultOpen />
             <div data-tour="dash-kpi">
               <KpiRow />
             </div>
@@ -70,29 +69,31 @@ export default function DashboardPage() {
         ) : (
           <>
             {/*
-              ① 판단 — 오늘 무엇을 봐야 하는가
-              숫자 · 그렇게 본 이유 · 지금 갈 곳이 한 칸에 함께 있다.
-            */}
-            <SectionRule label="오늘의 판단" />
-            <DecisionBand />
+              ① 판단 — 작은 칸 셋 (챙길 고객 · 재등록 기회 · 이용권 임박)
+              ② 실행 — 오늘의 실행 브리핑 · AX 코치 한 줄
+              ③ 근거 — 맨 아래 「매장 숫자 · 더 보기」 (접혀 있다)
 
-            {/* ② 실행 — 그 판단을 오늘 어떻게 처리하는가 */}
-            <SectionRule label="실행" />
+              층마다 붙어 있던 「오늘의 판단」 · 「실행」 눈썹 글자와 선은
+              지웠다. 칸이 작아져 한눈에 들어오니 이름표가 없어도 순서가
+              읽힌다 — 대표님: 「오늘에 너무 많이 펼쳐져 있어 집중이 안 된다.」
+            */}
+            <DecisionBand />
+            <div className="rise-stagger">
+              <BriefingPreview />
+            </div>
             {/*
-              AX 코치 — 브리핑 바로 위 한 줄. 브리핑이 "누구에게" 라면
+              AX 코치 — 브리핑 바로 아래 한 줄. 브리핑이 "누구에게" 라면
               코치는 "그게 기록으로 남고 있나" 다. 여기서는 준비도와
               오늘 할 일 하나만 보이고, 자세한 건 코치 화면에서 본다.
             */}
             <CoachEntryCard />
-            <div className="rise-stagger">
-              <BriefingPreview />
-            </div>
             {/*
               이용권 기한 · 잔여 · 소진 — 브리핑에 안 오른 분도 이용권 기록만
               보고 고른다. 고를 분이 없으면 스스로 숨는다.
             */}
             <PassFollowUpCard />
-            <div className="rise-stagger grid grid-cols-1 card-gap xl:grid-cols-2">
+            {/* 둘 다 볼 분이 없으면 칸도 사이 간격도 남기지 않는다 (empty:hidden) */}
+            <div className="rise-stagger grid grid-cols-1 card-gap empty:hidden xl:grid-cols-2">
               <OpportunityCard />
               <RevisitPreview />
             </div>

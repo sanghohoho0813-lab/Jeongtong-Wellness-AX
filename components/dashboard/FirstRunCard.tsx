@@ -12,14 +12,19 @@
  */
 
 import Link from "next/link";
+import { useEffect, useId, useState } from "react";
 import { useStore } from "@/lib/data/store";
+import { Hint } from "@/components/ui/Hint";
 import {
   CheckIcon,
+  ChevronRightIcon,
   ClipboardIcon,
   SparkIcon,
   UploadIcon,
   UsersIcon,
 } from "@/components/ui/icons";
+
+const OPEN_KEY = "jeongtong-fold:first-run";
 
 interface Step {
   key: string;
@@ -31,9 +36,35 @@ interface Step {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export default function FirstRunCard() {
+export default function FirstRunCard({
+  defaultOpen = false,
+}: {
+  /** 아무것도 없는 첫날 — 이 안내가 곧 화면이라 단계를 펴 둔다 */
+  defaultOpen?: boolean;
+} = {}) {
   const { customers, visits, memberships, taskOverrides, ready, isManager } =
     useStore();
+  /** 네 단계 목록을 폈는지 — 그 기기에 기억한다 (접는 칸과 같은 방식) */
+  const [open, setOpen] = useState(defaultOpen);
+  const listId = `${useId()}-steps`;
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(OPEN_KEY);
+      if (v === "1") setOpen(true);
+      else if (v === "0") setOpen(false);
+    } catch {
+      /* 기억 못 하면 접힌 채로 */
+    }
+  }, []);
+  const toggle = () =>
+    setOpen((v) => {
+      try {
+        localStorage.setItem(OPEN_KEY, v ? "0" : "1");
+      } catch {
+        /* 지금 화면만 바뀐다 */
+      }
+      return !v;
+    });
 
   const steps: Step[] = [
     {
@@ -79,23 +110,57 @@ export default function FirstRunCard() {
   if (!ready || !isManager || doneCount === steps.length) return null;
 
   const current = steps.find((s) => !s.done)!;
+  const CurrentIcon = current.icon;
 
   return (
-    <section className="card-accent rise-in">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-aqua-700">
-            시작하기
+    /*
+      평소에는 **지금 할 단계 한 줄**만 — 몇 단계째인지 · 무엇을 · 바로 가는 단추.
+      네 단계 전체와 설명은 「단계 보기」 를 눌렀을 때 편다.
+
+      예전에는 네 단계를 늘 펴 두어 폰에서 이 안내만 540px 이었다. 대표님
+      말씀: 「오늘에 너무 많이 펼쳐져 있어서 집중이 안 된다 — 그렇다고
+      기능을 못 쓰게 하거나 숨겨 두지는 말고.」 그래서 지금 할 일로 가는
+      단추는 접혀 있어도 늘 보이고, 접는 것은 예고와 설명뿐이다.
+    */
+    <section className="card-accent rise-in" data-first-run data-open={open ? "true" : "false"}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100">
+          <CurrentIcon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="nowrap-num text-[0.75rem] font-extrabold tracking-wide text-aqua-700">
+            시작하기 · {doneCount} / {steps.length} 단계
           </p>
-          <h2 className="mt-1 text-xl font-extrabold text-ink">
-            {doneCount === 0
-              ? "네 단계만 거치면 자리가 잡힙니다"
-              : `다음은 ${current.title.replace(/하기$/, "")} 차례입니다`}
-          </h2>
+          <Hint text={current.desc} title={current.title}>
+            <h2 className="text-[1.0625rem] font-extrabold leading-snug text-ink [word-break:keep-all]">
+              {doneCount === 0
+                ? "네 단계만 거치면 자리가 잡힙니다"
+                : `다음은 ${current.title.replace(/하기$/, "")} 차례입니다`}
+            </h2>
+          </Hint>
         </div>
-        <p className="nowrap-num shrink-0 text-sm font-bold text-ink-sub">
-          {doneCount} / {steps.length} 단계
-        </p>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Link
+            href={current.href}
+            aria-current="step"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-4 text-[0.9375rem] font-extrabold text-white shadow-[0_2px_8px_rgba(14,127,125,0.3)] transition-colors hover:from-aqua-850 hover:to-deep-700 sm:flex-none"
+          >
+            {current.cta}
+            <ChevronRightIcon className="h-4 w-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={open}
+            aria-controls={listId}
+            className="touch-target inline-flex shrink-0 items-center gap-1 rounded-btn px-3 text-[0.875rem] font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
+          >
+            {open ? "접기" : "단계 보기"}
+            <ChevronRightIcon
+              className={`h-4 w-4 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* 진행 막대 — 어디까지 왔는지 한눈에 */}
@@ -119,29 +184,28 @@ export default function FirstRunCard() {
         ))}
       </div>
 
-      {/*
-        지금 할 단계 하나만 크게 펼치고, 나머지는 한 줄로 줄인다.
-        네 단계를 모두 펼쳐 두면 폰에서 이 안내만 화면 하나를 넘겨서
-        정작 오늘의 할 일이 화면 밖으로 밀려난다.
-        끝난 단계는 지웠다는 표시로 남기고, 남은 단계는 예고로만 보인다.
-      */}
-      <ul className="mt-4 space-y-2">
-        {steps.map((s, i) => {
-          const Icon = s.icon;
-          const isCurrent = s.key === current.key;
-
-          if (!isCurrent) {
+      <div id={listId} hidden={!open}>
+        <ul className="mt-3 space-y-2">
+          {steps.map((s, i) => {
+            const Icon = s.icon;
+            const isCurrent = s.key === current.key;
             return (
               <li key={s.key}>
                 <Link
                   href={s.href}
-                  className="flex items-center gap-2.5 rounded-card bg-card/60 px-3.5 py-2.5 ring-1 ring-black/[0.04]"
+                  className={`flex items-start gap-2.5 rounded-card px-3.5 py-2.5 ${
+                    isCurrent
+                      ? "bg-card ring-2 ring-aqua-500"
+                      : "bg-card/60 ring-1 ring-black/[0.04]"
+                  }`}
                 >
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ${
                       s.done
                         ? "bg-emerald-50 text-positive-text ring-emerald-100 dark:bg-emerald-400/10 dark:ring-emerald-400/20"
-                        : "bg-stone-bg-deep text-ink-faint ring-black/[0.04]"
+                        : isCurrent
+                          ? "bg-aqua-50 text-aqua-700 ring-aqua-100"
+                          : "bg-stone-bg-deep text-ink-faint ring-black/[0.04]"
                     }`}
                   >
                     {s.done ? (
@@ -150,65 +214,51 @@ export default function FirstRunCard() {
                       <Icon className="h-4 w-4" />
                     )}
                   </span>
-                  <span className="nowrap-num shrink-0 text-xs font-extrabold text-ink-faint">
-                    {i + 1}단계
-                  </span>
-                  <span
-                    className={`min-w-0 flex-1 text-[0.9375rem] font-bold leading-snug ${
-                      s.done ? "text-ink-faint line-through" : "text-ink-sub"
-                    }`}
-                  >
-                    {s.title}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-x-2">
+                      <span className="nowrap-num text-xs font-extrabold text-ink-faint">
+                        {i + 1}단계
+                      </span>
+                      <span
+                        className={`text-[0.9375rem] font-bold leading-snug ${
+                          s.done
+                            ? "text-ink-faint line-through"
+                            : isCurrent
+                              ? "text-ink"
+                              : "text-ink-sub"
+                        }`}
+                      >
+                        {s.title}
+                      </span>
+                      {isCurrent && (
+                        <span className="rounded-full bg-sel px-2 py-0.5 text-[0.6875rem] font-extrabold text-sel-ink">
+                          지금 할 일
+                        </span>
+                      )}
+                    </span>
+                    {!s.done && (
+                      <span className="mt-0.5 block text-sm leading-relaxed text-ink-sub">
+                        {s.desc}
+                      </span>
+                    )}
                   </span>
                 </Link>
               </li>
             );
-          }
+          })}
+        </ul>
 
-          return (
-            <li key={s.key}>
-              <Link
-                href={s.href}
-                aria-current="step"
-                className="group flex flex-col rounded-card bg-card p-4 ring-2 ring-aqua-500 transition-shadow hover:shadow-card-hover"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="icon-pop flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-aqua-50 text-aqua-700 ring-1 ring-aqua-100">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <span className="nowrap-num text-xs font-extrabold text-ink-faint">
-                    {i + 1}단계
-                  </span>
-                  <span className="rounded-full bg-sel px-2 py-0.5 text-[0.6875rem] font-extrabold text-sel-ink">
-                    지금 할 일
-                  </span>
-                </span>
-
-                <span className="mt-2.5 block text-[1.0625rem] font-extrabold text-ink">
-                  {s.title}
-                </span>
-                <span className="mt-1 block text-sm leading-relaxed text-ink-sub">
-                  {s.desc}
-                </span>
-                <span className="mt-2.5 block text-sm font-extrabold text-aqua-700">
-                  {s.cta} →
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-
-      <p className="mt-3 text-[0.875rem] leading-relaxed text-ink-faint">
-        네 단계를 마치면 이 안내는 사라집니다. 사용법을 처음부터 보고 싶으시면{" "}
-        <Link
-          href="/guide"
-          className="tap-line font-bold text-aqua-700 hover:underline"
-        >
-          사용 방법
-        </Link>
-        를 열어 보세요.
-      </p>
+        <p className="mt-3 text-[0.875rem] leading-relaxed text-ink-faint">
+          네 단계를 마치면 이 안내는 사라집니다. 사용법을 처음부터 보고 싶으시면{" "}
+          <Link
+            href="/guide"
+            className="tap-line font-bold text-aqua-700 hover:underline"
+          >
+            사용 방법
+          </Link>
+          를 열어 보세요.
+        </p>
+      </div>
     </section>
   );
 }

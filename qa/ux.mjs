@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~5차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸)");
+const { log, finish } = recorder("UI/UX 2~6차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -222,6 +222,68 @@ await go(pc2, anyCustomer, 1200);
 log("편 칸은 다음에 열어도 펴져 있다 (그 기기에 기억)", (await pc2.locator('[data-fold="detail-history"]').getAttribute("data-open")) === "true");
 await pc2.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("jeongtong-fold:")).forEach((k) => localStorage.removeItem(k)));
 await pc2.context().close();
+
+/* ── 9. 오늘 간소화 — 「너무 많이 펼쳐져 있어 집중이 안 된다. 그렇다고 숨기지는 말고」 ── */
+{
+  const pc3 = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  pc3.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(pc3, "/", 1500);
+  const pcH = await pc3.evaluate(() => document.documentElement.scrollHeight);
+  log("오늘(PC) — 한 화면 반 안에 끝난다 (전에는 1,890px)", pcH <= 1400, `${pcH}px`);
+  log("오늘 — 「오늘의 판단」 · 「실행」 이름표 줄이 없다", !/오늘의 판단/.test(await pc3.locator("main").innerText()));
+  // 판단 칸 — 칸 전체가 갈 곳, 이유는 말풍선
+  const tile = pc3.locator("[data-decision-band] a").first();
+  log("판단 칸 셋 — 칸마다 누르면 갈 곳이 있다", (await pc3.locator("[data-decision-band] a[href]").count()) === 3);
+  await tile.hover();
+  await pc3.waitForTimeout(500);
+  log("판단 칸에 마우스를 올리면 왜 그렇게 봤는지 뜬다", /명|없습니다|있습니다/.test(await pc3.locator("[data-hint]").innerText().catch(() => "")));
+  await pc3.mouse.move(900, 880);
+  // 시작하기 — 지금 할 단계로 가는 단추는 늘 보이고, 네 단계 목록만 접힌다
+  const fr = pc3.locator("[data-first-run]");
+  if (await fr.count()) {
+    log("시작하기 — 평소에는 접혀 있다 (지금 할 단계 한 줄)", (await fr.getAttribute("data-open")) === "false");
+    log("시작하기 — 접혀 있어도 지금 할 일로 가는 단추는 보인다", await fr.locator('a[aria-current="step"]').isVisible());
+    await fr.getByRole("button", { name: /단계 보기/ }).click();
+    await pc3.waitForTimeout(300);
+    log("시작하기 — 「단계 보기」 를 누르면 네 단계가 다 보인다", (await fr.locator("li:visible").count()) === 4);
+    await fr.getByRole("button", { name: /접기/ }).click();
+  }
+  // AX 코치 — 한 줄짜리 자리
+  const ce = pc3.locator('[data-tour="coach-entry"]');
+  const ceH = await ce.evaluate((el) => Math.round(el.getBoundingClientRect().height));
+  log("AX 코치 자리 — 한 줄 (90px 이하)", ceH <= 90, `${ceH}px`);
+  // 브리핑 — 판단 이유는 PC 에서도 접혀 있고, 누르면 편다
+  await go(pc3, "/briefing", 1400);
+  const card = pc3.locator('[data-tour="task-card"]').first();
+  const why = card.getByRole("button", { name: /왜 이 고객/ });
+  log("챙길 고객(PC) — 판단 이유는 접혀 있다", (await why.getAttribute("aria-expanded")) === "false" && !(await card.innerText()).includes("판단 이유"));
+  await why.click();
+  await pc3.waitForTimeout(300);
+  log("챙길 고객 — 「왜 이 고객?」 을 누르면 판단 이유가 펴진다", (await card.innerText()).includes("판단 이유"));
+  const cardH = await pc3.locator('[data-tour="task-card"]').nth(1).evaluate((el) => Math.round(el.getBoundingClientRect().height));
+  log("챙길 고객(PC) — 과제 카드 한 장이 160px 이하", cardH <= 160, `${cardH}px`);
+  log("챙길 고객 — 「대기」 는 적지 않는다 (목록이 이미 미처리)", !/대기/.test(await pc3.locator('[data-tour="task-card"]').nth(1).innerText()));
+  // AX 코치 화면 — 리포트 단추는 제목 옆
+  await go(pc3, "/coach", 1400);
+  log("AX 코치 — 실증 리포트 단추가 화면 제목 옆에 있다", (await pc3.locator('main [data-tour="coach-sheet"] button').count()) === 1 && (await pc3.locator('[data-tour="coach-sheet"]').evaluate((el) => el.getBoundingClientRect().top)) < 260);
+  await pc3.context().close();
+
+  // 폰 — 판단 칸 셋이 한 줄, 과제 카드는 단추 한 줄
+  await go(p, "/", 1500);
+  const tops = await p.evaluate(() => [...document.querySelectorAll("[data-decision-band] a")].map((a) => Math.round(a.getBoundingClientRect().top)));
+  log("오늘(폰) — 판단 칸 셋이 한 줄에 선다", tops.length === 3 && new Set(tops).size === 1, JSON.stringify(tops));
+  const phH = await p.evaluate(() => document.documentElement.scrollHeight);
+  log("오늘(폰) — 전에는 2,503px, 이제 1,700px 이하", phH <= 1700, `${phH}px`);
+  await go(p, "/briefing", 1400);
+  const rows = await p.locator('[data-tour="task-card"]').first().evaluate((el) => {
+    const bar = el.querySelector(".no-print.flex");
+    const tops = [...(bar?.children ?? [])].filter((c) => c.getBoundingClientRect().width > 0).map((c) => Math.round(c.getBoundingClientRect().top));
+    return new Set(tops).size;
+  });
+  log("챙길 고객(폰) — 처리완료 · 보류 · 이유 단추가 한 줄", rows === 1, `${rows}줄`);
+  const nameLink = p.locator('[data-tour="task-card"]').first().locator('a[href^="/customers/"]').first();
+  log("챙길 고객(폰) — 「고객 상세」 는 이름을 누르면 간다 (이름 옆 ›)", await nameLink.isVisible());
+}
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
 console.log(`   (기준 ${BASE})`);
