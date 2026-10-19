@@ -15,12 +15,12 @@
  */
 
 import { useMemo, useState } from "react";
-import PageHeader from "@/components/layout/PageHeader";
+import StaffBand, { BandProgress, bandGhost } from "@/components/layout/StaffBand";
 import CoachSummary from "@/components/ax-coach/CoachSummary";
 import MissionCard from "@/components/ax-coach/MissionCard";
 import CoachReport from "@/components/ax-coach/CoachReport";
 import EvidenceSheet from "@/components/ax-coach/EvidenceSheet";
-import { Button, Card, EmptyState, Modal, SectionTitle } from "@/components/ui";
+import { Card, EmptyState, Modal, SectionTitle } from "@/components/ui";
 import { BookIcon, PrinterIcon, SparkIcon } from "@/components/ui/icons";
 import { useCoach } from "@/lib/ax-coach/useCoach";
 import { useStore } from "@/lib/data/store";
@@ -58,28 +58,52 @@ export default function CoachPage() {
 
   return (
     <div>
-      <PageHeader
+      {/*
+        머리 띠 (D-57) — 대시보드 · 챙길 고객과 같은 띠. 오늘 할 일이 몇 개고
+        몇 개를 마쳤는지가 결론이다. 준비도 점수는 아래 칸(CoachSummary)에
+        목표치 · 검산 숫자와 함께 그대로 있다 (D-18) — 띠에 또 쓰지 않는다.
+      */}
+      <StaffBand
         title="AX 코치"
         description="오늘 할 일을 먼저 알려 드리고, 실제 기록이 얼마나 쌓였는지 보여 드립니다."
-        action={
-          /*
-            심사장에서 필요한 것은 엑셀 700줄이 아니라 A4 한 장이다.
-            예전에는 맨 아래 따로 카드 한 장(「한 장으로 뽑아 가기」)이었는데,
-            단추 하나를 위해 110px 을 썼다. 제목 옆으로 올렸다 — 찾기도 쉽다.
-          */
+        /*
+          심사장에서 필요한 것은 엑셀 700줄이 아니라 A4 한 장이다.
+          단추는 띠 맨 윗줄 오른쪽 — 화면을 열자마자 보이는 자리.
+        */
+        badge={
           <span data-tour="coach-sheet" className="no-print inline-flex">
             <Hint
               title="한 장으로 뽑아 가기"
               text="지금까지 쌓인 것을 A4 한 장으로 — 무엇을 재기로 했는지 · 어디까지 왔는지 · 어느 기록에서 나왔는지. 줄 단위 원본은 AX 도입성과의 증적 내보내기로."
             >
-              <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+              <button
+                type="button"
+                onClick={() => setSheetOpen(true)}
+                className={`${bandGhost} !min-h-[40px] !px-3.5 !text-[0.875rem]`}
+              >
                 <PrinterIcon className="h-4 w-4" />
                 실증 리포트 보기
-              </Button>
+              </button>
             </Hint>
           </span>
         }
-      />
+        headline={
+          todayIssued.length === 0 ? (
+            <>오늘 따로 챙길 것이 없습니다</>
+          ) : todayVerified === todayIssued.length ? (
+            <>오늘 할 일을 모두 마치셨습니다</>
+          ) : (
+            <>
+              오늘은 <span className="nowrap-num text-aqua-300">{todayIssued.length - todayVerified}가지</span>만
+              해 보세요
+            </>
+          )
+        }
+      >
+        {todayIssued.length > 0 && (
+          <BandProgress label="오늘 할 일" done={todayVerified} total={todayIssued.length} unit="개" />
+        )}
+      </StaffBand>
 
       <div className="flex flex-col card-gap">
         {/*

@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import PageHeader from "@/components/layout/PageHeader";
+import StaffBand, { BandLink } from "@/components/layout/StaffBand";
 import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
 import { CustomerDerived, SalesOpportunity } from "@/lib/types";
@@ -14,12 +14,9 @@ import {
   Badge,
   Button,
   Card,
-  Em,
   EmptyState,
-  InsightBanner,
   OpportunityBadge,
   SectionTitle,
-  SummaryTile,
 } from "@/components/ui";
 import { ChevronRightIcon, RefreshIcon } from "@/components/ui/icons";
 
@@ -208,9 +205,70 @@ export default function RetentionPage() {
 
   return (
     <div>
-      <PageHeader
+      {/*
+        머리 띠 (D-57) — 제목 줄 · 어두운 「오늘 우선관리」 띠 · 요약 타일
+        다섯 장이 따로 있던 것을 띠 하나로. 결론(가장 먼저 연락할 분)은 띠의
+        큰 글로, 구간별 인원은 띠에 걸친 흰 판 한 장의 칸으로.
+      */}
+      <StaffBand
         title="재방문 관리"
         description="다음 방문이 늦어지는 고객을 모았습니다."
+        headline={
+          all.length === 0 ? (
+            <>아직 등록된 고객이 없습니다</>
+          ) : topPriority.length > 0 ? (
+            <>
+              가장 먼저 연락할 분은{" "}
+              {topPriority.map((d, i) => (
+                <span key={d.customer.id}>
+                  <Link
+                    href={`/customers/${d.customer.id}`}
+                    className="tap-line text-aqua-300 underline decoration-aqua-400/50 underline-offset-4 hover:text-aqua-200"
+                  >
+                    {displayName(d.customer.name, privacyMode)}
+                  </Link>
+                  {i < topPriority.length - 1 ? " · " : ""}
+                </span>
+              ))}{" "}
+              님입니다
+            </>
+          ) : (
+            <>지금 다음 방문이 늦어지는 분이 없습니다</>
+          )
+        }
+        actions={
+          topPriority.length > 0 ? (
+            <BandLink href="/briefing">
+              실행 브리핑
+              <ChevronRightIcon className="h-4 w-4" />
+            </BandLink>
+          ) : undefined
+        }
+        panel={
+          all.length > 0 ? (
+            /* 구간별 인원 — 한 판 안의 칸 (예전 요약 타일 다섯 장) */
+            <ul className="grid grid-cols-3 gap-y-1 sm:grid-cols-5">
+              {[
+                { label: "재방문 예정", value: dueGroup.rows.length, dot: "bg-aqua-500" },
+                { label: "방문 주기 초과", value: atRiskGroup.rows.length, dot: "bg-warn" },
+                { label: "장기 미방문", value: dormantGroup.rows.length, dot: "bg-danger" },
+                { label: "이용권 임박·소진", value: lowGroup.rows.length, dot: "bg-gold" },
+                { label: "AX 매출기회", value: opportunityCount, dot: "bg-positive" },
+              ].map((t) => (
+                <li key={t.label} className="flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 sm:px-3.5">
+                  <p className="flex items-start gap-1.5 text-[0.8125rem] font-bold leading-snug text-ink-sub">
+                    <span className={`mt-[0.3rem] h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
+                    <span className="min-w-0 [word-break:keep-all]">{t.label}</span>
+                  </p>
+                  <p className="nowrap-num mt-0.5 text-[1.375rem] font-extrabold tracking-tight text-ink">
+                    {t.value}
+                    <span className="ml-0.5 text-[0.875rem] font-bold text-ink-sub">명</span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : undefined
+        }
       />
 
       {/*
@@ -231,40 +289,6 @@ export default function RetentionPage() {
       ) : (
         <>
 
-      {/* 오늘 우선관리 인사이트 */}
-      {topPriority.length > 0 && (
-        <InsightBanner
-          title="오늘 우선관리"
-          className="mb-4 lg:mb-5"
-          action={
-            <Link
-              href="/briefing"
-              className="touch-target inline-flex items-center gap-0.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/20"
-            >
-              실행 브리핑
-              <ChevronRightIcon className="h-4 w-4" />
-            </Link>
-          }
-        >
-          지금 가장 먼저 연락해야 할 고객은{" "}
-          {topPriority.map((d, i) => (
-            <span key={d.customer.id}>
-              <Link
-                href={`/customers/${d.customer.id}`}
-                className="tap-line font-extrabold text-white underline decoration-aqua-400/60 underline-offset-4 hover:text-aqua-200"
-              >
-                {displayName(d.customer.name, privacyMode)}
-              </Link>
-              <Em> ({d.priorityScore})</Em>
-              {i < topPriority.length - 1 ? ", " : ""}
-            </span>
-          ))}
-          {" "}
-          입니다. 관리일 도래 <Em>{dueGroup.rows.length}명</Em> · 장기 미방문{" "}
-          <Em>{dormantGroup.rows.length}명</Em>이 관리 대기 중입니다.
-        </InsightBanner>
-      )}
-
       {/* 오늘 우선관리 실행 카드 — 데이터 → 판단 → 실행 (브리핑 엔진 재사용) */}
       {(() => {
         const topTasks = briefingTasks
@@ -280,34 +304,6 @@ export default function RetentionPage() {
         );
       })()}
 
-      {/* 그룹 요약 타일 + AX 매출기회 */}
-      <div className="rise-stagger mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
-        <SummaryTile
-          label="재방문 예정"
-          value={dueGroup.rows.length}
-          tone="aqua"
-        />
-        <SummaryTile
-          label="방문 주기 초과"
-          value={atRiskGroup.rows.length}
-          tone="warn"
-        />
-        <SummaryTile
-          label="장기 미방문"
-          value={dormantGroup.rows.length}
-          tone="danger"
-        />
-        <SummaryTile
-          label="이용권 임박·소진"
-          value={lowGroup.rows.length}
-          tone="gold"
-        />
-        <SummaryTile
-          label="AX 매출기회"
-          value={opportunityCount}
-          tone="green"
-        />
-      </div>
 
       {/*
         빈 구간은 한 장으로 모은다.

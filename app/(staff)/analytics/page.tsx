@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import PageHeader from "@/components/layout/PageHeader";
+import StaffBand from "@/components/layout/StaffBand";
 import { useStore } from "@/lib/data/store";
 import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
 import {
@@ -21,7 +21,6 @@ import {
   Card,
   Em,
   FilterChip,
-  InsightBanner,
   SectionTitle,
   SummaryTile,
 } from "@/components/ui";
@@ -205,19 +204,27 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="AX 도입성과"
-        description="모든 수치는 저장된 실제 기록에서 계산됩니다."
-      />
-
       <div className="flex flex-col card-gap">
         {/* 초기 데이터 부족: 억지 0% 대신 축적 안내 */}
+        {/*
+          머리 띠 (D-57) — 화면 제목 줄과 어두운 인사이트 띠를 하나로.
+          기록이 적을 때는 「모으는 중」 이 결론이고, 쌓이면 규칙이 세운 첫
+          신호가 결론이다. 띠 아래 칸들(약속한 지표 · 그래프)은 그대로.
+        */}
         {visitCount < 5 ? (
-          <InsightBanner title="기준 데이터 축적 중">
-            방문·이용 기록이 쌓이는 대로 재방문율과 월별 지표가 자동으로
-            계산됩니다. 지금까지 방문 기록 <Em>{visitCount}건</Em> · 고객{" "}
-            <Em>{customers.length}명</Em>이 저장되어 있습니다.
-          </InsightBanner>
+          <StaffBand
+            className="!mb-0"
+            title="AX 도입성과"
+            description="모든 수치는 저장된 실제 기록에서 계산됩니다."
+            meta="기준 데이터 축적 중"
+            headline={<>기록이 쌓이는 중입니다</>}
+          >
+            <p className="max-w-2xl text-[0.9375rem] leading-relaxed text-white/80">
+              방문·이용 기록이 쌓이는 대로 재방문율과 월별 지표가 자동으로
+              계산됩니다. 지금까지 방문 기록 <Em>{visitCount}건</Em> · 고객{" "}
+              <Em>{customers.length}명</Em>이 저장되어 있습니다.
+            </p>
+          </StaffBand>
         ) : (
         /*
           해석 → 왜 → 할 일 → 근거
@@ -232,7 +239,13 @@ export default function AnalyticsPage() {
           글씨로 내린다. 숫자를 지우지는 않는다 — 근거가 없으면 결론도
           믿을 수 없기 때문이다. 다만 **읽는 순서**를 뒤집는다.
         */
-        <InsightBanner title="AX 운영 인사이트">
+        <StaffBand
+          className="!mb-0"
+          title="AX 도입성과"
+          description="모든 수치는 저장된 실제 기록에서 계산됩니다."
+          meta="AX 운영 인사이트"
+          headline={opInsight.reasons[0] ?? opInsight.headline}
+        >
           {/*
             ① 해석 · ② 왜
 
@@ -244,12 +257,8 @@ export default function AnalyticsPage() {
             첫 항목은 규칙이 가장 먼저 세운 신호라 결론 자리에 맞고,
             문장을 새로 지어내지도 않는다.
           */}
-          <p className="text-[1.1875rem] font-extrabold leading-snug text-white sm:text-[1.3125rem]">
-            {opInsight.reasons[0] ?? opInsight.headline}
-          </p>
-
           {opInsight.reasons.length > 1 && (
-            <ul className="mt-3 space-y-1">
+            <ul className="space-y-1">
               {opInsight.reasons.slice(1).map((r, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="mt-[0.5rem] h-1.5 w-1.5 shrink-0 rounded-full bg-aqua-300" />
@@ -299,7 +308,7 @@ export default function AnalyticsPage() {
               </>
             )}
           </p>
-        </InsightBanner>
+        </StaffBand>
         )}
 
         {/*

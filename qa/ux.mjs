@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~7차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로)");
+const { log, finish } = recorder("UI/UX 2~8차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -353,6 +353,42 @@ await pc2.context().close();
     return days.every((h) => h.nextElementSibling?.tagName === "UL") && document.querySelectorAll("[data-visit-row]").length > 0;
   });
   log("방문 기록 — 하루가 한 판, 그 안에 줄", vis);
+}
+
+/* ── 11. 형제 화면도 같은 머리 띠 — 챙길 고객 · AX 코치 · 재방문 · 성과 · 고객 상세 (D-57) ──
+   대표님: 「조금 더 많이 개선해 줘」. 대시보드에서 옆 탭으로 넘어가면 옛 모양(제목 줄 +
+   어두운 카드)이 나오던 것을 같은 띠 하나로 맞췄다. 띠 안에 화면 이름(h1)이 있고,
+   띠 바깥에 제목 줄이 또 있지 않은지 본다. */
+{
+  for (const path of ["/briefing", "/coach", "/retention", "/analytics", "/customers/c-04"]) {
+    await go(p, path, 1300);
+    const r = await p.evaluate(() => {
+      const band = document.querySelector("main [data-staff-band]");
+      const h1s = [...document.querySelectorAll("main h1")];
+      return {
+        band: !!band,
+        inBand: h1s.length === 1 && !!band && band.contains(h1s[0]),
+        top: band ? Math.round(band.getBoundingClientRect().top) : 9999,
+      };
+    });
+    log(`${path} — 머리 띠가 있고 화면 이름은 띠 안에 하나`, r.band && r.inBand);
+    log(`${path} — 띠가 폰 첫 화면 위쪽에 있다`, r.top < 420, `${r.top}px`);
+  }
+  await go(p, "/briefing", 1300);
+  log("챙길 고객 — 거르개는 띠에 걸친 판 안에 (따로 떠 있는 카드가 아니다)", (await p.locator('[data-staff-band] [aria-label="관리 유형으로 거르기"]').count()) === 1);
+  log("챙길 고객 — 투어가 짚는 자리(briefing-hero)는 띠", (await p.locator('[data-staff-band] [data-tour="briefing-hero"]').count()) === 1);
+  await go(p, "/customers/c-04", 1300);
+  const prof = await p.evaluate(() => {
+    const band = document.querySelector("[data-staff-band]");
+    return {
+      name: (document.querySelector("main h1")?.textContent || "").trim(),
+      record: !!band?.querySelector('[data-tour="visit-record"]'),
+      tiles: band ? [...band.querySelectorAll("ul > li")].length : 0,
+    };
+  });
+  log("고객 상세 — 이름(h1)에는 이름만", prof.name.length >= 2 && !/신규|관리|등록일/.test(prof.name), prof.name);
+  log("고객 상세 — 방문 · 상담 기록은 띠 위의 흰 알약", prof.record);
+  log("고객 상세 — 나머지 넷은 걸친 판의 아이콘 칸", prof.tiles === 4, `${prof.tiles}칸`);
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

@@ -44,7 +44,7 @@ export default function SectionTabs() {
     <nav
       aria-label={`${section.label} 안에서 화면 옮기기`}
       data-section-tabs={section.root}
-      className="no-print mb-4 grid gap-1.5 rounded-card bg-card-soft p-1.5 ring-1 ring-stone-line"
+      className="no-print mb-4 grid gap-1.5 rounded-full bg-card-soft p-1.5 ring-1 ring-stone-line"
       style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
     >
       {tabs.map((t) => {
@@ -64,7 +64,7 @@ export default function SectionTabs() {
               **두 줄로 내려쓴다** — 탭이 조금 높아질 뿐 잃는 글자가 없다.
               `keep-all` 은 한글을 낱글자가 아니라 어절 단위로 끊는다.
             */
-            className={`flex min-h-[3rem] min-w-0 items-center justify-center gap-1.5 rounded-btn px-1.5 py-1.5 text-center text-[1.0625rem] leading-tight [word-break:keep-all] transition-colors ${
+            className={`flex min-h-[3rem] min-w-0 items-center justify-center gap-1.5 rounded-full px-1.5 py-1.5 text-center text-[1.0625rem] leading-tight [word-break:keep-all] transition-colors ${
               active
                 ? "bg-gradient-to-r from-deep-700 to-deep-800 font-extrabold text-white shadow-[0_2px_8px_rgba(10,46,44,0.22)]"
                 : "font-bold text-ink-sub hover:bg-stone-bg"

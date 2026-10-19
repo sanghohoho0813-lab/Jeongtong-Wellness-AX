@@ -130,7 +130,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           type="button"
           onClick={onOpenPalette}
           data-tour="quick-search"
-          className="flex h-10 w-full items-center gap-2 rounded-btn border border-stone-line bg-card-soft px-3 text-left text-sm text-ink-faint transition-colors hover:border-aqua-500 hover:bg-card"
+          className="flex h-10 w-full items-center gap-2 rounded-full border border-stone-line bg-card-soft px-3.5 text-left text-sm text-ink-faint transition-colors hover:border-aqua-500 hover:bg-card"
         >
           <SearchIcon className="h-[1.1rem] w-[1.1rem] shrink-0" />
           <span className="min-w-0 flex-1 truncate">고객 · 화면 찾기</span>
@@ -151,7 +151,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
         <Hint side="right" title="Why AX" text="우리 매장에 무엇이 달라지는가 — 열네 개의 짧은 이야기">
         <Link
           href="/why"
-          className={`flex items-center gap-2 rounded-btn px-3 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
+          className={`flex items-center gap-2 rounded-full px-3.5 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
             isActive(pathname, "/why")
               ? "bg-gradient-to-r from-deep-700 to-deep-900 text-white shadow-sm"
               : "bg-gradient-to-r from-deep-700/10 to-transparent text-deep-800 ring-1 ring-deep-700/20 hover:from-deep-700/20 dark:text-aqua-400"
@@ -165,7 +165,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           <Hint side="right" title="기획의도" text="이 시스템을 왜 만들었는지 — 한 장으로">
           <Link
             href="/intro"
-            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
+            className={`flex items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
               isActive(pathname, "/intro")
                 ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
                 : "bg-gold-soft text-gold-deep ring-1 ring-gold/30 hover:bg-gold/20"
@@ -179,7 +179,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
           <Link
             href="/guide"
             /* 읽을 거리는 둘 다 금색 — 기획의도보다 한 톤 옅게만 둔다 */
-            className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
+            className={`flex items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
               isActive(pathname, "/guide")
                 ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
                 : "bg-gold/10 text-gold-deep ring-1 ring-gold/20 hover:bg-gold/20"
@@ -214,7 +214,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
               href={v.href}
               aria-label={v.full}
               aria-current={isActive(pathname, v.href) ? "page" : undefined}
-              className={`flex items-center justify-center gap-1.5 rounded-btn px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
+              className={`flex items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-sm font-extrabold transition-colors [@media(max-height:960px)]:py-2 ${
                 isActive(pathname, v.href)
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-sm"
                   : "bg-deep-700/[0.07] text-deep-800 ring-1 ring-deep-700/15 hover:bg-deep-700/[0.14] dark:text-aqua-400"
@@ -257,7 +257,7 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             <Link
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`group relative mb-1.5 flex items-center gap-3 rounded-btn px-2.5 py-2.5 transition-colors [@media(max-height:960px)]:mb-1 [@media(max-height:960px)]:py-2 ${
+              className={`group relative mb-1.5 flex items-center gap-3 rounded-2xl px-2.5 py-2.5 transition-colors [@media(max-height:960px)]:mb-1 [@media(max-height:960px)]:py-2 ${
                 active
                   ? "bg-gradient-to-r from-deep-700 to-deep-800 text-white shadow-[0_3px_10px_rgba(10,46,44,0.28)]"
                   : "text-nav-ink hover:bg-stone-bg"

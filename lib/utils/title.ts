@@ -17,8 +17,12 @@ import { useEffect } from "react";
 
 const BASE = "정통대왕쑥뜸원 AX";
 
+export function setDocumentTitle(name?: string) {
+  document.title = name ? `${name} · ${BASE}` : BASE;
+}
+
 export function useDocumentTitle(name?: string) {
   useEffect(() => {
-    document.title = name ? `${name} · ${BASE}` : BASE;
+    setDocumentTitle(name);
   }, [name]);
 }

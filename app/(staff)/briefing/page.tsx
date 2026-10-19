@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import PageHeader from "@/components/layout/PageHeader";
+import StaffBand, { BandProgress, BandStat, bandGhost } from "@/components/layout/StaffBand";
 import TaskCard from "@/components/briefing/TaskCard";
 import { useStore } from "@/lib/data/store";
 import {
@@ -11,8 +11,8 @@ import {
   TaskCategory,
   TaskStatus,
 } from "@/lib/types";
-import { Button, Card, EmptyState, FilterChip, HeroCard } from "@/components/ui";
-import { PrinterIcon, SparkIcon } from "@/components/ui/icons";
+import { Button, EmptyState, FilterChip } from "@/components/ui";
+import { PrinterIcon } from "@/components/ui/icons";
 import AiReadyNote from "@/components/ui/AiReadyNote";
 import ChipRow from "@/components/ui/ChipRow";
 
@@ -93,7 +93,6 @@ export default function BriefingPage() {
   const closedByVisit = Math.max(0, doneCount - listedDone);
   const holdCount = briefingTasks.filter((t) => t.status === "hold").length;
   const total = briefingTasks.length + closedByVisit;
-  const progress = total > 0 ? doneCount / total : 0;
 
   /* 유형별 미처리 건수 — 거르개 칩에 붙는다 */
   const openByCategory: Record<string, number> = {};
@@ -102,150 +101,122 @@ export default function BriefingPage() {
 
   return (
     <div>
-      <PageHeader
+      {/*
+        머리 띠 (D-57) — 전에는 화면 제목 줄 · 어두운 요약 카드 · 흰 거르개
+        카드 세 덩어리였다. 대시보드와 같은 띠 하나로 합치고, 거르개는 띠에
+        걸쳐 올라온 흰 판으로 둔다. 투어가 짚는 자리(briefing-hero)는 띠.
+      */}
+      <StaffBand
         title="오늘의 실행 브리핑"
         description="오늘 챙길 고객을 우선순위대로 정리했습니다."
-        action={
-          /*
-            순서가 무엇으로 정해지는지(AI READY) — 설명 글이 ⓘ 로 접힌 뒤에도
-            눈에 보이게 인쇄 단추 옆에 둔다. 인쇄물에는 넣지 않는다.
-          */
-          <div className="no-print flex flex-wrap items-center justify-end gap-2">
+        dataTour="briefing-hero"
+        /* 순서가 무엇으로 정해지는지(AI READY) — 인쇄물에는 넣지 않는다 */
+        badge={
+          <span className="no-print">
             <AiReadyNote subject="priority" />
-            <Button variant="secondary" onClick={() => window.print()}>
-              <PrinterIcon className="h-4 w-4" />
-              오늘 할 일 인쇄
-            </Button>
-          </div>
+          </span>
         }
-      />
-
-      {/* Hero 요약 밴드 */}
-      <HeroCard dataTour="briefing-hero" className="mb-4 !p-5 sm:!p-6 lg:mb-5">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-aqua-400/25 text-aqua-300 ring-1 ring-aqua-300/30">
-              <SparkIcon className="h-6 w-6" />
-            </span>
-            <div>
-              <p className="text-[0.8125rem] font-bold text-deep-sub">
-                오늘 관리 대상
-              </p>
-              <p className="nowrap-num text-3xl font-extrabold tracking-tight text-white">
-                {openTasks.length}
-                <span className="ml-0.5 text-base font-bold text-deep-sub">
-                  명
-                </span>
-              </p>
-            </div>
-          </div>
-          <div>
-            <p className="text-[0.8125rem] font-bold text-deep-sub">처리완료</p>
-            <p className="nowrap-num text-3xl font-extrabold tracking-tight text-aqua-300">
-              {doneCount}
-              <span className="ml-0.5 text-base font-bold text-deep-sub">건</span>
-            </p>
-            {/* 목록에 없는 건이 섞여 있으면 왜 그런지 그 자리에서 밝힌다 */}
-            {closedByVisit > 0 && (
-              <p className="nowrap-num mt-0.5 text-[0.75rem] font-bold text-deep-sub">
-                방문으로 마무리 {closedByVisit}건 포함
-              </p>
-            )}
-          </div>
-          {holdCount > 0 && (
-            <div>
-              <p className="text-[0.8125rem] font-bold text-deep-sub">보류</p>
-              <p className="nowrap-num text-3xl font-extrabold tracking-tight text-white/80">
-                {holdCount}
-                <span className="ml-0.5 text-base font-bold text-deep-sub">
-                  건
-                </span>
-              </p>
-            </div>
-          )}
-          <div className="min-w-40 flex-1">
-            <div className="mb-1.5 flex items-center justify-between text-xs font-bold text-deep-sub">
-              <span>오늘 진행률</span>
-              <span className="nowrap-num">{Math.round(progress * 100)}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-white/15">
-              <div
-                className="h-2 rounded-full bg-gradient-to-r from-aqua-400 to-aqua-300 transition-all"
-                style={{ width: `${Math.round(progress * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-        {/*
-          유형별 미처리 칩은 여기서 뺐다 — 바로 아래 거르개 칩이 같은 이름에
-          같은 건수를 붙여 이미 보여 준다. 두 벌이면 PC 에서도 한 줄을 통째로
-          먹는다 (대표님: 「오늘에 너무 많이 펼쳐져 있어 집중이 안 된다」).
-        */}
-      </HeroCard>
-
-      {/* 화면에서 목록을 좁히는 도구 — 종이에는 필요 없다 */}
-      <Card className="no-print mb-4 !py-4">
-        <div className="flex flex-col gap-3">
-          <ChipRow ariaLabel="관리 유형으로 거르기">
-            {CATEGORY_FILTERS.map((c) => {
-              const active = category === c;
-              const dot = c === "all" ? "" : CATEGORY_DOTS[c];
-              return (
+        headline={
+          openTasks.length > 0 ? (
+            <>
+              챙길 분 <span className="nowrap-num text-aqua-300">{openTasks.length}명</span>을
+              먼저 할 순서대로 놓았습니다
+            </>
+          ) : doneCount > 0 ? (
+            <>오늘 챙길 분을 모두 챙기셨습니다</>
+          ) : (
+            <>지금 기준에 걸린 분이 없습니다</>
+          )
+        }
+        actions={
+          <button type="button" onClick={() => window.print()} className={bandGhost}>
+            <PrinterIcon className="h-4 w-4" />
+            오늘 할 일 인쇄
+          </button>
+        }
+        panelClassName="no-print"
+        panel={
+          /* 화면에서 목록을 좁히는 도구 — 종이에는 필요 없다 */
+          <div className="px-2.5 py-2.5 sm:px-3">
+            <div className="flex flex-col gap-3">
+            <ChipRow ariaLabel="관리 유형으로 거르기">
+              {CATEGORY_FILTERS.map((c) => {
+                const active = category === c;
+                const dot = c === "all" ? "" : CATEGORY_DOTS[c];
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setCategory(c)}
+                    className={`touch-target inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
+                      active
+                        ? "bg-sel text-sel-ink shadow-sm"
+                        : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                    }`}
+                  >
+                    {dot && (
+                      <span
+                        className={`h-2 w-2 rounded-full ${active ? "bg-white/80" : dot}`}
+                      />
+                    )}
+                    {c === "all" ? "전체 유형" : TASK_CATEGORY_LABELS[c]}
+                    {c !== "all" && openByCategory[c] > 0 && (
+                      <span className="nowrap-num font-extrabold opacity-90">
+                        {openByCategory[c]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </ChipRow>
+            <ChipRow ariaLabel="처리 상태로 거르기">
+              {STATUS_FILTERS.map((s) => (
+                <FilterChip
+                  key={s}
+                  tone="ink"
+                  active={status === s}
+                  onClick={() => setStatus(s)}
+                >
+                  {s === "open"
+                    ? "미처리"
+                    : s === "all"
+                      ? "전체 상태"
+                      : TASK_STATUS_LABELS[s]}
+                </FilterChip>
+              ))}
+              {/* AX 매출기회만 보기 — 관리 필요와 별개의 축이라 색을 달리한다 */}
+              {opportunityTotal > 0 && (
                 <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  className={`touch-target inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
-                    active
-                      ? "bg-sel text-sel-ink shadow-sm"
-                      : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"
+                  onClick={() => setOnlyOpportunity((v) => !v)}
+                  className={`touch-target nowrap-num shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors sm:ml-auto ${
+                    onlyOpportunity
+                      ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
+                      : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
                   }`}
                 >
-                  {dot && (
-                    <span
-                      className={`h-2 w-2 rounded-full ${active ? "bg-white/80" : dot}`}
-                    />
-                  )}
-                  {c === "all" ? "전체 유형" : TASK_CATEGORY_LABELS[c]}
-                  {c !== "all" && openByCategory[c] > 0 && (
-                    <span className="nowrap-num font-extrabold opacity-90">
-                      {openByCategory[c]}
-                    </span>
-                  )}
+                  매출기회 {opportunityTotal}
                 </button>
-              );
-            })}
-          </ChipRow>
-          <ChipRow ariaLabel="처리 상태로 거르기">
-            {STATUS_FILTERS.map((s) => (
-              <FilterChip
-                key={s}
-                tone="ink"
-                active={status === s}
-                onClick={() => setStatus(s)}
-              >
-                {s === "open"
-                  ? "미처리"
-                  : s === "all"
-                    ? "전체 상태"
-                    : TASK_STATUS_LABELS[s]}
-              </FilterChip>
-            ))}
-            {/* AX 매출기회만 보기 — 관리 필요와 별개의 축이라 색을 달리한다 */}
-            {opportunityTotal > 0 && (
-              <button
-                onClick={() => setOnlyOpportunity((v) => !v)}
-                className={`touch-target nowrap-num shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors sm:ml-auto ${
-                  onlyOpportunity
-                    ? "bg-gradient-to-r from-gold to-gold-deep text-white shadow-sm"
-                    : "bg-gold-soft text-gold-deep ring-1 ring-gold/25 hover:bg-gold/20"
-                }`}
-              >
-                매출기회 {opportunityTotal}
-              </button>
-            )}
-          </ChipRow>
+              )}
+            </ChipRow>
+          </div>
+          </div>
+        }
+      >
+        <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+          <BandStat label="오늘 관리 대상" value={openTasks.length} unit="명" />
+          <BandStat
+            label="처리완료"
+            value={doneCount}
+            unit="건"
+            accent
+            /* 목록에 없는 건이 섞여 있으면 왜 그런지 그 자리에서 밝힌다 */
+            sub={closedByVisit > 0 ? `방문으로 마무리 ${closedByVisit}건 포함` : undefined}
+          />
+          {holdCount > 0 && <BandStat label="보류" value={holdCount} unit="건" />}
+          <div className="min-w-40 flex-1">
+            <BandProgress label="오늘 진행" done={doneCount} total={total} />
+          </div>
         </div>
-      </Card>
+      </StaffBand>
 
       {filtered.length === 0 ? (
         /*

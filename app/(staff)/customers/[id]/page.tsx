@@ -32,12 +32,13 @@ import {
   CalendarIcon,
   ChatIcon,
   ChevronLeftIcon,
-  ChevronRightIcon,
   ClipboardIcon,
   PlusIcon,
   SparkIcon,
   TicketIcon,
+  UsersIcon,
 } from "@/components/ui/icons";
+import StaffBand, { bandPrimary } from "@/components/layout/StaffBand";
 import TaskCard from "@/components/briefing/TaskCard";
 import { DateTimePanel } from "@/components/ui/DateTimeField";
 import { useToast } from "@/components/ui/toast";
@@ -137,98 +138,134 @@ export default function CustomerDetailPage() {
         고객 목록
       </Link>
 
-      {/* 프로필 헤더 */}
-      <Card className="mb-4 lg:mb-5">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-800 text-xl font-extrabold text-white shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16 sm:text-2xl">
+      {/*
+        프로필 머리 띠 (D-57) — 연락처 앱의 사람 화면처럼.
+
+        전에는 흰 카드 한 장에 얼굴 · 이름 · 단추 넷(방문 기록 · 케어 리포트
+        · 정보 수정 · 고객 화면 미리보기)이 세로로 쌓여, 폰에서 이름 아래가
+        단추 밭이었다. 이제는
+          띠      얼굴 · 이름 · 상태 · 연락처 한 줄 · 가장 자주 하는 일 하나
+                  (방문 · 상담 기록, 흰 알약) · 전화 걸기
+          걸친 판 나머지 넷을 아이콘 칸으로 (고객 앱 홈의 바로가기 칸 모양)
+        이름(h1)은 그대로 이름 하나만 담는다 — 다른 검사 · 찾기가 여기서
+        이름을 읽는다.
+      */}
+      <StaffBand
+        big
+        docTitle={false}
+        title={displayName(c.name, privacyMode)}
+        avatar={
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua-400 to-aqua-700 text-xl font-extrabold text-white shadow-[0_4px_14px_rgba(0,0,0,0.25)] ring-2 ring-white/20 sm:h-16 sm:w-16 sm:text-2xl">
             {displayName(c.name, privacyMode).slice(0, 1)}
           </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/*
-                min-w-0 이 없으면 이 h1 은 flex 항목의 기본값(min-width:auto)
-                때문에 이름 길이만큼 늘어난다. 띄어쓰기 없는 긴 이름이 들어오면
-                줄바꿈이 일어나지 않고 화면 전체가 가로로 100px 넘게 밀렸다.
-                min-w-0 을 주면 상자가 줄어들고, 그제서야 break-words 가 먹는다.
-              */}
-              <h1 className="text-page-title min-w-0 break-words text-ink">
-                {displayName(c.name, privacyMode)}
-              </h1>
-              <CustomerStatusBadge status={derived.status} />
-              {c.tags?.map((t) => (
-                <Badge key={t} tone="gold" dot>
-                  {t}
-                </Badge>
-              ))}
-            </div>
-            {/* 빈 값(번호 없음 · 담당 미지정)은 적지 않는다 — 줄 앞에 「·」 만 남거나 「미지정」 이 늘 붙어 있었다 */}
-            <p className="mt-1 text-sm text-ink-sub">
-              {[
-                displayPhone(c.phone, canSeePhone),
-                c.ageGroup ?? "",
-                `등록일 ${formatDateKr(c.registeredAt)}`,
-                c.assignedStaffId ? `담당 ${staffName(c.assignedStaffId)}` : "",
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {/* 번호가 있으면 바로 건다 — 화면 공유 모드면 자동으로 사라진다 */}
-            <div className="mt-2 empty:hidden">
-              <PhoneLink phone={c.phone} canSee={canSeePhone} />
-            </div>
-          </div>
-          {/*
-            여기서 할 일은 대부분 '방문 기록'이다.
-            셋 다 같은 크기로 세로로 쌓아 두었더니 폰에서 화면 절반이
-            단추 밭이 되고, 정작 어느 것을 눌러야 하는지도 흐릿했다.
-            주 동작 하나만 크게 두고 나머지 둘은 그 아래 한 줄로 나눈다.
-          */}
-          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto">
-            <Button
-              dataTour="visit-record"
+        }
+        badge={
+          <>
+            <CustomerStatusBadge status={derived.status} />
+            {c.tags?.map((t) => (
+              <Badge key={t} tone="gold" dot>
+                {t}
+              </Badge>
+            ))}
+          </>
+        }
+        /* 빈 값(번호 없음 · 담당 미지정)은 적지 않는다 — 줄 앞에 「·」 만 남거나 「미지정」 이 늘 붙어 있었다 */
+        meta={[
+          displayPhone(c.phone, canSeePhone),
+          c.ageGroup ?? "",
+          `등록일 ${formatDateKr(c.registeredAt)}`,
+          c.assignedStaffId ? `담당 ${staffName(c.assignedStaffId)}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        actions={
+          <>
+            {/* 여기서 할 일은 대부분 '방문 기록'이다 — 그 하나만 흰 알약으로 크게 */}
+            <button
+              type="button"
+              data-tour="visit-record"
               onClick={() => {
                 setEditingVisit(undefined);
                 setOpenVisit(true);
               }}
-              size="lg"
-              className="w-full sm:w-auto"
+              className={`${bandPrimary} min-h-[48px] px-5`}
             >
-              <PlusIcon className="h-4 w-4" />
+              <PlusIcon className="h-4 w-4" strokeWidth={2.6} />
               방문 · 상담 기록
-            </Button>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => setOpenReport(true)}
-                dataTour="care-report"
-                className="flex-1 sm:flex-none"
-              >
-                <BookIcon className="h-4 w-4" />
-                케어 리포트
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => setOpenProfile(true)}
-                className="flex-1 sm:flex-none"
-              >
-                정보 수정
-              </Button>
-            </div>
+            </button>
+            {/* 번호가 있으면 바로 건다 — 화면 공유 모드면 자동으로 사라진다 */}
+            <PhoneLink phone={c.phone} canSee={canSeePhone} onDark size="md" />
+          </>
+        }
+        panel={
+          <ul className="grid grid-cols-4 gap-x-1 py-1">
+            {[
+              {
+                key: "report",
+                label: "케어 리포트",
+                icon: <BookIcon className="h-6 w-6" />,
+                tone: "bg-gold-soft text-gold-deep ring-gold/20",
+                tour: "care-report",
+                onClick: () => setOpenReport(true),
+              },
+              {
+                key: "profile",
+                label: "정보 수정",
+                icon: <ClipboardIcon className="h-6 w-6" />,
+                tone: "bg-stone-bg-deep text-ink-soft ring-black/[0.04] dark:ring-white/10",
+                onClick: () => setOpenProfile(true),
+              },
+              {
+                key: "membership",
+                label: "이용권 등록",
+                icon: <TicketIcon className="h-6 w-6" />,
+                tone: "bg-aqua-50 text-aqua-700 ring-aqua-100 dark:bg-aqua-500/10 dark:text-aqua-300 dark:ring-aqua-500/20",
+                onClick: () => {
+                  setEditingMembership(undefined);
+                  setOpenMembership(true);
+                },
+              },
+            ].map((t) => (
+              <li key={t.key} className="min-w-0">
+                <button
+                  type="button"
+                  data-tour={t.tour}
+                  onClick={t.onClick}
+                  className="group flex w-full flex-col items-center gap-1.5 rounded-2xl py-1 text-center"
+                >
+                  <span
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ring-1 transition-transform group-hover:-translate-y-0.5 group-active:scale-95 ${t.tone}`}
+                  >
+                    {t.icon}
+                  </span>
+                  <span className="w-full text-[0.8125rem] font-bold leading-tight text-ink-soft [word-break:keep-all]">
+                    {t.label}
+                  </span>
+                </button>
+              </li>
+            ))}
             {/*
               이 고객에게 우리 화면이 어떻게 보이는지.
               고객으로 로그인하는 것이 아니라, 지금 보고 있는 자료를 고객 쪽
               배치로 다시 그려 보는 것이다 — 자세한 이유는 미리보기 화면에.
             */}
-            <Link
-              href={`/customers/${c.id}/preview`}
-              className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-btn px-4 text-sm font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800 sm:w-auto"
-            >
-              고객 화면 미리보기
-              <ChevronRightIcon className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </Card>
+            <li className="min-w-0">
+              <Link
+                href={`/customers/${c.id}/preview`}
+                aria-label="고객 화면 미리보기"
+                className="group flex w-full flex-col items-center gap-1.5 rounded-2xl py-1 text-center"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-deep-700 to-deep-900 text-gold ring-1 ring-black/10 transition-transform group-hover:-translate-y-0.5 group-active:scale-95">
+                  <UsersIcon className="h-6 w-6" />
+                </span>
+                <span className="w-full text-[0.8125rem] font-bold leading-tight text-ink-soft [word-break:keep-all]">
+                  고객 화면
+                </span>
+              </Link>
+            </li>
+          </ul>
+        }
+      />
 
       <div className="flex flex-col card-gap">
         {/* 같은 분이 또 등록돼 있으면 한 줄로 알린다 — 없으면 아무것도 안 그린다 */}

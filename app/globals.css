@@ -818,6 +818,15 @@ a:active {
   .card-hero {
     color: #111 !important;
   }
+  /* 머리 띠(StaffBand) — 종이에는 딥그린 판 대신 테두리만 (잉크 절약 · 글이 읽히게) */
+  [data-staff-band] > section {
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+  [data-staff-band] > section * {
+    color: #111 !important;
+  }
   body {
     background: #fff !important;
   }
