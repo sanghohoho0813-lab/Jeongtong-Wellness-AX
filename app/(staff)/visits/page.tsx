@@ -322,8 +322,8 @@ export default function VisitsPage() {
                         aria-hidden
                         className={`absolute bottom-4 left-0 top-4 w-1 rounded-r-full bg-gradient-to-b ${st.strip}`}
                       />
-                      {/* 날짜는 위 머리글에 있으니 여기는 시각만 — 왼쪽 칸에 세운다 */}
-                      <p className="nowrap-num w-[3.75rem] shrink-0 pt-1 text-[0.8125rem] font-bold text-ink-sub">
+                      {/* 날짜는 위 머리글에 있으니 여기는 시각만 — 왼쪽 칸에 세운다 (폭은 글 길이만큼은 늘어난다: 큰 글씨 360px) */}
+                      <p className="nowrap-num min-w-[4.25rem] shrink-0 pt-1 text-[0.8125rem] font-bold text-ink-sub">
                         {timeKr(v.visitedAt)}
                       </p>
                       <div className="min-w-0 flex-1">
