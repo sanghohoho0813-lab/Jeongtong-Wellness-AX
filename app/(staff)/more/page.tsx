@@ -112,7 +112,8 @@ export default function MorePage() {
                   <span className="w-full text-[0.8125rem] font-extrabold leading-tight text-ink [word-break:keep-all]">
                     {d.label}
                   </span>
-                  <span className="nowrap-num -mt-1 w-full truncate text-[0.6875rem] font-bold text-ink-sub">
+                  {/* 자르지 않고 줄을 바꾼다 — 360px · 큰 글씨에서 「단계별 안내」 가 잘렸다 */}
+                  <span className="-mt-1 w-full text-[0.6875rem] font-bold leading-tight text-ink-sub [word-break:keep-all]">
                     {d.sub}
                   </span>
                 </Link>
