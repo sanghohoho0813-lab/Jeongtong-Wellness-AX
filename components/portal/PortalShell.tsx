@@ -135,10 +135,19 @@ export default function PortalShell({ children }: { children: ReactNode }) {
         실제 기록이 들어와 있을 때는 sample 이 false 라 그려지지 않는다.
       */}
       {sample && (
-        <div className="border-b border-gold/30 bg-gold-soft px-4 py-2.5">
-          <div className="mx-auto flex max-w-lg flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
-            <p className="text-[0.8125rem] font-bold leading-snug text-gold-deep">
-              예시 화면입니다 — 실제 기록이 아니라 보여 드리려고 만든 자료입니다
+        /*
+          한 줄짜리 띠 — 배달 앱 맨 위의 「다음 두 번 무료 배달」 띠 자리.
+          예전에는 세 줄(95px)이라 모든 화면의 첫 화면을 먹었다. 뜻은
+          그대로(예시다 · 실제 기록이 아니다 · 어떻게 쓰게 되는지)이고
+          높이만 줄였다. 좁은 폰에서는 두 줄까지 접힌다.
+        */
+        <div className="border-b border-gold/25 bg-gold-soft" data-sample-strip>
+          <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-1.5">
+            <span className="shrink-0 rounded-full bg-gold-deep px-2 py-0.5 text-[0.6875rem] font-extrabold text-white dark:text-deep-900">
+              예시
+            </span>
+            <p className="min-w-0 flex-1 text-[0.8125rem] font-bold leading-snug text-gold-deep">
+              예시 화면입니다 — 실제 기록이 아닙니다
             </p>
             {/*
               띠에서 바로 안내를 열 수 있게 한다.
@@ -150,7 +159,7 @@ export default function PortalShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={openHowItWorks}
-              className="tap-line shrink-0 text-[0.8125rem] font-extrabold text-gold-deep underline underline-offset-2"
+              className="tap-line shrink-0 rounded-full text-[0.8125rem] font-extrabold text-gold-deep underline underline-offset-2"
             >
               어떻게 이용하게 되나요
             </button>
@@ -164,7 +173,12 @@ export default function PortalShell({ children }: { children: ReactNode }) {
         이걸 빼면 마지막 카드가 네비에 가려서, 고객은 화면이 거기서
         끝난 줄 안다.
       */}
-      <main className="mx-auto max-w-lg px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4">
+      {/*
+        아래 고정 단추(StickyBar)가 있는 화면은 그 높이만큼 더 띄운다 —
+        맨 끝까지 내렸을 때 마지막 줄(화면 전환 스위치 등)이 단추 밑에
+        깔리지 않게. :has() 로 「이 화면에 고정 단추가 있는가」 를 본다.
+      */}
+      <main className="mx-auto max-w-lg px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 [&:has([data-sticky-bar])]:pb-[calc(10.5rem+env(safe-area-inset-bottom))]">
         {children}
 
         {/*
@@ -198,18 +212,27 @@ export default function PortalShell({ children }: { children: ReactNode }) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-1 px-1 transition-colors ${
-                    active ? "text-aqua-700" : "text-ink-faint hover:text-ink-sub"
+                  className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-0.5 px-1 transition-colors ${
+                    active ? "text-aqua-800 dark:text-aqua-300" : "text-ink-faint hover:text-ink-sub"
                   }`}
                 >
-                  <Icon className="h-[1.375rem] w-[1.375rem]" />
+                  {/* 지금 화면은 아이콘 뒤에 알약 — 색만이 아니라 모양으로도 표시 */}
+                  <span
+                    className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${
+                      active ? "bg-aqua-50 dark:bg-aqua-500/15" : ""
+                    }`}
+                  >
+                    <Icon className="h-[1.375rem] w-[1.375rem]" />
+                  </span>
                   {/*
                     실측 12.1px 이었다. 주 사용자층이 40~60대이고 이
                     다섯 칸이 고객 화면의 **주 메뉴** 인데, 화면에서 가장
                     작은 글씨 축에 들어 있었다. 13.2px 로 올린다 — 다섯 칸
                     폭(78px)에 '마이페이지' 다섯 자가 여전히 들어간다.
                   */}
-                  <span className="text-[0.75rem] font-bold leading-none">
+                  <span
+                    className={`text-[0.75rem] leading-none ${active ? "font-extrabold" : "font-bold"}`}
+                  >
                     {item.label}
                   </span>
                 </Link>

@@ -20,7 +20,7 @@
  */
 
 import { ReactNode, useState } from "react";
-import { Button, Card } from "@/components/ui";
+import { Panel, PillButton } from "@/components/portal/kit";
 
 export default function ReferralCard({
   branchName,
@@ -56,42 +56,32 @@ export default function ReferralCard({
   };
 
   return (
-    <Card>
-      {/*
-        단추를 옆에 두면 폰에서 제목이 "친구에게 / 알리기" 로 갈라진다.
-        폰에서는 아래로 내려 폭을 다 준다 (1:1 상담 카드와 같은 규칙).
-      */}
-      <div className="flex items-start gap-3.5">
+    <Panel>
+      {/* 한 줄 — 아이콘 · 제목 · 「링크 보내기」 (적립 앱의 「친구 초대」 줄) */}
+      <div className="flex items-center gap-3">
         {icon && (
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold-deep text-deep-900">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gold to-gold-deep text-deep-900">
             {icon}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-[1.0625rem] font-extrabold text-ink">
-            친구에게 알리기
-          </p>
-          <p className="mt-0.5 text-[0.9375rem] leading-relaxed text-ink-sub">
+          <p className="text-[1rem] font-extrabold text-ink">친구에게 알리기</p>
+          <p className="mt-0.5 text-[0.875rem] leading-snug text-ink-sub">
             매장 소개 링크를 보내 드립니다.
           </p>
         </div>
+        <PillButton tone="soft" size="md" onClick={() => void share()} className="shrink-0">
+          링크 보내기
+        </PillButton>
       </div>
-      <Button
-        variant="secondary"
-        size="lg"
-        onClick={() => void share()}
-        className="mt-3.5 w-full"
-      >
-        링크 보내기
-      </Button>
 
       {state === "copied" && (
-        <p className="mt-3 rounded-btn bg-aqua-50 px-3.5 py-2.5 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-100">
+        <p className="mt-3 rounded-2xl bg-aqua-50 px-3.5 py-2.5 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-100">
           링크를 복사했습니다. 문자나 메신저에 붙여 넣어 보내 주세요.
         </p>
       )}
       {state === "shown" && (
-        <div className="mt-3 rounded-btn bg-card-soft px-3.5 py-2.5 ring-1 ring-stone-line">
+        <div className="mt-3 rounded-2xl bg-card-soft px-3.5 py-2.5 ring-1 ring-stone-line">
           <p className="text-[0.8125rem] font-bold text-ink-sub">
             아래 주소를 눌러서 복사해 주세요
           </p>
@@ -105,6 +95,6 @@ export default function ReferralCard({
         추천에 따른 혜택이 있는지는 매장에 문의해 주세요. 이 화면에서 혜택이
         확정되지는 않습니다.
       </p>
-    </Card>
+    </Panel>
   );
 }

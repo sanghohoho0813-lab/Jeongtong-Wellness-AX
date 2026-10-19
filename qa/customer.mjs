@@ -241,5 +241,61 @@ log(
 );
 log("예시에서 남긴 뒤 — 남긴 것이 목록에 보인다", /예시 점검/.test(said));
 
+/* ── 생활 앱 모양 (D-54) — 모양을 바꿔도 갈 곳은 다 남았는가 ───────── */
+await go(p, "/my", 1200);
+const quick = await p
+  .locator('nav[aria-label="바로가기"] a')
+  .evaluateAll((as) => as.map((a) => a.getAttribute("href")));
+log(
+  "홈 — 바로가기 여덟 칸 (하단 탭에 없는 이용기록 · 웰니스 · 정보 · 서비스 안내까지)",
+  quick.length === 8 &&
+    ["/my/visits", "/my/wellness", "/my/content", "/my/more"].every((h) => quick.includes(h)),
+  quick.join(" "),
+);
+const stripH = await p
+  .locator("[data-sample-strip]")
+  .evaluate((el) => Math.round(el.getBoundingClientRect().height));
+log("예시 띠 — 두 줄 안 (전에는 세 줄 95px)", stripH <= 60, `${stripH}px`);
+log(
+  "다음 방문 카드 — 남은 날(D-n · 오늘 · 지남)을 보여 준다",
+  /D-\d+|오늘|지남|잡히지 않았어요/.test(await p.locator("[data-next-visit]").innerText()),
+);
+await p.locator('a[href^="/my/content#"]').first().click();
+await p.waitForTimeout(1000);
+log(
+  "나를 위한 케어 카드 — 누르면 그 글이 펴진 채로 열린다",
+  (await p.locator('[id^="content-"] button[aria-expanded="true"]').count()) === 1,
+);
+
+await go(p, "/my", 900);
+await p.locator('nav[aria-label="바로가기"] a[href="/my/request?kind=inquiry"]').click();
+await p.waitForTimeout(1000);
+log(
+  "1:1 상담 칸 — 「문의」 가 골라진 채로 열린다",
+  (await p.getByRole("button", { name: "문의" }).getAttribute("aria-pressed")) === "true",
+);
+
+/* 아래 고정 단추 — 맨 끝까지 내려도 마지막 줄을 덮지 않는다 */
+for (const path of ["/my/booking", "/my/passes", "/my/request"]) {
+  await go(p, path, 900);
+  const r = await p.evaluate(async () => {
+    // 부드러운 스크롤이 켜져 있어 그냥 내리면 도중에 잰다 — 바로 끝으로
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+    await new Promise((res) => setTimeout(res, 300));
+    const bar = document.querySelector("[data-sticky-bar]")?.getBoundingClientRect();
+    const boxes = [...document.querySelectorAll("main a, main button, main p, main li")]
+      .filter((el) => !el.closest("[data-sticky-bar]"))
+      .map((el) => el.getBoundingClientRect())
+      .filter((b) => b.height > 0 && b.width > 0);
+    const last = Math.max(...boxes.map((b) => b.bottom));
+    return { bar: bar ? bar.top : null, last };
+  });
+  log(
+    `${path} — 아래 고정 단추가 마지막 줄을 덮지 않는다`,
+    r.bar !== null && r.last <= r.bar + 1,
+    `내용 끝 ${Math.round(r.last)} · 단추 위 ${r.bar === null ? "없음" : Math.round(r.bar)}`,
+  );
+}
+
 await browser.close();
 finish();

@@ -18,7 +18,7 @@ import {
   FilterChip,
   Modal,
   SummaryTile,
-  inputCls,
+  searchCls,
 } from "@/components/ui";
 import { ClipboardIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/toast";
@@ -165,7 +165,7 @@ export default function VisitsPage() {
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
             <input
-              className={`${inputCls} pl-11`}
+              className={searchCls}
               aria-label="고객명으로 기록 찾기"
               placeholder="고객명 검색"
               value={query}

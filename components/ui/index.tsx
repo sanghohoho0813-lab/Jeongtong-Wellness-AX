@@ -207,6 +207,11 @@ export function Button({
   /** 단계별 안내(투어) 표식 */
   dataTour?: string;
 }) {
+  /*
+    단추는 알약 모양(rounded-full) — 대표님이 보여 주신 생활 앱(talabat ·
+    Rakuten)의 단추가 다 이 모양이고, 고객 화면(MY WELLNESS)도 같은
+    모양으로 맞췄다. 네모난 칸(입력칸 · 카드)과 누르는 것이 모양으로 갈린다.
+  */
   const variants: Record<ButtonVariant, string> = {
     primary:
       "bg-gradient-to-b from-aqua-650 to-aqua-850 text-white shadow-[0_2px_8px_rgba(14,127,125,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] hover:from-aqua-850 hover:to-deep-700 disabled:from-ink-faint disabled:to-ink-faint disabled:shadow-none",
@@ -231,7 +236,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       data-tour={dataTour}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-btn font-bold whitespace-nowrap transition-all touch-target ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-full font-bold whitespace-nowrap transition-all touch-target ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </button>
@@ -791,6 +796,13 @@ export function FieldLabel({
 
 export const inputCls =
   "w-full rounded-btn border border-stone-line bg-card px-3.5 py-2.5 text-[0.9375rem] text-ink outline-none transition-shadow focus:border-aqua-500 focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-faint";
+
+/**
+ * 찾기 칸 — 생활 앱의 검색창처럼 회색 알약에 돋보기 (아이콘은 왼쪽 pl-11 자리).
+ * 눌러서 쓰기 시작하면 흰 바탕으로 바뀌어 「지금 여기 쓰는 중」 이 보인다.
+ */
+export const searchCls =
+  "w-full rounded-full border border-transparent bg-stone-bg-deep py-3 pl-11 pr-4 text-[0.9375rem] text-ink outline-none transition-colors focus:border-aqua-500 focus:bg-card focus:ring-2 focus:ring-aqua-100 placeholder:text-ink-sub";
 
 /**
  * AX 매출기회 배지 — 재등록 / 재방문 기회를 색으로 구분한다.

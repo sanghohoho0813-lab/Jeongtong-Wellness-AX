@@ -9,22 +9,32 @@
  * 보여 주려고 쓴 것이 아니고, 고객 화면에 놓이는 순간 성격이 달라진다.
  */
 
+import { useState } from "react";
 import { usePortal } from "@/lib/portal/store";
-import { Badge, Card } from "@/components/ui";
 import { BODY_PART_LABELS } from "@/lib/types";
 import { formatDateWithDay, formatTimeKr, monthKey, formatMonthKr } from "@/lib/utils/date";
 import { summarizeUsage } from "@/lib/portal/wellness";
+import { EmptyLine, ListGroup, ListRow, PageHead, Section, StatusPill } from "@/components/portal/kit";
+
+const FILTERS = [
+  { key: "all", label: "전체" },
+  { key: "visit", label: "이용" },
+  { key: "consult", label: "상담" },
+] as const;
 
 export default function MyVisits() {
   const { visits, memberships } = usePortal();
   const usage = summarizeUsage(visits);
+  const [filter, setFilter] = useState<"all" | "visit" | "consult">("all");
 
   const passName = (id?: string) =>
     memberships.find((m) => m.id === id)?.programName;
 
+  const shown = filter === "all" ? visits : visits.filter((v) => v.type === filter);
+
   // 달별로 묶는다 — 스무 줄이 넘어가면 언제 것인지 눈으로 못 따라간다
   const groups: Array<{ key: string; items: typeof visits }> = [];
-  for (const v of visits) {
+  for (const v of shown) {
     const k = monthKey(v.visitedAt.slice(0, 10));
     const last = groups[groups.length - 1];
     if (last && last.key === k) last.items.push(v);
@@ -32,81 +42,91 @@ export default function MyVisits() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="px-1">
-        <h1 className="text-[1.375rem] font-extrabold text-ink">나의 이용기록</h1>
-        <p className="mt-1 text-[0.9375rem] text-ink-sub">
-          {usage.visitCount > 0
+    <div className="space-y-6">
+      <PageHead
+        back={{ href: "/my", label: "홈" }}
+        title="나의 이용기록"
+        sub={
+          usage.visitCount > 0
             ? `총 ${usage.visitCount}회 이용하셨습니다.` +
-              (usage.avgCycleDays
-                ? ` 평균 이용 간격은 ${usage.avgCycleDays}일입니다.`
-                : "")
-            : "아직 이용기록이 없습니다."}
-        </p>
-      </div>
+              (usage.avgCycleDays ? ` 평균 이용 간격은 ${usage.avgCycleDays}일입니다.` : "")
+            : "아직 이용기록이 없습니다."
+        }
+      />
+
+      {/* 주문 목록의 「전체 · 음식 · 장보기」 처럼 — 좁혀 보기만, 감추지 않는다 */}
+      {visits.length > 0 && (
+        <div role="group" aria-label="종류로 좁혀 보기" className="flex gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              aria-pressed={filter === f.key}
+              onClick={() => setFilter(f.key)}
+              className={`touch-target rounded-full px-4 text-[0.9375rem] font-bold ring-1 transition-colors ${
+                filter === f.key
+                  ? "bg-sel text-sel-ink ring-transparent"
+                  : "bg-card text-ink-soft ring-stone-line hover:bg-aqua-50"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {visits.length === 0 ? (
-        <Card>
-          <p className="py-8 text-center text-[0.9375rem] text-ink-sub">
-            이용하신 기록이 여기에 쌓입니다.
-          </p>
-        </Card>
+        <EmptyLine>이용하신 기록이 여기에 쌓입니다.</EmptyLine>
+      ) : shown.length === 0 ? (
+        <EmptyLine>이 종류의 기록이 없습니다.</EmptyLine>
       ) : (
         groups.map((g) => (
-          <Card key={g.key}>
-            <h2 className="mb-3 text-[0.8125rem] font-extrabold text-ink-sub">
-              {formatMonthKr(g.key)}
-            </h2>
-            <ul className="space-y-2.5">
+          <Section key={g.key} title={formatMonthKr(g.key)}>
+            <ListGroup>
               {g.items.map((v) => {
                 const time = v.visitedAt.slice(11, 16);
                 const pass = passName(v.membershipId);
+                const consult = v.type === "consult";
                 return (
-                  <li
+                  <ListRow
                     key={v.id}
-                    className="rounded-card bg-card-soft px-4 py-3 ring-1 ring-stone-line"
-                  >
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                      <span className="nowrap-num text-[0.9375rem] font-extrabold tabular text-ink">
+                    chevron={false}
+                    title={
+                      <span className="nowrap-num tabular">
                         {formatDateWithDay(v.visitedAt.slice(0, 10))}
+                        {time && (
+                          <span className="ml-1.5 text-[0.8125rem] font-medium text-ink-faint">
+                            {formatTimeKr(time)}
+                          </span>
+                        )}
                       </span>
-                      {time && (
-                        <span className="nowrap-num text-[0.8125rem] tabular text-ink-faint">
-                          {formatTimeKr(time)}
+                    }
+                    sub={
+                      <>
+                        <span className="block font-bold text-ink-soft">
+                          {consult ? "상담" : v.programName || "정통대왕쑥뜸"}
                         </span>
-                      )}
-                      {v.type === "consult" && (
-                        <Badge tone="gray" className="ml-auto">
-                          상담
-                        </Badge>
-                      )}
-                    </div>
-
-                    <p className="mt-1 text-[0.9375rem] font-bold text-ink-soft">
-                      {v.type === "consult"
-                        ? "상담"
-                        : v.programName || "정통대왕쑥뜸"}
-                    </p>
-
-                    {v.bodyParts.length > 0 && (
-                      <p className="mt-1 text-[0.8125rem] text-ink-sub">
-                        관리부위{" "}
-                        {v.bodyParts
-                          .map((p) => BODY_PART_LABELS[p.part] ?? p.part)
-                          .join(" · ")}
-                      </p>
-                    )}
-
-                    {pass && (
-                      <p className="mt-1 text-[0.8125rem] text-ink-faint">
-                        {pass} 1회 사용
-                      </p>
-                    )}
-                  </li>
+                        {v.bodyParts.length > 0 && (
+                          <span className="block">
+                            관리부위{" "}
+                            {v.bodyParts
+                              .map((p) => BODY_PART_LABELS[p.part] ?? p.part)
+                              .join(" · ")}
+                          </span>
+                        )}
+                        {pass && <span className="block text-ink-faint">{pass} 1회 사용</span>}
+                      </>
+                    }
+                    right={
+                      <StatusPill tone={consult ? "muted" : "done"}>
+                        {consult ? "상담" : "이용 완료"}
+                      </StatusPill>
+                    }
+                  />
                 );
               })}
-            </ul>
-          </Card>
+            </ListGroup>
+          </Section>
         ))
       )}
 

@@ -148,7 +148,7 @@ export default function RecordSheet({
               placeholder="이름 · 초성 · 연락처"
               aria-label="고객 찾기"
               inputMode="search"
-              className="h-12 w-full rounded-btn border border-stone-line bg-card-soft pl-11 pr-3 text-base font-bold text-ink outline-none placeholder:font-normal placeholder:text-ink-faint focus:border-aqua-500 focus:bg-card focus:ring-2 focus:ring-aqua-100"
+              className="h-12 w-full rounded-full border border-transparent bg-stone-bg-deep pl-11 pr-4 text-base font-bold text-ink outline-none placeholder:font-normal placeholder:text-ink-sub focus:border-aqua-500 focus:bg-card focus:ring-2 focus:ring-aqua-100"
             />
           </div>
         </div>

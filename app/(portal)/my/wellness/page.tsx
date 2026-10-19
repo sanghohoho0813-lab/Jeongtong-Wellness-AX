@@ -23,7 +23,8 @@ import {
   summarizePasses,
   summarizeUsage,
 } from "@/lib/portal/wellness";
-import { Badge, Button, Card, FieldLabel, inputCls } from "@/components/ui";
+import { FieldLabel, inputCls } from "@/components/ui";
+import { PageHead, Panel, PillButton, Section, StatusPill } from "@/components/portal/kit";
 import { CheckIcon } from "@/components/ui/icons";
 import { BODY_PART_LABELS, type BodyPart } from "@/lib/types";
 import { formatDateKr } from "@/lib/utils/date";
@@ -109,26 +110,25 @@ export default function MyWellness() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="px-1">
-        <h1 className="text-[1.375rem] font-extrabold text-ink">나의 웰니스</h1>
-        <p className="mt-1 text-[0.9375rem] text-ink-sub">
-          이용 기록을 바탕으로 정리한 내용입니다.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHead
+        back={{ href: "/my", label: "홈" }}
+        title="나의 웰니스"
+        sub="이용 기록을 바탕으로 정리한 내용입니다."
+      />
 
       {/* Wellness Type */}
-      <Card>
+      <Panel>
         <p className="text-[0.8125rem] font-bold text-ink-sub">Wellness Type</p>
         <p className="mt-1.5 flex flex-wrap items-center gap-2">
           <span className="text-[1.5rem] font-extrabold text-ink">{type.label}</span>
-          {type.key === "accumulating" && <Badge tone="gray">기록 쌓는 중</Badge>}
+          {type.key === "accumulating" && <StatusPill tone="muted">기록 쌓는 중</StatusPill>}
         </p>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-soft">
           {type.description}
         </p>
         {type.reasons.length > 0 && (
-          <ul className="mt-3 space-y-1.5 rounded-card bg-card-soft px-4 py-3 ring-1 ring-stone-line">
+          <ul className="mt-3 space-y-1.5 rounded-2xl bg-card-soft px-4 py-3 ring-1 ring-stone-line">
             {type.reasons.map((r, i) => (
               <li key={i} className="text-[0.8125rem] leading-relaxed text-ink-sub">
                 · {r}
@@ -139,14 +139,12 @@ export default function MyWellness() {
         <p className="mt-3 text-[0.75rem] leading-relaxed text-ink-faint">
           이용 방식에 따른 구분입니다. 몸 상태에 대한 분류가 아닙니다.
         </p>
-      </Card>
+      </Panel>
 
       {/* 이번 달 리포트 */}
-      <Card>
-        <h2 className="text-[1.0625rem] font-extrabold text-ink">
-          이번 달 나의 웰니스 리포트
-        </h2>
-        <ul className="mt-3 space-y-2">
+      <Section title="이번 달 나의 웰니스 리포트">
+      <Panel>
+        <ul className="space-y-2">
           {reportLines.map((l, i) => (
             <li
               key={i}
@@ -161,10 +159,11 @@ export default function MyWellness() {
           저장된 이용 기록을 그대로 정리한 문장입니다. 앞으로의 예측이나 몸
           상태에 대한 판단은 하지 않습니다.
         </p>
-      </Card>
+      </Panel>
+      </Section>
 
       {/* 다음 관리 참고일 */}
-      <Card>
+      <Panel>
         <p className="text-[0.8125rem] font-bold text-ink-sub">다음 관리 참고일</p>
         <p className="nowrap-num mt-1.5 text-[1.75rem] font-extrabold tabular text-aqua-700">
           {next.date ? formatDateKr(next.date) : "—"}
@@ -172,18 +171,18 @@ export default function MyWellness() {
         <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-sub">
           {next.basis}
         </p>
-      </Card>
+      </Panel>
 
       {/* Wellness Profile */}
-      <Card>
+      <Panel>
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-[1.0625rem] font-extrabold text-ink">
             나의 Wellness Profile
           </h2>
           {!editing && (
-            <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+            <PillButton tone="soft" size="md" onClick={() => setEditing(true)}>
               {profile.updatedAt ? "수정" : "작성"}
-            </Button>
+            </PillButton>
           )}
         </div>
 
@@ -278,7 +277,7 @@ export default function MyWellness() {
                     type="button"
                     aria-pressed={time === t.key}
                     onClick={() => setTime(time === t.key ? undefined : t.key)}
-                    className={`touch-target rounded-card text-[0.9375rem] font-bold ring-1 transition-colors ${
+                    className={`touch-target rounded-full text-[0.9375rem] font-bold ring-1 transition-colors ${
                       time === t.key
                         ? "bg-sel text-sel-ink ring-transparent"
                         : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50/60"
@@ -294,7 +293,7 @@ export default function MyWellness() {
               type="button"
               aria-pressed={homecare}
               onClick={() => setHomecare((v) => !v)}
-              className={`flex w-full items-center gap-2.5 rounded-card px-3.5 py-3 text-left ring-1 transition-colors ${
+              className={`flex w-full items-center gap-2.5 rounded-2xl px-3.5 py-3 text-left ring-1 transition-colors ${
                 homecare
                   ? "bg-aqua-50 ring-aqua-200 dark:bg-aqua-500/10"
                   : "bg-card-soft ring-stone-line hover:bg-aqua-50/60"
@@ -317,7 +316,7 @@ export default function MyWellness() {
             <div>
               <FieldLabel>한마디 (선택)</FieldLabel>
               <textarea
-                className={`${inputCls} min-h-[4.5rem] resize-y`}
+                className={`${inputCls} min-h-[4.5rem] resize-y !rounded-2xl`}
                 aria-label="한마디"
                 maxLength={300}
                 value={note}
@@ -333,20 +332,21 @@ export default function MyWellness() {
             )}
 
             <div className="flex gap-2">
-              <Button
-                variant="ghost"
+              <PillButton
+                tone="outline"
+                size="md"
                 className="flex-1"
                 onClick={() => setEditing(false)}
               >
                 취소
-              </Button>
-              <Button className="flex-1" disabled={busy} onClick={() => void save()}>
+              </PillButton>
+              <PillButton size="md" className="flex-1" disabled={busy} onClick={() => void save()}>
                 {busy ? "저장 중…" : "저장"}
-              </Button>
+              </PillButton>
             </div>
           </div>
         )}
-      </Card>
+      </Panel>
     </div>
   );
 }

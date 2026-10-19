@@ -10,12 +10,21 @@
  * 고객은 그날 그냥 오시고, 자리가 없으면 그건 시스템이 만든 사고다.
  */
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
-import { Badge, Button, Card, FieldLabel, inputCls } from "@/components/ui";
-import { CheckIcon, ChevronLeftIcon, PhoneIcon } from "@/components/ui/icons";
-import { formatDateKr, todayISO } from "@/lib/utils/date";
+import { FieldLabel, inputCls } from "@/components/ui";
+import { CheckIcon, PhoneIcon } from "@/components/ui/icons";
+import { formatDateKr, formatRelative, todayISO } from "@/lib/utils/date";
+import {
+  ListGroup,
+  ListRow,
+  PageHead,
+  Panel,
+  PillButton,
+  Section,
+  StatusPill,
+  StickyBar,
+} from "@/components/portal/kit";
 
 const SLOTS = [
   { key: "morning", label: "오전" },
@@ -29,11 +38,19 @@ const SLOT_LABEL: Record<string, string> = {
   evening: "저녁",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  open: "매장 확인 대기",
-  handled: "매장에서 확인함",
-  closed: "종료",
+const STATUS: Record<string, { label: string; tone: "wait" | "done" | "muted" }> = {
+  open: { label: "매장 확인 대기", tone: "wait" },
+  handled: { label: "매장에서 확인함", tone: "done" },
+  closed: { label: "종료", tone: "muted" },
 };
+
+/** 알약 두세 개 중 하나 고르기 (분절 단추) */
+const segCls = (on: boolean) =>
+  `touch-target rounded-full text-[0.9375rem] font-bold transition-colors ${
+    on
+      ? "bg-sel text-sel-ink shadow-sm"
+      : "text-ink-soft hover:bg-card"
+  }`;
 
 export default function MyRequest() {
   const { submitRequest, requests, branch, sample } = usePortal();
@@ -44,6 +61,11 @@ export default function MyRequest() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [done, setDone] = useState(false);
+
+  /* 홈의 「1:1 상담」 칸에서 왔으면 「문의」 를 골라 둔 채로 연다 (?kind=inquiry) */
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("kind") === "inquiry") setKind("inquiry");
+  }, []);
 
   const submit = async () => {
     if (kind === "booking" && !date) return setMsg("희망하시는 날짜를 골라 주세요.");
@@ -69,25 +91,15 @@ export default function MyRequest() {
   };
 
   return (
-    <div className="space-y-4">
-      <Link
-        href="/my"
-        className="tap-line inline-flex items-center gap-1 text-sm font-bold text-ink-sub"
-      >
-        <ChevronLeftIcon className="h-4 w-4" />
-        홈으로
-      </Link>
-
-      <div className="px-1">
-        <h1 className="text-[1.375rem] font-extrabold text-ink">방문 요청 · 문의</h1>
-        <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-sub">
-          남겨 주시면 매장에서 확인 후 연락드립니다. 이 화면에서 예약이 바로
-          확정되지는 않습니다.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PageHead
+        back={{ href: "/my", label: "홈" }}
+        title="방문 요청 · 문의"
+        sub="남겨 주시면 매장에서 확인 후 연락드립니다. 이 화면에서 예약이 바로 확정되지는 않습니다."
+      />
 
       {done && (
-        <Card lift={false} className="bg-aqua-50 ring-1 ring-aqua-200 dark:bg-aqua-500/10">
+        <Panel className="!bg-aqua-50 !ring-aqua-200 dark:!bg-aqua-500/10">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-aqua-700 ring-1 ring-aqua-200">
               <CheckIcon className="h-4 w-4" />
@@ -105,13 +117,13 @@ export default function MyRequest() {
                 : "요청을 남겼습니다. 매장에서 확인한 뒤 연락드립니다."}
             </p>
           </div>
-        </Card>
+        </Panel>
       )}
 
-      <Card>
-        {/* 무엇을 남기는가 */}
+      <Panel>
+        {/* 무엇을 남기는가 — 알약 두 개 중 하나 */}
         <FieldLabel>요청 종류</FieldLabel>
-        <div className="mb-4 grid grid-cols-2 gap-1.5">
+        <div className="mb-5 grid grid-cols-2 gap-1 rounded-full bg-stone-bg-deep p-1">
           {(
             [
               { key: "booking", label: "방문 희망" },
@@ -123,11 +135,7 @@ export default function MyRequest() {
               type="button"
               aria-pressed={kind === k.key}
               onClick={() => setKind(k.key)}
-              className={`touch-target rounded-card text-[0.9375rem] font-bold ring-1 transition-colors ${
-                kind === k.key
-                  ? "bg-sel text-sel-ink ring-transparent"
-                  : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50/60"
-              }`}
+              className={segCls(kind === k.key)}
             >
               {k.label}
             </button>
@@ -136,11 +144,11 @@ export default function MyRequest() {
 
         {kind === "booking" && (
           <>
-            <div className="mb-4">
+            <div className="mb-5">
               <FieldLabel>희망 날짜</FieldLabel>
               <input
                 type="date"
-                className={inputCls}
+                className={`${inputCls} !rounded-2xl`}
                 aria-label="희망 날짜"
                 min={todayISO()}
                 value={date}
@@ -148,20 +156,16 @@ export default function MyRequest() {
               />
             </div>
 
-            <div className="mb-4">
+            <div className="mb-5">
               <FieldLabel>희망 시간대 (선택)</FieldLabel>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-3 gap-1 rounded-full bg-stone-bg-deep p-1">
                 {SLOTS.map((s) => (
                   <button
                     key={s.key}
                     type="button"
                     aria-pressed={slot === s.key}
                     onClick={() => setSlot(slot === s.key ? undefined : s.key)}
-                    className={`touch-target rounded-card text-[0.9375rem] font-bold ring-1 transition-colors ${
-                      slot === s.key
-                        ? "bg-sel text-sel-ink ring-transparent"
-                        : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50/60"
-                    }`}
+                    className={segCls(slot === s.key)}
                   >
                     {s.label}
                   </button>
@@ -176,7 +180,7 @@ export default function MyRequest() {
             {kind === "booking" ? "남기실 말씀 (선택)" : "문의 내용"}
           </FieldLabel>
           <textarea
-            className={`${inputCls} min-h-[5rem] resize-y`}
+            className={`${inputCls} min-h-[6rem] resize-y !rounded-2xl`}
             aria-label={kind === "booking" ? "남기실 말씀" : "문의 내용"}
             maxLength={500}
             value={note}
@@ -185,75 +189,64 @@ export default function MyRequest() {
           />
         </div>
 
-        {msg && (
-          <p role="alert" className="mt-3 text-sm font-bold text-danger-text">
-            {msg}
-          </p>
-        )}
-
-        <Button
-          size="lg"
-          className="mt-4 w-full"
-          disabled={busy}
-          onClick={() => void submit()}
-        >
-          {busy ? "보내는 중…" : "요청 남기기"}
-        </Button>
-
         {branch?.phone && (
           /* 글자 속 링크라 손가락 과녁이 너무 작았다 — 누르는 것으로 보이게 둔다 */
-          <div className="mt-3 text-center">
-            <p className="text-[0.8125rem] text-ink-sub">
-              급하시면 매장으로 바로 전화 주세요
-            </p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-stone-line pt-4">
+            <p className="text-[0.875rem] text-ink-sub">급하시면 매장으로 바로 전화 주세요</p>
             <a
               href={`tel:${branch.phone.replace(/[^0-9+]/g, "")}`}
               aria-label={`매장에 전화 걸기 ${branch.phone}`}
-              className="touch-target mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-aqua-50 px-4 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100"
+              className="touch-target inline-flex items-center gap-1.5 rounded-full bg-aqua-50 px-4 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100"
             >
               <PhoneIcon className="h-4 w-4 shrink-0" />
               {branch.phone}
             </a>
           </div>
         )}
-      </Card>
+      </Panel>
 
-      {/* 지금까지 남긴 요청 */}
+      {/* 지금까지 남긴 요청 — 주문 목록처럼 상태 알약 */}
       {requests.length > 0 && (
-        <Card>
-          <h2 className="mb-3 text-[1.0625rem] font-extrabold text-ink">
-            남긴 요청
-          </h2>
-          <ul className="space-y-2.5">
-            {requests.map((r) => (
-              <li
-                key={r.id}
-                className="rounded-card bg-card-soft px-4 py-3 ring-1 ring-stone-line"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[0.9375rem] font-extrabold text-ink">
-                    {r.kind === "booking" ? "방문 희망" : "문의"}
-                  </span>
-                  <Badge tone={r.status === "open" ? "warn" : "positive"}>
-                    {STATUS_LABEL[r.status]}
-                  </Badge>
-                </div>
-                {r.preferredDate && (
-                  <p className="nowrap-num mt-1 text-[0.8125rem] tabular text-ink-sub">
-                    {formatDateKr(r.preferredDate)}
-                    {r.preferredSlot ? ` · ${SLOT_LABEL[r.preferredSlot]}` : ""}
-                  </p>
-                )}
-                {r.note && (
-                  <p className="mt-1 text-[0.8125rem] leading-relaxed text-ink-soft">
-                    {r.note}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <Section title="남긴 요청">
+          <ListGroup>
+            {requests.map((r) => {
+              const st = STATUS[r.status] ?? STATUS.open;
+              return (
+                <ListRow
+                  key={r.id}
+                  chevron={false}
+                  title={r.kind === "booking" ? "방문 희망" : "문의"}
+                  sub={
+                    <>
+                      {r.preferredDate && (
+                        <span className="nowrap-num tabular block">
+                          {formatDateKr(r.preferredDate)}
+                          {r.preferredSlot ? ` · ${SLOT_LABEL[r.preferredSlot]}` : ""}
+                        </span>
+                      )}
+                      {r.note && <span className="block text-ink-soft">{r.note}</span>}
+                      <span className="block text-ink-faint">{formatRelative(r.createdAt)} 남김</span>
+                    </>
+                  }
+                  right={<StatusPill tone={st.tone}>{st.label}</StatusPill>}
+                />
+              );
+            })}
+          </ListGroup>
+        </Section>
       )}
+
+      {/* 보내는 단추 — 하단 탭 바로 위에 늘 붙어 있다 */}
+      <StickyBar>
+        {msg && (
+          <p role="alert" className="mb-2 text-center text-sm font-bold text-danger-text">
+            {msg}
+          </p>
+        )}
+        <PillButton full disabled={busy} onClick={() => void submit()}>
+          {busy ? "보내는 중…" : "요청 남기기"}
+        </PillButton>
+      </StickyBar>
     </div>
   );
 }

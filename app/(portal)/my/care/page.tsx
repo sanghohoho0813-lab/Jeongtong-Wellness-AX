@@ -14,7 +14,6 @@
  * 몇 번째였고, 다음은 언제쯤인지.
  */
 
-import Link from "next/link";
 import { usePortal } from "@/lib/portal/store";
 import {
   classifyWellnessType,
@@ -22,11 +21,22 @@ import {
   summarizePasses,
   summarizeUsage,
 } from "@/lib/portal/wellness";
-import { Badge, Button, Card } from "@/components/ui";
-import { ChevronRightIcon, LeafIcon } from "@/components/ui/icons";
-import { formatDateKr, formatRelative } from "@/lib/utils/date";
+import { ChevronRightIcon } from "@/components/ui/icons";
+import { formatDateKr, formatDateWithDay, formatRelative } from "@/lib/utils/date";
 import { BODY_PART_LABELS, type BodyPart } from "@/lib/types";
 import { rankContents } from "@/lib/portal/content";
+import {
+  EmptyLine,
+  HCard,
+  HScroll,
+  ListGroup,
+  ListRow,
+  PageHead,
+  Panel,
+  PillLink,
+  Section,
+  StatusPill,
+} from "@/components/portal/kit";
 
 export default function MyCare() {
   const { customer, visits, memberships, profile, contentOpens } = usePortal();
@@ -60,60 +70,50 @@ export default function MyCare() {
     .slice(0, 5);
 
   const interest = profile.interestAreas ?? [];
-  const suggested = rankContents({ type: type.key, interestParts: interest }).slice(0, 2);
+  const suggested = rankContents({ type: type.key, interestParts: interest }).slice(0, 4);
 
   return (
-    <div className="space-y-4">
-      <div className="px-1">
-        <h1 className="text-[1.375rem] font-extrabold text-ink">케어기록</h1>
-        <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-sub">
-          매장에서 남긴 이용 기록입니다.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHead title="케어기록" sub="매장에서 남긴 이용 기록입니다." />
 
-      {/* 누적 요약 세 칸 */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <Card lift={false} className="!px-3 text-center">
-          <p className="text-[0.8125rem] font-bold text-ink-sub">누적 이용</p>
-          <p className="nowrap-num mt-1 text-[1.375rem] font-extrabold tabular text-ink">
-            {usage.visitCount}회
-          </p>
-        </Card>
-        <Card lift={false} className="!px-3 text-center">
-          <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
-          <p className="nowrap-num mt-1 text-[1.0625rem] font-extrabold tabular leading-tight text-ink">
-            {usage.lastVisitDate ? formatDateKr(usage.lastVisitDate).slice(5) : "—"}
-          </p>
-          <p className="mt-0.5 text-[0.75rem] text-ink-faint">
-            {usage.lastVisitDate ? formatRelative(usage.lastVisitDate) : "기록 없음"}
-          </p>
-        </Card>
-        <Card lift={false} className="!px-3 text-center">
-          <p className="text-[0.8125rem] font-bold text-ink-sub">다음 참고일</p>
-          <p className="nowrap-num mt-1 text-[1.0625rem] font-extrabold tabular leading-tight text-aqua-800">
-            {next.date ? formatDateKr(next.date).slice(5) : "—"}
-          </p>
-          <p className="mt-0.5 text-[0.75rem] text-ink-faint">
-            {next.fromStore ? "매장 안내" : next.date ? "간격 기준" : "계산 전"}
-          </p>
-        </Card>
-      </div>
+      {/* 누적 요약 — 한 판 안의 세 칸 */}
+      <Panel className="!p-0">
+        <dl className="grid grid-cols-3 divide-x divide-stone-line">
+          <div className="min-w-0 px-2 py-4 text-center">
+            <dt className="text-[0.8125rem] font-bold text-ink-sub">누적 이용</dt>
+            <dd className="nowrap-num tabular mt-1 text-[1.375rem] font-extrabold leading-none text-ink">
+              {usage.visitCount}
+              <span className="ml-0.5 text-[0.875rem] font-bold text-ink-sub">회</span>
+            </dd>
+          </div>
+          <div className="min-w-0 px-2 py-4 text-center">
+            <dt className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</dt>
+            <dd className="nowrap-num tabular mt-1 text-[1.0625rem] font-extrabold leading-tight text-ink">
+              {usage.lastVisitDate ? formatDateKr(usage.lastVisitDate).slice(5) : "—"}
+            </dd>
+            <dd className="mt-0.5 text-[0.75rem] text-ink-faint">
+              {usage.lastVisitDate ? formatRelative(usage.lastVisitDate) : "기록 없음"}
+            </dd>
+          </div>
+          <div className="min-w-0 px-2 py-4 text-center">
+            <dt className="text-[0.8125rem] font-bold text-ink-sub">다음 참고일</dt>
+            <dd className="nowrap-num tabular mt-1 text-[1.0625rem] font-extrabold leading-tight text-aqua-800">
+              {next.date ? formatDateKr(next.date).slice(5) : "—"}
+            </dd>
+            <dd className="mt-0.5 text-[0.75rem] text-ink-faint">
+              {next.fromStore ? "매장 안내" : next.date ? "간격 기준" : "계산 전"}
+            </dd>
+          </div>
+        </dl>
+      </Panel>
 
       {/* 많이 봐 드린 부위 */}
-      <Card>
-        <h2 className="text-[1.0625rem] font-extrabold text-ink">
-          많이 봐 드린 부위
-        </h2>
-        {topParts.length === 0 ? (
-          <p className="mt-3 rounded-card border border-dashed border-stone-line bg-card-soft py-6 text-center text-[0.9375rem] text-ink-sub">
-            아직 기록된 케어 부위가 없습니다.
-          </p>
-        ) : (
-          <>
-            <p className="mt-1 text-[0.875rem] leading-relaxed text-ink-sub">
-              지금까지 방문에서 실제로 기록된 부위입니다.
-            </p>
-            <ul className="mt-3 space-y-2">
+      <Section title="많이 봐 드린 부위" sub="지금까지 방문에서 실제로 기록된 부위입니다.">
+        <Panel>
+          {topParts.length === 0 ? (
+            <EmptyLine>아직 기록된 케어 부위가 없습니다.</EmptyLine>
+          ) : (
+            <ul className="space-y-2.5">
               {topParts.map(([part, n]) => {
                 const max = topParts[0][1];
                 return (
@@ -134,115 +134,85 @@ export default function MyCare() {
                 );
               })}
             </ul>
-          </>
-        )}
+          )}
 
-        {interest.length > 0 && (
-          <div className="mt-4 border-t border-stone-line pt-3">
-            <p className="text-[0.875rem] font-bold text-ink-sub">
-              내가 고른 관심 부위
-            </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {interest.map((p) => (
-                <Badge key={p} tone="outline">
-                  {BODY_PART_LABELS[p]}
-                </Badge>
-              ))}
+          {interest.length > 0 && (
+            <div className="mt-4 border-t border-stone-line pt-3">
+              <p className="text-[0.875rem] font-bold text-ink-sub">내가 고른 관심 부위</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {interest.map((p) => (
+                  <StatusPill key={p} tone="muted">
+                    {BODY_PART_LABELS[p]}
+                  </StatusPill>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <Link href="/my/wellness" className="mt-4 block">
-          <Button variant="secondary" size="lg" className="w-full justify-between">
+          <PillLink href="/my/wellness" tone="soft" size="md" full between className="mt-4">
             <span>나의 웰니스 정보 수정</span>
             <ChevronRightIcon className="h-5 w-5" />
-          </Button>
-        </Link>
-      </Card>
+          </PillLink>
+        </Panel>
+      </Section>
 
-      {/* 최근 방문 */}
-      <Card>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-[1.0625rem] font-extrabold text-ink">최근 방문</h2>
-          <Link
-            href="/my/visits"
-            className="tap-line inline-flex items-center gap-1 text-sm font-bold text-aqua-700"
-          >
-            전체 보기
-            <ChevronRightIcon className="h-4 w-4" />
-          </Link>
-        </div>
+      {/* 최근 방문 — 주문 목록처럼 */}
+      <Section title="최근 방문" more={{ href: "/my/visits" }}>
         {recent.length === 0 ? (
-          <p className="rounded-card border border-dashed border-stone-line bg-card-soft py-6 text-center text-[0.9375rem] text-ink-sub">
-            아직 방문 기록이 없습니다.
-          </p>
+          <EmptyLine>아직 방문 기록이 없습니다.</EmptyLine>
         ) : (
-          <ul className="space-y-2.5">
+          <ListGroup>
             {recent.map((v) => (
-              <li
+              <ListRow
                 key={v.id}
-                className="rounded-card bg-card-soft px-4 py-3 ring-1 ring-stone-line"
-              >
-                <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                  <span className="nowrap-num text-[0.9375rem] font-extrabold tabular text-ink">
-                    {formatDateKr(v.visitedAt.slice(0, 10))}
+                chevron={false}
+                title={
+                  <span className="nowrap-num tabular">
+                    {formatDateWithDay(v.visitedAt.slice(0, 10))}
+                    <span className="ml-1.5 text-[0.8125rem] font-medium text-ink-faint">
+                      {formatRelative(v.visitedAt)}
+                    </span>
                   </span>
-                  <span className="text-[0.8125rem] text-ink-faint">
-                    {formatRelative(v.visitedAt)}
-                  </span>
-                </div>
-                <p className="mt-1 break-words text-[0.9375rem] text-ink-soft">
-                  {v.programName || "정통대왕쑥뜸"}
-                </p>
-                {(v.bodyParts ?? []).length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(v.bodyParts ?? []).map((r, i) => (
-                      <Badge key={`${r.part}-${i}`} tone="aqua">
-                        {BODY_PART_LABELS[r.part]}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </li>
+                }
+                sub={
+                  <>
+                    <span className="block">{v.programName || "정통대왕쑥뜸"}</span>
+                    {(v.bodyParts ?? []).length > 0 && (
+                      <span className="mt-1.5 flex flex-wrap gap-1.5">
+                        {(v.bodyParts ?? []).map((r, i) => (
+                          <StatusPill key={`${r.part}-${i}`} tone="wait">
+                            {BODY_PART_LABELS[r.part]}
+                          </StatusPill>
+                        ))}
+                      </span>
+                    )}
+                  </>
+                }
+              />
             ))}
-          </ul>
+          </ListGroup>
         )}
-      </Card>
+      </Section>
 
-      {/* 이어서 볼 홈케어 */}
+      {/* 집에서 이어 가기 — 옆으로 넘기는 카드 */}
       {suggested.length > 0 && (
-        <Card>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-1.5 text-[1.0625rem] font-extrabold text-ink">
-              <LeafIcon className="h-4 w-4 shrink-0 text-gold-deep" />
-              집에서 이어 가기
-            </h2>
-            <Link
-              href="/my/content"
-              className="tap-line inline-flex items-center gap-1 text-sm font-bold text-aqua-700"
-            >
-              전체 보기
-              <ChevronRightIcon className="h-4 w-4" />
-            </Link>
-          </div>
-          <ul className="space-y-2">
+        <Section title="집에서 이어 가기" more={{ href: "/my/content" }}>
+          <HScroll label="집에서 이어 가기">
             {suggested.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href="/my/content"
-                  className="block rounded-card bg-card-soft px-4 py-3 ring-1 ring-stone-line transition-colors hover:bg-aqua-50"
-                >
-                  <p className="break-words text-[0.9375rem] font-extrabold text-ink">
-                    {c.title}
-                  </p>
-                  <p className="mt-0.5 break-words text-[0.875rem] leading-snug text-ink-sub">
-                    {c.summary}
-                  </p>
-                </Link>
-              </li>
+              <HCard key={c.id} href={`/my/content#${c.id}`}>
+                <StatusPill tone="muted" className="self-start">
+                  {c.tag}
+                </StatusPill>
+                <span className="mt-2.5 break-words text-[1.0625rem] font-extrabold leading-snug text-ink [word-break:keep-all]">
+                  {c.title}
+                </span>
+                <span className="mt-1 text-[0.875rem] leading-relaxed text-ink-sub">
+                  {c.summary}
+                </span>
+              </HCard>
             ))}
-          </ul>
-        </Card>
+          </HScroll>
+        </Section>
       )}
     </div>
   );

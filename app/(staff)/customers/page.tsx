@@ -20,8 +20,8 @@ import {
   OpportunityBadge,
   RecommendBadge,
   SummaryTile,
-  inputCls,
   recommendLevel,
+  searchCls,
 } from "@/components/ui";
 import { ChevronRightIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 import AiReadyNote from "@/components/ui/AiReadyNote";
@@ -232,7 +232,7 @@ export default function CustomersPage() {
         <div className="relative">
           <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
           <input
-            className={`${inputCls} pl-11`}
+            className={searchCls}
             aria-label="고객 검색"
             placeholder="고객명 · 초성 · 연락처 검색"
             value={query}

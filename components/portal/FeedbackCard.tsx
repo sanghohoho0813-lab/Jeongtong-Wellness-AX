@@ -15,7 +15,8 @@
 
 import { useState } from "react";
 import { usePortal } from "@/lib/portal/store";
-import { Badge, Button, Card, inputCls } from "@/components/ui";
+import { inputCls } from "@/components/ui";
+import { Panel, PillButton, StatusPill } from "@/components/portal/kit";
 import { CheckIcon } from "@/components/ui/icons";
 import { formatDateKr } from "@/lib/utils/date";
 
@@ -62,7 +63,7 @@ export default function FeedbackCard({
   if (done || already) {
     const latest = feedback[0];
     return (
-      <Card>
+      <Panel>
         <div className="flex items-start gap-3">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-aqua-50 text-aqua-700 ring-1 ring-aqua-200">
             <CheckIcon className="h-4 w-4" />
@@ -79,17 +80,17 @@ export default function FeedbackCard({
             </p>
             {latest?.satisfaction && (
               <p className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge tone="aqua">만족도 {latest.satisfaction}점</Badge>
+                <StatusPill tone="wait">만족도 {latest.satisfaction}점</StatusPill>
                 {latest.revisitIntent && (
-                  <Badge tone="gray">
+                  <StatusPill tone="muted">
                     {INTENTS.find((i) => i.key === latest.revisitIntent)?.label}
-                  </Badge>
+                  </StatusPill>
                 )}
               </p>
             )}
           </div>
         </div>
-      </Card>
+      </Panel>
     );
   }
 
@@ -128,7 +129,7 @@ export default function FeedbackCard({
   const started = score !== null;
 
   return (
-    <Card>
+    <Panel>
       <h2 className="text-[1.0625rem] font-extrabold text-ink">
         이번 이용은 어떠셨나요
       </h2>
@@ -149,7 +150,7 @@ export default function FeedbackCard({
               aria-pressed={score === n}
               aria-label={`${n}점 ${SCORE_LABEL[n]}`}
               onClick={() => setScore(n)}
-              className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-card ring-1 transition-colors ${
+              className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-2xl ring-1 transition-colors ${
                 score === n
                   ? "bg-sel text-sel-ink ring-transparent"
                   : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50/60"
@@ -182,7 +183,7 @@ export default function FeedbackCard({
               type="button"
               aria-pressed={intent === it.key}
               onClick={() => setIntent(it.key)}
-              className={`touch-target rounded-card px-3 text-[0.9375rem] font-bold ring-1 transition-colors ${
+              className={`touch-target rounded-full px-3 text-[0.9375rem] font-bold ring-1 transition-colors ${
                 intent === it.key
                   ? "bg-sel text-sel-ink ring-transparent"
                   : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50/60"
@@ -200,7 +201,7 @@ export default function FeedbackCard({
           하고 싶은 말 <span className="font-normal text-ink-faint">(선택)</span>
         </p>
         <textarea
-          className={`${inputCls} min-h-[5rem] resize-y`}
+          className={`${inputCls} min-h-[5rem] resize-y !rounded-2xl`}
           aria-label="하고 싶은 말"
           value={note}
           maxLength={500}
@@ -214,7 +215,7 @@ export default function FeedbackCard({
         type="button"
         aria-pressed={homecare}
         onClick={() => setHomecare((v) => !v)}
-        className={`mt-3 flex w-full items-center gap-2.5 rounded-card px-3.5 py-3 text-left ring-1 transition-colors ${
+        className={`mt-3 flex w-full items-center gap-2.5 rounded-2xl px-3.5 py-3 text-left ring-1 transition-colors ${
           homecare
             ? "bg-aqua-50 ring-aqua-200 dark:bg-aqua-500/10"
             : "bg-card-soft ring-stone-line hover:bg-aqua-50/60"
@@ -238,16 +239,16 @@ export default function FeedbackCard({
         </p>
       )}
 
-      <Button
-        size="lg"
-        className="mt-4 w-full"
+      <PillButton
+        full
+        className="mt-4"
         disabled={busy}
         onClick={() => void submit()}
       >
         {busy ? "보내는 중…" : "보내기"}
-      </Button>
+      </PillButton>
       </>
       )}
-    </Card>
+    </Panel>
   );
 }
