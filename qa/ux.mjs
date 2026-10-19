@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~8차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -389,6 +389,76 @@ await pc2.context().close();
   log("고객 상세 — 이름(h1)에는 이름만", prof.name.length >= 2 && !/신규|관리|등록일/.test(prof.name), prof.name);
   log("고객 상세 — 방문 · 상담 기록은 띠 위의 흰 알약", prof.record);
   log("고객 상세 — 나머지 넷은 걸친 판의 아이콘 칸", prof.tiles === 4, `${prof.tiles}칸`);
+}
+
+/* ── 12. 안정화 · 문 화면 · 앱 설치 (D-58) ──
+   어두운 모드에서는 aqua-50 ~ 200 이 어두운 색으로 바뀐다. 늘 어두운 판(머리 띠 · 알림) 위에
+   그 색을 쓰면 글자가 사라진다 — 알림의 「되돌리기」 가 그랬다. 글자가 실제로 밝은지 잰다. */
+{
+  const lum = (rgb) => {
+    const m = (rgb.match(/\d+(\.\d+)?/g) || []).slice(0, 3).map(Number);
+    const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+    return m.length === 3 ? 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]) : 0;
+  };
+  const dk = await (await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: "dark" })).newPage();
+  dk.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(dk, "/", 1200);
+  await dk.evaluate((k) => { const r = JSON.parse(localStorage.getItem(k) || "{}"); r.settings = { ...(r.settings || {}), theme: "dark" }; localStorage.setItem(k, JSON.stringify(r)); }, KEY);
+  await go(dk, "/", 1500);
+  const pill = await dk.evaluate(() => {
+    const el = [...document.querySelectorAll("[data-today-hero] span")].find((s) => /영업/.test(s.textContent || "") && s.children.length === 0);
+    return el ? getComputedStyle(el).color : "";
+  });
+  log("어두운 모드 — 대시보드 띠의 영업 상태 글자가 밝다 (사라지지 않는다)", !pill || lum(pill) > 0.5, pill || "(영업시간 미설정)");
+  await go(dk, "/visits", 1300);
+  await dk.locator("main [data-visit-row]").first().getByRole("button", { name: "삭제" }).click();
+  await dk.waitForTimeout(400);
+  await dk.locator('[role="dialog"]').last().getByRole("button", { name: "삭제" }).click();
+  await dk.waitForTimeout(500);
+  const undo = dk.getByRole("button", { name: "되돌리기" });
+  const undoColor = (await undo.count()) ? await undo.first().evaluate((b) => getComputedStyle(b).color) : "";
+  log("어두운 모드 — 알림의 「되돌리기」 글자가 밝다", !!undoColor && lum(undoColor) > 0.5, undoColor);
+  if (await undo.count()) await undo.first().click();
+  await dk.context().close();
+
+  // 없는 주소 — 영어 한 줄이 아니라 한국어 문 화면 + 갈 곳 셋
+  const nf = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await nf.goto(BASE + "/no-such-page-qa", { waitUntil: "networkidle" });
+  const nfText = await nf.evaluate(() => document.body.innerText);
+  log("없는 주소 — 한국어로 안내한다 (영어 기본 화면이 아니다)", /찾으시는 화면이 없습니다/.test(nfText) && !/could not be found/.test(nfText));
+  log("없는 주소 — 갈 곳 셋 (매장 안내 · 내 기록 · 직원 화면)", (await nf.locator('main a[href="/welcome"], main a[href="/my"], main a[href="/"]').count()) === 3);
+  // 직원 로그인 문 — 앱과 같은 띠 + 걸친 판
+  await nf.goto(BASE + "/login", { waitUntil: "networkidle" });
+  await nf.waitForTimeout(500);
+  log("로그인 문 — 딥그린 띠와 걸친 판 (옛 흰 카드 한 장이 아니다)", (await nf.locator("[data-door]").count()) === 1 && (await nf.locator("main h1, [data-door] h1").count()) >= 1);
+  await nf.context().close();
+
+  // 홈 화면에 앱으로 — 직원 앱 · 고객 앱이 서로 다른 앱 정보를 갖는다
+  const mf = async (path) => {
+    const r = await fetch(BASE + path);
+    const html = await r.text();
+    return (html.match(/<link rel="manifest" href="([^"]+)"/) || [])[1] || "";
+  };
+  const staffMf = await mf("/");
+  const myMf = await mf("/my");
+  log("앱 설치 — 직원 화면은 직원 앱, 고객 화면은 고객 앱 정보를 단다", staffMf === "/manifest.webmanifest" && myMf === "/my.webmanifest", `${staffMf} · ${myMf}`);
+  const okMf = async (path) => {
+    const j = await (await fetch(BASE + path)).json();
+    return j.display === "standalone" && j.icons?.some((i) => i.sizes === "512x512") && j.icons?.some((i) => i.sizes === "192x192");
+  };
+  log("앱 설치 — 두 앱 정보 모두 아이콘(192 · 512) · 앱처럼 열기", (await okMf("/manifest.webmanifest")) && (await okMf("/my.webmanifest")));
+  const icon = await fetch(BASE + "/icons/icon-512.png");
+  log("앱 설치 — 아이콘 그림이 실제로 있다", icon.status === 200 && /image\/png/.test(icon.headers.get("content-type") || ""));
+  await go(p, "/more", 1200);
+  log("더보기 — 「홈 화면에 앱으로 두기」 줄이 있다", (await p.locator("[data-install-app]").count()) === 1);
+  await go(p, "/my/account", 1300);
+  log("마이페이지 — 「홈 화면에 앱으로 두기」 줄이 있다", (await p.locator("[data-install-app]").count()) === 1);
+  const guide = p.locator('[data-install-app] button[aria-expanded]');
+  if (await guide.count()) {
+    await guide.click();
+    await p.waitForTimeout(300);
+    log("설치 신호가 없는 기기 — 단추 대신 방법을 펴서 보여 준다", /홈 화면에 추가|앱 설치/.test(await p.locator("[data-install-app]").innerText()));
+  }
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
