@@ -121,7 +121,7 @@ await p.getByRole("textbox", { name: "고객명으로 기록 찾기" }).fill("")
 // ── 6. 잘못 넣은 기록 지우기 → 이용권 되돌림 → 되돌리기 ──
 const usedVisit = s.visits.find((v) => v.membershipId === M.id);
 await go(p, "/visits", 1200);
-const cards = p.locator("main .relative.overflow-hidden");
+const cards = p.locator("main [data-visit-row]");
 const n = await cards.count();
 let deleted = false;
 for (let i = 0; i < n && !deleted; i++) {

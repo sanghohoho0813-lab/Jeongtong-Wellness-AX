@@ -101,6 +101,14 @@ export default function VisitsPage() {
   const [limit, setLimit] = useState(PAGE_SIZE);
   useEffect(() => setLimit(PAGE_SIZE), [query, type, period, staffFilter]);
   const visibleRows = rows.slice(0, limit);
+  /** 보이는 기록을 하루씩 — 목록은 이미 최신순이라 순서를 그대로 쓴다 */
+  const visibleDays: [string, Visit[]][] = [];
+  for (const v of visibleRows) {
+    const day = v.visitedAt.slice(0, 10);
+    const last = visibleDays[visibleDays.length - 1];
+    if (last && last[0] === day) last[1].push(v);
+    else visibleDays.push([day, [v]]);
+  }
 
   return (
     <div>
@@ -286,88 +294,101 @@ export default function VisitsPage() {
           />
         )
       ) : (
-        <div className="rise-stagger space-y-2.5">
-          {visibleRows.map((v, i) => {
-            const st = programStyle(v.programName, v.type === "consult");
-            const day = v.visitedAt.slice(0, 10);
-            const newDay = i === 0 || visibleRows[i - 1].visitedAt.slice(0, 10) !== day;
-            return (
-            <div key={v.id} className="space-y-2.5">
-            {/*
-              하루 단위로 묶는다 — 「오늘 누가 다녀가셨지」, 「오늘 결제가
-              얼마였지」 를 마감 때 손으로 세지 않게. 합계는 적어 둔 결제
-              금액만 더한다(지어내는 숫자 없음). 이용권은 차감된 횟수.
-            */}
-            {newDay && <DayHeader day={day} rows={rows} onSettle={() => setSettleDay(day)} />}
-            <Card className="relative overflow-hidden !py-4 !pl-5">
-              <span
-                className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${st.strip}`}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  href={`/customers/${v.customerId}`}
-                  className="tap-line font-bold text-ink hover:text-aqua-700"
-                >
-                  {displayName(customerName(v.customerId), privacyMode)}
-                </Link>
-                <Badge tone={st.badge} dot>
-                  {v.type === "consult" ? "상담" : (v.programName ?? "방문")}
-                </Badge>
-              </div>
-              {/* 날짜는 위 머리글에 있으니 여기는 시각만 */}
-              <p className="nowrap-num mt-0.5 text-[0.8125rem] font-bold text-ink-soft">
-                {timeKr(v.visitedAt)}
-              </p>
-              {v.bodyParts.length > 0 && (
-                <div className="mt-2">
-                  <BodyPartTags records={v.bodyParts} />
-                </div>
-              )}
-              {v.reaction && (
-                <p className="mt-2 text-sm text-ink-soft">{v.reaction}</p>
-              )}
-              {/*
-                담당·결제 정보는 한 줄로, [수정]·[삭제]는 그 아래 오른쪽에.
-                한 줄에 섞어 두면 좁은 화면에서 글이 길어질 때마다 단추가
-                제멋대로 다음 줄로 밀려나 위치가 매번 달라진다.
-              */}
-              {/* 비어 있는 칸(담당 미지정 등)은 적지 않는다 — 모든 줄에 같은 「미지정」 이 붙으면 읽을 것만 늘어난다 */}
-              {(() => {
-                const meta = [
-                  v.staffId ? `담당 ${staffName(v.staffId)}` : "",
-                  v.amount ? `결제 ${formatWon(v.amount)}` : "",
-                  v.membershipId ? "이용권 차감" : "",
-                  v.nextManageDate
-                    ? `다음 관리 예정일 ${formatDateKr(v.nextManageDate)}`
-                    : "",
-                ].filter(Boolean);
-                return meta.length > 0 ? (
-                  <p className="mt-1.5 text-[0.8125rem] text-ink-sub">
-                    {meta.join(" · ")}
-                  </p>
-                ) : null;
-              })()}
-              <div className="-mb-1.5 mt-0.5 flex items-center justify-end gap-1.5">
-                <button
-                  onClick={() => {
-                    setEditingVisit(v);
-                    setOpenForm(true);
-                  }}
-                  className="touch-target inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink-sub ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => setConfirmDelete(v)}
-                  className="touch-target inline-flex shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text"
-                >
-                  삭제
-                </button>
-              </div>
-            </Card>
-            </div>
-            );
-          })}
+        <div className="space-y-2.5">
+          {/*
+            하루 단위로 묶는다 — 「오늘 누가 다녀가셨지」, 「오늘 결제가
+            얼마였지」 를 마감 때 손으로 세지 않게. 합계는 적어 둔 결제
+            금액만 더한다(지어내는 숫자 없음). 이용권은 차감된 횟수.
+
+            하루 안의 기록은 고객 앱처럼 **한 묶음의 목록**이다 (D-56).
+            전에는 기록 한 건이 카드 한 장이라, 하루에 다섯 분이 오시면
+            그림자 달린 카드 다섯 장이 쌓였다. 이제 하루가 흰 판 하나이고,
+            줄 왼쪽에 시각을 세워 그날이 시간순으로 읽힌다.
+          */}
+          {visibleDays.map(([day, list]) => (
+            <section key={day} className="space-y-2">
+              <DayHeader day={day} rows={rows} onSettle={() => setSettleDay(day)} />
+              <ul className="rise-stagger divide-y divide-stone-line overflow-hidden rounded-[20px] bg-card shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+                {list.map((v) => {
+                  const st = programStyle(v.programName, v.type === "consult");
+                  return (
+                    <li
+                      key={v.id}
+                      data-visit-row
+                      className="relative flex gap-3 overflow-hidden py-3.5 pl-4 pr-3 sm:pl-5"
+                    >
+                      {/* 프로그램 색 — 줄 전체가 아니라 짧은 알약으로 */}
+                      <span
+                        aria-hidden
+                        className={`absolute bottom-4 left-0 top-4 w-1 rounded-r-full bg-gradient-to-b ${st.strip}`}
+                      />
+                      {/* 날짜는 위 머리글에 있으니 여기는 시각만 — 왼쪽 칸에 세운다 */}
+                      <p className="nowrap-num w-[3.75rem] shrink-0 pt-1 text-[0.8125rem] font-bold text-ink-sub">
+                        {timeKr(v.visitedAt)}
+                      </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link
+                            href={`/customers/${v.customerId}`}
+                            className="tap-line font-bold text-ink hover:text-aqua-700"
+                          >
+                            {displayName(customerName(v.customerId), privacyMode)}
+                          </Link>
+                          <Badge tone={st.badge} dot>
+                            {v.type === "consult" ? "상담" : (v.programName ?? "방문")}
+                          </Badge>
+                        </div>
+                        {v.bodyParts.length > 0 && (
+                          <div className="mt-1.5">
+                            <BodyPartTags records={v.bodyParts} />
+                          </div>
+                        )}
+                        {v.reaction && (
+                          <p className="mt-1.5 text-sm text-ink-soft">{v.reaction}</p>
+                        )}
+                        {/*
+                          담당·결제 정보는 한 줄로, [수정]·[삭제]는 그 아래 오른쪽에.
+                          비어 있는 칸(담당 미지정 등)은 적지 않는다.
+                        */}
+                        {(() => {
+                          const meta = [
+                            v.staffId ? `담당 ${staffName(v.staffId)}` : "",
+                            v.amount ? `결제 ${formatWon(v.amount)}` : "",
+                            v.membershipId ? "이용권 차감" : "",
+                            v.nextManageDate
+                              ? `다음 관리 예정일 ${formatDateKr(v.nextManageDate)}`
+                              : "",
+                          ].filter(Boolean);
+                          return meta.length > 0 ? (
+                            <p className="mt-1 text-[0.8125rem] text-ink-sub">
+                              {meta.join(" · ")}
+                            </p>
+                          ) : null;
+                        })()}
+                        <div className="-mb-1.5 flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingVisit(v);
+                              setOpenForm(true);
+                            }}
+                            className="touch-target inline-flex shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-aqua-800 transition-colors hover:bg-aqua-50 dark:text-aqua-300"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(v)}
+                            className="touch-target inline-flex shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
 
           {rows.length > visibleRows.length && (
             <div className="pt-1 text-center">

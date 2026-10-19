@@ -95,8 +95,9 @@ const config: Config = {
         positive: "#2E9E6B",
       },
       borderRadius: {
-        card: "18px",
-        "card-lg": "22px",
+        /* 고객 앱(kit)의 판과 같은 둥글기 — 20 · 24 (D-56) */
+        card: "20px",
+        "card-lg": "24px",
         btn: "12px",
       },
       boxShadow: {

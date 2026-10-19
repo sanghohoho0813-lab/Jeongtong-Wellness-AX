@@ -65,7 +65,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-stone-bg">
       <header className="sticky top-0 z-30 bg-deep-900 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
-        <div className="mx-auto flex h-[4.25rem] max-w-5xl items-center gap-3 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4 sm:px-6">
           <Link href="/welcome" className="min-w-0 flex-1" aria-label="정통대왕쑥뜸원 홈">
             <Brand />
           </Link>
@@ -104,20 +104,25 @@ export default function PublicShell({ children }: { children: ReactNode }) {
 
       <main id="main">{children}</main>
 
-      <footer className="mt-10 border-t border-stone-line bg-card">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      {/*
+        바닥글도 앱 모양으로 — 흰 판 하나에 상호 · 안내 · 알약 단추.
+        /my 의 마이페이지 아래쪽과 같은 결이다.
+      */}
+      <footer className="mx-auto mt-10 max-w-5xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-8">
+        <div className="rounded-[20px] bg-card p-5 shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06] sm:p-6">
           <Brand tone="light" />
           <p className="mt-3 max-w-prose text-[0.9375rem] leading-relaxed text-ink-sub">
             온열 웰니스 케어를 제공하는 매장입니다. 이 화면에서 예약을 확정하거나
             결제하지는 않습니다 — 남겨 주신 요청은 매장에서 확인한 뒤 연락드립니다.
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Link
               href="/my"
-              className="touch-target inline-flex items-center rounded-full bg-aqua-50 px-4 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100"
+              className="inline-flex min-h-[44px] items-center gap-1 rounded-full bg-aqua-50 px-4 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100 dark:bg-aqua-500/10 dark:ring-aqua-500/20"
             >
               내 기록 보기
+              <ChevronRightIcon className="h-4 w-4" />
             </Link>
             {/*
               직원 통로 — 찾으면 있는 자리에, 크지 않게.
@@ -130,11 +135,8 @@ export default function PublicShell({ children }: { children: ReactNode }) {
 
           {/*
             고객 화면(/my/more · /my/account)과 같은 문장을 쓴다.
-            "의학적 진단이나 치료를 대신하지 않습니다" 라고 쓸 뻔했는데,
-            뜻은 맞아도 우리 화면 어디에도 없던 단어를 굳이 여기서 처음
-            꺼내게 된다. 같은 말을 이미 쓰고 있는 표현으로 맞춘다.
           */}
-          <p className="mt-6 text-[0.8125rem] leading-relaxed text-ink-faint">
+          <p className="mt-5 border-t border-stone-line pt-4 text-[0.8125rem] leading-relaxed text-ink-faint">
             표시되는 케어 안내는 이용 기록을 바탕으로 정리한 것입니다. 몸 상태에
             대한 판단이나 의학적 안내는 제공하지 않습니다.
           </p>

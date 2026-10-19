@@ -1,8 +1,9 @@
 "use client";
 
-import PageHeader from "@/components/layout/PageHeader";
 import KpiRow from "@/components/dashboard/KpiRow";
 import DecisionBand from "@/components/dashboard/DecisionBand";
+import TodayHero from "@/components/dashboard/TodayHero";
+import QuickActions from "@/components/dashboard/QuickActions";
 import FirstRunCard from "@/components/dashboard/FirstRunCard";
 import BriefingPreview from "@/components/dashboard/BriefingPreview";
 import CustomerInboxCard from "@/components/dashboard/CustomerInboxCard";
@@ -18,7 +19,7 @@ import { ChartIcon } from "@/components/ui/icons";
 import { Fold } from "@/components/ui/Fold";
 
 export default function DashboardPage() {
-  const { settings, customers, visits } = useStore();
+  const { customers, visits } = useStore();
   /**
    * 아직 아무것도 쌓이지 않은 상태.
    *
@@ -29,13 +30,24 @@ export default function DashboardPage() {
    */
   const justStarted = customers.length === 0 || visits.length === 0;
 
+  /*
+    머리 띠 + 걸쳐 올린 흰 판 (D-56) — 고객 앱 홈과 같은 첫 화면.
+    판의 왼쪽(폰은 위)은 판단 세 칸, 오른쪽(폰은 아래)은 바로가기 네 칸.
+  */
+  const top = (
+    <div>
+      <TodayHero />
+      <div className="relative z-10 mx-2.5 -mt-10 rounded-[22px] bg-card p-1.5 shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06] sm:mx-4 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:p-2">
+        <DecisionBand />
+        <div className="mx-2 mt-1 border-t border-stone-line px-0.5 pb-1.5 pt-3 lg:mx-0 lg:mt-0 lg:border-l lg:border-t-0 lg:px-4 lg:py-2">
+          <QuickActions />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div>
-      {/* 날짜는 위(폰)·왼쪽(PC)의 실시간 시계가 이미 보여 준다 — 여기서 또 쓰지 않는다 */}
-      <PageHeader
-        title="대시보드"
-        description={`${settings.companyName} ${settings.branchName}`}
-      />
       {/*
         순서에 담은 뜻 — 판단 → 실행 → 근거
 
@@ -43,14 +55,12 @@ export default function DashboardPage() {
         이유는 "몇 명인지" 를 세려는 게 아니라 "오늘 누구를 챙기지" 를
         정하려는 것인데, 숫자가 맨 위에 있으면 그 답이 한 화면 아래로 밀린다.
 
-        그래서 세 층으로 나눈다.
+          판단  머리 띠의 한 문장 + 흰 판의 세 칸
+          실행  먼저 챙길 세 분 · AX 코치 한 줄 · 이용권 챙길 분
+          근거  판단이 맞는지 확인하는 숫자 (맨 아래, 접혀 있다)
 
-          판단  오늘 봐야 할 것 셋 — 숫자 · 그렇게 본 이유 · 갈 곳
-          실행  그 판단을 오늘 처리하는 자리
-          근거  판단이 맞는지 확인하는 숫자 (여기부터는 훑고 지나간다)
-
-        층 사이는 카드가 아니라 눈썹 글자와 선 하나로 가른다. 카드를 하나
-        더 만들면 그만큼 첫 화면이 밀리기 때문이다.
+        화면 제목 줄(「대시보드 ⓘ」)은 없앴다. 제목은 머리 띠 맨 윗줄에
+        작게 들어가 있고, 그 자리를 오늘의 한 문장이 쓴다.
       */}
       <div className="flex flex-col card-gap">
         {/*
@@ -58,6 +68,7 @@ export default function DashboardPage() {
           남길 것이 없으면 스스로 숨으므로 자리를 차지하지 않는다.
         */}
         <CustomerInboxCard />
+        {top}
         {justStarted ? (
           <>
             {/* 아직 아무것도 없을 때는 시작 안내가 곧 오늘 할 일이다 */}
@@ -69,57 +80,32 @@ export default function DashboardPage() {
         ) : (
           <>
             {/*
-              ① 판단 — 작은 칸 셋 (챙길 고객 · 재등록 기회 · 이용권 임박)
-              ② 실행 — 오늘의 실행 브리핑 · AX 코치 한 줄
-              ③ 근거 — 맨 아래 「매장 숫자 · 더 보기」 (접혀 있다)
-
-              층마다 붙어 있던 「오늘의 판단」 · 「실행」 눈썹 글자와 선은
-              지웠다. 칸이 작아져 한눈에 들어오니 이름표가 없어도 순서가
-              읽힌다 — 대표님: 「오늘에 너무 많이 펼쳐져 있어 집중이 안 된다.」
+              넓은 화면에서는 두 칸 — 왼쪽은 먼저 챙길 세 분, 오른쪽은
+              AX 코치 한 줄 · 이용권 챙길 분. 폰에서는 그 순서대로 쌓인다.
+              (오른쪽이 비면 칸도 사이 간격도 남기지 않는다: empty:hidden)
             */}
-            <DecisionBand />
-            <div className="rise-stagger">
+            <div className="grid grid-cols-1 card-gap xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] xl:items-start">
               <BriefingPreview />
+              <div className="flex min-w-0 flex-col card-gap empty:hidden xl:pt-[2.375rem]">
+                <CoachEntryCard />
+                <PassFollowUpCard />
+              </div>
             </div>
-            {/*
-              AX 코치 — 브리핑 바로 아래 한 줄. 브리핑이 "누구에게" 라면
-              코치는 "그게 기록으로 남고 있나" 다. 여기서는 준비도와
-              오늘 할 일 하나만 보이고, 자세한 건 코치 화면에서 본다.
-            */}
-            <CoachEntryCard />
-            {/*
-              이용권 기한 · 잔여 · 소진 — 브리핑에 안 오른 분도 이용권 기록만
-              보고 고른다. 고를 분이 없으면 스스로 숨는다.
-            */}
-            <PassFollowUpCard />
-            {/* 둘 다 볼 분이 없으면 칸도 사이 간격도 남기지 않는다 (empty:hidden) */}
             <div className="rise-stagger grid grid-cols-1 card-gap empty:hidden xl:grid-cols-2">
               <OpportunityCard />
               <RevisitPreview />
             </div>
             {/*
               도입 안내는 '오늘 할 일' 이 아니라 '자리 잡는 법' 이다.
-              기록이 쌓이기 시작한 뒤에도 맨 위에 두었더니 네 단계짜리
-              체크리스트가 첫 화면을 통째로 차지해, 정작 오늘의 브리핑이
-              한 화면 아래로 밀렸다. 네 단계를 마치면 스스로 사라진다.
+              네 단계를 마치면 스스로 사라진다.
             */}
             <FirstRunCard />
 
             {/*
-              ③ 근거 — 위 판단이 맞는지 확인하는 숫자.
-
-              예전에는 이 숫자들이 화면 맨 위에 카드 넉 장으로 있었다.
-              판단보다 크게 보이면 화면이 거짓말을 한다 — 저 숫자를 다
-              읽어도 오늘 뭘 할지는 안 나오기 때문이다. 판단 아래로 내리고,
-              카드에서 한 판 안의 칸으로 낮췄다.
-            */}
-            {/*
               ③ 근거 — 위 판단이 어떤 숫자 위에 서 있는지.
-
               매일 아침 볼 것은 아니다. 숫자 넉 장 · 부위 그림 · 고객 구성 ·
               지점 현황을 제목 한 줄로 접어 둔다 (대표님: 「글씨가 너무 많으면
-              안 돼」). 마우스를 올리면 무엇이 들어 있는지 보이고, 한 번 편
-              사람은 다음에도 펴진 채로 본다.
+              안 돼」). 한 번 편 사람은 다음에도 펴진 채로 본다.
             */}
             <Fold
               id="dash-reference"

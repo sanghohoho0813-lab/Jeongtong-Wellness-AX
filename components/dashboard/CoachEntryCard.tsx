@@ -45,8 +45,12 @@ export default function CoachEntryCard() {
                 {coverage.overall === null ? "아직 측정 전" : `${coverage.overall}%`}
               </b>
             </span>
+            {/*
+              넓은 PC(xl)에서는 대시보드 오른쪽 좁은 칸에 들어간다 (D-56) —
+              그때는 폰처럼 배지 대신 둘째 줄 앞의 짧은 완료 수로 (한 줄 유지).
+            */}
             {todayIssued.length > 0 && (
-              <span className="hidden sm:inline-flex">
+              <span className="hidden sm:inline-flex xl:hidden">
                 <Badge tone={allDone ? "positive" : "gray"} dot>
                   오늘 {todayIssued.length}개 중 {todayVerified}개 완료
                 </Badge>
@@ -56,7 +60,7 @@ export default function CoachEntryCard() {
           <span className="mt-0.5 block truncate text-[0.9375rem] text-ink-sub">
             {/* 폰 — 완료 수는 배지 대신 둘째 줄 앞에 짧게 */}
             {todayIssued.length > 0 && (
-              <b className="nowrap-num font-bold text-ink-soft sm:hidden">
+              <b className="nowrap-num font-bold text-ink-soft sm:hidden xl:inline">
                 {todayVerified}/{todayIssued.length} 완료 ·{" "}
               </b>
             )}
@@ -70,7 +74,7 @@ export default function CoachEntryCard() {
 
         {/* 폰에서는 「열기」 만 — 읽어 주는 프로그램에는 늘 「AX 코치 열기」 */}
         <span className="inline-flex shrink-0 items-center gap-0.5 text-[0.9375rem] font-extrabold text-ink-soft transition-colors group-hover:text-aqua-800">
-          <span className="sr-only sm:not-sr-only">AX 코치 </span>열기
+          <span className="sr-only sm:not-sr-only xl:sr-only">AX 코치 </span>열기
           <ChevronRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </Link>

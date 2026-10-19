@@ -238,7 +238,7 @@ export default function MyAccount() {
         </ListGroup>
         {futureOpen && (
           <Panel className="mt-3">
-            <FutureSection compact />
+            <FutureSection />
           </Panel>
         )}
       </div>

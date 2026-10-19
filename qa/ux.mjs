@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~6차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화)");
+const { log, finish } = recorder("UI/UX 2~7차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -283,6 +283,76 @@ await pc2.context().close();
   log("챙길 고객(폰) — 처리완료 · 보류 · 이유 단추가 한 줄", rows === 1, `${rows}줄`);
   const nameLink = p.locator('[data-tour="task-card"]').first().locator('a[href^="/customers/"]').first();
   log("챙길 고객(폰) — 「고객 상세」 는 이름을 누르면 간다 (이름 옆 ›)", await nameLink.isVisible());
+}
+
+/* ── 10. 같은 앱으로 — 고객용 첫 화면 · 대시보드 · 더보기 · 목록 묶음 (D-56) ──
+   대표님: 「더보기 → 고객용 화면을 누르면 옛날 모습」, 「내부 화면이 거의 안 바뀌었다」.
+   고객 앱(/my)과 같은 뼈대 — 머리 띠 · 걸쳐 올린 판 · 목록 묶음 — 가 실제로 있는지 본다. */
+{
+  // 고객용 첫 화면 — 머리 띠 + 걸친 바로가기 네 칸, 폰 길이가 줄었다
+  await go(p, "/welcome", 1500);
+  log("고객용 화면 — 머리 띠가 있다 (/my 홈과 같은 모양)", (await p.locator("[data-welcome-hero]").count()) === 1);
+  const quick = await p.locator('#actions nav[aria-label="바로가기"] a').evaluateAll((els) => els.map((a) => a.getAttribute("href")));
+  log("고객용 화면 — 바로가기 네 칸 (예약 · 이용권 · 상담 · 내 기록)", JSON.stringify(quick) === JSON.stringify(["/my/booking", "#가격", "/my/request", "/my"]), JSON.stringify(quick));
+  const qTops = await p.evaluate(() => [...document.querySelectorAll('#actions nav a')].map((a) => Math.round(a.getBoundingClientRect().top)));
+  log("고객용 화면 — 바로가기 네 칸이 폰에서도 한 줄", new Set(qTops).size === 1, JSON.stringify(qTops));
+  const heroBottom = await p.evaluate(() => Math.round(document.querySelector("[data-welcome-hero]").getBoundingClientRect().bottom));
+  const quickTop = await p.evaluate(() => Math.round(document.querySelector("#actions").getBoundingClientRect().top));
+  log("고객용 화면 — 바로가기 판이 머리 띠에 걸쳐 올라온다", quickTop < heroBottom, `띠 끝 ${heroBottom} · 판 ${quickTop}`);
+  log("고객용 화면 — 바로가기가 폰 첫 화면 안에 있다", quickTop < 844 - 80, `${quickTop}px`);
+  const wH = await p.evaluate(() => document.documentElement.scrollHeight);
+  log("고객용 화면(폰) — 전에는 8,186px, 이제 6,000px 이하", wH <= 6000, `${wH}px`);
+  log("고객용 화면 — 향후 확장은 점선 상자 하나 안의 목록 줄", (await p.locator("section#future ul.border-dashed > li").count()) === 5);
+
+  // 대시보드 — 머리 띠 + 걸친 판(판단 셋 + 바로가기 넷)
+  await go(p, "/", 1500);
+  log("대시보드 — 머리 띠에 오늘의 한 문장이 있다", /오늘 먼저 챙길 분이|모두 챙기셨습니다|걸린 분이 없습니다/.test(await p.locator("[data-today-hero]").innerText()));
+  const panel = await p.evaluate(() => {
+    const band = document.querySelector("[data-decision-band]");
+    const qa = document.querySelector("[data-quick-actions]");
+    const hero = document.querySelector("[data-today-hero]");
+    return {
+      same: !!band && !!qa && band.parentElement === qa.parentElement.parentElement,
+      overlap: band ? Math.round(band.getBoundingClientRect().top) < Math.round(hero.getBoundingClientRect().bottom) : false,
+      n: qa ? qa.querySelectorAll("li").length : 0,
+    };
+  });
+  log("대시보드 — 판단 세 칸과 바로가기 네 칸이 한 판 안에", panel.same && panel.n === 4, `바로가기 ${panel.n}칸`);
+  log("대시보드 — 그 판이 머리 띠에 걸쳐 올라온다", panel.overlap);
+  await p.locator("[data-quick-actions]").getByRole("button", { name: "방문 기록" }).click();
+  await p.waitForTimeout(500);
+  log("대시보드 바로가기 — 「방문 기록」 이 고객 고르기 창을 연다 (화면은 그대로)", (await p.locator('[role="dialog"]').count()) >= 1 && new URL(p.url()).pathname === "/");
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(300);
+  await p.locator("[data-quick-actions]").getByRole("button", { name: "고객 찾기" }).click();
+  await p.waitForTimeout(500);
+  log("대시보드 바로가기 — 「고객 찾기」 가 찾기 창을 연다", (await p.locator('[role="dialog"]').count()) >= 1);
+  await p.keyboard.press("Escape");
+  await p.waitForTimeout(300);
+  log("대시보드 — 브리핑 미리보기는 흰 목록 줄 (어두운 카드 두 장이 겹치지 않는다)", (await p.locator('[data-tour="dash-briefing"] ul > li').count()) >= 1 && (await p.locator('[data-tour="dash-briefing"].card-hero').count()) === 0);
+  const active = await p.evaluate(() => {
+    const a = [...document.querySelectorAll("nav.fixed a")].find((x) => x.getAttribute("href") === "/");
+    return a ? getComputedStyle(a.querySelector("span")).backgroundColor : "";
+  });
+  log("하단 탭 — 지금 탭은 아이콘 뒤에 알약 (고객 앱과 같은 모양)", !!active && active !== "rgba(0, 0, 0, 0)", active);
+
+  // 더보기 — 문서 · 영상 다섯은 아이콘 칸 한 줄
+  await go(p, "/more", 1300);
+  const docTops = await p.evaluate(() =>
+    [...document.querySelectorAll('main a[href="/why"], main a[href="/intro"], main a[href="/guide"], main a[href^="/videos/"]')].map((a) => Math.round(a.getBoundingClientRect().top)),
+  );
+  log("더보기 — 문서 · 영상 다섯이 한 줄의 아이콘 칸", docTops.length === 5 && new Set(docTops).size === 1, JSON.stringify(docTops));
+
+  // 고객 목록 · 방문 기록 — 카드 여러 장이 아니라 한 판 안의 줄
+  await go(p, "/customers", 1200);
+  const lists = await p.evaluate(() => new Set([...document.querySelectorAll('[data-tour="customer-row"]')].map((a) => a.closest("ul"))).size);
+  log("고객 목록 — 줄이 모두 한 판(목록 하나) 안에 있다", lists === 1, `목록 ${lists}개`);
+  await go(p, "/visits", 1200);
+  const vis = await p.evaluate(() => {
+    const days = [...document.querySelectorAll("[data-day-header]")];
+    return days.every((h) => h.nextElementSibling?.tagName === "UL") && document.querySelectorAll("[data-visit-row]").length > 0;
+  });
+  log("방문 기록 — 하루가 한 판, 그 안에 줄", vis);
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

@@ -12,8 +12,8 @@ import {
   TicketIcon,
 } from "@/components/ui/icons";
 import StickyBookBar from "@/components/public/StickyBookBar";
-import PhotoBand from "@/components/public/PhotoBand";
 import FutureSection from "@/components/public/FutureSection";
+import { ListGroup, ListRow, Section, StatusPill } from "@/components/portal/kit";
 import { PUBLIC_PRICES } from "@/lib/public/price-sheet";
 import { formatWon } from "@/lib/utils/format";
 
@@ -27,76 +27,65 @@ export const metadata: Metadata = {
  * 고객용 화면 — 고객이 보는 플랫폼
  * =================================
  *
- * '공개 첫 화면' 이라고 불렀었다. 만드는 쪽의 말이다. 이 주소는
- * 소개만 하고 마는 랜딩페이지가 아니라, 고객이 예약을 남기고 가격을
- * 보고 상담을 남기고 자기 기록으로 건너가는 **플랫폼**이다.
- * 이름이 하는 일을 가리키게 바꿨다.
+ * 이 주소는 소개만 하고 마는 랜딩페이지가 아니라, 고객이 예약을 남기고
+ * 가격을 보고 상담을 남기고 자기 기록(MY WELLNESS)으로 건너가는 문이다.
  *
- * 순서를 이렇게 잡았다.
+ * 생김새를 MY WELLNESS 와 같은 앱으로 맞췄다 (D-56).
+ * ------------------------------------------------
+ * 대표님이 내부 화면 「더보기 → 고객용 화면」 으로 들어와 보시고 "옛날
+ * 모습" 이라고 하셨다. 맞는 말이었다. 바로 다음 화면인 /my 는 배달 · 적립
+ * 앱 모양(머리 띠 · 바로가기 칸 · 옆으로 넘기는 카드 · 목록 줄 · 알약)
+ * 으로 바뀌었는데, 그 앞의 문만 홍보 페이지 모양 — 큰 사진 띠가 위아래로
+ * 일곱 장 — 그대로였다. 같은 가게의 두 화면이 서로 다른 앱처럼 보였다.
  *
- *   1) 여기가 무엇을 하는 곳인가        (히어로)
- *   2) 내가 지금 뭘 할 수 있는가        (큰 단추 넷)
- *   3) 나 같은 사람에게 맞는 곳인가     (이런 분께)
- *   4) 실제로 뭘 어떻게 하는가          (3단 구성)
- *   5) 얼마인가                         (가격표)
- *   6) 왜 여기여야 하는가               (기록이 쌓인다)
+ * 그래서 /my 의 부품(components/portal/kit)을 그대로 가져다 쓴다.
  *
- * 흔한 랜딩페이지는 2)를 맨 아래에 둔다. 그런데 이 화면에 오는 사람의 절반은
- * **이미 다니시는 고객**이고, 그분들이 원하는 건 소개가 아니라 자기 기록이다.
- * 그래서 단추를 위로 끌어올렸다.
+ *   1) 어두운 머리 띠 + 대표 사진            (여기가 무엇을 하는 곳인가)
+ *   2) 머리 띠에 걸친 바로가기 네 칸         (지금 뭘 할 수 있는가)
+ *   3) 지키는 것 세 가지                     (믿을 만한가)
+ *   4) 옆으로 넘기는 사진 카드 셋            (가면 어떤 시간을 보내나)
+ *   5) 이런 분께 · 세 겹 구성 — 목록 줄      (나에게 맞나 · 무엇을 하나)
+ *   6) 이용권 — 쿠폰 모양                    (얼마인가)
+ *   7) 기록이 쌓인다 — 어두운 판             (왜 여기여야 하나)
+ *   8) 앞으로 준비하는 것 — 점선 목록        (아직 없는 것)
+ *
+ * 폰에서 8,200px 이던 길이가 절반 가까이로 준다. 사진을 크게 깔던 띠를
+ * 카드 안의 사진으로 바꾼 것이 대부분이다. 내용은 하나도 빼지 않았다.
  *
  * 이 화면은 데이터베이스를 읽지 않는다. 읽는 순간 로그인 없이 열리는 통로가
  * 하나 생기고, 그건 공개 화면이 감당할 위험이 아니다. 여기 있는 글과 숫자는
  * 전부 매장 자료에서 옮겨 온 고정값이다.
  */
 
-/** 큰 단추 넷 — 시안의 2×2 배치를 그대로 쓴다 */
+/** 바로가기 네 칸 — /my 홈의 바로가기와 같은 모양 */
 const ACTIONS = [
   {
     href: "/my/booking",
     label: "예약하기",
-    desc: "날짜를 남기시면 매장에서 연락드립니다",
+    desc: "날짜를 남기시면 연락드립니다",
     icon: CalendarIcon,
-    solid: true,
+    tone: "bg-aqua-50 text-aqua-700 ring-aqua-100 dark:bg-aqua-500/10 dark:text-aqua-300 dark:ring-aqua-500/20",
   },
   {
     href: "#가격",
     label: "이용권 보기",
     desc: "1회 · 10회권 · 30회권 가격표",
     icon: TicketIcon,
-    solid: false,
+    tone: "bg-gold-soft text-gold-deep ring-gold/20",
   },
   {
     href: "/my/request",
     label: "상담 문의",
     desc: "궁금한 점을 남겨 주세요",
     icon: ChatIcon,
-    solid: false,
+    tone: "bg-aqua-50 text-aqua-700 ring-aqua-100 dark:bg-aqua-500/10 dark:text-aqua-300 dark:ring-aqua-500/20",
   },
   {
     href: "/my",
-    label: "내 기록 시작하기",
-    desc: "이용 기록과 남은 이용권 확인",
+    label: "내 기록",
+    desc: "이용 기록 · 남은 이용권 확인",
     icon: ClipboardIcon,
-    solid: true,
-  },
-];
-
-const FOR_WHOM = [
-  {
-    icon: BodyIcon,
-    title: "맞춤 웰니스 관리",
-    desc: "케어 부위와 반응을 매번 기록해, 다음 방문 때 그대로 이어서 봐 드립니다.",
-  },
-  {
-    icon: CalendarIcon,
-    title: "방문 주기 관리",
-    desc: "다녀가신 간격을 보고 다음 방문 권장 시점을 함께 챙겨 드립니다.",
-  },
-  {
-    icon: LeafIcon,
-    title: "홈케어 안내",
-    desc: "매장에서 하는 관리와 이어지는 생활 관리 정보를 안내해 드립니다.",
+    tone: "bg-gradient-to-br from-deep-700 to-deep-900 text-gold ring-black/10",
   },
 ];
 
@@ -125,236 +114,205 @@ const TRUST = [
   },
 ];
 
-/** 실제 시술 구성 — 서비스 표준 화면과 같은 내용 */
-const LAYERS = [
-  { no: 1, name: "보호용 거즈", desc: "피부에 먼저 올립니다" },
-  { no: 2, name: "특제 반죽", desc: "여러 식물을 곱게 갈아 배합·발효한 반죽" },
-  { no: 3, name: "국내산 쑥", desc: "국내산 최상급을 씁니다" },
+/**
+ * 옆으로 넘기는 사진 카드 셋.
+ *
+ * 사진마다 **왜 거기 있는지**가 다르다 — 무엇을 해 주나 · 어떤 곳인가 ·
+ * 무엇을 몸에 올리나. 같은 쑥뜸 사진을 세 번 쓰면 세 번 다 같은 말이 된다.
+ *
+ * 세 장 모두 3:2 상자에 넣는다. 원본 비율이 1.50 · 2.00 · 1.25 라
+ * 잘리는 양은 0% · 25% · 17% — 무엇을 찍은 사진인지 알아볼 수 있는 선
+ * (34%) 안이다. 4:3 으로 두면 store_space 가 33% 로 그 선에 붙는다.
+ */
+const SCENES = [
+  {
+    src: "/brand/service_scene.jpg",
+    alt: "직원이 고객의 복부에 쑥뜸을 올려 드리는 모습",
+    position: "object-[45%_45%]",
+    eyebrow: "방문하시면",
+    title: "눕기만 하시면 됩니다",
+    desc: "부위를 여쭙고 거즈 · 반죽 · 쑥을 차례로 올립니다. 진행되는 동안 편히 쉬시면 됩니다.",
+  },
+  {
+    src: "/brand/store_space.jpg",
+    alt: "따뜻한 조명과 나무·초록으로 꾸민 케어 공간",
+    position: "object-center",
+    eyebrow: "머무는 동안",
+    title: "서두르지 않아도 되는 자리",
+    desc: "따뜻한 조명과 나무 · 초록으로 꾸민 공간에서 쉬다 가십니다.",
+  },
+  {
+    src: "/brand/material_closeup.jpg",
+    alt: "거즈 위에 넓게 편 쑥 — 가까이서 본 모습",
+    position: "object-center",
+    eyebrow: "무엇을 올리나",
+    title: "몸에 닿는 것부터 봅니다",
+    desc: "보호용 거즈 위에 여러 식물을 배합·발효한 반죽을 펴고, 국내산 최상급 쑥을 올립니다.",
+  },
 ];
+
+const FOR_WHOM = [
+  {
+    icon: BodyIcon,
+    title: "맞춤 웰니스 관리",
+    desc: "케어 부위와 반응을 매번 기록해, 다음 방문 때 이어서 봐 드립니다.",
+  },
+  {
+    icon: CalendarIcon,
+    title: "방문 주기 관리",
+    desc: "다녀가신 간격을 보고 다음 방문 권장 시점을 함께 챙겨 드립니다.",
+  },
+  {
+    icon: LeafIcon,
+    title: "홈케어 안내",
+    desc: "매장에서 하는 관리와 이어지는 생활 관리 정보를 안내해 드립니다.",
+  },
+];
+
+/** 실제 시술 구성 — 서비스 표준 화면 · 고객 화면(/my/more)과 같은 내용 */
+const LAYERS: { no: number; name: string; desc: string; photo?: string }[] = [
+  { no: 1, name: "보호용 거즈", desc: "피부에 먼저 올립니다" },
+  { no: 2, name: "특제 반죽", desc: "여러 식물을 곱게 갈아 배합·발효한 반죽", photo: "/service/dough.jpg" },
+  { no: 3, name: "국내산 쑥", desc: "국내산 최상급을 씁니다", photo: "/service/mugwort.jpg" },
+];
+
+const card =
+  "rounded-[20px] bg-card shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]";
 
 export default function PublicHome() {
   return (
     <>
-      {/* ── 1. 히어로 ─────────────────────────────────────── */}
+      {/* ── 1. 머리 띠 ─────────────────────────────────────── */}
       {/*
-        히어로 사진이 바뀌었다 — 그리고 그게 이번 작업에서 가장 큰 변화다.
+        /my 홈의 머리 띠와 같은 딥그린 띠. 글자는 단색 띠 위에만 올리고,
+        사진은 띠 안의 둥근 카드로 넣는다.
 
-        전에는 `moxa.jpg` 였다. 완성된 대왕쑥뜸을 검은 배경에서 찍은 **제품
-        정물**이다. 제품을 설명하는 자리에서는 훌륭하지만, 처음 온 사람이
-        5초 안에 보는 첫 화면에 놓기에는 성격이 맞지 않았다. 브랜드의 첫
-        인상이 '무엇을 파는가' 로 시작해 버린다.
-
-        `hero_main.jpg` 는 **장면**이다. 케어 베드에 편안히 누운 분이 있고,
-        앞쪽 나무 쟁반에 쑥과 허브볼이 놓여 있다. 여기가 어떤 곳이고 오면
-        어떤 시간을 보내게 되는지가 한 장에 들어 있다.
-
-        잘라내기 — 사진을 열어 보고 정한다
-        ----------------------------------
-        1536×1024 (비 1.50). 화면에서 눈이 가는 곳은 둘이다.
-
-            얼굴    가로 약 60%, 세로 약 32%
-            쟁반    아래쪽 절반 전체
-
-        왼쪽 4분의 1은 아무것도 없는 미색 벽이라 잘라도 잃을 것이 없다.
-
-            PC   3:2 (= 원본 그대로)  → 잘리는 양 0%
-            폰   4:3                  → 가로 11% 만 잘림.
-                 그것도 가운데가 아니라 58% 지점을 기준으로 잘라
-                 빈 벽 쪽을 먼저 버리고 얼굴을 남긴다
-
-        같은 비율을 기계적으로 쓰지 않는 이유가 이것이다. 폰에서 3:2 를
-        그대로 쓰면 높이가 239px 밖에 안 되어 얼굴이 너무 작아지고, PC 에서
-        4:3 을 쓰면 잘라낼 이유가 없는데 잘라내게 된다.
-
-        선명도
-        ------
-        원본이 가로 1536px 이다. 1920 화면에 전체폭으로 깔면 25% 확대되어
-        흐려지고 2배 화면에서는 더 심하다. 그래서 **전체폭으로 깔지 않는다.**
-        PC 에서는 좌우 2단의 오른쪽 칸(최대 약 620px)에 넣는다 — 2배 화면
-        기준 1240px 이 필요하므로 1536px 로 넉넉하다.
-
-        글자는 여전히 단색 딥그린 위에만 올린다. 사진 위에 얹는 것은 작은
-        설명표 하나뿐이고, 그 자리에는 아래쪽 어둠 그라데이션을 깐다.
+        hero_main.jpg (1536×1024, 비 1.50)
+            PC   3:2  → 잘리는 양 0%
+            폰   16:10 → 세로 6%. 바로가기 칸이 첫 화면에 들어오도록
+                        4:3 보다 한 단계 낮췄다. 58% 지점을 기준으로 잘라
+                        왼쪽 빈 벽을 먼저 버리고 얼굴을 남긴다.
+        전체폭으로 깔지 않는다 — 1920 화면에 깔면 25% 확대되어 흐려진다.
       */}
-      <section className="relative isolate overflow-hidden bg-gradient-to-b from-deep-900 to-deep-950">
-        {/* 은은한 금빛 번짐 — 단색 면이 밋밋해지지 않게 */}
+      <section
+        data-welcome-hero
+        className="relative isolate overflow-hidden bg-gradient-to-b from-deep-900 via-deep-900 to-deep-800 text-white"
+      >
         <div
           aria-hidden
           className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold/10 blur-3xl"
         />
-
-        <div className="relative mx-auto grid max-w-5xl items-center gap-7 px-4 pb-14 pt-9 sm:px-6 sm:pb-16 sm:pt-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12">
+        <div className="relative mx-auto grid max-w-5xl items-center gap-5 px-4 pb-14 pt-6 sm:px-6 sm:pb-16 sm:pt-9 lg:grid-cols-[1fr_1fr] lg:gap-10 lg:pb-20 lg:pt-12">
           <div className="min-w-0">
-            <h1 className="text-[1.9375rem] font-extrabold leading-[1.25] tracking-tight text-white sm:text-[2.75rem]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[0.8125rem] font-extrabold text-gold-lite ring-1 ring-gold/30">
+              <LeafIcon className="h-4 w-4 shrink-0" />
+              국내산 최상급 쑥 사용
+            </span>
+            <h1 className="mt-3 text-[1.875rem] font-extrabold leading-[1.25] tracking-tight sm:text-[2.5rem]">
               몸과 마음을 돌보는
-              <span className="mt-1 block bg-gradient-to-r from-gold-lite to-gold bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-gold-lite to-gold bg-clip-text text-transparent">
                 프리미엄 쑥뜸 케어
               </span>
             </h1>
-
-            <span className="my-4 flex max-w-xs items-center gap-3 sm:my-5" aria-hidden>
-              <span className="h-px flex-1 bg-white/25" />
-              <LeafIcon className="h-4 w-4 text-gold" />
-              <span className="h-px flex-1 bg-white/25" />
-            </span>
-
-            <p className="max-w-md text-[1.0625rem] leading-relaxed text-white/85 sm:text-[1.125rem]">
-              거즈 위에 특제 반죽을 펴고 쑥을 올려 넓은 부위에 온열을
-              전달합니다. 다녀가신 기록이 쌓이면 다음 관리 시점까지 함께
-              챙겨 드립니다.
+            <p className="mt-2.5 max-w-md text-[1rem] leading-relaxed text-white/80 sm:text-[1.0625rem]">
+              거즈 위에 특제 반죽을 펴고 쑥을 올려, 넓은 부위에 온열을
+              전달합니다.
             </p>
           </div>
 
-          <figure className="relative min-w-0">
-            {/*
-              사진 둘레에 얇은 빛 테두리(매트)를 한 겹 두른다.
-              액자에 매트를 두르듯 — 화면 끝까지 늘어난 사진은 '배경'으로
-              읽히지만, 테두리가 있는 사진은 '작품'으로 읽힌다.
-            */}
-            <div className="rounded-[2rem] bg-white/[0.06] p-2 shadow-[0_28px_64px_-28px_rgba(0,0,0,0.8)] ring-1 ring-gold/25">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] lg:aspect-[3/2]">
-                <Image
-                  src="/brand/hero_main.jpg"
-                  alt="따뜻한 조명 아래 케어를 받으며 쉬고 계신 모습과, 앞에 놓인 쑥과 허브볼"
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 620px, 100vw"
-                  /*
-                    58% 지점을 기준으로 자른다. 가운데(50%)로 두면 폰에서
-                    오른쪽 화초가 잘려 나가고 왼쪽 빈 벽이 남는다 —
-                    버릴 것을 남기고 남길 것을 버리는 셈이다.
-                  */
-                  className="object-cover object-[58%_50%] lg:object-center"
-                />
-
-                {/* 아래쪽만 어둡게 — 설명표가 사진 위에서 읽히도록 */}
-                <div
-                  aria-hidden
-                  className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
-                />
-
-                <figcaption className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-deep-950/65 px-3.5 py-2 text-[0.875rem] font-bold text-gold-lite ring-1 ring-gold/35 backdrop-blur-md sm:text-[0.9375rem]">
-                    <LeafIcon className="h-4 w-4 shrink-0" />
-                    국내산 최상급 쑥 사용
-                  </span>
-                </figcaption>
-              </div>
+          <figure className="relative min-w-0 overflow-hidden rounded-[22px] shadow-[0_24px_56px_-28px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
+            <div className="relative aspect-[16/10] lg:aspect-[3/2]">
+              <Image
+                src="/brand/hero_main.jpg"
+                alt="따뜻한 조명 아래 케어를 받으며 쉬고 계신 모습과, 앞에 놓인 쑥과 허브볼"
+                fill
+                priority
+                sizes="(min-width: 1024px) 480px, 100vw"
+                className="object-cover object-[58%_50%] lg:object-center"
+              />
             </div>
           </figure>
         </div>
       </section>
 
-      {/* ── 2. 지금 할 수 있는 것 ─────────────────────────── */}
+      {/* ── 2. 바로가기 네 칸 ─────────────────────────────── */}
       {/*
-        relative z-10 이 없으면 이 카드들이 히어로 밑에 깔린다.
-        히어로는 position:relative + isolate 라 스택 문맥을 만드는데, 이쪽은
-        position:static 이라 '위치 잡힌 요소'에게 그림 순서를 내준다.
-        -mt-6 으로 끌어올린 26px 이 그대로 히어로에 먹혀서, 실제 폰에서
-        첫 카드의 '예약하기' 글자 윗부분이 잘려 보였다.
+        머리 띠에 반쯤 걸쳐 올린다 (/my 홈과 같은 자리 · 같은 모양).
+        relative z-10 이 없으면 이 판이 머리 띠 밑에 깔린다 — 띠가 isolate
+        라 스택 문맥을 만들고, 이쪽이 static 이면 그림 순서를 내준다.
+
+        폰에서는 아이콘 + 이름만, 넓은 화면에서는 한 줄 설명을 더한다.
       */}
       <section
         id="actions"
         aria-label="바로 하실 수 있는 것"
         data-book-anchor
-        className="relative z-10 mx-auto -mt-6 max-w-5xl scroll-mt-24 px-4 sm:px-6"
+        className="relative z-10 mx-auto -mt-9 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
-        {/*
-          네 칸의 크기를 맞춘다.
+        <div className={`${card} !rounded-[22px] px-2 pb-3 pt-4 sm:px-4 sm:pb-4 sm:pt-5`}>
+          <nav aria-label="바로가기">
+            <ul className="grid grid-cols-4 gap-x-1.5 sm:gap-x-3">
+              {ACTIONS.map((a) => {
+                const Icon = a.icon;
+                return (
+                  <li key={a.label} className="min-w-0">
+                    <Link
+                      href={a.href}
+                      data-quick={a.href}
+                      className="group flex flex-col items-center gap-1.5 rounded-2xl py-1 text-center transition-colors sm:px-2 sm:py-2 sm:hover:bg-card-soft"
+                    >
+                      <span
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 transition-transform group-hover:-translate-y-0.5 group-active:scale-95 ${a.tone}`}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </span>
+                      <span className="w-full text-[0.8125rem] font-bold leading-tight text-ink-soft [word-break:keep-all] sm:text-[1rem] sm:font-extrabold sm:text-ink">
+                        {a.label}
+                      </span>
+                      <span className="hidden w-full text-[0.8125rem] leading-snug text-ink-sub [word-break:keep-all] sm:block">
+                        {a.desc}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
 
-          전에는 설명 길이가 칸마다 달라서 카드 높이가 제각각이었다
-          ('1회 · 10회권 · 30회권 가격표' 는 한 줄, '날짜를 남기시면
-          매장에서 연락드립니다' 는 두 줄). PC 에서 2×2 로 놓이면 그 차이가
-          왼쪽·오른쪽 어긋남으로 그대로 드러난다.
-
-          items-stretch(기본) + h-full 로 같은 줄의 두 칸을 같은 높이로
-          묶고, 글은 위에서부터 채운다(items-start). 아이콘 상자는 어느
-          칸에서나 48px 한 가지다.
-        */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {ACTIONS.map((a) => {
-            const Icon = a.icon;
-            return (
-              <Link
-                key={a.label}
-                href={a.href}
-                className={`card-lift group flex h-full items-start gap-4 rounded-card-lg p-5 shadow-card transition-colors ${
-                  a.solid
-                    ? "bg-deep-800 text-white ring-1 ring-deep-700 hover:bg-deep-700"
-                    : "bg-card text-ink ring-1 ring-stone-line hover:bg-aqua-50"
-                }`}
-              >
-                <span
-                  className={`icon-pop flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
-                    a.solid
-                      ? "bg-white/12 text-gold-lite ring-1 ring-white/15"
-                      : "bg-gold-soft/50 text-gold-deep ring-1 ring-gold/25"
-                  }`}
-                >
-                  <Icon className="h-6 w-6" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[1.1875rem] font-extrabold leading-tight">
-                    {a.label}
-                  </span>
-                  <span
-                    className={`mt-1 block text-[0.9375rem] leading-snug ${
-                      a.solid ? "text-white/75" : "text-ink-sub"
-                    }`}
-                  >
-                    {a.desc}
-                  </span>
-                </span>
-                <ChevronRightIcon
-                  className={`mt-1 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5 ${
-                    a.solid ? "text-white/60" : "text-ink-faint"
-                  }`}
-                />
-              </Link>
-            );
-          })}
+          <p className="mx-1 mt-3.5 rounded-2xl bg-card-soft px-3.5 py-2.5 text-[0.875rem] leading-snug text-ink-sub ring-1 ring-stone-line sm:mx-2">
+            예약과 상담은 <b className="text-ink-soft">내 기록</b>에 들어가신 뒤
+            남기실 수 있습니다. 처음이시라면 매장에서 연결코드를 받아 주세요.
+          </p>
         </div>
-
-        <p className="mt-3 px-1 text-[0.9375rem] leading-relaxed text-ink-sub">
-          예약과 상담은 <b className="text-ink-soft">내 기록</b>에 들어가신 뒤
-          남기실 수 있습니다. 처음이시라면 매장에서 연결코드를 받아 주세요.
-        </p>
       </section>
 
-      {/* ── 2-1. 매장을 믿을 만한 이유 ────────────────────── */}
+      {/* ── 3. 매장이 지키는 것 ──────────────────────────── */}
       {/*
-        여기에 무엇을 쓰지 '않았는지' 를 먼저 적어 둔다.
-
         보통 이 자리에는 '○년 경력', '만족도 ○%', '누적 ○명' 이 들어간다.
         그 숫자들을 쓰지 않았다. 매장이 확인해 준 값이 이 저장소 어디에도
-        없기 때문이다. 확인되지 않은 숫자를 공개 화면에 거는 것은 그냥
-        거짓말이고, 한 번 걸면 내리기도 어렵다.
-
-        그래서 **이미 확인된 사실 셋**만 쓴다. 셋 다 서비스 표준 화면
-        (/service) · 실제 제품자료와 같은 내용이고, 효능을 말하지 않는다.
-        매장에서 경력·만족도 수치를 확정해 주시면 그때 이 자리에 더한다.
+        없기 때문이다. 확인된 사실 셋만 쓴다.
       */}
-      <section
+      <Section
         id="trust"
-        aria-labelledby="trust-h"
-        className="mx-auto mt-10 max-w-5xl scroll-mt-24 px-4 sm:px-6"
+        headingId="trust-h"
+        title="정통대왕쑥뜸원이 지키는 것"
+        className="mx-auto mt-8 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
-        <h2 id="trust-h" className="eyebrow mb-3 px-1">
-          정통대왕쑥뜸원이 지키는 것
-        </h2>
-        <ul className="stat-strip grid-cols-1 sm:grid-cols-3">
+        <ul
+          className={`${card} grid grid-cols-1 divide-y divide-stone-line overflow-hidden sm:grid-cols-3 sm:divide-x sm:divide-y-0`}
+        >
           {TRUST.map((t) => {
             const Icon = t.icon;
             return (
-              <li key={t.title} className="stat-cell flex items-start gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/60 text-gold-deep ring-1 ring-gold/25">
+              <li key={t.title} className="flex items-start gap-3 px-4 py-3.5 sm:py-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/70 text-gold-deep ring-1 ring-gold/25">
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[1.0625rem] font-extrabold leading-tight text-ink">
+                  <span className="block text-[1rem] font-extrabold leading-snug text-ink">
                     {t.title}
                   </span>
-                  <span className="mt-1 block text-[0.9375rem] leading-snug text-ink-sub">
+                  <span className="mt-0.5 block text-[0.875rem] leading-snug text-ink-sub">
                     {t.desc}
                   </span>
                 </span>
@@ -362,405 +320,295 @@ export default function PublicHome() {
             );
           })}
         </ul>
-      </section>
+      </Section>
 
-      {/* ── 2-2. 어떤 시간을 보내시게 되는지 ─────────────── */}
+      {/* ── 4. 어떤 시간을 보내시게 되는지 — 옆으로 넘기는 카드 ── */}
       {/*
-        사진을 몇 장 넣었는지가 아니라, 사진마다 **왜 거기 있는지**가
-        달라야 한다. 여기 셋은 서로 다른 질문에 답한다.
-
-            서비스 장면  — 가면 무엇을 해 주나
-            매장 공간    — 어떤 곳인가
-            재료         — 무엇을 몸에 올리나
-
-        같은 쑥뜸 사진을 세 번 쓰면 세 번 다 같은 말이 된다.
+        전에는 사진을 화면 폭 가득 세 장 연달아 깔았다(폰에서 약 1,900px).
+        배달 앱의 「가게 카드 줄」 처럼 옆으로 넘기게 하면 한 화면 높이로
+        세 장면이 다 들어온다. 넓은 화면에서는 세 칸으로 나란히 놓는다.
       */}
-      <section
+      <Section
         id="service"
-        aria-label="어떤 시간을 보내시게 되는지"
-        className="mx-auto mt-12 max-w-5xl scroll-mt-24 space-y-3 px-4 sm:px-6"
+        headingId="service-h"
+        title="어떤 시간을 보내시게 되는지"
+        sub={<span className="sm:hidden">옆으로 넘겨 보세요</span>}
+        className="mx-auto mt-8 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
-        <PhotoBand
-          src="/brand/service_scene.jpg"
-          alt="직원이 고객의 복부에 쑥뜸을 올려 드리는 모습"
-          eyebrow="방문하시면"
-          title="눕기만 하시면 됩니다"
-          position="object-[45%_45%]"
+        <ul
+          aria-label="방문하시면 · 머무는 동안 · 무엇을 올리나"
+          className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 pt-0.5 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0"
         >
-          <p>
-            부위를 여쭙고, 거즈를 깔고, 반죽을 편 다음 쑥을 올립니다.
-            한 점이 아니라 넓은 면에 온기가 퍼지도록 준비해 드립니다.
-          </p>
-          <p>진행되는 동안에는 편히 쉬시면 됩니다.</p>
-        </PhotoBand>
-
-        {/*
-          store_space.jpg 만 원본이 1774×887(비 2.0)이라 가로로 긴 띠에
-          제대로 들어간다. 1536×1024 짜리를 여기 넣으면 위아래로 25%가
-          잘려 나간다 — 그래서 이 자리에는 이 사진만 쓴다.
-        */}
-        <figure className="relative overflow-hidden rounded-card-lg shadow-card ring-1 ring-stone-line">
-          <div className="relative aspect-[16/10] sm:aspect-[2/1]">
-            <Image
-              src="/brand/store_space.jpg"
-              alt="따뜻한 조명과 나무·초록으로 꾸민 케어 공간"
-              fill
-              sizes="(min-width: 640px) 900px, 100vw"
-              className="object-cover object-center"
-            />
-            <span
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-deep-950/85 via-deep-950/25 to-transparent"
-            />
-          </div>
-          <figcaption className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-            <p className="eyebrow !text-gold-lite">머무는 동안</p>
-            <p className="mt-1.5 max-w-md text-[1.125rem] font-extrabold leading-snug text-white sm:text-[1.375rem]">
-              서두르지 않아도 되는 자리로 준비해 두었습니다
-            </p>
-          </figcaption>
-        </figure>
-
-        <PhotoBand
-          src="/brand/material_closeup.jpg"
-          alt="거즈 위에 넓게 편 쑥 — 가까이서 본 모습"
-          eyebrow="무엇을 올리나"
-          title="몸에 닿는 것부터 봅니다"
-          ratioWide="sm:aspect-[5/4]"
-          textFirst
-        >
-          <p>
-            피부에 먼저 닿는 것은 보호용 거즈입니다. 그 위에 여러 식물을
-            곱게 갈아 배합·발효한 특제 반죽을 넓게 펴고, 마지막에 국내산
-            최상급 쑥을 올립니다.
-          </p>
-        </PhotoBand>
-      </section>
-
-      {/* ── 3. 이런 분께 ──────────────────────────────────── */}
-      <section id="for-whom" aria-labelledby="for-whom-h" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
-        <h2
-          id="for-whom-h"
-          className="flex items-center justify-center gap-2.5 text-center text-[1.375rem] font-extrabold text-ink sm:text-[1.625rem]"
-        >
-          <LeafIcon className="h-5 w-5 shrink-0 text-gold-deep" aria-hidden />
-          이런 분께 권해 드립니다
-          <LeafIcon className="h-5 w-5 shrink-0 scale-x-[-1] text-gold-deep" aria-hidden />
-        </h2>
-
-        {/*
-          폰에서는 가로줄, PC 에서는 세 칸.
-
-          처음엔 어느 폭에서나 세로 카드였다. 그런데 폰에서 카드 하나가
-          480px 씩 차지해, 짧은 문장 셋을 읽는 데 스크롤이 두 화면 가까이
-          들었다. 여백이 넉넉한 것과 텅 빈 것은 다르다.
-
-          폰에서는 아이콘을 왼쪽에 두고 글을 오른쪽에 붙인다 — 셋을 합쳐
-          한 화면에 들어온다. PC 는 가로 폭이 남으니 그대로 세 칸으로 편다.
-        */}
-        <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
-          {FOR_WHOM.map((f) => {
-            const Icon = f.icon;
-            return (
-              <li
-                key={f.title}
-                className="flex items-center gap-4 rounded-card-lg bg-card p-4 shadow-card ring-1 ring-stone-line sm:flex-col sm:p-6 sm:text-center"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-deep-700 to-deep-900 text-gold shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16">
-                  <Icon className="h-6 w-6 sm:h-8 sm:w-8" />
-                </span>
-                <span className="min-w-0 flex-1 sm:flex-none">
-                  <span className="block text-[1.0625rem] font-extrabold text-ink sm:mt-4">
-                    {f.title}
-                  </span>
-                  <span className="mt-1 block break-words text-[0.9375rem] leading-snug text-ink-sub sm:mt-1.5 sm:leading-relaxed">
-                    {f.desc}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      {/* ── 4. 어떻게 하는가 ──────────────────────────────── */}
-      <section id="how" aria-labelledby="how-h" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
-        {/*
-          여기도 같은 문제였다. mugwort.jpg 는 840×1120, **세로로 긴** 사진
-          (0.75)인데 21:9(2.33) 띠에 깔아 두었다 — 세로의 68% 가 잘려서,
-          쑥 무더기의 허리께만 가로로 길게 남았다.
-
-          세로 사진은 세로로 놓는다. PC 에서는 왼쪽에 3:4 로 세워
-          원본 그대로 보여 주고(잘리는 양 0%), 글과 3단 구성을 오른쪽에
-          붙인다. 폰에서는 1:1 로 두어 25% 만 잘리게 한다.
-        */}
-        <div className="overflow-hidden rounded-card-lg bg-card shadow-card ring-1 ring-stone-line sm:grid sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div className="relative aspect-square sm:aspect-auto sm:min-h-full">
-            <Image
-              src="/service/mugwort.jpg"
-              alt="반죽 위에 올리는 국내산 쑥"
-              fill
-              sizes="(min-width: 640px) 420px, 100vw"
-              className="object-cover object-center"
-            />
-          </div>
-          <div className="min-w-0 p-6 sm:p-7">
-            <h2 id="how-h" className="text-[1.375rem] font-extrabold text-ink sm:text-[1.5rem]">
-              세 겹으로 올립니다
-            </h2>
-            <p className="mt-2 max-w-prose text-[0.9375rem] leading-relaxed text-ink-sub">
-              피부에 닿는 순서대로 거즈 → 특제 반죽 → 쑥을 올려 완성합니다.
-              한 점이 아니라 넓은 부위에 온열이 퍼지는 것이 대왕쑥뜸의 방식입니다.
-            </p>
-            <ol className="mt-5 space-y-2.5">
-              {LAYERS.map((l) => (
-                <li
-                  key={l.no}
-                  className="flex items-center gap-3.5 rounded-card bg-card-soft px-4 py-3 ring-1 ring-stone-line"
-                >
-                  <span className="nowrap-num flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-aqua-500 to-deep-800 text-[0.9375rem] font-extrabold text-white">
-                    {l.no}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[1rem] font-extrabold text-ink">
-                      {l.name}
-                    </span>
-                    <span className="block text-[0.875rem] leading-snug text-ink-sub">
-                      {l.desc}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. 가격표 ─────────────────────────────────────── */}
-      <section id="가격" aria-labelledby="price" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
-        <h2 id="price" className="text-center text-[1.375rem] font-extrabold text-ink sm:text-[1.625rem]">
-          이용권 안내
-        </h2>
-        <p className="mx-auto mt-2 max-w-prose text-center text-[0.9375rem] leading-relaxed text-ink-sub">
-          매장 가격표 기준입니다. 변동될 수 있으니 방문 전 확인해 주세요.
-        </p>
-
-        {/*
-          폰에서는 가로줄, PC 에서는 세 칸.
-
-          세로 카드로 두었더니 값 하나 보는 데 카드가 400px 씩 들었고,
-          '가장 많이 찾으십니다' 배지를 카드 위쪽에 띄워 놓은 탓에 폰에서
-          위 카드의 아래쪽을 덮었다 — 히어로가 예약 카드를 덮던 것과 같은
-          실수다. 배지를 카드 안으로 들이고, 폰에서는 한 줄로 눕힌다.
-        */}
-        <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
-          {PUBLIC_PRICES.map((p) => (
+          {SCENES.map((s) => (
             <li
-              key={p.name}
-              className={`flex h-full items-center gap-4 rounded-card-lg p-4 shadow-card sm:flex-col sm:items-start sm:p-6 ${
-                p.highlight
-                  ? "bg-deep-800 text-white ring-1 ring-gold/40"
-                  : "bg-card ring-1 ring-stone-line"
-              }`}
+              key={s.src}
+              className="w-[78%] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none"
             >
-              <span className="min-w-0 flex-1">
-                {p.highlight && (
-                  <span className="mb-1.5 inline-flex rounded-full bg-gradient-to-r from-gold to-gold-deep px-2.5 py-0.5 text-[0.6875rem] font-extrabold tracking-wide text-deep-900">
-                    가장 많이 찾으십니다
-                  </span>
-                )}
-                <span
-                  className={`block break-words text-[1.0625rem] font-extrabold ${
-                    p.highlight ? "text-gold-lite" : "text-ink"
-                  }`}
-                >
-                  {p.name}
-                </span>
-                <span
-                  className={`mt-1 flex items-center gap-1.5 text-[0.875rem] font-bold ${
-                    p.highlight ? "text-gold-lite" : "text-aqua-800"
-                  }`}
-                >
-                  <CheckIcon className="h-4 w-4 shrink-0" />
-                  {p.sessions}회 이용
-                </span>
-              </span>
-
-              {/*
-                PC 에서 값을 카드 바닥에 붙인다(mt-auto). 10회권만 위에
-                배지가 붙어 있어서, 그냥 두면 세 카드의 값이 계단처럼
-                어긋난 높이에 놓인다 — 값을 견주려고 보는 표에서 그건
-                제일 하면 안 되는 일이다.
-              */}
-              <span className="shrink-0 text-right sm:mt-auto sm:w-full sm:pt-4 sm:text-left">
-                <span
-                  className={`nowrap-num block text-[1.375rem] font-extrabold tabular lg:text-[1.75rem] ${
-                    p.highlight ? "text-white" : "text-ink"
-                  }`}
-                >
-                  {formatWon(p.price)}
-                </span>
-                {p.sessions > 1 && (
-                  <span
-                    className={`nowrap-num mt-0.5 block text-[0.8125rem] tabular ${
-                      p.highlight ? "text-white/70" : "text-ink-sub"
-                    }`}
-                  >
-                    1회당 {formatWon(p.perSession)}
-                  </span>
-                )}
-              </span>
+              <article className={`${card} flex h-full flex-col overflow-hidden`}>
+                <div className="relative aspect-[3/2] bg-stone-bg-deep">
+                  <Image
+                    src={s.src}
+                    alt={s.alt}
+                    fill
+                    sizes="(min-width: 640px) 330px, 80vw"
+                    className={`object-cover ${s.position}`}
+                  />
+                </div>
+                <div className="flex-1 p-4">
+                  <p className="text-[0.8125rem] font-extrabold text-gold-deep">{s.eyebrow}</p>
+                  <h3 className="mt-0.5 text-[1.0625rem] font-extrabold leading-snug text-ink">
+                    {s.title}
+                  </h3>
+                  <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-sub">{s.desc}</p>
+                </div>
+              </article>
             </li>
           ))}
         </ul>
+      </Section>
 
-        <p className="mt-4 text-center text-[0.875rem] leading-relaxed text-ink-faint">
+      {/* ── 5. 이런 분께 · 세 겹 구성 — 목록 줄 ───────────── */}
+      {/* 넓은 화면에서는 두 목록을 나란히 둔다. 폭 1,000px 짜리 목록 줄은 읽기 어렵다 */}
+      <div className="mx-auto mt-8 grid max-w-5xl items-start gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-6">
+        <Section
+          id="for-whom"
+          headingId="for-whom-h"
+          title="이런 분께 권해 드립니다"
+          className="min-w-0 scroll-mt-24"
+        >
+          <ListGroup>
+            {FOR_WHOM.map((f) => {
+              const Icon = f.icon;
+              return (
+                <ListRow
+                  key={f.title}
+                  chevron={false}
+                  icon={<Icon className="h-5 w-5 text-aqua-700" />}
+                  title={f.title}
+                  sub={f.desc}
+                />
+              );
+            })}
+          </ListGroup>
+        </Section>
+
+        <Section
+          id="how"
+          headingId="how-h"
+          title="세 겹으로 올립니다"
+          sub="피부에 닿는 순서대로 — 한 점이 아니라 넓은 부위에 온열이 퍼집니다."
+          className="min-w-0 scroll-mt-24"
+        >
+          <ListGroup>
+            {LAYERS.map((l) => (
+              <ListRow
+                key={l.no}
+                chevron={false}
+                icon={
+                  l.photo ? (
+                    /* 사진이 있는 겹은 사진으로 — 가게 화면 메뉴 줄의 작은 사진처럼 */
+                    <span className="relative block h-10 w-10 overflow-hidden rounded-xl">
+                      <Image src={l.photo} alt={l.name} fill sizes="40px" className="object-cover" />
+                    </span>
+                  ) : (
+                    <span className="nowrap-num text-[1rem] font-extrabold text-aqua-800">
+                      {l.no}
+                    </span>
+                  )
+                }
+                title={
+                  l.photo ? (
+                    <span>
+                      <span className="nowrap-num mr-1.5 text-aqua-700">{l.no}</span>
+                      {l.name}
+                    </span>
+                  ) : (
+                    l.name
+                  )
+                }
+                sub={l.desc}
+              />
+            ))}
+          </ListGroup>
+        </Section>
+      </div>
+
+      {/* ── 6. 이용권 — 쿠폰 모양 ─────────────────────────── */}
+      {/*
+        /my/passes 의 이용권 쿠폰과 같은 모양. 값은 오른쪽(넓은 화면에서는
+        아래쪽) 절취선 너머에 둔다. 폭을 고정하지 않는다 — 30회권 값이
+        카드 밖으로 12px 삐져나왔던 일(태블릿 검사)을 되풀이하지 않는다.
+      */}
+      <Section
+        id="가격"
+        headingId="price"
+        title="이용권 안내"
+        sub="매장 가격표 기준입니다. 변동될 수 있으니 방문 전 확인해 주세요."
+        className="mx-auto mt-8 max-w-5xl scroll-mt-24 px-4 sm:px-6"
+      >
+        <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
+          {PUBLIC_PRICES.map((p) => (
+            <li
+              key={p.name}
+              data-price-ticket
+              className={`overflow-hidden ${card} ${p.highlight ? "!ring-2 !ring-gold/55" : ""}`}
+            >
+              <div className="flex h-full sm:flex-col">
+                <div className="min-w-0 flex-1 p-4">
+                  <p className="break-words text-[1.0625rem] font-extrabold leading-snug text-ink">
+                    {p.name}
+                  </p>
+                  <p className="mt-2 flex flex-wrap gap-1.5">
+                    <StatusPill tone="wait">{p.sessions}회 이용</StatusPill>
+                    {p.highlight && <StatusPill tone="warn">가장 많이 찾으십니다</StatusPill>}
+                  </p>
+                </div>
+                <div
+                  className={`relative flex min-w-[6.5rem] shrink-0 flex-col items-end justify-center border-l-2 border-dashed border-stone-line px-3.5 py-3 text-right sm:items-start sm:border-l-0 sm:border-t-2 sm:px-4 sm:text-left ${
+                    p.highlight ? "bg-gold-soft/70" : "bg-aqua-50/70 dark:bg-aqua-500/10"
+                  }`}
+                >
+                  {/* 절취선 끝의 반원 홈 — 폰은 위아래, 넓은 화면은 좌우 */}
+                  <span
+                    aria-hidden
+                    className="absolute -left-[9px] -top-2 h-4 w-4 rounded-full bg-stone-bg sm:-left-2 sm:-top-[9px]"
+                  />
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-2 -left-[9px] h-4 w-4 rounded-full bg-stone-bg sm:-right-2 sm:-top-[9px] sm:bottom-auto sm:left-auto"
+                  />
+                  <span className="nowrap-num tabular text-[1.25rem] font-extrabold leading-tight text-ink lg:text-[1.5rem]">
+                    {formatWon(p.price)}
+                  </span>
+                  {p.sessions > 1 && (
+                    <span className="nowrap-num tabular mt-0.5 text-[0.8125rem] text-ink-sub">
+                      1회당 {formatWon(p.perSession)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 px-1 text-[0.8125rem] leading-relaxed text-ink-faint">
           이용권 유효기간·환불 규정은 매장에서 정한 내용을 안내해 드립니다.
         </p>
-      </section>
+      </Section>
 
-      {/* ── 6. 왜 여기인가 — 기록이 쌓인다 ────────────────── */}
-      <section id="records" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-6">
-        {/*
-          이 칸은 딥그린 한 판이었다. 글은 좋은데 화면에서 가장 큰 덩어리가
-          단색이라, 바로 위 가격표와 무게가 같아 보였다. 오른쪽에 사진을
-          넣어 '여기가 결론' 이라는 것이 눈으로도 보이게 한다.
-
-          사진은 my_wellness.jpg — 고객이 자기 화면을 보는 장면이다.
-          바로 아래 단추가 '내 기록 시작하기' 이므로, 누르면 무엇이
-          나오는지를 사진이 먼저 말해 준다.
-        */}
-        <div className="overflow-hidden rounded-card-lg bg-gradient-to-br from-deep-800 to-deep-950 shadow-card ring-1 ring-gold/25 lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
-          <div className="p-7 sm:p-9">
-            <p className="text-[0.75rem] font-extrabold uppercase tracking-[0.16em] text-gold">
-              다니실수록 편해집니다
-            </p>
-            <h2 className="mt-2 max-w-xl text-[1.5rem] font-extrabold leading-snug text-white sm:text-[1.875rem]">
+      {/* ── 7. 왜 여기인가 — 기록이 쌓인다 ────────────────── */}
+      {/*
+        머리 띠와 같은 딥그린 판 — 이 화면의 결론이라 무게를 맞춘다.
+        사진은 my_wellness.jpg — 고객이 자기 화면을 보는 장면. 바로 아래
+        단추가 '내 기록 시작하기' 이므로, 누르면 무엇이 나오는지를 사진이
+        먼저 말해 준다.  폰 16:9 → 16% · PC 3:2 → 0% 잘림.
+      */}
+      <section
+        id="records"
+        aria-labelledby="records-h"
+        className="mx-auto mt-8 max-w-5xl scroll-mt-24 px-4 sm:px-6"
+      >
+        <div className="overflow-hidden rounded-[22px] bg-gradient-to-br from-deep-800 to-deep-950 text-white shadow-card ring-1 ring-gold/25 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <figure className="relative aspect-[16/9] lg:order-2 lg:m-5 lg:aspect-[3/2] lg:overflow-hidden lg:rounded-[18px]">
+            <Image
+              src="/brand/my_wellness.jpg"
+              alt="휴대폰으로 자신의 이용 기록을 확인하는 모습"
+              fill
+              sizes="(min-width: 1024px) 420px, 100vw"
+              className="object-cover object-[55%_40%]"
+            />
+            <span
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-deep-800/90 via-transparent to-transparent lg:hidden"
+            />
+          </figure>
+          <div className="p-5 sm:p-7 lg:order-1">
+            <p className="text-[0.8125rem] font-extrabold text-gold">다니실수록 편해집니다</p>
+            <h2
+              id="records-h"
+              className="mt-1 text-[1.375rem] font-extrabold leading-snug [word-break:keep-all] sm:text-[1.625rem]"
+            >
               매번 처음부터 다시 설명하지 않으셔도 됩니다
             </h2>
-            <p className="mt-3 max-w-xl text-[1rem] leading-relaxed text-white/80">
+            <p className="mt-2 max-w-xl text-[0.9375rem] leading-relaxed text-white/80">
               어느 부위를 어떻게 봐 드렸는지, 어떤 반응이 좋으셨는지가 방문마다
               남습니다. 다음에 오시면 그 기록에서 이어서 시작합니다.
             </p>
-
-            {/*
-              PC 에서도 세 줄을 나란히 둔다(lg:grid-cols-1 을 뺐다).
-
-              세로로 쌓아 두었더니 글 칸 높이가 545px 이 되었고, 옆 사진이
-              거기 맞춰 늘어나면서 456×545 — **세로로 긴 상자**가 되었다.
-              my_wellness.jpg 는 가로 사진(1.50)이라 세로 상자에 넣으면
-              가로의 44% 가 잘려 나간다. 글 줄을 어떻게 배치하느냐가 옆
-              사진 잘리는 양을 정하고 있었던 것이다.
-            */}
-            <ul className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-              {[
-                "케어 부위와 반응 기록",
-                "남은 이용권 확인",
-                "다음 방문 권장 시점 안내",
-              ].map((t) => (
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {["케어 부위와 반응 기록", "남은 이용권 확인", "다음 방문 권장 시점 안내"].map((t) => (
                 <li
                   key={t}
-                  className="flex items-center gap-2.5 rounded-card bg-white/[0.07] px-4 py-3 text-[0.9375rem] font-bold text-white ring-1 ring-white/10"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[0.875rem] font-bold ring-1 ring-white/15"
                 >
                   <CheckIcon className="h-4 w-4 shrink-0 text-gold" />
-                  <span className="min-w-0">{t}</span>
+                  {t}
                 </li>
               ))}
             </ul>
-
             <Link
               href="/my"
-              className="touch-target mt-7 inline-flex items-center gap-1.5 rounded-btn bg-gradient-to-r from-gold to-gold-deep px-6 text-[1.0625rem] font-extrabold text-deep-900 shadow-[0_4px_14px_rgba(201,168,106,0.3)] transition-transform hover:scale-[1.02]"
+              className="mt-5 inline-flex min-h-[52px] items-center gap-1.5 rounded-full bg-gradient-to-r from-gold to-gold-deep px-6 text-[1.0625rem] font-extrabold text-deep-900 shadow-[0_4px_14px_rgba(201,168,106,0.3)] transition-transform hover:scale-[1.02]"
             >
               내 기록 시작하기
               <ChevronRightIcon className="h-5 w-5" />
             </Link>
           </div>
-
-          {/*
-            aspect 를 PC 에서도 유지하고 min-h-full 로 늘어나게만 한다.
-            (aspect-auto 로 두면 옆 글 높이가 사진 비율을 정해 버린다 —
-             위 목록 주석과 같은 이유)
-          */}
-          <figure className="relative aspect-[4/3] lg:aspect-[3/2] lg:min-h-full">
-            <Image
-              src="/brand/my_wellness.jpg"
-              alt="휴대폰으로 자신의 이용 기록을 확인하는 모습"
-              fill
-              sizes="(min-width: 1024px) 40vw, 100vw"
-              className="object-cover object-[55%_40%]"
-            />
-            {/* 왼쪽에서 딥그린이 사진으로 녹아들게 — 두 면이 딱 잘려 보이지 않도록 */}
-            <span
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-deep-950/70 to-transparent lg:bg-gradient-to-r lg:from-deep-950 lg:via-deep-950/25 lg:to-transparent"
-            />
-          </figure>
         </div>
       </section>
 
-      {/* ── 6-2. 편안히 쉬다 가시는 자리 ─────────────────── */}
-      <section className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
-        <PhotoBand
-          src="/brand/customer_experience.jpg"
-          alt="케어를 마치고 편안히 쉬고 계신 모습"
-          eyebrow="다녀가신 뒤"
-          title="몸이 어떠셨는지 한마디만 남겨 주세요"
-          position="object-[40%_40%]"
-          textFirst
-        >
-          <p>
-            남겨 주신 말은 다음 방문 준비에 그대로 쓰입니다. 어느 부위가
-            편하셨는지, 어떤 세기가 좋으셨는지를 기억에 기대지 않고 적어 둡니다.
-          </p>
-          <p className="text-[0.875rem] text-ink-faint">
-            몸 상태에 대한 판단이나 의학적 안내는 제공하지 않습니다.
-          </p>
-        </PhotoBand>
+      {/* ── 7-1. 다녀가신 뒤 — 사진 배너 ──────────────────── */}
+      {/* /my 홈의 사진 배너와 같은 모양. 4:3 작은 사진 → 11% 잘림 */}
+      <section aria-labelledby="after-h" className="mx-auto mt-4 max-w-5xl px-4 sm:px-6">
+        <div className={`${card} flex items-center gap-4 p-3.5 sm:p-4`}>
+          <span className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-2xl sm:w-44">
+            <Image
+              src="/brand/customer_experience.jpg"
+              alt="케어를 마치고 편안히 쉬고 계신 모습"
+              fill
+              sizes="(min-width: 640px) 200px, 140px"
+              className="object-cover object-[40%_40%]"
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.8125rem] font-extrabold text-gold-deep">다녀가신 뒤</p>
+            <h2
+              id="after-h"
+              className="mt-0.5 text-[1.0625rem] font-extrabold leading-snug text-ink [word-break:keep-all]"
+            >
+              몸이 어떠셨는지 한마디만 남겨 주세요
+            </h2>
+            <p className="mt-1 text-[0.875rem] leading-snug text-ink-sub">
+              남겨 주신 말은 다음 방문 준비에 그대로 쓰입니다.
+            </p>
+          </div>
+        </div>
+        <p className="mt-2 px-1 text-[0.8125rem] leading-relaxed text-ink-faint">
+          몸 상태에 대한 판단이나 의학적 안내는 제공하지 않습니다.
+        </p>
       </section>
 
-      {/* ── 7. 앞으로 준비하고 있는 것 ────────────────────── */}
+      {/* ── 8. 앞으로 준비하고 있는 것 ────────────────────── */}
       {/*
         맨 아래에 둔다. 오늘 예약하러 오신 분이 아직 없는 기능을 먼저
-        만나면 안 된다 — 화면 위쪽 80% 는 지금 하실 수 있는 일이고,
-        미래 이야기는 다 보고 난 뒤에 나온다.
-      */}
-      {/*
-        aria-labelledby="future" 라고 적었다가 고쳤다 — 자기 자신을
-        가리키고 있었다. 그러면 이름이 붙는 게 아니라 구역 전체의 글이
-        이름이 되거나 아예 무시된다. 제목(h2)은 FutureSection 안에 있어
-        여기서 id 로 집을 수 없으므로 aria-label 로 직접 적는다.
+        만나면 안 된다. 점선 상자 + 「향후 확장」 배지로 위쪽 실선 목록
+        (지금 되는 것)과 갈라 놓는다.
+        제목(h2)은 FutureSection 안에 있어 여기서 id 로 집을 수 없으므로
+        aria-label 로 직접 적는다.
       */}
       <section
         id="future"
         aria-label="앞으로 준비하고 있는 것"
-        className="mx-auto mt-14 max-w-5xl scroll-mt-24 px-4 sm:px-6"
+        className="mx-auto mt-10 max-w-5xl scroll-mt-24 px-4 sm:px-6"
       >
-        {/*
-          옅은 금빛 판을 깔고 점선으로 두른다.
-
-          "잘 보이게" 와 "있는 것처럼 보이면 안 된다" 는 서로 당긴다.
-          채운 흰 카드로 만들면 눈에는 잘 띄지만 위쪽의 실제 기능들과
-          같아 보이고, 그러면 아직 없는 것을 있다고 읽게 된다.
-
-          판을 까는 것으로 **구역의 존재감**을 올리고, 테두리를 점선으로
-          두는 것으로 **성격의 차이**를 유지한다. 멀리서 보면 "여기 뭔가
-          따로 있네" 가 먼저 오고, 가까이 오면 점선과 배지가 "아직은
-          아니다" 를 말한다.
-        */}
-        <div className="rounded-card-lg border border-dashed border-gold/45 bg-gold-soft/25 p-6 sm:p-8">
-          <FutureSection />
-        </div>
+        <FutureSection />
       </section>
 
       {/*
-        폰 하단 고정 예약 막대 — 위쪽 단추가 화면 밖으로 나간 뒤에만 올라온다.
-        (자세한 이유는 StickyBookBar 안에)
+        폰 하단 고정 예약 막대 — 위쪽 바로가기가 화면 밖으로 나간 뒤에만
+        올라온다. 막대가 마지막 글을 가리지 않게 비워 두는 자리는 이제
+        바닥글 아래에 있다 (PublicShell) — 본문과 바닥글 사이에 두었더니
+        폰에서 미래 목록과 바닥글 사이가 120px 비어 보였다.
       */}
       <StickyBookBar />
-
-      {/* 고정 막대가 마지막 글을 가리지 않게 그만큼 비워 둔다 */}
-      <div aria-hidden className="h-[4.5rem] sm:hidden" />
     </>
   );
 }

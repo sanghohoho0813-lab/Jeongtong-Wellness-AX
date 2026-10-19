@@ -254,9 +254,10 @@ export default function TaskCard({
       data-tour="task-card"
       className={`group relative overflow-hidden ${shell} p-4 pl-5 transition-opacity ${finished ? "opacity-55" : ""}`}
     >
-      {/* 관리 유형 컬러 스트립 */}
+      {/* 관리 유형 색 — 카드 전체 높이의 띠가 아니라 짧은 알약으로 (D-56) */}
       <span
-        className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${CATEGORY_STRIPS[task.category]} ${hero ? "opacity-80" : ""}`}
+        aria-hidden
+        className={`absolute bottom-4 left-0 top-4 w-1 rounded-r-full bg-gradient-to-b ${CATEGORY_STRIPS[task.category]} ${hero ? "opacity-80" : ""}`}
       />
       <div className="flex items-start gap-3">
         {/*

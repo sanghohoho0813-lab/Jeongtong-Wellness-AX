@@ -50,22 +50,19 @@ type Tone = "aqua" | "gold" | "amber";
 
 const TONE: Record<
   Tone,
-  { rail: string; tile: string; num: string; cta: string }
+  { tile: string; num: string; cta: string }
 > = {
   aqua: {
-    rail: "rgb(var(--c-aqua-500))",
     tile: "bg-aqua-50 text-aqua-700 ring-aqua-100",
     num: "text-aqua-800",
     cta: "text-aqua-800 hover:bg-aqua-50",
   },
   gold: {
-    rail: "rgb(var(--c-gold))",
     tile: "bg-gold-soft text-gold-deep ring-gold/25",
     num: "text-gold-deep",
     cta: "text-gold-deep hover:bg-gold-soft",
   },
   amber: {
-    rail: "rgb(var(--c-warn-text))",
     tile: "bg-amber-400/15 text-amber-600 ring-amber-400/25 dark:text-amber-300",
     num: "text-warn-text",
     cta: "text-warn-text hover:bg-amber-400/10",
@@ -82,6 +79,7 @@ function Decision({
   href,
   cta,
   quiet,
+  divider,
 }: {
   tone: Tone;
   icon: ReactNode;
@@ -91,34 +89,36 @@ function Decision({
   reason: string;
   href: string;
   cta: string;
-  /** 0 명일 때 — 숫자를 크게 쓰지 않고 조용히 넘어간다 */
   quiet?: boolean;
+  /** 두 번째 · 세 번째 칸 — 왼쪽에 가는 선 */
+  divider?: boolean;
 }) {
   const t = TONE[tone];
   return (
     /*
-      작은 칸 셋을 **폰에서도 한 줄**에 세운다.
+      흰 판 하나 안의 세 칸 (D-56).
 
-      예전에는 칸마다 라벨 · 큰 숫자 · 이유 두 줄 · 「지금 처리하기」 가
-      있어서 폰에서 셋이 370px, PC 에서도 210px 이었다. 대표님 말씀:
-      「오늘에 너무 많이 펼쳐져 있어서 오히려 집중이 안 된다.」
+      전에는 칸마다 따로 카드였다 — 테두리 · 그림자 · 왼쪽 색 띠가 셋씩.
+      이제 이 판은 머리 띠에 걸쳐 올라온 흰 판(고객 앱 홈의 바로가기
+      판과 같은 자리)이고, 칸 사이는 가는 선 하나로만 가른다.
 
-      그래서 칸에는 **이름 · 숫자 · 갈 곳(›)** 만 남긴다. 칸 전체가 누르는
-      자리라 갈 곳은 그대로다. 「왜 그렇게 봤는지」 한 줄은
+      칸에는 **이름 · 숫자 · 갈 곳(›)** 만. 칸 전체가 누르는 자리다.
+      「왜 그렇게 봤는지」 한 줄은
         - PC: 칸 아래 한 줄 (자리가 있다) + 마우스를 올리면 말풍선
         - 폰: 누르고 들어간 화면(브리핑)의 카드마다 이유가 있다
-      로 옮겼다. 읽어 주는 프로그램에는 늘 같이 읽힌다(Hint).
+      읽어 주는 프로그램에는 늘 같이 읽힌다(Hint).
     */
     <Hint text={reason} title={label}>
       <Link
         href={href}
         aria-label={`${label} ${count}${unit} — ${cta}`}
-        style={{ "--rail": quiet ? "rgb(var(--c-line))" : t.rail } as never}
-        className="rail card card-lift group flex min-w-0 flex-col !py-3 !pl-4 !pr-3 sm:!py-4 sm:!pl-5"
+        className={`group flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 transition-colors hover:bg-card-soft sm:px-4 sm:py-3 ${
+          divider ? "relative before:absolute before:-left-px before:bottom-3 before:top-3 before:w-px before:bg-stone-line" : ""
+        }`}
       >
         <span className="flex min-w-0 items-center gap-2">
           <span
-            className={`icon-pop hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 sm:flex ${
+            className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 sm:flex ${
               quiet ? "bg-stone-bg-deep text-ink-faint ring-black/[0.04]" : t.tile
             }`}
           >
@@ -145,17 +145,17 @@ function Decision({
             <span className="ml-0.5 text-[0.9375rem] font-bold text-ink-sub">{unit}</span>
           </span>
           <span
-            className={`mb-0.5 inline-flex shrink-0 items-center gap-0.5 text-[0.875rem] font-extrabold ${
+            className={`mb-0.5 inline-flex shrink-0 items-center gap-0.5 rounded-full text-[0.875rem] font-extrabold ${
               quiet ? "text-ink-faint" : t.cta
             }`}
           >
-            <span className="hidden lg:inline">{cta}</span>
+            <span className="hidden xl:inline">{cta}</span>
             <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </span>
         </span>
 
         {/* 왜 그렇게 봤는지 — 자리가 있는 PC 에서만 한 줄 */}
-        <span className="mt-1.5 hidden truncate text-[0.875rem] text-ink-sub md:block">
+        <span className="mt-1.5 hidden truncate text-[0.8125rem] text-ink-sub md:block">
           {reason}
         </span>
       </Link>
@@ -207,7 +207,7 @@ export default function DecisionBand() {
   ).length;
 
   return (
-    <div data-decision-band className="rise-stagger grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+    <div data-decision-band className="grid grid-cols-3">
       <Decision
         tone="aqua"
         icon={<SparkIcon className="h-[1.15rem] w-[1.15rem]" />}
@@ -231,6 +231,7 @@ export default function DecisionBand() {
       <Decision
         tone="gold"
         icon={<TrendUpIcon className="h-[1.15rem] w-[1.15rem]" />}
+        divider
         label="재등록 상담 기회"
         count={oppOpen.length}
         unit="명"
@@ -251,6 +252,7 @@ export default function DecisionBand() {
       <Decision
         tone="amber"
         icon={<TicketIcon className="h-[1.15rem] w-[1.15rem]" />}
+        divider
         label={`이용권 ${lowLimit}회 이하`}
         count={lowPasses.length}
         unit="건"

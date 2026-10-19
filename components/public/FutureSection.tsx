@@ -117,33 +117,35 @@ function PreviewBody({ item }: { item: FutureItem }) {
  * 것은 같은 화면 위의 설명 창뿐이다.
  */
 function FutureRow({ item, onOpen }: { item: FutureItem; onOpen: () => void }) {
+  /*
+    앱의 목록 줄 모양 — 아이콘 · 이름 · 한 줄 · ›. 다만 테두리는 점선
+    상자가 두르고 있어서, 위쪽의 실선 목록(지금 되는 것)과 갈라진다.
+  */
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="card-lift group flex h-full w-full items-start gap-3.5 rounded-card-lg border border-dashed border-stone-line bg-card/60 p-5 text-left transition-colors hover:bg-card"
+      className="group flex min-h-[64px] w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-card/70"
     >
       {/* ring 은 box-shadow 라 점선이 안 된다 — `ring-dashed` 는 아무
-          CSS 도 만들지 않고 조용히 버려진다. 점선은 카드 바깥 테두리가
+          CSS 도 만들지 않고 조용히 버려진다. 점선은 바깥 상자가
           맡고, 아이콘 칸은 실선으로 둔다. */}
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/50 text-gold-deep ring-1 ring-gold/30">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-soft/60 text-gold-deep ring-1 ring-gold/30">
         <SparkIcon className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[1.0625rem] font-extrabold text-ink">
+          <span className="text-[1rem] font-extrabold leading-snug text-ink">
             {item.label}
           </span>
           <FutureBadge />
         </span>
-        <span className="mt-1 block text-[0.9375rem] leading-snug text-ink-sub">
+        <span className="mt-0.5 block text-[0.875rem] leading-snug text-ink-sub">
           {item.tagline}
         </span>
-        <span className="mt-2 inline-flex items-center gap-0.5 text-[0.875rem] font-extrabold text-gold-deep">
-          어떤 모습일지 보기
-          <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </span>
       </span>
+      <span className="sr-only">어떤 모습일지 보기</span>
+      <ChevronRightIcon className="h-5 w-5 shrink-0 text-gold-deep transition-transform group-hover:translate-x-0.5" />
     </button>
   );
 }
@@ -172,12 +174,7 @@ export function useFuturePreview() {
   return { openItem: setOpen, sheet };
 }
 
-export default function FutureSection({
-  /** 좁은 화면에서 한 칸으로 둘지 */
-  compact = false,
-}: {
-  compact?: boolean;
-}) {
+export default function FutureSection() {
   const { openItem, sheet } = useFuturePreview();
 
   return (
@@ -195,21 +192,23 @@ export default function FutureSection({
         점선으로 둘러, 위쪽의 실선·흰 카드들과 한눈에 갈라지게 한다.
         '중요하지만 성격이 다른 구역' 으로 읽히는 것이 목표다.
       */}
-      <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h2 className="text-[1.375rem] font-extrabold text-ink sm:text-[1.625rem]">
+      <div className="mb-1 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 px-1">
+        <h2 className="text-[1.125rem] font-extrabold leading-tight tracking-tight text-ink sm:text-[1.25rem]">
           앞으로 준비하고 있는 것
         </h2>
-        <FutureBadge className="!text-[0.8125rem]" />
+        <FutureBadge />
       </div>
-      <p className="-mt-3 mb-5 text-[0.9375rem] leading-relaxed text-ink-sub">
+      <p className="mb-3 px-1 text-[0.875rem] leading-snug text-ink-sub">
         아래 다섯 가지는 <b className="text-ink-soft">아직 이용하실 수
         없습니다.</b> 정통대왕쑥뜸원이 앞으로 만들어 가려는 방향이라
         미리 적어 둡니다.
       </p>
 
-      <ul
-        className={`grid grid-cols-1 gap-3 ${compact ? "" : "sm:grid-cols-2 lg:grid-cols-3"}`}
-      >
+      {/*
+        카드 다섯 장이던 것을 점선 상자 하나 안의 목록 다섯 줄로 바꿨다.
+        폰에서 카드 하나가 150px 씩, 다섯 장이면 한 화면이 넘었다.
+      */}
+      <ul className="divide-y divide-dashed divide-gold/30 overflow-hidden rounded-[20px] border border-dashed border-gold/50 bg-gold-soft/20">
         {FUTURE_ITEMS.map((item) => (
           <li key={item.key} className="min-w-0">
             <FutureRow item={item} onOpen={() => openItem(item)} />

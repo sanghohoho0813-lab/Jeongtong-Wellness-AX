@@ -320,44 +320,38 @@ export default function CustomersPage() {
           />
         )
       ) : (
-        <div className="rise-stagger space-y-2.5">
+        <div className="space-y-3">
+          {/*
+            고객 앱처럼 **한 묶음의 목록**으로 (D-56).
+
+            전에는 줄마다 따로 흰 카드였고 왼쪽에 세로 색 띠를 세웠다.
+            스무 장의 카드가 각자 그림자를 달고 늘어서면 목록이 아니라
+            카드 더미로 보인다. 이제는 흰 판 하나에 줄을 가는 선으로만
+            가르고, 급한 정도는 얼굴(동그라미) 귀퉁이의 점 하나로 옮겼다 —
+            훑는 눈이 지나가는 왼쪽 가장자리에 그대로 있다.
+            (상태 이름 · 「우선」 표시는 줄 안에 글로 그대로 있다)
+          */}
+          <ul className="rise-stagger divide-y divide-stone-line overflow-hidden rounded-[20px] bg-card shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
           {visibleRows.map((d) => (
-            /*
-              줄마다 왼쪽에 세로 띠를 세운다.
-
-              예전에는 모든 줄이 똑같은 흰 카드였고, 급한 줄이라는 표시는
-              카드 안쪽의 작은 배지뿐이었다. 스무 줄을 훑을 때 배지는
-              안 읽힌다 — 눈은 줄 안쪽까지 들어가지 않고 왼쪽 가장자리를
-              따라 내려가기 때문이다.
-
-              그 가장자리에 색을 놓는다. 급한 줄은 진하고 두껍게, 챙길
-              줄은 얇게, 정상인 줄은 아예 흐리게. 훑는 눈이 지나가는 자리에
-              세기가 있으면 멈춰야 할 줄에서 저절로 멈춘다.
-            */
+            <li key={d.customer.id}>
             <Link
-              key={d.customer.id}
               data-tour="customer-row"
               href={`/customers/${d.customer.id}`}
-              style={
-                {
-                  "--rail":
-                    d.priorityScore > 0
-                      ? recommendLevel(d.priorityScore).rail
-                      : "rgb(var(--c-line))",
-                } as never
-              }
-              className={`card card-lift rail group flex items-center gap-3 !py-3.5 !pl-5 sm:gap-4 ${
-                d.priorityScore >= 60
-                  ? "rail-strong"
-                  : d.priorityScore > 0
-                    ? ""
-                    : "rail-soft"
-              }`}
+              className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-card-soft sm:gap-4"
             >
               <span
-                className={`icon-pop flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}
+                className={`icon-pop relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}
               >
                 {d.customer.name.slice(0, 1)}
+                {d.priorityScore > 0 && (
+                  <span
+                    aria-hidden
+                    style={{ background: recommendLevel(d.priorityScore).rail }}
+                    className={`absolute -right-0.5 -top-0.5 rounded-full ring-2 ring-card ${
+                      d.priorityScore >= 60 ? "h-3.5 w-3.5" : "h-3 w-3"
+                    }`}
+                  />
+                )}
               </span>
               {/*
                 한 줄에 배지를 넷씩 늘어놓았더니 폰에서 세 줄로 접히면서
@@ -519,7 +513,9 @@ export default function CustomersPage() {
               )}
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
             </Link>
+            </li>
           ))}
+          </ul>
 
           {rows.length > visibleRows.length && (
             <div className="pt-1 text-center">

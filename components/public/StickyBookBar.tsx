@@ -46,7 +46,8 @@ export default function StickyBookBar() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-card/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md transition-transform duration-200 ease-out sm:hidden ${
+      data-sticky-book
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.05] bg-card/95 dark:border-white/10 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md transition-transform duration-200 ease-out sm:hidden ${
         show ? "translate-y-0" : "translate-y-full"
       }`}
       /* 숨어 있는 동안에는 읽어 주는 도구와 탭 이동에서도 빠진다 */
@@ -57,14 +58,14 @@ export default function StickyBookBar() {
         <Link
           href="/my/request"
           tabIndex={show ? 0 : -1}
-          className="touch-target flex shrink-0 items-center justify-center rounded-btn px-4 text-[0.9375rem] font-extrabold text-ink-sub ring-1 ring-stone-line transition-colors active:bg-stone-bg"
+          className="flex min-h-[52px] shrink-0 items-center justify-center rounded-full bg-card px-5 text-[0.9375rem] font-extrabold text-ink ring-1 ring-stone-line transition-colors active:bg-stone-bg"
         >
           상담 문의
         </Link>
         <Link
           href="/my/booking"
           tabIndex={show ? 0 : -1}
-          className="touch-target flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 text-[1.0625rem] font-extrabold text-white shadow-[0_2px_10px_rgba(14,127,125,0.35)] transition-transform active:scale-[0.99]"
+          className="flex min-h-[52px] flex-1 items-center justify-center gap-1.5 rounded-full bg-gradient-to-b from-aqua-650 to-aqua-850 text-[1.0625rem] font-extrabold text-white shadow-[0_4px_14px_rgba(14,127,125,0.30)] transition-transform active:scale-[0.99]"
         >
           <CalendarIcon className="h-5 w-5" />
           예약하기

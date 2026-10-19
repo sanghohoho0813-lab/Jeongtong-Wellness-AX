@@ -7,7 +7,8 @@
  */
 
 import Link from "next/link";
-import PageHeader from "@/components/layout/PageHeader";
+import { ReactNode } from "react";
+import { useDocumentTitle } from "@/lib/utils/title";
 import { useStore } from "@/lib/data/store";
 import {
   MORE_ITEMS,
@@ -16,7 +17,7 @@ import {
 } from "@/components/layout/nav-items";
 import { ProfileButton } from "@/components/layout/UserSwitch";
 import { FontScale, Theme } from "@/lib/types";
-import { Card, FieldLabel, SectionTitle, SegmentedControl } from "@/components/ui";
+import { FieldLabel, SegmentedControl } from "@/components/ui";
 import {
   BookIcon,
   ChevronRightIcon,
@@ -25,114 +26,101 @@ import {
 } from "@/components/ui/icons";
 import { VIDEO_LIST } from "@/lib/content/videos";
 
+/** 알아보기 칸 — 고객 앱 홈의 바로가기 칸과 같은 모양 */
+const DOC_TONE = {
+  deep: "bg-gradient-to-br from-deep-700 to-deep-900 text-gold ring-black/10",
+  gold: "bg-gradient-to-br from-gold to-gold-deep text-white ring-gold/30",
+  goldSoft: "bg-gold-soft text-gold-deep ring-gold/20",
+  aqua: "bg-gradient-to-br from-aqua-500 to-deep-700 text-white ring-black/10",
+};
+
 export default function MorePage() {
   const { settings, isManager, updateSettings } = useStore();
   const items = navItemsFor(MORE_ITEMS, isManager);
+  const title = isManager ? "더보기" : "계정";
+  useDocumentTitle(title);
+
+  /*
+    문서 · 영상 다섯 — 전에는 큰 카드 다섯 장이 세로로 쌓여 폰 한 화면
+    (약 480px)을 통째로 썼다. 고객 앱처럼 아이콘 칸 다섯으로 줄인다 (D-56).
+    한 줄 설명은 칸 아래 작은 글씨로 남긴다 — 이름만으로는 영상 길이를 모른다.
+  */
+  const docs: {
+    href: string;
+    label: string;
+    sub: string;
+    icon: ReactNode;
+    tone: string;
+    aria?: string;
+  }[] = [
+    { href: "/why", label: "Why AX", sub: "14개 절", icon: <SparkIcon className="h-6 w-6" />, tone: DOC_TONE.deep },
+    { href: "/intro", label: "기획의도", sub: "만든 이유", icon: <BookIcon className="h-6 w-6" />, tone: DOC_TONE.gold },
+    { href: "/guide", label: "사용 방법", sub: "단계별 안내", icon: <SparkIcon className="h-6 w-6" />, tone: DOC_TONE.goldSoft },
+    ...VIDEO_LIST.map((v) => ({
+      href: v.href,
+      /* 재생 표시(▶)가 영상이라는 것을 말한다 — 이름은 짧게, 길이는 아래 */
+      label: v.title.replace(/ 영상$/, ""),
+      sub: v.length,
+      aria: `${v.title} ${v.length}`,
+      icon: <PlayIcon className="h-6 w-6" />,
+      tone: v.tone === "gold" ? DOC_TONE.gold : DOC_TONE.aqua,
+    })),
+  ];
+
   return (
-    <div>
-      <PageHeader
-        title={isManager ? "더보기" : "계정"}
-        description={
-          isManager
-            ? `${settings.companyName} ${settings.branchName} · 가끔 여는 화면과 설정`
-            : `${settings.companyName} ${settings.branchName} · 계정 · 화면 표시`
-        }
-      />
-      <div className="mb-4">
-        <ProfileButton />
+    <div className="space-y-5">
+      {/*
+        머리 띠 — 고객 앱 마이페이지 · 대시보드와 같은 딥그린 띠.
+        내 계정 카드가 띠에 걸쳐 올라온다.
+      */}
+      <div>
+        <section className="relative isolate overflow-hidden rounded-[24px] bg-gradient-to-br from-deep-800 via-deep-900 to-deep-950 px-5 pb-12 pt-5 text-white sm:px-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-aqua-400/15 blur-3xl"
+          />
+          <h1 className="relative text-[1.5rem] font-extrabold tracking-tight">{title}</h1>
+          <p className="relative mt-1 text-[0.875rem] font-bold text-white/70">
+            {settings.companyName} {settings.branchName} ·{" "}
+            {isManager ? "가끔 여는 화면과 설정" : "계정 · 화면 표시"}
+          </p>
+        </section>
+        <div className="relative z-10 mx-2.5 -mt-8 rounded-[22px] bg-card p-1.5 shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06] sm:mx-4">
+          <ProfileButton />
+        </div>
       </div>
 
-      {/* 문서 — 메뉴 목록보다 위에 두고 색으로 구분한다 */}
-      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-        <Link
-          href="/why"
-          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-deep-700/10 to-card px-4 py-4 shadow-card ring-1 ring-deep-700/20 transition-colors active:bg-deep-700/15 sm:col-span-2"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-deep-700 to-deep-900 text-gold shadow-sm">
-            <SparkIcon className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
-              Why AX
-            </span>
-            <span className="block text-[0.875rem] leading-snug text-ink-sub">
-              우리 매장에 무엇이 달라지는가 · 14개 절
-            </span>
-          </span>
-          <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-        </Link>
-        <Link
-          href="/intro"
-          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-gold-soft to-card px-4 py-4 shadow-card ring-1 ring-gold/25 transition-colors active:bg-gold/10"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gold to-gold-deep text-white shadow-sm">
-            <BookIcon className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
-              기획의도
-            </span>
-            <span className="block text-[0.875rem] leading-snug text-gold-deep">
-              이 시스템을 만든 이유
-            </span>
-          </span>
-          <ChevronRightIcon className="h-5 w-5 shrink-0 text-gold-deep" />
-        </Link>
-        <Link
-          href="/guide"
-          /* 읽을 거리 둘(기획의도 · 사용 방법)은 같은 금색, 톤만 다르게 */
-          className="flex items-center gap-3.5 rounded-card bg-gradient-to-br from-gold/10 to-card px-4 py-4 shadow-card ring-1 ring-gold/20 transition-colors active:bg-gold/[0.16]"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gold-deep to-gold text-white shadow-sm">
-            <SparkIcon className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
-              사용 방법
-            </span>
-            <span className="block text-[0.875rem] leading-snug text-gold-deep">
-              화면별 사용법 · 단계별 안내
-            </span>
-          </span>
-          <ChevronRightIcon className="h-5 w-5 shrink-0 text-gold-deep" />
-        </Link>
-        {/* 영상 두 편 — 한 편씩 자기 화면으로 간다 (누르면 그 영상만 나온다) */}
-        {VIDEO_LIST.map((v) => {
-          const gold = v.tone === "gold";
-          return (
-            <Link
-              key={v.id}
-              href={v.href}
-              className={`flex items-center gap-3.5 rounded-card bg-gradient-to-br px-4 py-4 shadow-card ring-1 transition-colors ${
-                gold
-                  ? "from-gold-soft to-card ring-gold/25 active:bg-gold/10"
-                  : "from-aqua-50 to-card ring-aqua-200 active:bg-aqua-100"
-              }`}
-            >
-              <span
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm ${
-                  gold ? "from-gold to-gold-deep" : "from-aqua-500 to-deep-700"
-                }`}
-              >
-                <PlayIcon className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[1.0625rem] font-extrabold text-ink">
-                  {v.title}
-                </span>
-                <span
-                  className={`block text-[0.875rem] leading-snug ${
-                    gold ? "text-gold-deep" : "text-aqua-800 dark:text-aqua-400"
-                  }`}
+      {/* 알아보기 — 문서 · 영상 (메뉴 목록보다 위) */}
+      <section aria-labelledby="more-docs-h">
+        <h2 id="more-docs-h" className="mb-2.5 px-1 text-[1.125rem] font-extrabold tracking-tight text-ink">
+          알아보기
+        </h2>
+        <div className="rounded-[20px] bg-card px-1.5 py-3.5 shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+          <ul className="grid grid-cols-5 gap-x-1">
+            {docs.map((d) => (
+              <li key={d.href} className="min-w-0">
+                <Link
+                  href={d.href}
+                  aria-label={d.aria}
+                  className="group flex min-h-[56px] flex-col items-center gap-1.5 rounded-2xl py-1 text-center"
                 >
-                  {v.length} · 세로 · 가로
-                </span>
-              </span>
-              <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
-            </Link>
-          );
-        })}
-      </div>
+                  <span
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ring-1 shadow-sm transition-transform group-hover:-translate-y-0.5 group-active:scale-95 ${d.tone}`}
+                  >
+                    {d.icon}
+                  </span>
+                  <span className="w-full text-[0.8125rem] font-extrabold leading-tight text-ink [word-break:keep-all]">
+                    {d.label}
+                  </span>
+                  <span className="nowrap-num -mt-1 w-full truncate text-[0.6875rem] font-bold text-ink-sub">
+                    {d.sub}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {/*
         목차에서 내려온 화면들 — 넷으로 줄이면서 여기로 모였다.
@@ -142,20 +130,23 @@ export default function MorePage() {
         손끝이 닿는 높이(60px 이상)와 읽히는 크기(17px)를 지킨다.
       */}
       {items.length > 0 && (
-        <Card className="!p-2">
-          <ul className="divide-y divide-stone-bg-deep">
+        <section aria-labelledby="more-menu-h">
+          <h2 id="more-menu-h" className="mb-2.5 px-1 text-[1.125rem] font-extrabold tracking-tight text-ink">
+            매장 운영
+          </h2>
+          <ul className="divide-y divide-stone-line overflow-hidden rounded-[20px] bg-card shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
             {items.map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="flex min-h-[3.75rem] items-center gap-3.5 px-3.5 py-3.5"
+                    className="flex min-h-[3.75rem] items-center gap-3.5 px-4 py-3 transition-colors hover:bg-card-soft"
                   >
                     <span
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ${NAV_TONE_CLASS[item.tone]}`}
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${NAV_TONE_CLASS[item.tone]}`}
                     >
-                      <Icon className="h-[1.35rem] w-[1.35rem]" />
+                      <Icon className="h-[1.3rem] w-[1.3rem]" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[1.0625rem] font-extrabold leading-snug text-ink">
@@ -173,7 +164,7 @@ export default function MorePage() {
               );
             })}
           </ul>
-        </Card>
+        </section>
       )}
 
       {/*
@@ -181,42 +172,44 @@ export default function MorePage() {
         설정 화면 안쪽까지 들어가야 했더니, 글씨가 작아 불편한 분이
         정작 그 설정을 찾지 못했다. 폰에서 가장 먼저 손이 가는 자리에 둔다.
       */}
-      <Card className="mt-4">
-          <SectionTitle tone="gray">화면 표시</SectionTitle>
-          <div className="space-y-5">
-            <div>
-              <FieldLabel>글자 크기</FieldLabel>
-              <SegmentedControl<FontScale>
-                label="글자 크기"
-                value={settings.fontScale}
-                options={[
-                  { key: "small", label: "작게" },
-                  { key: "default", label: "기본" },
-                  { key: "large", label: "크게" },
-                ]}
-                onChange={(v) => updateSettings({ fontScale: v })}
-              />
-            </div>
-            <div>
-              <FieldLabel>테마</FieldLabel>
-              <SegmentedControl<Theme>
-                label="테마"
-                value={settings.theme ?? "light"}
-                options={[
-                  { key: "light", label: "라이트" },
-                  { key: "dark", label: "다크" },
-                  { key: "system", label: "시스템" },
-                ]}
-                onChange={(v) => updateSettings({ theme: v })}
-              />
-            </div>
-            <p className="text-sm leading-relaxed text-ink-sub">
-              {isManager
-                ? "매장 정보, 직원 관리, 고객관리 기준은 설정 화면에서 조정합니다."
-                : "매장 정보, 직원 관리, 고객관리 기준은 대표/관리자 계정에서 설정합니다."}
-            </p>
+      <section aria-labelledby="more-display-h">
+        <h2 id="more-display-h" className="mb-2.5 px-1 text-[1.125rem] font-extrabold tracking-tight text-ink">
+          화면 표시
+        </h2>
+        <div className="space-y-4 rounded-[20px] bg-card p-4 shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+          <div>
+            <FieldLabel>글자 크기</FieldLabel>
+            <SegmentedControl<FontScale>
+              label="글자 크기"
+              value={settings.fontScale}
+              options={[
+                { key: "small", label: "작게" },
+                { key: "default", label: "기본" },
+                { key: "large", label: "크게" },
+              ]}
+              onChange={(v) => updateSettings({ fontScale: v })}
+            />
           </div>
-        </Card>
+          <div>
+            <FieldLabel>테마</FieldLabel>
+            <SegmentedControl<Theme>
+              label="테마"
+              value={settings.theme ?? "light"}
+              options={[
+                { key: "light", label: "라이트" },
+                { key: "dark", label: "다크" },
+                { key: "system", label: "시스템" },
+              ]}
+              onChange={(v) => updateSettings({ theme: v })}
+            />
+          </div>
+          <p className="text-sm leading-relaxed text-ink-sub">
+            {isManager
+              ? "매장 정보, 직원 관리, 고객관리 기준은 설정 화면에서 조정합니다."
+              : "매장 정보, 직원 관리, 고객관리 기준은 대표/관리자 계정에서 설정합니다."}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

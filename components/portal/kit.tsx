@@ -69,18 +69,27 @@ export function Section({
   more,
   children,
   className = "",
+  id,
+  headingId,
 }: {
   title: ReactNode;
   sub?: ReactNode;
   more?: { href: string; label?: string };
   children: ReactNode;
   className?: string;
+  /** 전체 메뉴가 찾아오는 자리 이름 (고객용 첫 화면) */
+  id?: string;
+  /** 제목에 이름을 붙이면 구역 이름도 그 제목으로 읽힌다 */
+  headingId?: string;
 }) {
   return (
-    <section className={className}>
+    <section id={id} aria-labelledby={headingId} className={className}>
       <div className="mb-2.5 flex items-end justify-between gap-3 px-1">
         <div className="min-w-0">
-          <h2 className="text-[1.125rem] font-extrabold leading-tight tracking-tight text-ink [word-break:keep-all]">
+          <h2
+            id={headingId}
+            className="text-[1.125rem] font-extrabold leading-tight tracking-tight text-ink [word-break:keep-all]"
+          >
             {title}
           </h2>
           {sub && (

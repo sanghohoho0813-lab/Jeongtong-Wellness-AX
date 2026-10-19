@@ -39,6 +39,7 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import { Modal } from "@/components/ui";
 import { VIDEOS } from "@/lib/content/videos";
 import { Hint } from "@/components/ui/Hint";
+import { SHELL_EVENTS } from "@/lib/ui/shell-events";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -380,22 +381,28 @@ function BottomNav({
 
   const face = (item: (typeof items)[number], active: boolean) => {
     const Icon = item.icon;
+    /*
+      고객 앱(MY WELLNESS) 하단 탭과 같은 모양 — 지금 있는 탭은 아이콘
+      뒤에 연한 알약이 깔린다 (D-56). 전에는 탭 위쪽에 3px 막대였는데,
+      얇아서 40~60대 눈에는 어느 탭인지 잘 안 보였다.
+    */
     return (
       <>
-        {active && (
-          <span className="absolute top-0 h-[3px] w-9 rounded-b-full bg-aqua-500" />
-        )}
-        <Icon className={`h-6 w-6 ${active ? "" : "opacity-85"}`} />
-        <span className="truncate">{item.label}</span>
+        <span
+          className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${
+            active ? "bg-aqua-50 dark:bg-aqua-500/15" : ""
+          }`}
+        >
+          <Icon className={`h-6 w-6 ${active ? "" : "opacity-85"}`} />
+        </span>
+        <span className={`truncate ${active ? "font-extrabold" : ""}`}>{item.label}</span>
       </>
     );
   };
-
   const tabCls = (active: boolean) =>
-    `relative flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2.5 pt-3 text-[0.72rem] font-bold transition-colors ${
-      active ? "text-deep-800 dark:text-aqua-700" : "text-nav-ink"
+    `relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2 text-[0.72rem] font-bold transition-colors ${
+      active ? "text-aqua-800 dark:text-aqua-300" : "text-nav-ink"
     }`;
-
   const tab = (item: (typeof items)[number]) => {
     /*
       '더보기'만 이동이 아니라 시트를 연다 — 라벨이 말하는 대로 더 보여 준다.
@@ -688,6 +695,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  /* 화면 안의 바로가기 칸이 보내는 신호 (lib/ui/shell-events.ts) */
+  useEffect(() => {
+    const onRecord = () => setSheetOpen(true);
+    const onSearch = () => setPaletteOpen(true);
+    const onNew = () => setNewName("");
+    window.addEventListener(SHELL_EVENTS.record, onRecord);
+    window.addEventListener(SHELL_EVENTS.search, onSearch);
+    window.addEventListener(SHELL_EVENTS.newCustomer, onNew);
+    return () => {
+      window.removeEventListener(SHELL_EVENTS.record, onRecord);
+      window.removeEventListener(SHELL_EVENTS.search, onSearch);
+      window.removeEventListener(SHELL_EVENTS.newCustomer, onNew);
+    };
   }, []);
 
   return (
