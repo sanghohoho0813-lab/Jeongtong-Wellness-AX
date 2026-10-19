@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   title: "정통대왕쑥뜸원 — 프리미엄 온열 웰니스 케어",
   description:
     "거즈 · 특제 반죽 · 국내산 최상급 쑥을 올려 넓은 부위에 온열을 전달하는 대왕쑥뜸. 방문 기록이 쌓이면 다음 관리 시점을 함께 챙겨 드립니다.",
+  /* 이 화면에서 「홈 화면에 추가」 하면 고객 앱(MY WELLNESS)으로 설치된다 */
+  manifest: "/my.webmanifest",
+  appleWebApp: { capable: true, title: "MY WELLNESS", statusBarStyle: "default" },
 };
 
 /**

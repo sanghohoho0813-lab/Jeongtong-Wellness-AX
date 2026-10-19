@@ -223,7 +223,7 @@ export default function RetentionPage() {
                 <span key={d.customer.id}>
                   <Link
                     href={`/customers/${d.customer.id}`}
-                    className="tap-line text-aqua-300 underline decoration-aqua-400/50 underline-offset-4 hover:text-aqua-200"
+                    className="tap-line text-aqua-300 underline decoration-aqua-400/50 underline-offset-4 hover:text-white"
                   >
                     {displayName(d.customer.name, privacyMode)}
                   </Link>

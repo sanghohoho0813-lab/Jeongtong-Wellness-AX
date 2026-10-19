@@ -22,25 +22,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { humanError, staffClient, supabaseConfigured } from "@/lib/supabase/client";
 import { demoMode } from "@/lib/auth/mode";
-import { Button, Card, FieldLabel, inputCls } from "@/components/ui";
-
-function BrandMark() {
-  return (
-    <div className="mb-6 flex items-center gap-3">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-aqua-500 to-deep-900 text-xl font-extrabold text-white shadow-[0_4px_14px_rgba(10,46,44,0.28)]">
-        鼎
-      </span>
-      <span className="min-w-0">
-        <span className="block text-[1.0625rem] font-extrabold tracking-tight text-ink">
-          정통대왕쑥뜸원
-        </span>
-        <span className="block text-[0.7rem] font-extrabold uppercase tracking-[0.14em] text-aqua-700">
-          Wellness Business AX
-        </span>
-      </span>
-    </div>
-  );
-}
+import { Button, FieldLabel, inputCls } from "@/components/ui";
+import DoorFrame, { DoorNote } from "@/components/layout/DoorFrame";
 
 function LoginForm() {
   const router = useRouter();
@@ -110,31 +93,55 @@ function LoginForm() {
 
   if (!supabaseConfigured) {
     return (
-      <Card>
-        <BrandMark />
-        <h1 className="text-[1.25rem] font-extrabold text-ink">
-          아직 서버에 연결되지 않았습니다
-        </h1>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-sub">
-          이 빌드에는 매장 서버 설정이 들어 있지 않습니다. 설치를 맡은 곳에
-          문의해 주세요.
+      <DoorFrame
+        eyebrow="직원용 · 내부 AX"
+        title="아직 서버에 연결되지 않았습니다"
+        sub="이 빌드에는 매장 서버 설정이 들어 있지 않습니다."
+      >
+        <p className="text-[0.9375rem] leading-relaxed text-ink-sub">
+          설치를 맡은 곳에 문의해 주세요. 고객이시라면 아래에서 매장 안내를
+          보실 수 있습니다.
         </p>
-      </Card>
+        <Link
+          href="/welcome"
+          className="mt-4 inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-aqua-50 px-5 text-[1rem] font-extrabold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-100 dark:bg-aqua-500/10 dark:ring-aqua-500/20"
+        >
+          매장 안내 보기
+        </Link>
+      </DoorFrame>
     );
   }
 
   return (
-    <Card>
-      <BrandMark />
-      <h1 className="text-[1.375rem] font-extrabold tracking-tight text-ink">
-        직원 로그인
-      </h1>
-      <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
-        매장에서 받은 계정으로 들어옵니다. 어떤 화면을 볼 수 있는지는
-        계정에 따라 정해집니다.
-      </p>
-
-      <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
+    <DoorFrame
+      eyebrow="직원용 · 내부 AX"
+      title="직원 로그인"
+      sub="매장에서 받은 계정으로 들어옵니다. 어떤 화면을 볼 수 있는지는 계정에 따라 정해집니다."
+      after={
+        <>
+          <DoorNote>
+            <p className="text-[0.875rem] leading-relaxed text-ink-sub">
+              비밀번호가 기억나지 않으면 매장 관리자에게 재설정을 요청해 주세요.
+            </p>
+            <p className="mt-2 text-[0.875rem] leading-relaxed text-ink-sub">
+              고객이시라면{" "}
+              <Link href="/my" className="font-bold text-aqua-700 underline underline-offset-2">
+                MY WELLNESS
+              </Link>{" "}
+              로 들어가 주세요. 그쪽은 비밀번호 없이 이메일로 받은 숫자 여섯
+              자리로 들어갑니다.
+            </p>
+          </DoorNote>
+          {demoMode && (
+            <p className="mt-3 rounded-[20px] bg-gold-soft px-4 py-3 text-[0.8125rem] font-bold leading-relaxed text-gold-deep">
+              지금은 체험(Demo) 모드입니다. 로그인하지 않아도 가상 자료로 화면을
+              둘러볼 수 있습니다.
+            </p>
+          )}
+        </>
+      }
+    >
+      <form onSubmit={submit} className="space-y-4" noValidate>
         <div>
           <FieldLabel>이메일</FieldLabel>
           <input
@@ -175,36 +182,14 @@ function LoginForm() {
           {busy ? "확인하는 중…" : "로그인"}
         </Button>
       </form>
-
-      <p className="mt-5 border-t border-stone-line pt-4 text-[0.8125rem] leading-relaxed text-ink-sub">
-        비밀번호가 기억나지 않으면 매장 관리자에게 재설정을 요청해 주세요.
-        <br />
-        고객이시라면{" "}
-        <Link href="/my" className="font-bold text-aqua-700 underline">
-          MY WELLNESS
-        </Link>{" "}
-        로 들어가 주세요. 그쪽은 비밀번호 없이 이메일로 받은 숫자 여섯
-        자리로 들어갑니다.
-      </p>
-
-      {demoMode && (
-        <p className="mt-3 rounded-card bg-gold-soft px-3.5 py-2.5 text-[0.8125rem] font-bold leading-relaxed text-gold-deep">
-          지금은 체험(Demo) 모드입니다. 로그인하지 않아도 가상 자료로 화면을
-          둘러볼 수 있습니다.
-        </p>
-      )}
-    </Card>
+    </DoorFrame>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-dvh bg-stone-bg px-4 py-10 sm:py-16">
-      <div className="mx-auto w-full max-w-md">
-        <Suspense fallback={null}>
-          <LoginForm />
-        </Suspense>
-      </div>
-    </div>
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

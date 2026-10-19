@@ -7,6 +7,9 @@ import { ToastProvider } from "@/components/ui/toast";
 export const metadata: Metadata = {
   title: "MY WELLNESS · 정통대왕쑥뜸원",
   description: "내 이용기록과 이용권을 확인하는 고객 화면",
+  /* 고객 앱은 고객 앱 이름 · 첫 화면으로 설치된다 (직원 앱과 다른 앱) */
+  manifest: "/my.webmanifest",
+  appleWebApp: { capable: true, title: "MY WELLNESS", statusBarStyle: "default" },
 };
 
 /**

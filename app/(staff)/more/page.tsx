@@ -25,6 +25,7 @@ import {
   SparkIcon,
 } from "@/components/ui/icons";
 import { VIDEO_LIST } from "@/lib/content/videos";
+import InstallApp from "@/components/ui/InstallApp";
 
 /** 알아보기 칸 — 고객 앱 홈의 바로가기 칸과 같은 모양 */
 const DOC_TONE = {
@@ -167,6 +168,16 @@ export default function MorePage() {
           </ul>
         </section>
       )}
+
+      {/* 이 기기 — 홈 화면에 앱으로 두기 (D-58). 매장 태블릿 · 대표님 폰에 아이콘 하나로 */}
+      <section aria-labelledby="more-device-h">
+        <h2 id="more-device-h" className="mb-2.5 px-1 text-[1.125rem] font-extrabold tracking-tight text-ink">
+          이 기기
+        </h2>
+        <div className="overflow-hidden rounded-[20px] bg-card shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+          <InstallApp appName="정통 AX" />
+        </div>
+      </section>
 
       {/*
         글자 크기·테마는 누구에게나 여기서 바로 바뀐다.

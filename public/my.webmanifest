@@ -1,0 +1,18 @@
+{
+  "id": "/my",
+  "name": "MY WELLNESS · 정통대왕쑥뜸원",
+  "short_name": "MY WELLNESS",
+  "description": "내 이용 기록과 남은 이용권, 다음 방문을 확인하는 고객 화면",
+  "lang": "ko",
+  "start_url": "/my",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F3EF",
+  "theme_color": "#0A2E2C",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

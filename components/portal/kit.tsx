@@ -138,7 +138,7 @@ const PILL: Record<PillTone, string> = {
     "bg-gradient-to-b from-aqua-650 to-aqua-850 text-white shadow-[0_4px_14px_rgba(14,127,125,0.30)] hover:from-aqua-850 hover:to-deep-700 disabled:from-ink-faint disabled:to-ink-faint disabled:shadow-none",
   soft: "bg-aqua-50 text-aqua-800 ring-1 ring-aqua-100 hover:bg-aqua-100 dark:bg-aqua-500/10 dark:ring-aqua-500/20",
   outline: "bg-card text-ink ring-1 ring-stone-line hover:bg-stone-bg",
-  onDark: "bg-white text-deep-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)] hover:bg-aqua-50",
+  onDark: "bg-white text-deep-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)] hover:bg-white/85",
   ghostDark: "bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20",
 };
 

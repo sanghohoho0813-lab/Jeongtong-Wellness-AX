@@ -233,7 +233,7 @@ export default function TaskCard({
     ? "rounded-card bg-white/10 ring-1 ring-white/15"
     : "rounded-card bg-card ring-1 ring-black/[0.06] dark:ring-white/10";
   const panelLabel = hero
-    ? "text-[0.7rem] font-extrabold uppercase tracking-wider text-aqua-200"
+    ? "text-[0.7rem] font-extrabold uppercase tracking-wider text-white/75"
     : "text-[0.7rem] font-extrabold uppercase tracking-wider text-ink-faint";
   const chipOn = hero
     ? "bg-white text-deep-900"
@@ -295,7 +295,7 @@ export default function TaskCard({
             <Link
               href={`/customers/${customer.id}`}
               className={`tap-line max-w-full text-[1.0625rem] font-extrabold ${
-                hero ? "text-white hover:text-aqua-200" : "text-ink hover:text-aqua-700"
+                hero ? "text-white hover:text-white/80" : "text-ink hover:text-aqua-700"
               }`}
             >
               {/* 긴 이름은 이름만 말줄임 — 옆의 › 는 밀려나지 않는다 */}
@@ -434,7 +434,7 @@ export default function TaskCard({
               {finished && panel !== "done" && (
                 <button
                   onClick={openDonePanel}
-                  className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-aqua-200 hover:text-white" : "text-aqua-700 hover:text-aqua-800"}`}
+                  className={`touch-target rounded-full px-3 py-1.5 text-sm font-bold ${hero ? "text-white/85 hover:text-white" : "text-aqua-700 hover:text-aqua-800"}`}
                 >
                   결과 수정
                 </button>
@@ -444,7 +444,7 @@ export default function TaskCard({
                 href={`/customers/${customer.id}`}
                 className={`touch-target ml-auto items-center gap-0.5 text-sm font-bold ${
                   hero
-                    ? "inline-flex text-aqua-200 hover:text-white"
+                    ? "inline-flex text-white/85 hover:text-white"
                     : "hidden text-ink-sub hover:text-aqua-700 sm:inline-flex"
                 }`}
               >

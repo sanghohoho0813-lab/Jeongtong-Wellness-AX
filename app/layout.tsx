@@ -5,6 +5,21 @@ import RootBoundary from "@/components/layout/RootBoundary";
 export const metadata: Metadata = {
   title: "정통대왕쑥뜸원 AX Platform",
   description: "정통대왕쑥뜸원 웰니스 운영 AX 플랫폼",
+  /* 홈 화면에 추가했을 때의 아이콘 · 이름 (D-58). 매니페스트는 app/manifest.ts */
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "정통 AX",
+    /* default — 상태 표시줄 아래에서 화면이 시작한다. translucent 로 두면
+       머리글이 시계 · 배터리 줄 밑으로 들어가 가려진다 */
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {

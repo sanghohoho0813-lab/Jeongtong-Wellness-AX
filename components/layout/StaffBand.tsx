@@ -257,7 +257,7 @@ export function BandProgress({
 const PILL =
   "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-[0.9375rem] font-extrabold transition-colors";
 /** 흰 알약 — 이 화면에서 가장 먼저 할 일 */
-export const bandPrimary = `${PILL} bg-white text-deep-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)] hover:bg-aqua-50`;
+export const bandPrimary = `${PILL} bg-white text-deep-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)] hover:bg-white/85`;
 /** 투명 알약 — 그다음 할 일 */
 export const bandGhost = `${PILL} bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20`;
 
@@ -282,7 +282,7 @@ export function BandLink({
 /** 띠 위의 작은 상태 알약 (영업 중 · 공유 모드 등) */
 export function BandPill({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-[0.75rem] font-extrabold text-aqua-200 ring-1 ring-white/15">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-[0.75rem] font-extrabold text-white/85 ring-1 ring-white/15">
       {children}
     </span>
   );

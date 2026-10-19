@@ -88,7 +88,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   t.action?.onAction();
                   dismiss(t.id);
                 }}
-                className="pointer-events-auto ml-0.5 shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold text-aqua-200 ring-1 ring-white/20 hover:bg-white/25"
+                className="pointer-events-auto ml-0.5 shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold text-white ring-1 ring-white/25 hover:bg-white/25"
               >
                 {t.action.label}
               </button>

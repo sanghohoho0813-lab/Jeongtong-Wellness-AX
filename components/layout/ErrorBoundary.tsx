@@ -101,20 +101,20 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={() => this.setState({ error: null })}
-            className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-gradient-to-b from-aqua-650 to-aqua-850 px-4 py-2.5 text-[0.9375rem] font-bold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
+            className="touch-target inline-flex items-center gap-1.5 rounded-full bg-gradient-to-b from-aqua-650 to-aqua-850 px-4 py-2.5 text-[0.9375rem] font-bold text-white shadow-[0_2px_8px_rgba(14,127,125,0.35)]"
           >
             <RefreshIcon className="h-4 w-4" />
             다시 시도
           </button>
           <Link
             href="/customers"
-            className="touch-target inline-flex items-center rounded-btn bg-aqua-50 px-4 py-2.5 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-200"
+            className="touch-target inline-flex items-center rounded-full bg-aqua-50 px-4 py-2.5 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-200"
           >
             고객 화면으로
           </Link>
           <button
             onClick={() => this.setState({ rescued: rescueRawBackup() })}
-            className="touch-target inline-flex items-center gap-1.5 rounded-btn bg-card-soft px-4 py-2.5 text-[0.9375rem] font-bold text-ink-soft ring-1 ring-black/[0.05]"
+            className="touch-target inline-flex items-center gap-1.5 rounded-full bg-card-soft px-4 py-2.5 text-[0.9375rem] font-bold text-ink-soft ring-1 ring-black/[0.05]"
           >
             <DownloadIcon className="h-4 w-4" />
             지금 기록 파일로 꺼내기
@@ -138,7 +138,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 window.localStorage.removeItem(STORAGE_KEY);
                 window.location.href = "/";
               }}
-              className="touch-target mt-2.5 inline-flex items-center rounded-btn bg-danger px-4 py-2.5 text-[0.9375rem] font-bold text-white"
+              className="touch-target mt-2.5 inline-flex items-center rounded-full bg-danger px-4 py-2.5 text-[0.9375rem] font-bold text-white"
             >
               저장 내용 비우고 다시 열기
             </button>

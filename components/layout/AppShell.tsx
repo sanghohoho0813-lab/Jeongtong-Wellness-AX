@@ -497,17 +497,18 @@ function ContentSkeleton() {
       <p role="status" className="sr-only">
         불러오는 중입니다
       </p>
+      {/*
+        뼈대도 지금 화면의 모양으로 (D-58) — 묶음 탭 · 머리 띠 · 걸친 판 ·
+        목록 줄. 옛 모양(제목 줄 + 카드 넉 장)의 뼈대가 0.5초 보였다가
+        새 화면으로 바뀌면, 화면이 한 번 「뒤집히는」 것처럼 보였다.
+      */}
       <div className="animate-pulse" aria-hidden>
-        <div className="mb-5 h-9 w-52 rounded-btn bg-stone-line/70" />
-        <div className="mb-4 h-28 rounded-card bg-stone-line/50" />
-        <div className="mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-card bg-stone-line/50" />
-          ))}
-        </div>
-        <div className="space-y-3">
+        <div className="mb-4 h-[3.75rem] rounded-full bg-stone-line/60" />
+        <div className="h-44 rounded-[24px] bg-deep-800/25 dark:bg-white/[0.06]" />
+        <div className="relative z-10 mx-2.5 -mt-10 h-28 rounded-[22px] bg-card shadow-card ring-1 ring-black/[0.04] sm:mx-4 dark:ring-white/[0.06]" />
+        <div className="mt-6 space-y-px overflow-hidden rounded-[20px]">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-24 rounded-card bg-stone-line/40" />
+            <div key={i} className="h-[4.5rem] bg-stone-line/40" />
           ))}
         </div>
       </div>

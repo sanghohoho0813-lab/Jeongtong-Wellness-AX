@@ -16,6 +16,7 @@ import { useState } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { nextReference, summarizePasses, summarizeUsage } from "@/lib/portal/wellness";
 import FutureSection from "@/components/public/FutureSection";
+import InstallApp from "@/components/ui/InstallApp";
 import {
   BellIcon,
   BookIcon,
@@ -162,6 +163,15 @@ export default function MyAccount() {
       </Section>
 
       {/* 연락처 */}
+      {/* 홈 화면에 앱으로 두기 (D-58) — 다음부터 아이콘 하나로 바로 열린다 */}
+      <Section title="이 폰에서">
+        <ListGroup>
+          <li>
+            <InstallApp appName="MY WELLNESS" />
+          </li>
+        </ListGroup>
+      </Section>
+
       <Section title="연락처">
         <ListGroup>
           <ListRow

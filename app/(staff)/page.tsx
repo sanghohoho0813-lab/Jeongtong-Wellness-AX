@@ -35,15 +35,17 @@ export default function DashboardPage() {
     판의 왼쪽(폰은 위)은 판단 세 칸, 오른쪽(폰은 아래)은 바로가기 네 칸.
   */
   const top = (
-    <div>
-      <TodayHero />
-      <div className="relative z-10 mx-2.5 -mt-10 rounded-[22px] bg-card p-1.5 shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06] sm:mx-4 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:p-2">
-        <DecisionBand />
-        <div className="mx-2 mt-1 border-t border-stone-line px-0.5 pb-1.5 pt-3 lg:mx-0 lg:mt-0 lg:border-l lg:border-t-0 lg:px-4 lg:py-2">
-          <QuickActions />
-        </div>
-      </div>
-    </div>
+    <TodayHero
+      panelClassName="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center"
+      panel={
+        <>
+          <DecisionBand />
+          <div className="mx-2 mt-1 border-t border-stone-line px-0.5 pb-1.5 pt-3 lg:mx-0 lg:mt-0 lg:border-l lg:border-t-0 lg:px-4 lg:py-2">
+            <QuickActions />
+          </div>
+        </>
+      }
+    />
   );
 
   return (

@@ -25,33 +25,31 @@
 
 import { FormEvent, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
-import { Button, Card, FieldLabel, inputCls } from "@/components/ui";
+import { Button, FieldLabel, inputCls } from "@/components/ui";
+import DoorFrame, { DoorNote } from "@/components/layout/DoorFrame";
 import { PortalHeader, useDeviceTheme } from "./PortalShell";
 import { useHowItWorks } from "@/components/public/HowItWorks";
 
-function Frame({ children }: { children: React.ReactNode }) {
-  // 로그인 화면도 폰의 밝기를 따라간다 (문 안쪽만 어두우면 이상하다)
+/**
+ * 문의 뼈대 — 앱 안쪽과 같은 딥그린 띠 + 걸친 흰 판 (D-58, DoorFrame).
+ * 로그인 화면도 폰의 밝기를 따라간다 (문 안쪽만 어두우면 이상하다).
+ */
+function Door(props: Omit<Parameters<typeof DoorFrame>[0], "header" | "eyebrow">) {
   useDeviceTheme();
-  return (
-    <div className="min-h-dvh bg-stone-bg">
-      <PortalHeader />
-      <main className="mx-auto max-w-lg px-4 py-6">{children}</main>
-    </div>
-  );
+  return <DoorFrame header={<PortalHeader />} eyebrow="MY WELLNESS · 고객용" {...props} />;
 }
 
 /** 화면 가운데 한 줄 안내 (읽는 동안 아무것도 깜빡이지 않게) */
 function Waiting() {
   return (
-    <Frame>
-      <Card>
-        <div className="space-y-3 py-6">
-          <div className="h-5 w-40 animate-pulse rounded bg-stone-bg-deep" />
-          <div className="h-4 w-full animate-pulse rounded bg-stone-bg-deep" />
-          <div className="h-4 w-2/3 animate-pulse rounded bg-stone-bg-deep" />
-        </div>
-      </Card>
-    </Frame>
+    <Door title="잠시만 기다려 주세요">
+      <div role="status" className="space-y-3 py-2">
+        <span className="sr-only">불러오는 중입니다</span>
+        <div className="h-5 w-40 animate-pulse rounded-full bg-stone-bg-deep" />
+        <div className="h-4 w-full animate-pulse rounded-full bg-stone-bg-deep" />
+        <div className="h-4 w-2/3 animate-pulse rounded-full bg-stone-bg-deep" />
+      </div>
+    </Door>
   );
 }
 
@@ -109,107 +107,105 @@ function SignIn() {
   };
 
   return (
-    <Frame>
-      <Card>
-        <h1 className="text-[1.375rem] font-extrabold leading-snug text-ink">
-          {step === "email" ? "내 이용정보 보기" : "메일로 보낸 숫자 6자리"}
-        </h1>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-sub">
-          {step === "email"
-            ? "이메일 주소를 넣으면 숫자 6자리를 보내 드립니다. 비밀번호는 만들지 않으셔도 됩니다."
-            : `${email} 으로 보냈습니다. 메일이 보이지 않으면 스팸함도 확인해 주세요.`}
-        </p>
+    <Door
+      title={step === "email" ? "내 이용정보 보기" : "메일로 보낸 숫자 6자리"}
+      sub={
+        step === "email"
+          ? "이메일 주소를 넣으면 숫자 6자리를 보내 드립니다. 비밀번호는 만들지 않으셔도 됩니다."
+          : `${email} 으로 보냈습니다. 메일이 보이지 않으면 스팸함도 확인해 주세요.`
+      }
+      after={
+        <>
+          {/*
+            아직 계정이 없는 분을 위한 두 갈래.
 
-        {step === "email" ? (
-          <form onSubmit={askCode} className="mt-5 space-y-4">
-            <div>
-              <FieldLabel>이메일 주소</FieldLabel>
-              <input
-                className={inputCls}
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                aria-label="이메일 주소"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="example@email.com"
-              />
+            로그인 화면만 덩그러니 두면, 이게 무슨 화면인지 모르는 분은
+            이메일을 넣을 이유를 못 찾는다. 먼저 보고 나서 시작할 수 있게 한다.
+          */}
+          <DoorNote>
+            <h2 className="text-[1rem] font-extrabold text-ink">처음이신가요?</h2>
+            <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
+              계정이 없어도 어떤 화면인지 먼저 보실 수 있습니다. 예시 자료로
+              채워진 화면이라 실제 기록은 아닙니다.
+            </p>
+            <div className="mt-3.5 flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={enterSample}>
+                예시로 둘러보기
+              </Button>
+              <Button variant="ghost" onClick={openHowItWorks}>
+                어떻게 이용하게 되나요
+              </Button>
             </div>
-            {msg && (
-              <p role="alert" className="text-sm font-bold text-danger-text">
-                {msg}
-              </p>
-            )}
-            <Button type="submit" size="lg" className="w-full" disabled={busy}>
-              {busy ? "보내는 중…" : "숫자 6자리 받기"}
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={submitCode} className="mt-5 space-y-4">
-            <div>
-              <FieldLabel>받은 숫자 6자리</FieldLabel>
-              <input
-                className={`${inputCls} nowrap-num text-center text-2xl font-extrabold tracking-[0.4em] tabular`}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                aria-label="받은 숫자 6자리"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="000000"
-              />
-            </div>
-            {msg && (
-              <p role="alert" className="text-sm font-bold text-danger-text">
-                {msg}
-              </p>
-            )}
-            <Button type="submit" size="lg" className="w-full" disabled={busy}>
-              {busy ? "확인 중…" : "확인"}
-            </Button>
-            <button
-              type="button"
-              className="tap-line w-full text-sm font-bold text-ink-sub hover:text-ink"
-              onClick={() => {
-                setStep("email");
-                setCode("");
-                setMsg("");
-              }}
-            >
-              이메일 주소를 다시 넣을게요
-            </button>
-          </form>
-        )}
-      </Card>
-
-      {/*
-        아직 계정이 없는 분을 위한 두 갈래.
-
-        로그인 화면만 덩그러니 두면, 이게 무슨 화면인지 모르는 분은
-        이메일을 넣을 이유를 못 찾는다. 먼저 보고 나서 시작할 수 있게 한다.
-      */}
-      <Card className="mt-4">
-        <h2 className="text-[1rem] font-extrabold text-ink">처음이신가요?</h2>
-        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-sub">
-          계정이 없어도 어떤 화면인지 먼저 보실 수 있습니다. 예시 자료로
-          채워진 화면이라 실제 기록은 아닙니다.
-        </p>
-        <div className="mt-3.5 flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={enterSample}>
-            예시로 둘러보기
+          </DoorNote>
+          <p className="mt-4 px-1 text-[0.8125rem] leading-relaxed text-ink-faint">
+            여기서는 내 이용기록과 이용권만 볼 수 있습니다. 몸 상태에 대한 판단이나
+            의학적 안내는 제공하지 않습니다.
+          </p>
+          {howItWorksSheet}
+        </>
+      }
+    >
+      {step === "email" ? (
+        <form onSubmit={askCode} className="space-y-4">
+          <div>
+            <FieldLabel>이메일 주소</FieldLabel>
+            <input
+              className={inputCls}
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              aria-label="이메일 주소"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@email.com"
+            />
+          </div>
+          {msg && (
+            <p role="alert" className="text-sm font-bold text-danger-text">
+              {msg}
+            </p>
+          )}
+          <Button type="submit" size="lg" className="w-full" disabled={busy}>
+            {busy ? "보내는 중…" : "숫자 6자리 받기"}
           </Button>
-          <Button variant="ghost" onClick={openHowItWorks}>
-            어떻게 이용하게 되나요
+        </form>
+      ) : (
+        <form onSubmit={submitCode} className="space-y-4">
+          <div>
+            <FieldLabel>받은 숫자 6자리</FieldLabel>
+            <input
+              className={`${inputCls} nowrap-num text-center text-2xl font-extrabold tracking-[0.4em] tabular`}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              aria-label="받은 숫자 6자리"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="000000"
+            />
+          </div>
+          {msg && (
+            <p role="alert" className="text-sm font-bold text-danger-text">
+              {msg}
+            </p>
+          )}
+          <Button type="submit" size="lg" className="w-full" disabled={busy}>
+            {busy ? "확인 중…" : "확인"}
           </Button>
-        </div>
-      </Card>
-
-      <p className="mt-4 px-1 text-[0.8125rem] leading-relaxed text-ink-faint">
-        여기서는 내 이용기록과 이용권만 볼 수 있습니다. 몸 상태에 대한 판단이나
-        의학적 안내는 제공하지 않습니다.
-      </p>
-      {howItWorksSheet}
-    </Frame>
+          <button
+            type="button"
+            className="tap-line w-full text-sm font-bold text-ink-sub hover:text-ink"
+            onClick={() => {
+              setStep("email");
+              setCode("");
+              setMsg("");
+            }}
+          >
+            이메일 주소를 다시 넣을게요
+          </button>
+        </form>
+      )}
+    </Door>
   );
 }
 
@@ -233,55 +229,49 @@ function LinkAccount() {
   };
 
   return (
-    <Frame>
-      <Card>
-        <h1 className="text-[1.375rem] font-extrabold leading-snug text-ink">
-          매장에서 받은 연결코드
-        </h1>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-sub">
-          매장에 방문하시거나 전화로 요청하시면 여섯 자리 코드를 알려 드립니다.
-          한 번만 넣으시면 다음부터는 바로 열립니다.
-        </p>
-
-        <form onSubmit={submit} className="mt-5 space-y-4">
-          <div>
-            <FieldLabel>연결코드</FieldLabel>
-            <input
-              className={`${inputCls} text-center text-2xl font-extrabold uppercase tracking-[0.3em]`}
-              aria-label="연결코드"
-              maxLength={6}
-              autoCapitalize="characters"
-              value={code}
-              onChange={(e) =>
-                setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-              }
-              placeholder="ABC123"
-            />
-          </div>
-          {msg && (
-            <p role="alert" className="text-sm font-bold text-danger-text">
-              {msg}
-            </p>
-          )}
-          <Button type="submit" size="lg" className="w-full" disabled={busy}>
-            {busy ? "확인 중…" : "연결하기"}
-          </Button>
-        </form>
-      </Card>
-
-      <Card className="mt-4">
-        <p className="text-[0.8125rem] leading-relaxed text-ink-sub">
-          지금 <b className="text-ink">{email}</b> 으로 로그인되어 있습니다.
-        </p>
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="tap-line mt-1 text-sm font-bold text-ink-sub hover:text-ink"
-        >
-          다른 이메일로 로그인
-        </button>
-      </Card>
-    </Frame>
+    <Door
+      title="매장에서 받은 연결코드"
+      sub="매장에 방문하시거나 전화로 요청하시면 여섯 자리 코드를 알려 드립니다. 한 번만 넣으시면 다음부터는 바로 열립니다."
+      after={
+        <DoorNote>
+          <p className="text-[0.8125rem] leading-relaxed text-ink-sub">
+            지금 <b className="text-ink">{email}</b> 으로 로그인되어 있습니다.
+          </p>
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="tap-line mt-1 text-sm font-bold text-ink-sub hover:text-ink"
+          >
+            다른 이메일로 로그인
+          </button>
+        </DoorNote>
+      }
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <div>
+          <FieldLabel>연결코드</FieldLabel>
+          <input
+            className={`${inputCls} text-center text-2xl font-extrabold uppercase tracking-[0.3em]`}
+            aria-label="연결코드"
+            maxLength={6}
+            autoCapitalize="characters"
+            value={code}
+            onChange={(e) =>
+              setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+            }
+            placeholder="ABC123"
+          />
+        </div>
+        {msg && (
+          <p role="alert" className="text-sm font-bold text-danger-text">
+            {msg}
+          </p>
+        )}
+        <Button type="submit" size="lg" className="w-full" disabled={busy}>
+          {busy ? "확인 중…" : "연결하기"}
+        </Button>
+      </form>
+    </Door>
   );
 }
 
@@ -300,19 +290,11 @@ export default function PortalGate({ children }: { children: React.ReactNode }) 
 
   if (phase === "error") {
     return (
-      <Frame>
-        <Card>
-          <h1 className="text-[1.25rem] font-extrabold text-ink">
-            정보를 불러오지 못했습니다
-          </h1>
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-sub">
-            {error}
-          </p>
-          <Button className="mt-4 w-full" size="lg" onClick={() => void refresh()}>
-            다시 시도
-          </Button>
-        </Card>
-      </Frame>
+      <Door title="정보를 불러오지 못했습니다" sub={error}>
+        <Button className="w-full" size="lg" onClick={() => void refresh()}>
+          다시 시도
+        </Button>
+      </Door>
     );
   }
 
