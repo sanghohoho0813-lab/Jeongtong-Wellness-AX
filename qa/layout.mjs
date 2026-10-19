@@ -106,9 +106,19 @@ for (const [path, label] of PAGES) {
         페이지가 굴러가지 않으면(문서가 화면보다 짧으면) 정말로 못 보므로
         그때는 넘기지 않는다.
       */
-      const hitPos = getComputedStyle(hit).position;
+      /*
+        막대 자신만 보면 안 된다. 하단 네비 가운데 [기록] 칸처럼 떠 있는
+        막대 **안쪽의 칸**(position: static)에 걸리면, 그 칸은 fixed 가
+        아니라서 덮였다고 잘못 잡혔다 — 줄이 우연히 화면 맨 아래에 걸린
+        자리에서. 조상 가운데 하나라도 떠 있으면 떠 있는 막대다.
+      */
+      let floating = false;
+      for (let a = hit; a && a !== document.body; a = a.parentElement) {
+        const pos = getComputedStyle(a).position;
+        if (pos === "fixed" || pos === "sticky") { floating = true; break; }
+      }
       const scrollable = document.documentElement.scrollHeight > innerHeight + 4;
-      if (scrollable && (hitPos === "fixed" || hitPos === "sticky")) continue;
+      if (scrollable && floating) continue;
       covered.push(`${el.tagName} "${(el.textContent || "").trim().slice(0, 14)}" ← ${hit.tagName}.${String(hit.className).split(" ")[0]}`);
     }
 

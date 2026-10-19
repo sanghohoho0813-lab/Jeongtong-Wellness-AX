@@ -365,7 +365,12 @@ export default function VisitsPage() {
                             </p>
                           ) : null;
                         })()}
-                        <div className="-mb-1.5 flex items-center justify-end gap-1">
+                        {/*
+                          mt-2.5 — 이름 링크(.tap-line)는 손끝 높이 44px 를 위해 아래로
+                          0.625rem 넘쳐 있다. 시각을 왼쪽 칸으로 옮기자 이름 바로 아래에
+                          이 단추 줄이 붙어, 큰 글씨에서 이름 아랫부분을 덮었다.
+                        */}
+                        <div className="-mb-1.5 mt-2.5 flex items-center justify-end gap-1">
                           <button
                             onClick={() => {
                               setEditingVisit(v);
