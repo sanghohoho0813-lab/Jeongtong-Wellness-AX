@@ -86,7 +86,7 @@ export default function StaffBand({
       title={infoTitle}
       open={info}
       onToggle={() => setInfo((v) => !v)}
-      className="-my-2 !h-9 !w-9 !text-white/70 hover:!text-white"
+      className="-my-3 !text-white/70 hover:!text-white" /* 손끝 크기(44px)는 그대로, 줄 높이는 늘리지 않게 위아래를 당긴다 */
     />
   ) : null;
 
