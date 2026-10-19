@@ -255,7 +255,7 @@ log(
 const stripH = await p
   .locator("[data-sample-strip]")
   .evaluate((el) => Math.round(el.getBoundingClientRect().height));
-log("예시 띠 — 두 줄 안 (전에는 세 줄 95px)", stripH <= 60, `${stripH}px`);
+log("예시 띠 — 한 줄 (전에는 세 줄 95px)", stripH <= 46, `${stripH}px`);
 log(
   "다음 방문 카드 — 남은 날(D-n · 오늘 · 지남)을 보여 준다",
   /D-\d+|오늘|지남|잡히지 않았어요/.test(await p.locator("[data-next-visit]").innerText()),
@@ -273,6 +273,25 @@ await p.waitForTimeout(1000);
 log(
   "1:1 상담 칸 — 「문의」 가 골라진 채로 열린다",
   (await p.getByRole("button", { name: "문의" }).getAttribute("aria-pressed")) === "true",
+);
+
+/* 날짜 칩 — 달력을 열지 않고 한 번 눌러 고른다 */
+await go(p, "/my/request", 900);
+const chip = p.locator('[aria-label="앞으로 두 주 중 날짜 고르기"] button').nth(2);
+const chipLabel = (await chip.getAttribute("aria-label")) || "";
+await chip.click();
+await p.waitForTimeout(200);
+const picked = await p.locator('input[aria-label="희망 날짜"]').inputValue();
+log(
+  "방문 요청 — 날짜 칩을 누르면 희망 날짜가 채워진다",
+  !!picked && chipLabel.startsWith(picked.replace(/-/g, ".")),
+  `${chipLabel} → ${picked}`,
+);
+
+await go(p, "/my/care", 900);
+log(
+  "케어기록 — 최근 방문이 타임라인(맨 위가 최근)으로 보인다",
+  (await p.locator("[data-care-timeline] li").count()) > 0,
 );
 
 /* 아래 고정 단추 — 맨 끝까지 내려도 마지막 줄을 덮지 않는다 */

@@ -146,8 +146,10 @@ export default function PortalShell({ children }: { children: ReactNode }) {
             <span className="shrink-0 rounded-full bg-gold-deep px-2 py-0.5 text-[0.6875rem] font-extrabold text-white dark:text-deep-900">
               예시
             </span>
+            {/* 좁은 폰에서도 한 줄 — 「실제 기록이 아닙니다」 는 자리가 있을 때만 (읽어 주는 프로그램에는 늘) */}
             <p className="min-w-0 flex-1 text-[0.8125rem] font-bold leading-snug text-gold-deep">
-              예시 화면입니다 — 실제 기록이 아닙니다
+              예시 화면입니다
+              <span className="sr-only min-[440px]:not-sr-only"> — 실제 기록이 아닙니다</span>
             </p>
             {/*
               띠에서 바로 안내를 열 수 있게 한다.

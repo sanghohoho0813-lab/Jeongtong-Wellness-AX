@@ -29,8 +29,6 @@ import {
   EmptyLine,
   HCard,
   HScroll,
-  ListGroup,
-  ListRow,
   PageHead,
   Panel,
   PillLink,
@@ -156,41 +154,52 @@ export default function MyCare() {
         </Panel>
       </Section>
 
-      {/* 최근 방문 — 주문 목록처럼 */}
+      {/* 최근 방문 — 주문 추적 화면의 타임라인처럼: 맨 위가 가장 최근 */}
       <Section title="최근 방문" more={{ href: "/my/visits" }}>
         {recent.length === 0 ? (
           <EmptyLine>아직 방문 기록이 없습니다.</EmptyLine>
         ) : (
-          <ListGroup>
-            {recent.map((v) => (
-              <ListRow
-                key={v.id}
-                chevron={false}
-                title={
-                  <span className="nowrap-num tabular">
-                    {formatDateWithDay(v.visitedAt.slice(0, 10))}
-                    <span className="ml-1.5 text-[0.8125rem] font-medium text-ink-faint">
-                      {formatRelative(v.visitedAt)}
-                    </span>
+          <Panel>
+            <ol data-care-timeline>
+              {recent.map((v, i) => (
+                <li key={v.id} className="relative flex gap-3.5 pb-5 last:pb-0">
+                  {/* 점과 이어지는 선 */}
+                  <span aria-hidden className="relative flex w-4 shrink-0 justify-center">
+                    <span
+                      className={`mt-1.5 h-3.5 w-3.5 rounded-full ring-4 ${
+                        i === 0
+                          ? "bg-aqua-500 ring-aqua-100 dark:ring-aqua-500/25"
+                          : "bg-stone-line ring-transparent"
+                      }`}
+                    />
+                    {i < recent.length - 1 && (
+                      <span className="absolute bottom-[-0.25rem] top-6 w-0.5 rounded-full bg-stone-line" />
+                    )}
                   </span>
-                }
-                sub={
-                  <>
-                    <span className="block">{v.programName || "정통대왕쑥뜸"}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="nowrap-num tabular text-[1rem] font-extrabold text-ink">
+                      {formatDateWithDay(v.visitedAt.slice(0, 10))}
+                      <span className="ml-1.5 text-[0.8125rem] font-medium text-ink-faint">
+                        {formatRelative(v.visitedAt)}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 text-[0.9375rem] text-ink-sub">
+                      {v.programName || "정통대왕쑥뜸"}
+                    </p>
                     {(v.bodyParts ?? []).length > 0 && (
-                      <span className="mt-1.5 flex flex-wrap gap-1.5">
-                        {(v.bodyParts ?? []).map((r, i) => (
-                          <StatusPill key={`${r.part}-${i}`} tone="wait">
+                      <p className="mt-1.5 flex flex-wrap gap-1.5">
+                        {(v.bodyParts ?? []).map((r, j) => (
+                          <StatusPill key={`${r.part}-${j}`} tone="wait">
                             {BODY_PART_LABELS[r.part]}
                           </StatusPill>
                         ))}
-                      </span>
+                      </p>
                     )}
-                  </>
-                }
-              />
-            ))}
-          </ListGroup>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Panel>
         )}
       </Section>
 

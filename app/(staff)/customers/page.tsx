@@ -355,7 +355,7 @@ export default function CustomersPage() {
               }`}
             >
               <span
-                className={`icon-pop flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}
+                className={`icon-pop flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}
               >
                 {d.customer.name.slice(0, 1)}
               </span>

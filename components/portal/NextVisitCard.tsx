@@ -24,6 +24,7 @@ export default function NextVisitCard({
   lastDate,
   cta,
   basis,
+  tone = "solid",
 }: {
   date?: string;
   fromStore: boolean;
@@ -32,6 +33,8 @@ export default function NextVisitCard({
   cta?: { href: string; label: string };
   /** 날짜가 어떻게 나왔는지 한 줄 더 (예약 화면) */
   basis?: string;
+  /** glass — 홈의 딥그린 머리 띠 안에 놓일 때 (바탕이 이미 짙다) */
+  tone?: "solid" | "glass";
 }) {
   const left = date ? -daysAgo(date) : undefined; // 남은 날 (지나면 음수)
   const dLabel =
@@ -54,7 +57,11 @@ export default function NextVisitCard({
   return (
     <section
       data-next-visit
-      className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-deep-800 to-deep-950 p-5 text-white shadow-hero ring-1 ring-gold/20"
+      className={`relative overflow-hidden rounded-[22px] p-5 text-white ${
+        tone === "glass"
+          ? "bg-white/[0.07] ring-1 ring-white/15"
+          : "bg-gradient-to-br from-deep-800 to-deep-950 shadow-hero ring-1 ring-gold/20"
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

@@ -14,7 +14,13 @@ import { useEffect, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { FieldLabel, inputCls } from "@/components/ui";
 import { CheckIcon, PhoneIcon } from "@/components/ui/icons";
-import { formatDateKr, formatRelative, todayISO } from "@/lib/utils/date";
+import {
+  daysFromToday,
+  formatDateKr,
+  formatRelative,
+  todayISO,
+  weekdayKr,
+} from "@/lib/utils/date";
 import {
   ListGroup,
   ListRow,
@@ -61,6 +67,8 @@ export default function MyRequest() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [done, setDone] = useState(false);
+  /** 날짜 칩 — 오늘부터 두 주 (화면을 연 날 기준) */
+  const [dayChips] = useState(() => Array.from({ length: 14 }, (_, i) => daysFromToday(i)));
 
   /* 홈의 「1:1 상담」 칸에서 왔으면 「문의」 를 골라 둔 채로 연다 (?kind=inquiry) */
   useEffect(() => {
@@ -146,14 +154,62 @@ export default function MyRequest() {
           <>
             <div className="mb-5">
               <FieldLabel>희망 날짜</FieldLabel>
-              <input
-                type="date"
-                className={`${inputCls} !rounded-2xl`}
-                aria-label="희망 날짜"
-                min={todayISO()}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+              {/*
+                앞으로 두 주를 날짜 칩으로 — 예약 앱의 가로 날짜 줄처럼.
+                달력을 열어 숫자를 맞추는 것보다 한 번 누르는 쪽이 쉽다.
+                더 먼 날은 아래 「달력에서 고르기」 로 (같은 값을 쓴다).
+                매장 휴무일은 화면이 모르므로 막지 않는다 — 남기시면 매장이
+                확인해 연락드린다.
+              */}
+              <div
+                role="group"
+                aria-label="앞으로 두 주 중 날짜 고르기"
+                className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+              >
+                {dayChips.map((d, i) => {
+                  const on = date === d;
+                  const wd = weekdayKr(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      aria-pressed={on}
+                      aria-label={`${formatDateKr(d)} (${wd})`}
+                      onClick={() => setDate(on ? "" : d)}
+                      className={`flex w-[3.75rem] shrink-0 flex-col items-center rounded-2xl py-2 ring-1 transition-colors ${
+                        on
+                          ? "bg-sel text-sel-ink ring-transparent"
+                          : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50"
+                      }`}
+                    >
+                      <span
+                        className={`text-[0.75rem] font-bold ${
+                          on ? "" : wd === "일" ? "text-danger-text" : wd === "토" ? "text-aqua-700" : "text-ink-sub"
+                        }`}
+                      >
+                        {i === 0 ? "오늘" : i === 1 ? "내일" : wd}
+                      </span>
+                      <span className="nowrap-num tabular text-[1.25rem] font-extrabold leading-tight">
+                        {Number(d.slice(8, 10))}
+                      </span>
+                      <span className={`text-[0.6875rem] font-bold ${on ? "" : "text-ink-faint"}`}>
+                        {Number(d.slice(5, 7))}월
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <label className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span className="text-[0.875rem] font-bold text-ink-sub">달력에서 고르기</span>
+                <input
+                  type="date"
+                  className={`${inputCls} !w-auto flex-1 !rounded-2xl`}
+                  aria-label="희망 날짜"
+                  min={todayISO()}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </label>
             </div>
 
             <div className="mb-5">

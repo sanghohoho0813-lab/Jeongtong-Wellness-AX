@@ -25,10 +25,10 @@ import {
 } from "@/components/portal/kit";
 
 /** 실제 제품자료에서 옮긴 사진 — 홍보 페이지를 만들지는 않는다 */
-const LAYERS = [
+const LAYERS: { no: number; name: string; desc: string; photo?: string }[] = [
   { no: 1, name: "보호용 거즈", desc: "피부에 먼저 올립니다" },
-  { no: 2, name: "특제 반죽", desc: "여러 식물을 배합·발효" },
-  { no: 3, name: "쑥", desc: "국내산 최상급" },
+  { no: 2, name: "특제 반죽", desc: "여러 식물을 배합·발효", photo: "/service/dough.jpg" },
+  { no: 3, name: "쑥", desc: "국내산 최상급", photo: "/service/mugwort.jpg" },
 ];
 
 export default function MyMore() {
@@ -66,9 +66,25 @@ export default function MyMore() {
               key={l.no}
               chevron={false}
               icon={
-                <span className="nowrap-num text-[1rem] font-extrabold text-aqua-800">{l.no}</span>
+                l.photo ? (
+                  /* 사진이 있는 겹은 사진으로 — 가게 화면 메뉴 줄의 작은 사진처럼 */
+                  <span className="relative block h-10 w-10 overflow-hidden rounded-xl">
+                    <Image src={l.photo} alt={l.name} fill sizes="40px" className="object-cover" />
+                  </span>
+                ) : (
+                  <span className="nowrap-num text-[1rem] font-extrabold text-aqua-800">{l.no}</span>
+                )
               }
-              title={l.name}
+              title={
+                l.photo ? (
+                  <span>
+                    <span className="nowrap-num mr-1.5 text-aqua-700">{l.no}</span>
+                    {l.name}
+                  </span>
+                ) : (
+                  l.name
+                )
+              }
               sub={l.desc}
             />
           ))}

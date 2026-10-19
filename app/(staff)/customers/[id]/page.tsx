@@ -140,7 +140,7 @@ export default function CustomerDetailPage() {
       {/* 프로필 헤더 */}
       <Card className="mb-4 lg:mb-5">
         <div className="flex flex-wrap items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-aqua-500 to-deep-800 text-xl font-extrabold text-white shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16 sm:text-2xl">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua-500 to-deep-800 text-xl font-extrabold text-white shadow-[0_4px_12px_rgba(10,46,44,0.25)] sm:h-16 sm:w-16 sm:text-2xl">
             {displayName(c.name, privacyMode).slice(0, 1)}
           </span>
           <div className="min-w-0 flex-1">

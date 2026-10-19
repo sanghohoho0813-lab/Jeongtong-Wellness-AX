@@ -12,10 +12,11 @@
  *
  * 모양은 배달 · 적립 앱(대표님이 보여 주신 talabat · Rakuten)을 따른다.
  *
- *   인사 한 줄
- *   다음 방문 카드   ← 주문 추적 카드처럼: 지난 방문 → 오늘 → 다음 방문 진행선
- *   바로가기 여덟 칸 ← 카테고리 칸처럼: 고객 화면의 모든 곳이 한 번에 닿는다
+ *   머리 띠         ← 브랜드 색이 머리글에서 이어진다: 인사 + 다음 방문 카드
+ *                     (주문 추적 카드처럼: 지난 방문 → 오늘 → 다음 방문 진행선)
+ *   바로가기 여덟 칸 ← 카테고리 칸처럼, 띠 끝에 겹쳐 올라온다
  *   이용권 카드      ← 적립 포인트 카드처럼
+ *   서비스 사진 띠   ← 배너 자리 (할인 문구 없이 실제 사진 한 장)
  *   나를 위한 케어   ← 「Picks for you」 처럼 옆으로 넘기는 카드
  *   이번 이용 한마디 · 친구에게 알리기
  *   (상담 · 방문 요청은 바로가기 칸에 있다 — 같은 길을 두 번 그리지 않는다)
@@ -26,6 +27,7 @@
  * 아니다 — 마지막 이용일과 그 예정일이다.
  */
 
+import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { usePortal } from "@/lib/portal/store";
@@ -113,41 +115,62 @@ export default function MyHome() {
 
   return (
     <div className="space-y-6">
-      {/* ── 인사 ─────────────────────────────────────────
-          「지금까지 쌓인 것」(함께한 개월 · 다녀가신 횟수)을 인사 아래 한 줄로.
-          예전에는 숫자 세 칸이 따로 있었는데, 고객에게 그건 표가 아니라
-          「6개월째 다니고 있구나」 하는 한 문장이면 된다. */}
-      <div className="px-1 pt-1">
-        <p className="text-[0.9375rem] font-bold text-ink-sub">
+      {/* ── 머리 띠 — 인사 + 다음 방문 ──────────────────
+          배달 앱 첫 화면처럼 머리글의 브랜드 색이 그대로 이어져 내려오고,
+          그 안에 「누구의 화면인지」(인사)와 「다음에 언제」(다음 방문)가
+          함께 들어 있다. 아래 바로가기 판이 띠의 끝에 겹쳐 올라온다.
+
+          인사 아래 한 줄은 「지금까지 쌓인 것」(함께한 개월 · 다녀가신 횟수).
+          숫자 세 칸이 따로 있던 자리를 한 문장으로 줄였다. */}
+      <section
+        data-home-hero
+        className="-mx-4 -mt-4 bg-gradient-to-b from-deep-900 via-deep-900 to-deep-800 px-4 pb-12 pt-5 text-white sm:mx-0 sm:mt-0 sm:rounded-[28px] sm:px-5"
+      >
+        <p className="text-[0.9375rem] font-bold text-gold-lite/90">
           {branch?.name ?? "정통대왕쑥뜸원"}
           {usage.visitCount > 0 &&
             ` · 함께한 지 ${monthsTogether}개월 · ${usage.visitCount}회 다녀가셨어요`}
         </p>
-        <h1 className="mt-1 text-[1.625rem] font-extrabold leading-tight tracking-tight text-ink [word-break:keep-all]">
+        <h1 className="mt-1 text-[1.625rem] font-extrabold leading-tight tracking-tight [word-break:keep-all]">
           {customer?.name}님, 안녕하세요
         </h1>
-      </div>
 
-      {/* ── 다음 방문 — 주문 추적 카드처럼 ─────────────── */}
-      <NextVisitCard
-        date={next.date}
-        fromStore={next.fromStore}
-        lastDate={usage.lastVisitDate}
-        cta={{ href: "/my/booking", label: next.date ? "예약 변경 요청" : "방문 요청 남기기" }}
-      />
+        {/* 다음 방문 — 주문 추적 카드처럼 (띠 안이라 유리처럼 비치는 판) */}
+        <div className="mt-4">
+          <NextVisitCard
+            tone="glass"
+            date={next.date}
+            fromStore={next.fromStore}
+            lastDate={usage.lastVisitDate}
+            cta={{ href: "/my/booking", label: next.date ? "예약 변경 요청" : "방문 요청 남기기" }}
+          />
+        </div>
+      </section>
 
-      {/* ── 바로가기 여덟 칸 ─────────────────────────────
+      {/* ── 바로가기 여덟 칸 — 띠 끝에 겹쳐 올라온다 ───────
           하단 탭 다섯 칸에 못 들어간 곳(이용 기록 · 나의 웰니스 · 콘텐츠 ·
           서비스 안내)이 예전에는 다른 화면 안쪽 링크로만 닿았다.
-          여기서 한 번에 다 보이게 한다 — 숨겨진 기능이 없게. */}
-      <Panel className="!px-2 !py-4">
+          여기서 한 번에 다 보이게 한다 — 숨겨진 기능이 없게.
+          귀퉁이 숫자는 저장된 사실(남은 이용권 · 다녀가신 횟수)뿐이다. */}
+      <Panel className="relative !-mt-9 !px-2 !py-4">
         <QuickGrid
           items={[
             { href: "/my/request", label: "방문 요청", icon: <CalendarIcon className={ICON} />, tone: "deep" },
-            { href: "/my/passes", label: "이용권", icon: <TicketIcon className={ICON} />, tone: "gold" },
+            {
+              href: "/my/passes",
+              label: "이용권",
+              icon: <TicketIcon className={ICON} />,
+              tone: "gold",
+              badge: pass.totalRemaining > 0 ? `${pass.totalRemaining}회` : undefined,
+            },
             { href: "/my/care", label: "케어기록", icon: <ClipboardIcon className={ICON} /> },
             { href: "/my/request?kind=inquiry", label: "1:1 상담", icon: <ChatIcon className={ICON} /> },
-            { href: "/my/visits", label: "이용 기록", icon: <RefreshIcon className={ICON} /> },
+            {
+              href: "/my/visits",
+              label: "이용 기록",
+              icon: <RefreshIcon className={ICON} />,
+              badge: usage.visitCount > 0 ? `${usage.visitCount}회` : undefined,
+            },
             { href: "/my/wellness", label: "나의 웰니스", icon: <LeafIcon className={ICON} /> },
             { href: "/my/content", label: "웰니스 정보", icon: <BookIcon className={ICON} /> },
             { href: "/my/more", label: "서비스 안내", icon: <SparkIcon className={ICON} />, tone: "stone" },
@@ -162,6 +185,33 @@ export default function MyHome() {
         programName={pass.active?.programName}
         totalRemaining={pass.totalRemaining}
       />
+
+      {/* ── 서비스 안내 — 사진 한 장짜리 띠 ─────────────────
+          배달 앱의 배너 자리지만 할인 · 행사 문구는 없다(매장이 정한 혜택이
+          없으므로). 실제 제품 사진과 「어떤 방식인지」 한 줄만. */}
+      <Link
+        href="/my/more"
+        data-service-banner
+        className="group flex items-center gap-3.5 rounded-[22px] bg-card p-3 pr-4 shadow-card ring-1 ring-black/[0.04] transition-transform hover:-translate-y-0.5 dark:ring-white/[0.06]"
+      >
+        <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-stone-bg-deep">
+          <Image
+            src="/service/moxa.jpg"
+            alt="정통대왕쑥뜸 완성된 모습"
+            fill
+            sizes="80px"
+            className="object-cover"
+          />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[0.8125rem] font-extrabold text-aqua-700">서비스 안내</span>
+          <span className="mt-0.5 block text-[1.0625rem] font-extrabold leading-snug text-ink [word-break:keep-all]">
+            세 겹으로 올리는 쑥뜸
+          </span>
+          <span className="mt-0.5 block text-[0.875rem] text-ink-sub">거즈 · 반죽 · 쑥 · 매장 가격표</span>
+        </span>
+        <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5" />
+      </Link>
 
       {/* ── 나를 위한 케어 — 옆으로 넘기는 카드 ────────────
           여기에 Wellness Type 라벨(재등록 관심형 · 장기미방문형 …)을 걸어

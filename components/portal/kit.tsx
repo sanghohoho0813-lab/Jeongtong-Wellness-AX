@@ -243,6 +243,8 @@ export interface QuickItem {
   label: string;
   icon: ReactNode;
   tone?: "aqua" | "gold" | "deep" | "stone";
+  /** 칸 귀퉁이 작은 숫자 — 배달 앱 칸의 「Up to 60%」 자리. 저장된 사실만 (남은 횟수 등) */
+  badge?: string;
 }
 
 const QUICK_TONE = {
@@ -264,11 +266,16 @@ export function QuickGrid({ items }: { items: QuickItem[] }) {
               className="group flex flex-col items-center gap-1.5 rounded-2xl py-1 text-center"
             >
               <span
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl ring-1 transition-transform group-hover:-translate-y-0.5 group-active:scale-95 ${
+                className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ring-1 transition-transform group-hover:-translate-y-0.5 group-active:scale-95 ${
                   QUICK_TONE[it.tone ?? "aqua"]
                 }`}
               >
                 {it.icon}
+                {it.badge && (
+                  <span className="nowrap-num absolute -right-2 -top-2 rounded-full bg-gold-deep px-1.5 py-px text-[0.6875rem] font-extrabold leading-tight text-white ring-2 ring-card dark:text-deep-900">
+                    {it.badge}
+                  </span>
+                )}
               </span>
               <span className="w-full text-[0.8125rem] font-bold leading-tight text-ink-soft [word-break:keep-all]">
                 {it.label}
