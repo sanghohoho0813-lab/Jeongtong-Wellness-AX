@@ -388,8 +388,13 @@ function BottomNav({
     */
     return (
       <>
+        {/*
+          알약 폭은 칸 폭을 넘지 않는다(w-full max-w-14). 큰 글씨에서는
+          3.5rem 이 칸(약 75px)보다 넓어져 맨 오른쪽 탭의 알약이 화면 밖으로
+          나갔다.
+        */}
         <span
-          className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${
+          className={`flex h-8 w-full max-w-14 items-center justify-center rounded-full transition-colors ${
             active ? "bg-aqua-50 dark:bg-aqua-500/15" : ""
           }`}
         >
