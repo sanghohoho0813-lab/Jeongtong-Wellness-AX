@@ -526,6 +526,18 @@ await pc2.context().close();
   };
   await openNewCustomer();
   log("공용 창 — 손잡이 · 44px 닫기", (await t.locator('[role="dialog"]').last().locator("[data-sheet-grabber]").isVisible()) && ((await t.locator('[role="dialog"]').last().getByRole("button", { name: "닫기" }).boundingBox())?.height ?? 0) >= 44);
+  /* 저장 단추 줄은 창 맨 아래에 딱 붙는다 — 전에는 본문 아래 여백(약 18px)만큼 떠서
+     그 틈으로 뒤의 입력칸이 비쳐 보였다 */
+  const footGap = () => t.locator('[role="dialog"]').last().evaluate((d) => {
+    const sc = d.querySelector(".overflow-y-auto");
+    const f = [...d.querySelectorAll("div")].find((x) => getComputedStyle(x).position === "sticky");
+    return f ? Math.round(sc.getBoundingClientRect().bottom - f.getBoundingClientRect().bottom) : -1;
+  });
+  const gapTop = await footGap();
+  await t.locator('[role="dialog"]').last().evaluate((d) => { const sc = d.querySelector(".overflow-y-auto"); sc.scrollTop = sc.scrollHeight; });
+  await t.waitForTimeout(300);
+  const gapEnd = await footGap();
+  log("공용 창 — 저장 단추 줄이 창 맨 아래에 붙는다 (뒤의 입력칸이 비치지 않는다)", gapTop >= 0 && gapTop <= 1 && gapEnd >= 0 && gapEnd <= 1, `처음 ${gapTop}px · 끝 ${gapEnd}px`);
   await swipe(200);
   log("공용 창 — 손대지 않았으면 끌어내리면 닫힌다", (await dlgs()) === 0);
   await openNewCustomer();

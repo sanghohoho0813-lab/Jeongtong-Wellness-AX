@@ -662,6 +662,12 @@ export function Em({ children }: { children: ReactNode }) {
  *
  * (모달 본문의 좌우·아래 여백을 음수 여백으로 되돌려 창 폭에 꽉 채우고,
  *  홈 인디케이터가 있는 폰을 위해 아래 여백을 안전영역만큼 더 준다)
+ *
+ * 붙는 자리도 본문 아래 여백만큼 내린다(음수 bottom). sticky 는 스크롤
+ * 상자의 안쪽 여백 안에서 멈추기 때문에, bottom-0 이면 단추 줄 아래로
+ * 그 여백(16px)만큼 뒤의 입력칸이 비쳐 보였다 (D-59 에서 찾음).
+ * 아래 음수 여백은 ! 로 — 부모 폼의 space-y 가 아래 여백을 0 으로 덮어
+ * 써서, 맨 끝까지 내리면 단추 줄 아래에 빈 띠가 남았다.
  */
 export function FormActions({
   children,
@@ -676,7 +682,7 @@ export function FormActions({
   error?: string;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-5 -mb-4 mt-3 border-t border-stone-line bg-card px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+    <div className="sticky -bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 -mx-5 !-mb-[calc(1rem+env(safe-area-inset-bottom))] mt-3 border-t border-stone-line bg-card px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:-bottom-4 sm:!-mb-4">
       {error && (
         <p
           role="alert"
@@ -1071,7 +1077,7 @@ export function Modal({
           <SheetGrabber />
           <div className="modal-header flex items-center justify-between gap-3 border-b border-stone-line px-5 pb-3.5 pt-1.5 sm:py-4">
             <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
-            {/* 44px — 손끝 기준. 36px 이던 것을 키웠다 (D-59) */}
+            {/* 2.75rem(이 앱 기본 글씨에서 약 48px) — 손끝 기준 44px 이상. 2.25rem(약 40px)이던 것을 키웠다 (D-59) */}
             <button
               onClick={tryClose}
               aria-label="닫기"
