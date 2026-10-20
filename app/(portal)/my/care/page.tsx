@@ -87,7 +87,7 @@ export default function MyCare() {
           <div className="min-w-0 px-2 py-4 text-center">
             <dt className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</dt>
             <dd className="nowrap-num tabular mt-1 text-[1.0625rem] font-extrabold leading-tight text-ink">
-              {usage.lastVisitDate ? formatDateKr(usage.lastVisitDate).slice(5) : "—"}
+              {usage.lastVisitDate ? formatDateKr(usage.lastVisitDate).slice(5) : "없음"}
             </dd>
             <dd className="mt-0.5 text-[0.75rem] text-ink-faint">
               {usage.lastVisitDate ? formatRelative(usage.lastVisitDate) : "기록 없음"}
@@ -96,7 +96,7 @@ export default function MyCare() {
           <div className="min-w-0 px-2 py-4 text-center">
             <dt className="text-[0.8125rem] font-bold text-ink-sub">다음 참고일</dt>
             <dd className="nowrap-num tabular mt-1 text-[1.0625rem] font-extrabold leading-tight text-aqua-800">
-              {next.date ? formatDateKr(next.date).slice(5) : "—"}
+              {next.date ? formatDateKr(next.date).slice(5) : "미정"}
             </dd>
             <dd className="mt-0.5 text-[0.75rem] text-ink-faint">
               {next.fromStore ? "매장 안내" : next.date ? "간격 기준" : "계산 전"}

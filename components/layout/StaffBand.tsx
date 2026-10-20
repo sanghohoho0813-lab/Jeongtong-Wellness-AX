@@ -23,9 +23,10 @@
  */
 
 import Link from "next/link";
-import { ReactNode, useEffect, useId, useState } from "react";
+import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { InfoButton } from "@/components/ui/Fold";
 import { setDocumentTitle } from "@/lib/utils/title";
+import { useAnnounceWhenHidden } from "@/lib/ui/band-title";
 
 export default function StaffBand({
   title,
@@ -79,6 +80,17 @@ export default function StaffBand({
   }, [tab]);
   const id = useId();
   const [info, setInfo] = useState(false);
+
+  /*
+    띠의 제목이 폰 머리글 밑으로 들어가면 머리글이 그 이름을 대신 보여
+    준다 (lib/ui/band-title.ts, D-60). 글자로 된 제목만 — 고객 상세는
+    얼굴 동그라미 글자도 함께.
+  */
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const shortTitle =
+    typeof title === "string" ? title : typeof docTitle === "string" ? docTitle : undefined;
+  const initial = big && shortTitle ? shortTitle.slice(0, 1) : undefined;
+  useAnnounceWhenHidden(headRef, shortTitle, initial);
   const infoTitle = typeof title === "string" ? title : undefined;
   const infoBtn = description ? (
     <InfoButton
@@ -121,6 +133,7 @@ export default function StaffBand({
                 */}
                 <h1
                   id={id}
+                  ref={headRef}
                   className="flex min-w-0 items-center break-words text-[1.5rem] font-extrabold leading-tight tracking-tight sm:text-[1.75rem]"
                 >
                   <span className="min-w-0 break-words">{title}</span>
@@ -133,7 +146,7 @@ export default function StaffBand({
           </div>
         ) : (
           <div className="relative flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] font-bold text-white/70">
-            <h1 id={id} className="flex items-center text-[0.9375rem] font-extrabold text-white">
+            <h1 id={id} ref={headRef} className="flex items-center text-[0.9375rem] font-extrabold text-white">
               {title}
               {infoBtn}
             </h1>

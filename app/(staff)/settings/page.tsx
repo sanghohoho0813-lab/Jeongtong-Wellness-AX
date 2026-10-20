@@ -24,7 +24,19 @@ import {
   SegmentedControl,
   inputCls,
 } from "@/components/ui";
-import { CheckIcon, DownloadIcon, PlusIcon } from "@/components/ui/icons";
+import {
+  BuildingIcon,
+  CheckIcon,
+  ClipboardIcon,
+  DownloadIcon,
+  GaugeIcon,
+  MonitorIcon,
+  PaletteIcon,
+  PlusIcon,
+  TicketIcon,
+  TrendUpIcon,
+  UsersIcon,
+} from "@/components/ui/icons";
 import AiReadyNote from "@/components/ui/AiReadyNote";
 import { useToast } from "@/components/ui/toast";
 import DataImport from "@/components/settings/DataImport";
@@ -274,9 +286,16 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 card-gap xl:grid-cols-2 xl:items-start">
+      {/*
+        폰에서는 칸 열 장을 한 묶음 목록으로 (D-60) — 흰 판 하나에 줄을 나눠
+        담는다. 넓은 화면은 그대로 카드 두 단.
+      */}
+      <div
+        data-settings-group
+        className="grid grid-cols-1 card-gap max-lg:!gap-0 max-lg:divide-y max-lg:divide-stone-line max-lg:overflow-hidden max-lg:rounded-[20px] max-lg:bg-card max-lg:shadow-card max-lg:ring-1 max-lg:ring-black/[0.04] dark:max-lg:ring-white/[0.06] xl:grid-cols-2 xl:items-start"
+      >
         {/* 화면 */}
-        <SettingsSection id="set-screen" title="화면" summary="글자 크기 · 밝기 · 색 조합 · 화면 밀도">
+        <SettingsSection id="set-screen" icon={<PaletteIcon className="h-5 w-5" />} title="화면" summary="글자 크기 · 밝기 · 색 조합 · 화면 밀도">
           <div className="space-y-5">
             <div>
               <FieldLabel>글자 크기</FieldLabel>
@@ -409,7 +428,7 @@ export default function SettingsPage() {
         {isManager && (
           <>
         {/* 매장 */}
-        <SettingsSection id="set-store" title="매장" summary="상호 · 지점명 · 영업시간">
+        <SettingsSection id="set-store" icon={<BuildingIcon className="h-5 w-5" />} title="매장" summary="상호 · 지점명 · 영업시간">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <FieldLabel>회사명</FieldLabel>
@@ -474,6 +493,7 @@ export default function SettingsPage() {
           id="set-baseline"
           dataTour="settings-baseline"
           tone="gold"
+          icon={<GaugeIcon className="h-5 w-5" />}
           title="도입 전 기준선 — 아는 만큼만"
           summary="AX 쓰기 전 숫자 — 성과 비교의 기준"
         >
@@ -529,6 +549,7 @@ export default function SettingsPage() {
         {/* 직원 */}
         <SettingsSection
           id="set-staff"
+          icon={<UsersIcon className="h-5 w-5" />}
           title="직원"
           summary="직원 이름 · 역할 · 계정"
           action={
@@ -604,7 +625,7 @@ export default function SettingsPage() {
           그때 이름과 연락처가 그대로 나가면 되돌릴 수가 없다.
           저장된 자료는 건드리지 않고 보이는 것만 가린다.
         */}
-        <SettingsSection id="set-privacy" title="화면 공유" summary="고객 이름과 연락처를 화면에서 가리기">
+        <SettingsSection id="set-privacy" icon={<MonitorIcon className="h-5 w-5" />} title="화면 공유" summary="고객 이름과 연락처를 화면에서 가리기">
           {/*
             네모 체크박스 대신 누르는 단추로 둔다.
             체크박스는 실제 그림이 20px 라 손끝으로 겨냥하기 어렵고,
@@ -647,6 +668,7 @@ export default function SettingsPage() {
         {/* 서비스 · 이용권 상품 (매장 가격표) */}
         <SettingsSection
           id="set-product"
+          icon={<TicketIcon className="h-5 w-5" />}
           title="서비스 · 이용권 상품"
           summary="매장이 파는 프로그램과 이용권 가격"
         >
@@ -669,6 +691,7 @@ export default function SettingsPage() {
         <SettingsSection
           id="set-rules"
           dataTour="settings-rules"
+          icon={<ClipboardIcon className="h-5 w-5" />}
           title="고객관리 기준"
           summary="브리핑과 재방문이 대상을 가려내는 숫자"
         >
@@ -805,6 +828,7 @@ export default function SettingsPage() {
         {/* 매출기회 기준 — Priority 기준과 분리된 별도 카드 */}
         <SettingsSection
           id="set-opp"
+          icon={<TrendUpIcon className="h-5 w-5" />}
           title="AX 매출기회 기준"
           summary="재방문 · 재등록 기회를 판단하는 숫자"
         >
@@ -842,6 +866,7 @@ export default function SettingsPage() {
         <SettingsSection
           id="set-data"
           dataTour="settings-data"
+          icon={<DownloadIcon className="h-5 w-5" />}
           title="데이터"
           summary="전체 백업 내려받기 · 불러오기 · 초기화"
         >

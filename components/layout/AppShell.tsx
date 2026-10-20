@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { useStaffLink } from "@/lib/supabase/StaffLink";
 import { formatDateTimeKr } from "@/lib/utils/date";
@@ -40,7 +40,8 @@ import { Modal } from "@/components/ui";
 import { VIDEOS } from "@/lib/content/videos";
 import { Hint } from "@/components/ui/Hint";
 import { SHELL_EVENTS } from "@/lib/ui/shell-events";
-import { scrollTopIfHere } from "@/lib/ui/scroll";
+import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
+import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -315,10 +316,90 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
       ).length
     : 0;
 
+  /*
+    폰 머리글 (D-60)
+
+    전에는 상호 줄과 날짜 · 시각 줄 두 줄(100px)이 통째로 위에 붙어 있었고,
+    그 위로 백업 띠(63px)가 같은 자리에 붙어 **상호 줄을 덮었다** — 내려
+    보는 동안 찾기 · 알림 단추가 띠 밑에 깔려 누를 수 없었다.
+
+    이제 붙어 있는 것은 상호 줄 하나(약 65px)뿐이다. 날짜 · 시각 줄은 맨
+    위에서만 보이고 내려가면 같이 올라간다. 띠들은 이 머리글 **아래**에
+    붙거나(저장 실패 등 꼭 봐야 하는 것) 같이 올라간다(백업 안내).
+    머리글 높이는 --mobile-header-h 로 알려 둔다 — 아래에 붙는 띠와
+    「머리 띠가 머리글 밑으로 들어갔는지」 재는 쪽이 같은 값을 쓴다.
+
+    머리 띠(StaffBand)가 위로 사라지면 상호 자리에 그 화면 이름이 온다
+    (고객 상세에서는 고객 이름) — 큰 제목이 작아져 위에 붙는 앱의 움직임.
+    눌러서 맨 위로.
+  */
+  const ref = useRef<HTMLElement>(null);
+  const [stuck, setStuck] = useState(false);
+  const [band, setBand] = useState<BandTitle | null>(null);
+  const pathname = usePathname();
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const set = () =>
+      document.documentElement.style.setProperty("--mobile-header-h", `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        setStuck(window.scrollY > 4);
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const onBand = (e: Event) => setBand((e as CustomEvent<BandTitle | null>).detail);
+    window.addEventListener(BAND_TITLE_EVENT, onBand);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener(BAND_TITLE_EVENT, onBand);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
+  /* 화면이 바뀌면 상호로 돌아간다 (새 화면의 띠가 다시 알린다) */
+  useEffect(() => setBand(null), [pathname]);
+
   return (
-    <header className="sticky top-0 z-30 border-b border-black/[0.04] bg-stone-bg/85 px-4 py-2.5 backdrop-blur-md lg:hidden">
+    <>
+    <header
+      ref={ref}
+      data-mobile-header
+      data-stuck={stuck ? "" : undefined}
+      className={`sticky top-0 z-30 border-b bg-stone-bg/85 px-4 py-2.5 backdrop-blur-md transition-[border-color,box-shadow] lg:hidden ${
+        stuck
+          ? "border-black/[0.06] shadow-[0_6px_16px_-12px_rgba(10,46,44,0.35)] dark:border-white/10"
+          : "border-transparent"
+      }`}
+    >
       <div className="flex items-center justify-between gap-[12px]">
-      <Logo />
+      {band ? (
+        <button
+          type="button"
+          data-header-title
+          onClick={scrollToTop}
+          aria-label={`${band.title} — 맨 위로`}
+          className="header-title-in flex min-h-[44px] min-w-0 flex-1 items-center gap-[10px] text-left"
+        >
+          {band.initial && (
+            <span className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua-400 to-aqua-700 text-[15px] font-extrabold text-white">
+              {band.initial}
+            </span>
+          )}
+          <span className="min-w-0 truncate text-[18px] font-extrabold tracking-tight text-ink">
+            {band.title}
+          </span>
+        </button>
+      ) : (
+        <Logo />
+      )}
       <div className="flex shrink-0 items-center gap-[8px]">
         <button
           type="button"
@@ -348,13 +429,14 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
         )}
       </div>
       </div>
-      {/* 날짜 · 지금 시각 — 손에 든 채로 바로 보이게 */}
-      <div className="relative mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <LiveClock variant="header" />
-        {/* 좁은 폰에서는 줄이 넘쳐 머리글이 두꺼워지므로 태블릿 폭부터만 */}
-        <StageChip compact className="hidden sm:inline-flex" />
-      </div>
     </header>
+    {/* 날짜 · 지금 시각 — 맨 위에서 바로 보이게. 내려가면 같이 올라간다 */}
+    <div data-header-clock className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pb-2.5 lg:hidden">
+      <LiveClock variant="header" />
+      {/* 좁은 폰에서는 줄이 넘쳐 머리글이 두꺼워지므로 태블릿 폭부터만 */}
+      <StageChip compact className="hidden sm:inline-flex" />
+    </div>
+    </>
   );
 }
 
@@ -534,7 +616,7 @@ function SaveFailedBanner() {
   const { saveFailed } = useStore();
   if (!saveFailed) return null;
   return (
-    <div className="no-print sticky top-0 z-40 border-b border-danger/30 bg-danger px-4 py-2.5 text-white sm:px-6 lg:ml-64 lg:px-8">
+    <div className="no-print sticky top-[var(--mobile-header-h,0px)] z-40 border-b border-danger/30 bg-danger px-4 py-2.5 text-white sm:px-6 lg:top-0 lg:ml-64 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-sm font-extrabold">
           기록이 이 기기에 저장되지 않고 있습니다.
@@ -572,7 +654,7 @@ function SyncFailedBanner() {
     : null;
 
   return (
-    <div className="no-print sticky top-0 z-40 border-b border-warn/40 bg-warn px-4 py-2.5 text-white sm:px-6 lg:ml-64 lg:px-8">
+    <div className="no-print sticky top-[var(--mobile-header-h,0px)] z-40 border-b border-warn/40 bg-warn px-4 py-2.5 text-white sm:px-6 lg:top-0 lg:ml-64 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-sm font-extrabold">
           기록이 서버에 반영되지 않고 있습니다.
@@ -626,7 +708,7 @@ function DroppedRecordsBanner() {
   };
 
   return (
-    <div className="no-print sticky top-0 z-40 border-b border-warn/30 bg-warn px-4 py-2.5 text-white sm:px-6 lg:ml-64 lg:px-8">
+    <div className="no-print sticky top-[var(--mobile-header-h,0px)] z-40 border-b border-warn/30 bg-warn px-4 py-2.5 text-white sm:px-6 lg:top-0 lg:ml-64 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-sm font-extrabold">
           읽을 수 없는 기록 {droppedRecords.length}건을 건너뛰었습니다.
@@ -664,7 +746,7 @@ function PrivacyModeBanner() {
   const { privacyMode } = useStore();
   if (!privacyMode) return null;
   return (
-    <div className="no-print sticky top-0 z-40 border-b border-deep-line bg-deep-800 px-4 py-2 text-white sm:px-6 lg:ml-64 lg:px-8">
+    <div className="no-print sticky top-[var(--mobile-header-h,0px)] z-40 border-b border-deep-line bg-deep-800 px-4 py-2 text-white sm:px-6 lg:top-0 lg:ml-64 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-sm font-extrabold">
           화면 공유 모드 — 고객 이름과 연락처를 가리고 있습니다.
@@ -744,6 +826,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* 폰 하단 [기록] → 고객 고르기 → 곧바로 기록 창 */}
       <RecordSheet
         open={sheetOpen}
+        currentId={pathname.match(/^\/customers\/([^/]+)$/)?.[1]}
         onClose={() => setSheetOpen(false)}
         onPick={(id) => {
           setSheetOpen(false);

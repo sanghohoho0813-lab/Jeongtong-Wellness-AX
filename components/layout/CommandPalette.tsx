@@ -12,6 +12,11 @@
  *
  * 직원 계정에게는 볼 수 없는 화면과 대표 전용 동작을 아예 보여 주지 않는다
  * (화면 가드와 같은 기준 — lib/auth/permissions.ts).
+ *
+ * 빈 창도 비어 있지 않다 (D-60). 열자마자 **최근 본 고객**과 **오늘 챙길
+ * 분**이 먼저 보인다 — 카운터에서 찾는 사람은 대개 방금 본 분이거나 오늘
+ * 연락할 분이다. 이름을 다시 칠 필요 없이 한 번 눌러 상세로, 오른쪽
+ * [방문 기록] 으로 바로 기록.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,8 +40,13 @@ import { ALL_SCREENS, NAV_TONE_CLASS, navItemsFor } from "./nav-items";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
+import { recentCustomerIds } from "@/lib/ui/recent";
+import { CustomerDerived } from "@/lib/types";
 
 const MAX_CUSTOMERS = 6;
+/** 빈 창에 먼저 보이는 줄 수 — 최근 본 고객 · 오늘 챙길 분 */
+const MAX_RECENT = 4;
+const MAX_TODAY = 3;
 
 /**
  * 화면을 부르는 다른 이름들.
@@ -66,7 +76,7 @@ const NAV_KEYWORDS: Record<string, string> = {
 
 interface Item {
   id: string;
-  group: "고객" | "화면" | "동작";
+  group: "고객" | "최근 본 고객" | "오늘 챙길 분" | "화면" | "동작";
   label: string;
   hint?: string;
   /** 검색에 함께 걸리는 말 (한글 표기가 다른 경우 등) */
@@ -101,6 +111,7 @@ export default function CommandPalette({
     isManager,
     settings,
     updateSettings,
+    briefingTasks,
     privacyMode } = useStore();
   // 백업은 한 곳에서만 만든다 (lib/data/useBackup.ts)
   const { exportBackup } = useBackup();
@@ -264,28 +275,20 @@ export default function CommandPalette({
   }, [settings, updateSettings, exportBackup, isManager, onClose, startTour, toast]);
 
   // ---------- 고객 ----------
-  const customerItems: Item[] = useMemo(() => {
-    const q = query.trim();
-    if (!q) return [];
-    const digits = phoneDigits(q);
-    return [...derivedById.values()]
-      .filter((d) => {
-        if (digits.length >= 2 && phoneDigits(d.customer.phone).includes(digits))
-          return true;
-        return matchesQuery(d.customer.name, q);
-      })
-      // 관리가 급한 고객을 위로 — 찾자마자 상태가 눈에 들어오게
-      .sort((a, b) => b.priorityScore - a.priorityScore)
-      .slice(0, MAX_CUSTOMERS)
-      .map((d) => {
+  /* 고객 한 줄 — 찾은 고객 · 최근 본 고객 · 오늘 챙길 분이 같은 모양 */
+  const customerItem = useCallback(
+    (d: CustomerDerived, group: "고객" | "최근 본 고객" | "오늘 챙길 분", why?: string): Item => {
         const opp = opportunityById.get(d.customer.id);
         return {
-          id: `cust-${d.customer.id}`,
-          group: "고객" as const,
+          id: `cust-${group}-${d.customer.id}`,
+          group,
           label: displayName(d.customer.name, privacyMode),
-          hint: `${displayPhone(d.customer.phone, canSeePhone)} · 방문 ${d.visitCount}회${
-            d.lastVisitDate ? ` · 최근 ${formatRelative(d.lastVisitDate)}` : ""
-          }`,
+          /* 오늘 챙길 분은 왜 챙기는지가 먼저 — 번호는 상세에서 */
+          hint:
+            why ??
+            `${displayPhone(d.customer.phone, canSeePhone)} · 방문 ${d.visitCount}회${
+              d.lastVisitDate ? ` · 최근 ${formatRelative(d.lastVisitDate)}` : ""
+            }`,
           icon: (
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-aqua-50 to-aqua-100 text-xs font-extrabold text-aqua-800 ring-1 ring-aqua-200/60">
               {displayName(d.customer.name, privacyMode).slice(0, 1)}
@@ -308,17 +311,52 @@ export default function CommandPalette({
             },
           },
         };
-      });
-  }, [
-    query,
-    derivedById,
-    opportunityById,
-    canSeePhone,
-    privacyMode,
-    go,
-    onClose,
-    onRecordVisit,
-  ]);
+    },
+    [opportunityById, canSeePhone, privacyMode, go, onClose, onRecordVisit],
+  );
+
+  const customerItems: Item[] = useMemo(() => {
+    const q = query.trim();
+    if (!q) return [];
+    const digits = phoneDigits(q);
+    return [...derivedById.values()]
+      .filter((d) => {
+        if (digits.length >= 2 && phoneDigits(d.customer.phone).includes(digits))
+          return true;
+        return matchesQuery(d.customer.name, q);
+      })
+      // 관리가 급한 고객을 위로 — 찾자마자 상태가 눈에 들어오게
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, MAX_CUSTOMERS)
+      .map((d) => customerItem(d, "고객"));
+  }, [query, derivedById, customerItem]);
+
+  /*
+    빈 창 — 최근 본 고객 · 오늘 챙길 분.
+    창을 열 때마다 새로 읽는다 (방금 본 고객이 바로 맨 위에 와야 한다).
+    오늘 챙길 분은 아직 처리하지 않은 과제만, 최근 본 고객과 겹치지 않게.
+  */
+  const [recentIds, setRecentIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (open) setRecentIds(recentCustomerIds());
+  }, [open]);
+  const idleItems: Item[] = useMemo(() => {
+    if (query.trim()) return [];
+    const recent = recentIds
+      .map((id) => derivedById.get(id))
+      .filter((d): d is CustomerDerived => !!d)
+      .slice(0, MAX_RECENT);
+    const seen = new Set(recent.map((d) => d.customer.id));
+    const today = briefingTasks
+      .filter((t) => t.status === "pending" || t.status === "confirmed")
+      .filter((t) => !seen.has(t.customerId) && derivedById.has(t.customerId))
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, MAX_TODAY);
+    return [
+      ...recent.map((d) => customerItem(d, "최근 본 고객")),
+      ...today.map((t) => customerItem(derivedById.get(t.customerId)!, "오늘 챙길 분", t.suggestedAction)),
+    ];
+  }, [query, recentIds, derivedById, briefingTasks, customerItem]);
 
   // ---------- 검색어로 걸러내기 ----------
   const results: Item[] = useMemo(() => {
@@ -329,8 +367,13 @@ export default function CommandPalette({
       (it.keywords ?? "").includes(q) ||
       matchesQuery(it.label, q);
     // 고객을 맨 위에 둔다 — 검색창을 여는 이유의 대부분이라
-    return [...customerItems, ...navItems.filter(match), ...actionItems.filter(match)];
-  }, [query, customerItems, navItems, actionItems]);
+    return [
+      ...idleItems,
+      ...customerItems,
+      ...navItems.filter(match),
+      ...actionItems.filter(match),
+    ];
+  }, [query, idleItems, customerItems, navItems, actionItems]);
 
   useEffect(() => setCursor(0), [query]);
   useEffect(() => {
@@ -415,7 +458,10 @@ export default function CommandPalette({
               return (
                 <li key={it.id}>
                   {head && (
-                    <p className="px-4 pb-1 pt-2.5 text-[0.6875rem] font-extrabold uppercase tracking-wider text-ink-faint">
+                    <p
+                      data-palette-group={head}
+                      className="px-4 pb-1 pt-2.5 text-[0.75rem] font-extrabold tracking-wide text-ink-faint"
+                    >
                       {head}
                     </p>
                   )}
@@ -450,7 +496,7 @@ export default function CommandPalette({
                       <button
                         type="button"
                         onClick={it.secondary.run}
-                        className="shrink-0 rounded-btn bg-aqua-50 px-2.5 py-1.5 text-xs font-extrabold text-aqua-800 ring-1 ring-aqua-200 transition-colors hover:bg-aqua-100"
+                        className="press touch-target shrink-0 rounded-full bg-aqua-50 px-3.5 text-[0.8125rem] font-extrabold text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-100"
                       >
                         {it.secondary.label}
                       </button>

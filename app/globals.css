@@ -819,12 +819,14 @@ a:active {
     color: #111 !important;
   }
   /* 머리 띠(StaffBand) — 종이에는 딥그린 판 대신 테두리만 (잉크 절약 · 글이 읽히게) */
-  [data-staff-band] > section {
+  [data-staff-band] > section,
+  [data-page-band] > section {
     background: #fff !important;
     box-shadow: none !important;
     border: 1px solid #ddd !important;
   }
-  [data-staff-band] > section * {
+  [data-staff-band] > section *,
+  [data-page-band] > section * {
     color: #111 !important;
   }
   body {
@@ -979,6 +981,20 @@ a:active {
 }
 .page-enter {
   animation: fade-in 0.18s ease-out;
+}
+/* 머리 띠가 위로 사라지면 폰 머리글에 그 화면 이름이 떠오른다 (D-60) */
+@keyframes title-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.header-title-in {
+  animation: title-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* 누르는 동안 살짝 들어간다 — 폰에는 「마우스를 올리면 색이 바뀜」 이
    없어서, 눌렀는지 손끝으로 알 길이 이것뿐이다. 꺼진 단추는 그대로. */

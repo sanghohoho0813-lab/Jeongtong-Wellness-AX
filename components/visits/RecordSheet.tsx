@@ -33,10 +33,17 @@ export default function RecordSheet({
   onClose,
   onPick,
   onNew,
+  currentId,
 }: {
   open: boolean;
   onClose: () => void;
   onPick: (customerId: string) => void;
+  /**
+   * 지금 보고 있는 고객 (고객 상세에서 [기록] 을 눌렀을 때, D-60).
+   * 맨 위에 「지금 보고 있는 분」 으로 따로 둔다 — 그 화면에서 [기록] 을
+   * 누른 사람은 십중팔구 그분을 기록하려는 것이다.
+   */
+  currentId?: string;
   /** 처음 오신 분 — 검색어를 이름으로 넘겨 등록 화면을 연다 */
   onNew: (name: string) => void;
 }) {
@@ -91,16 +98,18 @@ export default function RecordSheet({
         const dueRank = doneToday ? 3 : due ? (due <= today ? 0 : 1) : 2;
         // 이름을 그대로 쳤으면 그분이 맨 위 — 「옥윤용」 을 찾는데 「옥윤용2」 가 먼저 뜨면 안 된다
         const exact = q && d.customer.name === q ? 0 : 1;
-        return { d, dueRank, exact, last: d.lastVisitDate ?? "" };
+        const here = !q && d.customer.id === currentId ? 0 : 1;
+        return { d, dueRank, exact, here, last: d.lastVisitDate ?? "" };
       })
       .sort((a, b) => {
+        if (a.here !== b.here) return a.here - b.here;
         if (a.exact !== b.exact) return a.exact - b.exact;
         if (a.dueRank !== b.dueRank) return a.dueRank - b.dueRank;
         // 예정일이 같은 무리 안에서는 최근에 온 분부터 (기억이 생생한 순)
         return b.last.localeCompare(a.last);
       })
       .slice(0, MAX_ROWS);
-  }, [derivedById, query]);
+  }, [derivedById, query, currentId]);
 
   /* 손잡이 · 제목 줄을 아래로 끌면 닫힌다 (components/ui/sheet.tsx) */
   const drag = useSheetDrag(onClose);
@@ -115,7 +124,10 @@ export default function RecordSheet({
     손님인지. 머리 이름은 줄마다 붙는 「오늘 예정」 표와 같은 말을 쓴다.
     찾는 중(검색어가 있을 때)에는 묶지 않는다 — 찾는 이름이 맨 위면 된다.
   */
-  const dueCount = query.trim() ? 0 : rows.filter((r) => r.dueRank === 0).length;
+  const pinned = rows[0]?.here === 0 ? 1 : 0;
+  const dueCount = query.trim()
+    ? 0
+    : rows.filter((r) => r.here !== 0 && r.dueRank === 0).length;
 
   return createPortal(
     <div className="fixed inset-0 z-[65] flex flex-col justify-end">
@@ -185,11 +197,13 @@ export default function RecordSheet({
               const isDue = !doneToday && !!due && due <= today;
               const m = d.activeMembership;
               const head =
-                dueCount > 0 && i === 0
-                  ? `오늘 예정 · ${dueCount}명`
-                  : dueCount > 0 && i === dueCount
-                    ? "그 밖의 분"
-                    : null;
+                pinned && i === 0
+                  ? "지금 보고 있는 분"
+                  : dueCount > 0 && i === pinned
+                    ? `오늘 예정 · ${dueCount}명`
+                    : (dueCount > 0 || pinned) && i === pinned + dueCount
+                      ? "그 밖의 분"
+                      : null;
               return (
                 <li key={d.customer.id}>
                   {head && (

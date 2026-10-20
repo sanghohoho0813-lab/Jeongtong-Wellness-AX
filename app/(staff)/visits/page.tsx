@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
+import { bandGhost, bandPrimary } from "@/components/layout/StaffBand";
 import VisitForm from "@/components/visits/VisitForm";
 import SettlementSheet from "@/components/visits/SettlementSheet";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
@@ -116,22 +117,24 @@ export default function VisitsPage() {
         title="방문 / 이용 기록"
         description="방문·상담 기록이 시간순으로 쌓입니다."
         action={
-          <div className="flex gap-2">
+          <>
             {/* 저녁 마감 — 오늘 받은 돈 · 기록을 한 장으로 */}
-            <Button variant="secondary" onClick={() => setSettleDay(todayISO())}>
+            <button type="button" onClick={() => setSettleDay(todayISO())} className={bandGhost}>
               <ClipboardIcon className="h-4 w-4" />
               마감 정산
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setEditingVisit(undefined);
                 setOpenForm(true);
               }}
+              className={bandPrimary}
             >
-              <PlusIcon className="h-4 w-4" />
+              <PlusIcon className="h-4 w-4" strokeWidth={2.6} />
               방문 기록
-            </Button>
-          </div>
+            </button>
+          </>
         }
       />
 
@@ -327,7 +330,7 @@ export default function VisitsPage() {
                         {timeKr(v.visitedAt)}
                       </p>
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <Link
                             href={`/customers/${v.customerId}`}
                             className="tap-line font-bold text-ink hover:text-aqua-700"
@@ -365,28 +368,29 @@ export default function VisitsPage() {
                             </p>
                           ) : null;
                         })()}
-                        {/*
-                          mt-2.5 — 이름 링크(.tap-line)는 손끝 높이 44px 를 위해 아래로
-                          0.625rem 넘쳐 있다. 시각을 왼쪽 칸으로 옮기자 이름 바로 아래에
-                          이 단추 줄이 붙어, 큰 글씨에서 이름 아랫부분을 덮었다.
-                        */}
-                        <div className="-mb-1.5 mt-2.5 flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => {
-                              setEditingVisit(v);
-                              setOpenForm(true);
-                            }}
-                            className="touch-target inline-flex shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-aqua-800 transition-colors hover:bg-aqua-50 dark:text-aqua-300"
-                          >
-                            수정
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete(v)}
-                            className="touch-target inline-flex shrink-0 items-center rounded-full px-3.5 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text"
-                          >
-                            삭제
-                          </button>
-                        </div>
+                      </div>
+                      {/*
+                        [수정] · [삭제] 는 줄 오른쪽 위에 (D-60). 전에는 내용 아래
+                        한 줄을 통째로 차지해, 메모 없는 상담 한 건도 줄 높이가
+                        두 배였다 — 하루 목록이 그만큼 길어졌다. 삭제는 되돌리기
+                        알림이 있어도 손이 덜 가게 흐린 글씨 그대로.
+                      */}
+                      <div className="-my-1.5 -mr-1 flex shrink-0 items-start gap-0.5">
+                        <button
+                          onClick={() => {
+                            setEditingVisit(v);
+                            setOpenForm(true);
+                          }}
+                          className="touch-target inline-flex shrink-0 items-center rounded-full px-3 text-sm font-bold text-aqua-800 transition-colors hover:bg-aqua-50 active:bg-aqua-50 dark:text-aqua-300"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(v)}
+                          className="touch-target inline-flex shrink-0 items-center rounded-full px-3 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text active:bg-stone-bg"
+                        >
+                          삭제
+                        </button>
                       </div>
                     </li>
                   );

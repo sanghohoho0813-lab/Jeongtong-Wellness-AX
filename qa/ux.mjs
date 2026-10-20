@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -606,6 +606,112 @@ await pc2.context().close();
   const dur = await rm.locator('[role="dialog"]').last().evaluate((d) => parseFloat(getComputedStyle(d).animationDuration));
   log("움직임 줄이기 설정 — 시트가 움직이지 않고 바로 뜬다", dur < 0.01, `${dur}s`);
   await rm.context().close();
+}
+
+/* ── 14. 자주 가는 길을 짧게 · 같은 앱으로 (D-60) ──
+   폰 머리글은 상호 줄만 붙고(띠가 덮지 않는다), 머리 띠가 위로 사라지면 그 화면 이름이 머리글에.
+   찾기 창은 비어 있지 않다(최근 본 고객 · 오늘 챙길 분). 고객 화면에서 [기록] 은 그분이 맨 위.
+   목록 · 설정 화면도 같은 띠, 빈 값은 말로, 고객 앱 날짜는 큰 달력 시트. */
+{
+  const ph = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
+  ph.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  const scrollTo = async (y) => { await ph.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), y); await ph.waitForTimeout(500); };
+
+  await go(ph, "/customers/c-04", 1400);
+  const name = ((await ph.locator("main h1").first().innerText()) || "").trim();
+  const headerH = await ph.locator("[data-mobile-header]").evaluate((h) => h.getBoundingClientRect().height);
+  log("폰 머리글 — 붙어 있는 것은 상호 줄 하나 (날짜 · 시각 줄은 같이 올라간다)", headerH <= 80, `${Math.round(headerH)}px`);
+  await scrollTo(700);
+  const hit = await ph.evaluate(() => {
+    const b = document.querySelector('[aria-label="고객 찾기 열기"]');
+    const r = b.getBoundingClientRect();
+    const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return !!at && b.contains(at);
+  });
+  log("내려가도 머리글의 찾기 단추를 누를 수 있다 (백업 띠가 덮지 않는다)", hit);
+  const remind = await ph.evaluate(() => { const r = document.querySelector("[data-backup-reminder]"); return r ? Math.round(r.getBoundingClientRect().bottom) : null; });
+  log("백업 띠 — 폰에서는 내려가면 같이 올라간다", remind === null || remind <= 0, remind === null ? "띠 없음" : `${remind}px`);
+  const ttl = ((await ph.locator("[data-header-title]").innerText().catch(() => "")) || "").replace(/\s+/g, "");
+  log("머리 띠가 위로 사라지면 머리글에 고객 이름", !!name && ttl.endsWith(name.replace(/\s+/g, "")), `${name} → ${ttl}`);
+  await ph.locator("[data-header-title]").click();
+  await ph.waitForTimeout(1000);
+  log("머리글의 이름을 누르면 맨 위로 · 상호가 돌아온다", (await ph.evaluate(() => scrollY)) === 0 && (await ph.locator("[data-header-title]").count()) === 0);
+
+  await ph.getByRole("button", { name: "방문 기록하기" }).click();
+  await ph.waitForTimeout(700);
+  const sh = ph.locator('[role="dialog"]').last();
+  const g = await sh.locator("[data-sheet-group]").allInnerTexts();
+  /* 줄 글자는 「얼굴 글자 · 이름 · 표 …」 순 — 이름이 들어 있는지만 본다 */
+  const firstRow = ((await sh.locator("ul li button").first().innerText()) || "").replace(/\s+/g, " ");
+  log("고객 화면에서 [기록] — 「지금 보고 있는 분」 이 맨 위", g[0] === "지금 보고 있는 분" && firstRow.includes(name), `${g.join(" / ")} · ${firstRow.slice(0, 20)}`);
+  await ph.keyboard.press("Escape");
+  await ph.waitForTimeout(400);
+
+  log("고객 상세 — 빈 값을 「-」 로 두지 않는다", !(await ph.locator(".stat-cell p").allInnerTexts()).some((t) => t.trim() === "-"));
+
+  await go(ph, "/", 1200);
+  await ph.getByRole("button", { name: "고객 찾기 열기" }).click();
+  await ph.waitForTimeout(600);
+  const pg = await ph.locator("[data-palette-group]").allInnerTexts();
+  const recentFirst = ((await ph.locator('[role="dialog"] li').first().innerText()) || "").replace(/\s+/g, " ");
+  log("찾기 — 빈 창에 「최근 본 고객」 이 먼저 (방금 본 분이 맨 위)", pg[0] === "최근 본 고객" && recentFirst.includes(name), `${pg.join(" / ")}`);
+  log("찾기 — 「오늘 챙길 분」 도 빈 창에", pg.includes("오늘 챙길 분"));
+  const sec2 = await ph.locator('[role="dialog"] li').first().getByRole("button", { name: "방문 기록" }).boundingBox();
+  log("찾기 — 줄 오른쪽 [방문 기록] 이 손끝 크기", !!sec2 && sec2.height >= 44, sec2 ? `${Math.round(sec2.height)}px` : "");
+  await ph.keyboard.press("Escape");
+
+  for (const path of ["/customers", "/visits", "/settings", "/service"]) {
+    await go(ph, path, 1100);
+    log(`${path} — 다른 화면과 같은 딥그린 띠 (제목은 띠 안에)`, (await ph.locator("[data-page-band] h1").count()) === 1 && (await ph.locator("main h1").count()) === 1);
+  }
+  await go(ph, "/visits", 1200);
+  log("방문 기록 — [방문 기록] · [마감 정산] 은 띠 위 알약", (await ph.locator("[data-page-band]").getByRole("button", { name: "방문 기록" }).count()) === 1 && (await ph.locator("[data-page-band]").getByRole("button", { name: "마감 정산" }).count()) === 1);
+  const hs = (await ph.evaluate(() => [...document.querySelectorAll("main [data-visit-row]")].map((r) => r.getBoundingClientRect().height))).sort((a, b) => a - b);
+  const med = hs.length ? hs[Math.floor(hs.length / 2)] : 0;
+  log("방문 기록 줄 — [수정] · [삭제] 가 한 줄을 따로 차지하지 않는다 (가운데 높이 72px 이하)", med > 0 && med <= 72, `${Math.round(med)}px`);
+
+  await go(ph, "/settings", 1300);
+  const grp = await ph.evaluate(() => {
+    const g = document.querySelector("[data-settings-group]");
+    if (!g) return null;
+    const cs = getComputedStyle(g);
+    return { radius: parseFloat(cs.borderTopLeftRadius), gap: cs.rowGap, icons: g.querySelectorAll("button[aria-expanded] > span[aria-hidden] svg").length };
+  });
+  log("설정 — 폰에서는 칸 열 장이 한 묶음 목록 (아이콘 칸 + 이름)", !!grp && grp.radius >= 16 && (grp.gap === "0px" || grp.gap === "normal") && grp.icons >= 9, JSON.stringify(grp));
+
+  // 고객 앱 — 날짜는 큰 달력 시트
+  await go(ph, "/my/request", 1300);
+  log("방문 요청 — 브라우저 날짜 칸(mm/dd/yyyy)이 없다", (await ph.locator('input[type="date"]').count()) === 0);
+  await ph.getByRole("button", { name: /달력/ }).click();
+  await ph.waitForTimeout(700);
+  log("방문 요청 — 「달력」 을 누르면 아래에서 큰 달력이 올라온다", await ph.locator("[data-date-sheet]").isVisible());
+  const cellH = await ph.locator("[data-date-sheet] button[aria-pressed]").first().boundingBox();
+  log("달력 칸 — 손끝 크기 (44px)", !!cellH && cellH.height >= 44, cellH ? `${Math.round(cellH.height)}px` : "");
+  const today = await ph.evaluate(() => new Date().toLocaleDateString("sv-SE"));
+  const pastDisabled = await ph.evaluate((t) => [...document.querySelectorAll("[data-date-sheet] button[aria-pressed]")].filter((b) => b.disabled).length, today);
+  log("달력 — 지난 날은 고를 수 없다", Number(today.slice(8, 10)) === 1 || pastDisabled === Number(today.slice(8, 10)) - 1, `잠김 ${pastDisabled}칸`);
+  await ph.locator("[data-date-sheet] button[aria-pressed]:not([disabled])").last().click();
+  await ph.waitForTimeout(600);
+  const pickedVal = await ph.locator("[data-picked-date]").getAttribute("data-picked-date");
+  log("달력에서 고르면 시트가 닫히고 고른 날이 한 줄로 보인다", (await ph.locator("[data-date-sheet]").count()) === 0 && !!pickedVal && /\d+월 \d+일/.test(await ph.locator("[data-picked-date]").innerText()), pickedVal || "");
+
+  await go(ph, "/my/wellness", 1300);
+  const pe = ph.locator("[data-profile-empty]");
+  if (await pe.count()) {
+    log("나의 웰니스 — 빈 프로필은 「—」 다섯 줄 대신 안내 하나 + [지금 적기]", (await pe.getByRole("button", { name: "지금 적기" }).count()) === 1 && (await ph.getByRole("button", { name: "작성" }).count()) === 0);
+  }
+  await go(ph, "/my/visits", 1300);
+  await scrollTo(500);
+  log("고객 앱 — 내려가면 머리글에 그 화면 이름", /이용기록/.test(await ph.locator("[data-header-title]").innerText().catch(() => "")));
+
+  await go(ph, "/my", 1300);
+  const fs = await ph.evaluate(() => {
+    const b = [...document.querySelectorAll("button[aria-label^='1점']")][0];
+    const s = b?.querySelectorAll("span")[1];
+    return s ? parseFloat(getComputedStyle(s).fontSize) : null;
+  });
+  if (fs !== null) log("이번 이용은 어떠셨나요 — 점수 뜻풀이 13px 이상", fs >= 13, `${fs}px`);
+  await ph.context().close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

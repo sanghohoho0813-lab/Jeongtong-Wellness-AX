@@ -20,7 +20,8 @@
  */
 
 import Link from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
+import { useAnnounceWhenHidden } from "@/lib/ui/band-title";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 
 /* ── 쪽 제목 ───────────────────────────────────────────── */
@@ -37,6 +38,9 @@ export function PageHead({
   back?: { href: string; label: string };
   action?: ReactNode;
 }) {
+  /* 제목이 머리글 밑으로 들어가면 머리글에 이 화면 이름 (D-60) */
+  const headRef = useRef<HTMLHeadingElement>(null);
+  useAnnounceWhenHidden(headRef, title);
   return (
     <div className="px-1">
       {back && (
@@ -49,7 +53,10 @@ export function PageHead({
         </Link>
       )}
       <div className="flex items-center justify-between gap-3">
-        <h1 className="min-w-0 text-[1.5rem] font-extrabold leading-tight tracking-tight text-ink [word-break:keep-all]">
+        <h1
+          ref={headRef}
+          className="min-w-0 text-[1.5rem] font-extrabold leading-tight tracking-tight text-ink [word-break:keep-all]"
+        >
           {title}
         </h1>
         {action}

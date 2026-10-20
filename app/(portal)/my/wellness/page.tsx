@@ -109,6 +109,32 @@ export default function MyWellness() {
     }
   };
 
+  /* 프로필 줄 — 하나도 안 적었으면 빈 줄 대신 안내 하나 (D-60) */
+  const profileRows: { k: string; v?: string }[] = [
+              { k: "이용 목적", v: profile.purpose },
+              {
+                k: "관심 관리부위",
+                v: (profile.interestAreas ?? [])
+                  .map((p) => BODY_PART_LABELS[p] ?? p)
+                  .join(" · "),
+              },
+              {
+                k: "선호 시간대",
+                v: TIMES.find((t) => t.key === profile.preferredTime)?.label,
+              },
+              {
+                k: "홈케어 정보",
+                v:
+                  profile.homecareInterest === undefined
+                    ? undefined
+                    : profile.homecareInterest
+                      ? "받아볼래요"
+                      : "괜찮아요",
+              },
+              { k: "한마디", v: profile.note },
+  ];
+  const profileEmpty = !profileRows.some((r) => r.v);
+
   return (
     <div className="space-y-6">
       <PageHead
@@ -166,7 +192,7 @@ export default function MyWellness() {
       <Panel>
         <p className="text-[0.8125rem] font-bold text-ink-sub">다음 관리 참고일</p>
         <p className="nowrap-num mt-1.5 text-[1.75rem] font-extrabold tabular text-aqua-700">
-          {next.date ? formatDateKr(next.date) : "—"}
+          {next.date ? formatDateKr(next.date) : "아직 없음"}
         </p>
         <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-sub">
           {next.basis}
@@ -179,7 +205,7 @@ export default function MyWellness() {
           <h2 className="text-[1.0625rem] font-extrabold text-ink">
             나의 Wellness Profile
           </h2>
-          {!editing && (
+          {!editing && !profileEmpty && (
             <PillButton tone="soft" size="md" onClick={() => setEditing(true)}>
               {profile.updatedAt ? "수정" : "작성"}
             </PillButton>
@@ -187,30 +213,30 @@ export default function MyWellness() {
         </div>
 
         {!editing ? (
+          (() => {
+          /*
+            하나도 안 적었으면 「—」 다섯 줄 대신 왜 적는지와 [지금 적기] 하나 (D-60).
+            빈 줄 다섯은 「고장 났나」 로 읽히고, 적을 이유는 말해 주지 않았다.
+          */
+          if (profileEmpty) {
+            return (
+              <div data-profile-empty className="rounded-2xl bg-card-soft px-4 py-4 ring-1 ring-stone-line">
+                <p className="text-[0.9375rem] font-bold text-ink">아직 적지 않으셨어요</p>
+                <p className="mt-1 text-[0.875rem] leading-relaxed text-ink-sub [word-break:keep-all]">
+                  이용 목적 · 관심 있는 부위 · 편한 시간을 적어 두시면 다음에 오실 때
+                  매장에서 참고합니다. 1분이면 됩니다.
+                </p>
+                <div className="mt-3">
+                  <PillButton size="md" onClick={() => setEditing(true)}>
+                    지금 적기
+                  </PillButton>
+                </div>
+              </div>
+            );
+          }
+          return (
           <dl className="divide-y divide-stone-line">
-            {[
-              { k: "이용 목적", v: profile.purpose },
-              {
-                k: "관심 관리부위",
-                v: (profile.interestAreas ?? [])
-                  .map((p) => BODY_PART_LABELS[p] ?? p)
-                  .join(" · "),
-              },
-              {
-                k: "선호 시간대",
-                v: TIMES.find((t) => t.key === profile.preferredTime)?.label,
-              },
-              {
-                k: "홈케어 정보",
-                v:
-                  profile.homecareInterest === undefined
-                    ? undefined
-                    : profile.homecareInterest
-                      ? "받아볼래요"
-                      : "괜찮아요",
-              },
-              { k: "한마디", v: profile.note },
-            ].map((row) => (
+            {profileRows.map((row) => (
               <div
                 key={row.k}
                 className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-2.5"
@@ -219,11 +245,13 @@ export default function MyWellness() {
                   {row.k}
                 </dt>
                 <dd className="min-w-0 flex-1 text-[0.9375rem] text-ink-soft">
-                  {row.v || <span className="text-ink-faint">—</span>}
+                  {row.v || <span className="text-ink-faint">적지 않음</span>}
                 </dd>
               </div>
             ))}
           </dl>
+          );
+          })()
         ) : (
           <div className="space-y-4">
             <div>

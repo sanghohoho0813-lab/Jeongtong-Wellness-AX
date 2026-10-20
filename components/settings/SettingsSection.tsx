@@ -16,6 +16,11 @@
  * 거기서 접으면 마우스 쓰는 사람에게 없던 일이 하나 생긴다. 접는 것은
  * 자리가 없을 때 하는 일이지, 언제나 좋은 일이 아니다.
  *
+ * 폰에서는 칸 열 장이 따로 떠 있지 않고 **한 묶음 목록**이다 (D-60) —
+ * 더보기 · 고객 앱 마이페이지와 같은 모양(아이콘 칸 + 이름 + 한 줄 설명).
+ * 묶음은 부모(설정 화면의 `settings-group`)가 그리고, 칸은 카드 모양을
+ * 내려놓는다. 펴면 그 자리에서 펴진다.
+ *
  * 화면 안 바로가기(`#set-store`)로 들어오면 **그 칸이 열린 채로** 도착한다.
  * 열리지 않으면 바로가기가 제목까지만 데려다주고 끝나서, 누르는 일이
  * 한 번 더 늘어난다. 화면 공유 띠의 「설정에서 끄기」 도 같은 길을 쓴다.
@@ -30,10 +35,13 @@ export default function SettingsSection({
   title,
   summary,
   tone,
+  icon,
   action,
   dataTour,
   children,
 }: {
+  /** 폰 목록 줄 왼쪽의 아이콘 */
+  icon?: ReactNode;
   /** 화면 안 바로가기의 도착 지점 (`set-store` 처럼) */
   id: string;
   title: ReactNode;
@@ -59,7 +67,11 @@ export default function SettingsSection({
   }, [id]);
 
   return (
-    <Card id={id} dataTour={dataTour} className="scroll-mt-36 lg:scroll-mt-6">
+    <Card
+      id={id}
+      dataTour={dataTour}
+      className="scroll-mt-36 max-lg:!rounded-none max-lg:!border-0 max-lg:!bg-transparent max-lg:!px-4 max-lg:!py-1.5 max-lg:!shadow-none lg:scroll-mt-6"
+    >
       {/*
         접는 손잡이 — 폰에서만. 높이 60px 이상, 글자 17px.
         제목과 한 줄 설명을 같이 둔다. 「데이터」 네 글자만 보고 그 안에
@@ -70,10 +82,22 @@ export default function SettingsSection({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={bodyId}
-        className={`flex w-full min-h-[3.25rem] items-center gap-3 text-left lg:hidden ${
-          open ? "mb-4" : ""
+        className={`flex w-full min-h-[3.25rem] items-center gap-3.5 py-1.5 text-left lg:hidden ${
+          open ? "mb-3" : ""
         }`}
       >
+        {icon && (
+          <span
+            aria-hidden
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${
+              tone === "gold"
+                ? "bg-gold-soft text-gold-deep ring-gold/20"
+                : "bg-aqua-50 text-aqua-800 ring-aqua-100 dark:bg-aqua-500/10 dark:text-aqua-300 dark:ring-aqua-500/20"
+            }`}
+          >
+            {icon}
+          </span>
+        )}
         <span className="min-w-0 flex-1">
           <span className="block text-[1.0625rem] font-extrabold leading-snug text-ink">
             {title}

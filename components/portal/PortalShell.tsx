@@ -14,11 +14,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { useHowItWorks } from "@/components/public/HowItWorks";
 import { SurfaceSwitch } from "@/components/layout/SurfaceSwitch";
-import { scrollTopIfHere } from "@/lib/ui/scroll";
+import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
+import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
 import {
   CalendarIcon,
   ClipboardIcon,
@@ -66,20 +67,52 @@ function isActive(pathname: string, href: string): boolean {
  * 마이페이지 안에 모아 두었고 종을 따로 달면 누를 것이 둘로 갈린다.
  */
 export function PortalHeader({ account = false }: { account?: boolean }) {
+  /*
+    내려가서 쪽 제목(PageHead)이 머리글 밑으로 들어가면, 「MY WELLNESS」
+    자리에 그 화면 이름이 온다 (D-60 — 직원 화면과 같은 움직임). 위의 작은
+    줄은 「MY WELLNESS」 로 남아 어느 앱인지는 그대로 보인다. 눌러서 맨 위로.
+  */
+  const ref = useRef<HTMLElement>(null);
+  const [band, setBand] = useState<BandTitle | null>(null);
+  const pathname = usePathname();
+  useEffect(() => {
+    const el = ref.current;
+    if (el) document.documentElement.style.setProperty("--mobile-header-h", `${el.offsetHeight}px`);
+    const onBand = (e: Event) => setBand((e as CustomEvent<BandTitle | null>).detail);
+    window.addEventListener(BAND_TITLE_EVENT, onBand);
+    return () => window.removeEventListener(BAND_TITLE_EVENT, onBand);
+  }, []);
+  useEffect(() => setBand(null), [pathname]);
+
+  const brand = (
+    <>
+      <span className="block truncate text-[11px] font-bold text-gold-lite/85">
+        {band ? "MY WELLNESS" : "정통대왕쑥뜸원"}
+      </span>
+      <span className="block truncate text-[17px] font-extrabold leading-tight tracking-tight text-white">
+        {band ? band.title : "MY WELLNESS"}
+      </span>
+    </>
+  );
   return (
-    <header className="sticky top-0 z-30 bg-deep-900 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
+    <header ref={ref} className="sticky top-0 z-30 bg-deep-900 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
       <div className="mx-auto flex h-16 max-w-lg items-center gap-3 px-4">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold to-gold-deep font-serif text-lg font-bold text-deep-900 shadow-[0_2px_8px_rgba(10,46,44,0.25)]">
           鼎
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[11px] font-bold text-gold-lite/85">
-            정통대왕쑥뜸원
-          </span>
-          <span className="block truncate text-[17px] font-extrabold leading-tight tracking-tight text-white">
-            MY WELLNESS
-          </span>
-        </span>
+        {band ? (
+          <button
+            type="button"
+            data-header-title
+            onClick={scrollToTop}
+            aria-label={`${band.title} — 맨 위로`}
+            className="header-title-in min-h-[44px] min-w-0 flex-1 text-left"
+          >
+            {brand}
+          </button>
+        ) : (
+          <span className="min-w-0 flex-1">{brand}</span>
+        )}
         {account && (
           <Link
             href="/my/account"

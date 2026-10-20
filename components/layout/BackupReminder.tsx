@@ -77,6 +77,9 @@ export default function BackupReminder() {
     설명 문장을 접고, 「오늘은 나중에」 는 ✕ 한 개로 줄인다. 넓은
     화면에서는 자리가 있으니 그대로 다 보여 준다.
 
+    폰에서는 위에 붙어 있지 않고 내려가면 같이 올라간다 (D-60). 붙어
+    있을 때는 같은 자리에 붙은 머리글의 찾기 · 알림 단추를 덮었다.
+
     단추는 **하나짜리 요소**로 두고 안쪽 글자만 바꾼다. 폰용·PC용을
     따로 만들면 같은 이름의 단추가 화면에 둘이 되어, 눌러야 할 것이
     어느 쪽인지 사람도 검사기도 알 수 없다.
@@ -84,7 +87,7 @@ export default function BackupReminder() {
   return (
     <div
       data-backup-reminder
-      className="no-print sticky top-0 z-40 border-b border-gold/30 bg-gold-soft px-4 py-2 sm:px-6 sm:py-2.5 lg:ml-64 lg:px-8"
+      className="no-print relative z-20 border-b border-gold/30 bg-gold-soft px-4 py-2 sm:px-6 sm:py-2.5 lg:sticky lg:top-0 lg:z-40 lg:ml-64 lg:px-8"
     >
       <div className="mx-auto flex max-w-7xl items-center gap-2 sm:flex-wrap sm:gap-x-3 sm:gap-y-2">
         <span className="min-w-0 flex-1 sm:flex-none">

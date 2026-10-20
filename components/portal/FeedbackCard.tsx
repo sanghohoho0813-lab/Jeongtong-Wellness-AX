@@ -150,7 +150,7 @@ export default function FeedbackCard({
               aria-pressed={score === n}
               aria-label={`${n}점 ${SCORE_LABEL[n]}`}
               onClick={() => setScore(n)}
-              className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-2xl ring-1 transition-colors ${
+              className={`press flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-2xl py-1 ring-1 ${
                 score === n
                   ? "bg-sel text-sel-ink ring-transparent"
                   : "bg-card-soft text-ink-soft ring-stone-line hover:bg-aqua-50/60"
@@ -159,8 +159,12 @@ export default function FeedbackCard({
               <span className="nowrap-num text-[1.0625rem] font-extrabold tabular">
                 {n}
               </span>
-              {/* 실측 11px 이었다. 뜻풀이가 안 읽히면 숫자만 남는다 → 12.1px */}
-              <span className="text-[0.6875rem] font-bold leading-none">
+              {/*
+                실측 11px → 12.1px → 13.2px (D-60). 「보통 이하」 「아주 좋음」 은
+                고르는 이유 그 자체라 숫자만큼 읽혀야 한다. 좁은 폰 · 큰 글씨에서는
+                낱말 사이에서 두 줄로 접힌다.
+              */}
+              <span className="px-0.5 text-center text-[0.75rem] font-bold leading-tight [word-break:keep-all]">
                 {SCORE_LABEL[n]}
               </span>
             </button>

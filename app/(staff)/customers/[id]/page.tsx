@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VisitForm from "@/components/visits/VisitForm";
 import BodyMap, { BodyPartTags } from "@/components/body-map/BodyMap";
 import { useStore } from "@/lib/data/store";
@@ -56,6 +56,7 @@ import MergeCustomerNotice from "@/components/customers/MergeCustomerNotice";
 import AiReadyNote from "@/components/ui/AiReadyNote";
 import { PREFERENCE_CATEGORY_LABELS } from "@/lib/types";
 import { Fold } from "@/components/ui/Fold";
+import { rememberCustomer } from "@/lib/ui/recent";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
@@ -101,6 +102,12 @@ export default function CustomerDetailPage() {
   useDocumentTitle(
     derived ? displayName(derived.customer.name, privacyMode) : "고객",
   );
+
+  /* 찾기 창의 「최근 본 고객」 (D-60) — 번호만, 이 기기에만 */
+  const exists = !!derived;
+  useEffect(() => {
+    if (exists) rememberCustomer(params.id);
+  }, [exists, params.id]);
 
   if (!derived || !facts) {
     return (
@@ -281,8 +288,9 @@ export default function CustomerDetailPage() {
         <div className="stat-strip rise-stagger grid-cols-2 xl:grid-cols-4">
           <div className="stat-cell min-w-0">
             <p className="text-[0.8125rem] font-bold text-ink-sub">최근 방문</p>
+            {/* 빈 값은 「-」 가 아니라 말로 (D-60) — 60대 눈에 「-」 는 뜻이 없다 */}
             <p className="mt-1.5 text-2xl font-extrabold text-ink">
-              {formatRelative(derived.lastVisitDate)}
+              {derived.lastVisitDate ? formatRelative(derived.lastVisitDate) : "아직 없음"}
             </p>
             <p className="mt-1 nowrap-num text-xs text-ink-sub">
               누적 {derived.visitCount}회
@@ -297,12 +305,12 @@ export default function CustomerDetailPage() {
               다음 관리 예정일
             </p>
             <p className="mt-1.5 text-2xl font-extrabold text-deep-800 dark:text-aqua-700">
-              {formatRelative(c.nextManageDate)}
+              {c.nextManageDate ? formatRelative(c.nextManageDate) : "미정"}
             </p>
             <p className="tabular mt-1 text-[0.875rem] leading-snug text-ink-sub">
               {c.nextManageDate
                 ? formatDateTimeKr(c.nextManageDate, c.nextManageTime)
-                : "예정일 미정"}
+                : "잡아 두면 그날 챙길 분에 올라옵니다"}
             </p>
             <button
               type="button"

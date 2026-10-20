@@ -118,11 +118,11 @@ export default function MyAccount() {
         </div>
         <dl className="mt-4 grid grid-cols-3 divide-x divide-white/15 rounded-2xl bg-white/[0.07] py-3 ring-1 ring-white/10">
           {[
-            { k: "누적 이용", v: usage.visitCount > 0 ? `${usage.visitCount}회` : "—" },
-            { k: "남은 이용권", v: pass.totalRemaining > 0 ? `${pass.totalRemaining}회` : "—" },
+            { k: "누적 이용", v: usage.visitCount > 0 ? `${usage.visitCount}회` : "없음" },
+            { k: "남은 이용권", v: pass.totalRemaining > 0 ? `${pass.totalRemaining}회` : "없음" },
             {
               k: "첫 방문",
-              v: usage.firstVisitDate ? formatDateKr(usage.firstVisitDate).slice(2) : "—",
+              v: usage.firstVisitDate ? formatDateKr(usage.firstVisitDate).slice(2) : "아직",
             },
           ].map((row) => (
             <div key={row.k} className="min-w-0 px-2 text-center">

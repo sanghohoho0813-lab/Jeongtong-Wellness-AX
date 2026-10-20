@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
+import { bandPrimary } from "@/components/layout/StaffBand";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
@@ -159,10 +160,10 @@ export default function CustomersPage() {
         title="고객"
         description="우선 관리가 필요한 고객부터 보여 드립니다."
         action={
-          <Button onClick={() => setOpenForm(true)}>
-            <PlusIcon className="h-4 w-4" />
+          <button type="button" onClick={() => setOpenForm(true)} className={bandPrimary}>
+            <PlusIcon className="h-4 w-4" strokeWidth={2.6} />
             고객 등록
-          </Button>
+          </button>
         }
       />
 

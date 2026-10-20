@@ -281,7 +281,8 @@ const chip = p.locator('[aria-label="앞으로 두 주 중 날짜 고르기"] bu
 const chipLabel = (await chip.getAttribute("aria-label")) || "";
 await chip.click();
 await p.waitForTimeout(200);
-const picked = await p.locator('input[aria-label="희망 날짜"]').inputValue();
+/* 고른 날은 칩 아래 한 줄에 (D-60 — 브라우저 날짜 칸 대신 큰 달력 시트) */
+const picked = (await p.locator("[data-picked-date]").getAttribute("data-picked-date")) || "";
 log(
   "방문 요청 — 날짜 칩을 누르면 희망 날짜가 채워진다",
   !!picked && chipLabel.startsWith(picked.replace(/-/g, ".")),

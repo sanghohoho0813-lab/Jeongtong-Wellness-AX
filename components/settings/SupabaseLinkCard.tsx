@@ -63,6 +63,7 @@ export default function SupabaseLinkCard() {
   return (
     <SettingsSection
       id="set-link"
+      icon={<RefreshIcon className="h-5 w-5" />}
       title="매장 계정 연결"
       summary="여러 기기에서 같은 기록 보기 · 고객 화면 열기"
     >

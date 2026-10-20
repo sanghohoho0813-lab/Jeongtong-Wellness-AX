@@ -10,10 +10,11 @@
  * 고객은 그날 그냥 오시고, 자리가 없으면 그건 시스템이 만든 사고다.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { FieldLabel, inputCls } from "@/components/ui";
-import { CheckIcon, PhoneIcon } from "@/components/ui/icons";
+import { CalendarIcon, CheckIcon, PhoneIcon } from "@/components/ui/icons";
+import DateSheet from "@/components/portal/DateSheet";
 import {
   daysFromToday,
   formatDateKr,
@@ -69,6 +70,15 @@ export default function MyRequest() {
   const [done, setDone] = useState(false);
   /** 날짜 칩 — 오늘부터 두 주 (화면을 연 날 기준) */
   const [dayChips] = useState(() => Array.from({ length: 14 }, (_, i) => daysFromToday(i)));
+  const [sheet, setSheet] = useState(false);
+  const chipsRef = useRef<HTMLDivElement>(null);
+  /* 달력에서 두 주 안의 날을 골랐으면 그 칩이 보이게 옆으로 옮긴다 */
+  useEffect(() => {
+    if (!date) return;
+    chipsRef.current
+      ?.querySelector<HTMLElement>(`[data-day="${date}"]`)
+      ?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [date]);
 
   /* 홈의 「1:1 상담」 칸에서 왔으면 「문의」 를 골라 둔 채로 연다 (?kind=inquiry) */
   useEffect(() => {
@@ -162,6 +172,7 @@ export default function MyRequest() {
                 확인해 연락드린다.
               */}
               <div
+                ref={chipsRef}
                 role="group"
                 aria-label="앞으로 두 주 중 날짜 고르기"
                 className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
@@ -173,6 +184,7 @@ export default function MyRequest() {
                     <button
                       key={d}
                       type="button"
+                      data-day={d}
                       aria-pressed={on}
                       aria-label={`${formatDateKr(d)} (${wd})`}
                       onClick={() => setDate(on ? "" : d)}
@@ -199,17 +211,44 @@ export default function MyRequest() {
                   );
                 })}
               </div>
-              <label className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="text-[0.875rem] font-bold text-ink-sub">달력에서 고르기</span>
-                <input
-                  type="date"
-                  className={`${inputCls} !w-auto flex-1 !rounded-2xl`}
-                  aria-label="희망 날짜"
-                  min={todayISO()}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </label>
+              {/*
+                고른 날을 한 줄로 크게 — 칩 밖(두 주 뒤)의 날을 달력에서 골라도
+                무엇을 골랐는지 여기서 보인다 (D-60). 달력은 브라우저 날짜 칸이
+                아니라 아래에서 올라오는 큰 달력 (components/portal/DateSheet).
+              */}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <p
+                  data-picked-date={date}
+                  className={`nowrap-num flex min-h-[44px] items-center gap-1.5 text-[0.9375rem] font-extrabold ${
+                    date ? "text-aqua-800 dark:text-aqua-300" : "text-ink-faint"
+                  }`}
+                >
+                  {date ? (
+                    <>
+                      <CheckIcon className="h-4 w-4" />
+                      {Number(date.slice(5, 7))}월 {Number(date.slice(8, 10))}일 ({weekdayKr(date)})
+                      {slot ? ` · ${SLOT_LABEL[slot]}` : ""}
+                    </>
+                  ) : (
+                    "아직 고르지 않으셨어요"
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSheet(true)}
+                  className="press touch-target inline-flex items-center gap-1.5 rounded-full bg-card px-4 text-[0.9375rem] font-extrabold text-ink-soft ring-1 ring-stone-line hover:bg-aqua-50"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  {date && !dayChips.includes(date) ? "다른 날로" : "더 먼 날 · 달력"}
+                </button>
+              </div>
+              <DateSheet
+                open={sheet}
+                value={date}
+                min={todayISO()}
+                onPick={setDate}
+                onClose={() => setSheet(false)}
+              />
             </div>
 
             <div className="mb-5">
