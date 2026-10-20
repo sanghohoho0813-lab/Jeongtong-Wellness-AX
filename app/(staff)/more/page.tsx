@@ -143,7 +143,7 @@ export default function MorePage() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="flex min-h-[3.75rem] items-center gap-3.5 px-4 py-3 transition-colors hover:bg-card-soft"
+                    className="flex min-h-[3.75rem] items-center gap-3.5 px-4 py-3 transition-colors hover:bg-card-soft active:bg-card-soft"
                   >
                     <span
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${NAV_TONE_CLASS[item.tone]}`}

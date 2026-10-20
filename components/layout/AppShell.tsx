@@ -40,6 +40,7 @@ import { Modal } from "@/components/ui";
 import { VIDEOS } from "@/lib/content/videos";
 import { Hint } from "@/components/ui/Hint";
 import { SHELL_EVENTS } from "@/lib/ui/shell-events";
+import { scrollTopIfHere } from "@/lib/ui/scroll";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -394,7 +395,7 @@ function BottomNav({
           나갔다.
         */}
         <span
-          className={`flex h-8 w-full max-w-14 items-center justify-center rounded-full transition-colors ${
+          className={`flex h-8 w-full max-w-14 items-center justify-center rounded-full transition-[background-color,transform] duration-150 group-active:scale-90 ${
             active ? "bg-aqua-50 dark:bg-aqua-500/15" : ""
           }`}
         >
@@ -405,7 +406,7 @@ function BottomNav({
     );
   };
   const tabCls = (active: boolean) =>
-    `relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2 text-[0.72rem] font-bold transition-colors ${
+    `group relative flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2 text-[0.72rem] font-bold transition-colors ${
       active ? "text-aqua-800 dark:text-aqua-300" : "text-nav-ink"
     }`;
   const tab = (item: (typeof items)[number]) => {
@@ -432,7 +433,13 @@ function BottomNav({
       isActive(pathname, item.href) ||
       sectionForPath(pathname)?.root === item.href;
     return (
-      <Link key={item.href} href={item.href} className={tabCls(active)}>
+      <Link
+        key={item.href}
+        href={item.href}
+        aria-current={pathname === item.href ? "page" : undefined}
+        onClick={(e) => scrollTopIfHere(e, pathname, item.href)}
+        className={tabCls(active)}
+      >
         {face(item, active)}
       </Link>
     );
@@ -805,9 +812,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 건너갈 길은 남아 있어야 한다.
               */}
               <SectionTabs />
-              <ErrorBoundary resetKey={pathname}>
-                <RouteGuard>{children}</RouteGuard>
-              </ErrorBoundary>
+              {/*
+                화면이 바뀌면 새 화면이 살짝 떠오른다 (D-59, 투명도만).
+                탭 줄은 그대로 두고 본문만 — 묶음 안에서 옮겨 다닐 때 탭이
+                깜빡이면 어디에 있는지 놓친다.
+              */}
+              <div key={pathname} className="page-enter">
+                <ErrorBoundary resetKey={pathname}>
+                  <RouteGuard>{children}</RouteGuard>
+                </ErrorBoundary>
+              </div>
             </>
           ) : (
             <ContentSkeleton />

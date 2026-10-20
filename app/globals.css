@@ -916,6 +916,81 @@ a:active {
   }
 }
 
+/* ---------- 시트 · 화면 전환 (D-59) ----------
+   폰에서 창은 아래에서 「올라온다」 — 툭 나타나면 어디서 온 창인지,
+   어떻게 닫는지(아래로 내리면 된다)가 몸으로 읽히지 않는다.
+   넓은 화면의 창은 가운데 상자라 살짝 떠오르기만 한다.
+   화면 전환은 투명도만 바꾼다 — 위치(transform)를 움직이면 그동안 화면
+   안의 「아래 고정 단추」(position: fixed) 가 화면이 아니라 이 상자를
+   기준으로 잡혀 튄다.
+   움직임 줄이기 설정을 켠 분께는 위의 「모션 최소화」 규칙이 다 끈다. */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sheet-panel {
+  animation: sheet-in 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 640px) {
+  .sheet-panel {
+    animation: dialog-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+.sheet-backdrop {
+  animation: fade-in 0.2s ease-out;
+}
+/* 위에 뜨는 상자 (고객 · 화면 찾기) — 폰에서도 아래가 아니라 위에서 뜬다 */
+.pop-panel {
+  animation: dialog-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* 오른쪽에서 들어오는 서랍 (고객용 화면 전체 메뉴) */
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawer-panel {
+  animation: drawer-in 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.page-enter {
+  animation: fade-in 0.18s ease-out;
+}
+/* 누르는 동안 살짝 들어간다 — 폰에는 「마우스를 올리면 색이 바뀜」 이
+   없어서, 눌렀는지 손끝으로 알 길이 이것뿐이다. 꺼진 단추는 그대로. */
+.press {
+  transition-property: color, background-color, border-color, box-shadow, opacity, filter, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.press:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.97);
+}
+
 /* scrollbar (desktop, subtle) */
 ::-webkit-scrollbar {
   width: 8px;

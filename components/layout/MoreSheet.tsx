@@ -20,6 +20,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { SheetGrabber, useSheetDrag } from "@/components/ui/sheet";
 import { useStore } from "@/lib/data/store";
 import { FontScale, PALETTES, Theme } from "@/lib/types";
 import { MORE_ITEMS, NAV_TONE_CLASS, navItemsFor } from "./nav-items";
@@ -83,6 +84,9 @@ export default function MoreSheet({
     };
   }, [open]);
 
+  /* 손잡이 · 제목 줄을 아래로 끌면 닫힌다 (components/ui/sheet.tsx, D-59) */
+  const drag = useSheetDrag(onClose);
+
   if (!open || !mounted) return null;
 
   const items = navItemsFor(MORE_ITEMS, isManager);
@@ -90,7 +94,7 @@ export default function MoreSheet({
   return createPortal(
     <div className="fixed inset-0 z-[65] flex flex-col justify-end">
       <div
-        className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
+        className="sheet-backdrop absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={onClose}
       />
       <div
@@ -99,29 +103,33 @@ export default function MoreSheet({
         role="dialog"
         aria-modal="true"
         aria-label={isManager ? "더보기" : "계정"}
-        className="relative z-10 flex max-h-[88dvh] flex-col rounded-t-card-lg bg-card shadow-float outline-none"
+        style={drag.panelStyle}
+        className="sheet-panel relative z-10 flex max-h-[88dvh] flex-col rounded-t-card-lg bg-card shadow-float outline-none"
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-stone-line px-4 py-3.5">
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-extrabold text-ink">
-              {isManager ? "더보기" : "계정"}
-            </h2>
-            <p className="mt-0.5 truncate text-xs text-ink-sub">
-              {settings.companyName} {settings.branchName}
-            </p>
-            {/* 폰에서 단계(DEMO · PILOT · PRODUCTION)를 보는 자리 (v3.0 §15) */}
-            <div className="mt-1.5">
-              <StageChip />
+        <div {...drag.handleProps} className="shrink-0">
+          <SheetGrabber />
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-stone-line px-4 pb-3.5 pt-1.5">
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-extrabold text-ink">
+                {isManager ? "더보기" : "계정"}
+              </h2>
+              <p className="mt-0.5 truncate text-xs text-ink-sub">
+                {settings.companyName} {settings.branchName}
+              </p>
+              {/* 폰에서 단계(DEMO · PILOT · PRODUCTION)를 보는 자리 (v3.0 §15) */}
+              <div className="mt-1.5">
+                <StageChip />
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="닫기"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub transition-colors hover:bg-stone-bg-deep"
+            >
+              <XIcon className="h-6 w-6" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub transition-colors hover:bg-stone-bg-deep"
-          >
-            <XIcon className="h-6 w-6" />
-          </button>
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">

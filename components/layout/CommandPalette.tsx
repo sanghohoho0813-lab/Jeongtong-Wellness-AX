@@ -375,7 +375,7 @@ export default function CommandPalette({
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-start justify-center p-3 sm:p-6">
       <div
-        className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
+        className="sheet-backdrop absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={onClose}
       />
       <div
@@ -383,7 +383,7 @@ export default function CommandPalette({
         aria-modal="true"
         aria-label="빠른 실행"
         onKeyDown={onKeyDown}
-        className="relative z-10 mt-[6vh] flex max-h-[80dvh] w-full max-w-xl flex-col overflow-hidden rounded-card-lg bg-card shadow-float ring-1 ring-black/[0.06] dark:ring-white/10"
+        className="pop-panel relative z-10 mt-[6vh] flex max-h-[80dvh] w-full max-w-xl flex-col overflow-hidden rounded-card-lg bg-card shadow-float ring-1 ring-black/[0.06] dark:ring-white/10"
       >
         <div className="flex items-center gap-2.5 border-b border-stone-line px-4 py-3">
           <SearchIcon className="h-5 w-5 shrink-0 text-ink-faint" />

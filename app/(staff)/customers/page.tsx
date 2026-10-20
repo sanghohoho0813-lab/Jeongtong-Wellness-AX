@@ -337,7 +337,7 @@ export default function CustomersPage() {
             <Link
               data-tour="customer-row"
               href={`/customers/${d.customer.id}`}
-              className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-card-soft sm:gap-4"
+              className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-card-soft active:bg-card-soft sm:gap-4"
             >
               <span
                 className={`icon-pop relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-extrabold text-white shadow-sm ${AVATAR_BY_STATUS[d.status]}`}

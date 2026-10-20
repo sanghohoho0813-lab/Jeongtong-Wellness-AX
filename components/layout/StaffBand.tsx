@@ -255,7 +255,7 @@ export function BandProgress({
 }
 
 const PILL =
-  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-[0.9375rem] font-extrabold transition-colors";
+  "press inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-[0.9375rem] font-extrabold";
 /** 흰 알약 — 이 화면에서 가장 먼저 할 일 */
 export const bandPrimary = `${PILL} bg-white text-deep-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)] hover:bg-white/85`;
 /** 투명 알약 — 그다음 할 일 */

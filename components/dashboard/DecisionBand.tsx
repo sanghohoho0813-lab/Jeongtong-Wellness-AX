@@ -112,7 +112,7 @@ function Decision({
       <Link
         href={href}
         aria-label={`${label} ${count}${unit} — ${cta}`}
-        className={`group flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 transition-colors hover:bg-card-soft sm:px-4 sm:py-3 ${
+        className={`group flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 transition-colors hover:bg-card-soft active:bg-card-soft sm:px-4 sm:py-3 ${
           divider ? "relative before:absolute before:-left-px before:bottom-3 before:top-3 before:w-px before:bg-stone-line" : ""
         }`}
       >

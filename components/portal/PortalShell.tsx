@@ -18,6 +18,7 @@ import { ReactNode, useEffect } from "react";
 import { usePortal } from "@/lib/portal/store";
 import { useHowItWorks } from "@/components/public/HowItWorks";
 import { SurfaceSwitch } from "@/components/layout/SurfaceSwitch";
+import { scrollTopIfHere } from "@/lib/ui/scroll";
 import {
   CalendarIcon,
   ClipboardIcon,
@@ -181,7 +182,10 @@ export default function PortalShell({ children }: { children: ReactNode }) {
         깔리지 않게. :has() 로 「이 화면에 고정 단추가 있는가」 를 본다.
       */}
       <main className="mx-auto max-w-lg px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 [&:has([data-sticky-bar])]:pb-[calc(10.5rem+env(safe-area-inset-bottom))]">
-        {children}
+        {/* 화면이 바뀌면 새 화면이 살짝 떠오른다 (D-59, 투명도만) */}
+        <div key={pathname} className="page-enter">
+          {children}
+        </div>
 
         {/*
           직원이 고객 화면을 열어 본 뒤 돌아갈 길.
@@ -214,13 +218,14 @@ export default function PortalShell({ children }: { children: ReactNode }) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-0.5 px-1 transition-colors ${
+                  onClick={(e) => scrollTopIfHere(e, pathname, item.href)}
+                  className={`group flex min-h-[3.75rem] flex-col items-center justify-center gap-0.5 px-1 transition-colors ${
                     active ? "text-aqua-800 dark:text-aqua-300" : "text-ink-faint hover:text-ink-sub"
                   }`}
                 >
                   {/* 지금 화면은 아이콘 뒤에 알약 — 색만이 아니라 모양으로도 표시 */}
                   <span
-                    className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${
+                    className={`flex h-8 w-14 items-center justify-center rounded-full transition-[background-color,transform] duration-150 group-active:scale-90 ${
                       active ? "bg-aqua-50 dark:bg-aqua-500/15" : ""
                     }`}
                   >

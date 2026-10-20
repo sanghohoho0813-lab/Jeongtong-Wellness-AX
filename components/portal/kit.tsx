@@ -148,7 +148,7 @@ const PILL_SIZE = {
 };
 
 function pillCls(tone: PillTone, size: "md" | "lg", full?: boolean, between?: boolean) {
-  return `inline-flex items-center gap-1.5 rounded-full font-extrabold transition-colors ${
+  return `press inline-flex items-center gap-1.5 rounded-full font-extrabold ${
     between ? "justify-between" : "justify-center"
   } ${full ? "w-full" : ""} ${PILL[tone]} ${PILL_SIZE[size]}`;
 }
@@ -410,7 +410,7 @@ export function ListRow({
     </>
   );
   const cls =
-    "flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card-soft";
+    "flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card-soft active:bg-card-soft";
   return (
     <li>
       {href ? (

@@ -130,14 +130,14 @@ export default function PublicNav() {
   const sheet = (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div
-        className="absolute inset-0 bg-deep-950/50 backdrop-blur-[3px]"
+        className="sheet-backdrop absolute inset-0 bg-deep-950/50 backdrop-blur-[3px]"
         onClick={() => setOpen(false)}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="전체 메뉴"
-        className="relative z-10 flex h-full w-full max-w-sm flex-col bg-card shadow-float"
+        className="drawer-panel relative z-10 flex h-full w-full max-w-sm flex-col bg-card shadow-float"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-stone-line px-5 py-4">
           <p className="text-[1.0625rem] font-extrabold text-ink">전체 메뉴</p>

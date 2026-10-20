@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -459,6 +459,141 @@ await pc2.context().close();
     await p.waitForTimeout(300);
     log("설치 신호가 없는 기기 — 단추 대신 방법을 펴서 보여 준다", /홈 화면에 추가|앱 설치/.test(await p.locator("[data-install-app]").innerText()));
   }
+}
+
+/* ── 13. 앱처럼 움직인다 (D-59) ──
+   창은 아래에서 올라오고, 손잡이 · 제목 줄을 아래로 쓸면 닫힌다(손가락일 때만).
+   적다 만 것이 있으면 끌어서 닫아도 먼저 묻는다. 지금 있는 탭을 다시 누르면 맨 위로.
+   손짓은 CDP 의 진짜 터치로 낸다 — 합성 이벤트로는 브라우저가 실제로 하는 일을 못 본다. */
+{
+  const tctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const t = await tctx.newPage();
+  t.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  const cdp = await tctx.newCDPSession(t);
+  const dlgs = () => t.locator('[role="dialog"]').count();
+  /* 창의 끄는 자리(손잡이 · 제목 줄)에서 아래로 dy 만큼 쓸어내린다 */
+  const swipe = async (dy, from = '[style*="touch-action"]') => {
+    const at = await t.locator('[role="dialog"]').last().evaluate((d, sel) => {
+      const r = d.querySelector(sel).getBoundingClientRect();
+      return { x: r.left + 40, y: r.top + 12 };
+    }, from);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: at.x, y: at.y }] });
+    const steps = 10;
+    for (let i = 1; i <= steps; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: at.x, y: at.y + (dy * i) / steps }] });
+      await t.waitForTimeout(40);
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await t.waitForTimeout(600);
+  };
+
+  // 기록할 고객 고르기 — 두 분을 오늘 예정으로 두고 연다
+  await go(t, "/", 1200);
+  await t.evaluate((k) => {
+    const r = JSON.parse(localStorage.getItem(k) || "{}");
+    const today = new Date().toLocaleDateString("sv-SE");
+    (r.customers || []).slice(0, 2).forEach((c) => { c.nextManageDate = today; });
+    localStorage.setItem(k, JSON.stringify(r));
+  }, KEY);
+  await go(t, "/", 1500);
+  await t.getByRole("button", { name: "방문 기록하기" }).click();
+  await t.waitForTimeout(60);
+  const anim = await t.locator('[role="dialog"]').last().evaluate((d) => getComputedStyle(d).animationName);
+  log("시트 — 폰에서 아래에서 올라온다 (툭 뜨지 않는다)", anim === "sheet-in", anim);
+  await t.waitForTimeout(500);
+  const rec = t.locator('[role="dialog"]').last();
+  log("시트 — 맨 위에 손잡이가 보인다", await rec.locator("[data-sheet-grabber]").isVisible());
+  const xb = await rec.getByRole("button", { name: "닫기" }).boundingBox();
+  log("시트 — 닫기 단추 44px 이상", !!xb && xb.width >= 44 && xb.height >= 44, xb ? `${Math.round(xb.width)}px` : "");
+  const groups = await rec.locator("[data-sheet-group]").allInnerTexts();
+  log("기록 고르기 — 「오늘 예정 · N명」 묶음 머리 + 「그 밖의 분」", /^오늘 예정 · 2명$/.test(groups[0] || "") && groups[1] === "그 밖의 분", groups.join(" / "));
+  await rec.locator("input").first().fill("가");
+  await t.waitForTimeout(300);
+  log("기록 고르기 — 찾는 중에는 묶지 않는다 (찾는 이름이 맨 위)", (await rec.locator("[data-sheet-group]").count()) === 0);
+  await rec.locator("input").first().fill("");
+  await rec.locator("input").first().blur();
+  await swipe(30);
+  log("시트 — 조금만 끌면 닫히지 않고 제자리로 돌아온다", (await dlgs()) === 1);
+  await swipe(200, "ul");
+  log("시트 — 목록을 끌면 스크롤이지 닫힘이 아니다", (await dlgs()) === 1);
+  await swipe(200);
+  log("시트 — 손잡이 · 제목 줄을 아래로 쓸면 닫힌다", (await dlgs()) === 0);
+
+  // 공용 창(Modal) — 처음 오신 분 등록
+  const openNewCustomer = async () => {
+    await t.locator("[data-quick-actions]").getByRole("button", { name: "처음 오신 분" }).click();
+    await t.waitForTimeout(700);
+  };
+  await openNewCustomer();
+  log("공용 창 — 손잡이 · 44px 닫기", (await t.locator('[role="dialog"]').last().locator("[data-sheet-grabber]").isVisible()) && ((await t.locator('[role="dialog"]').last().getByRole("button", { name: "닫기" }).boundingBox())?.height ?? 0) >= 44);
+  await swipe(200);
+  log("공용 창 — 손대지 않았으면 끌어내리면 닫힌다", (await dlgs()) === 0);
+  await openNewCustomer();
+  await t.locator('[role="dialog"]').last().locator("input").first().fill("적다만이름");
+  await t.waitForTimeout(300);
+  await swipe(200);
+  log("공용 창 — 적다 만 것이 있으면 끌어내려도 먼저 묻는다", /적으신 내용이 사라집니다/.test(await t.evaluate(() => document.body.innerText)) && (await dlgs()) > 0);
+  await t.getByRole("button", { name: "그냥 닫기" }).click();
+  await t.waitForTimeout(600);
+
+  // 마우스로는 끌리지 않는다 (PC 는 ✕ · ESC)
+  await openNewCustomer();
+  const hb = await t.locator('[role="dialog"]').last().locator('[style*="touch-action"]').boundingBox();
+  await t.mouse.move(hb.x + 40, hb.y + 12);
+  await t.mouse.down();
+  await t.mouse.move(hb.x + 40, hb.y + 260, { steps: 8 });
+  await t.mouse.up();
+  await t.waitForTimeout(500);
+  log("시트 — 마우스로 끌어서는 닫히지 않는다 (손가락만)", (await dlgs()) === 1);
+  await t.keyboard.press("Escape");
+  await t.waitForTimeout(500);
+
+  // 화면 전환 — 투명도만 (위치를 움직이면 아래 고정 단추가 튄다)
+  await t.locator('nav a[href="/customers"]').last().click();
+  await t.waitForTimeout(60);
+  const pe = await t.evaluate(() => {
+    const el = document.querySelector("main .page-enter");
+    return el ? { a: getComputedStyle(el).animationName, tf: getComputedStyle(el).transform } : null;
+  });
+  log("화면 전환 — 새 화면이 살짝 떠오른다 (투명도만, 위치는 그대로)", !!pe && pe.a === "fade-in" && pe.tf === "none", JSON.stringify(pe));
+  await t.waitForTimeout(900);
+
+  // 지금 있는 탭을 다시 누르면 맨 위로 — 직원 · 고객 앱 둘 다
+  await t.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await t.waitForTimeout(300);
+  const y0 = await t.evaluate(() => scrollY);
+  await t.locator('nav a[href="/customers"]').last().click();
+  await t.waitForTimeout(1000);
+  log("하단 탭 — 지금 화면의 탭을 다시 누르면 맨 위로", y0 > 100 && (await t.evaluate(() => scrollY)) === 0 && new URL(t.url()).pathname === "/customers", `${Math.round(y0)} → ${await t.evaluate(() => scrollY)}`);
+  await go(t, "/my", 1500);
+  await t.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await t.waitForTimeout(300);
+  const m0 = await t.evaluate(() => scrollY);
+  await t.locator('nav[aria-label="주요 메뉴"] a[href="/my"]').click();
+  await t.waitForTimeout(1000);
+  log("고객 앱 하단 탭 — 다시 누르면 맨 위로", m0 > 100 && (await t.evaluate(() => scrollY)) === 0, `${Math.round(m0)} → ${await t.evaluate(() => scrollY)}`);
+
+  // 누르는 동안 살짝 들어간다
+  const pill = t.locator("main .press").first();
+  const pb = await pill.boundingBox();
+  await t.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2);
+  await t.mouse.down();
+  await t.waitForTimeout(250);
+  const pressed = await pill.evaluate((el) => getComputedStyle(el).transform);
+  await t.mouse.move(2, 2);
+  await t.mouse.up();
+  log("누르는 단추 — 누르는 동안 살짝 들어간다", /^matrix\(0\.9[0-9]+/.test(pressed), pressed);
+  await tctx.close();
+
+  // 움직임 줄이기 설정 — 올라오는 움직임을 끈다
+  const rm = await (await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" })).newPage();
+  rm.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(rm, "/", 1200);
+  await rm.getByRole("button", { name: "방문 기록하기" }).click();
+  await rm.waitForTimeout(100);
+  const dur = await rm.locator('[role="dialog"]').last().evaluate((d) => parseFloat(getComputedStyle(d).animationDuration));
+  log("움직임 줄이기 설정 — 시트가 움직이지 않고 바로 뜬다", dur < 0.01, `${dur}s`);
+  await rm.context().close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

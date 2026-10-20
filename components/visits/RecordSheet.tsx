@@ -24,6 +24,7 @@ import { PlusIcon, SearchIcon, XIcon } from "@/components/ui/icons";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative, todayISO } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
+import { SheetGrabber, useSheetDrag } from "@/components/ui/sheet";
 
 const MAX_ROWS = 30;
 
@@ -101,40 +102,55 @@ export default function RecordSheet({
       .slice(0, MAX_ROWS);
   }, [derivedById, query]);
 
+  /* 손잡이 · 제목 줄을 아래로 끌면 닫힌다 (components/ui/sheet.tsx) */
+  const drag = useSheetDrag(onClose);
+
   if (!open || !mounted) return null;
 
   const today = todayISO();
+  /*
+    「오늘 예정」 인 분(예정일이 오늘이거나 지난 분)을 따로 묶어 머리를
+    단다 (D-59). 순서는 전부터 그분들이 위였지만, 어디까지가 그 무리인지
+    줄만 봐서는 알 수 없었다 — 다섯째 줄이 오늘 예정인지 그냥 최근
+    손님인지. 머리 이름은 줄마다 붙는 「오늘 예정」 표와 같은 말을 쓴다.
+    찾는 중(검색어가 있을 때)에는 묶지 않는다 — 찾는 이름이 맨 위면 된다.
+  */
+  const dueCount = query.trim() ? 0 : rows.filter((r) => r.dueRank === 0).length;
 
   return createPortal(
     <div className="fixed inset-0 z-[65] flex flex-col justify-end">
       <div
-        className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
+        className="sheet-backdrop absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="기록할 고객 고르기"
-        className="relative z-10 flex max-h-[88dvh] flex-col rounded-t-card-lg bg-card shadow-float"
+        style={drag.panelStyle}
+        className="sheet-panel relative z-10 flex max-h-[88dvh] flex-col rounded-t-card-lg bg-card shadow-float"
       >
-        {/* 제목 + 닫기 — 닫기는 크게 (잘못 눌러 갇히지 않게) */}
-        <div className="flex items-center justify-between gap-3 border-b border-stone-line px-4 py-3.5">
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-extrabold text-ink">
-              누구의 기록인가요?
-            </h2>
-            <p className="mt-0.5 truncate text-xs text-ink-sub">
-              이름을 누르면 바로 기록 화면이 열립니다
-            </p>
+        {/* 손잡이 + 제목 + 닫기 — 닫기는 크게 (잘못 눌러 갇히지 않게) · 이 줄을 끌어내려도 닫힌다 */}
+        <div {...drag.handleProps} className="shrink-0">
+          <SheetGrabber />
+          <div className="flex items-center justify-between gap-3 border-b border-stone-line px-4 pb-3.5 pt-1.5">
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-extrabold text-ink">
+                누구의 기록인가요?
+              </h2>
+              <p className="mt-0.5 truncate text-xs text-ink-sub">
+                이름을 누르면 바로 기록 화면이 열립니다
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="닫기"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub"
+            >
+              <XIcon className="h-6 w-6" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub"
-          >
-            <XIcon className="h-6 w-6" />
-          </button>
         </div>
 
         {/* 검색 — 안 써도 되지만 고객이 많으면 필요하다 */}
@@ -163,13 +179,27 @@ export default function RecordSheet({
           </p>
         ) : (
           <ul className="min-h-0 flex-1 overflow-y-auto">
-            {rows.map(({ d }) => {
+            {rows.map(({ d }, i) => {
               const due = d.customer.nextManageDate;
               const doneToday = (d.lastVisitDate ?? "").slice(0, 10) === today;
               const isDue = !doneToday && !!due && due <= today;
               const m = d.activeMembership;
+              const head =
+                dueCount > 0 && i === 0
+                  ? `오늘 예정 · ${dueCount}명`
+                  : dueCount > 0 && i === dueCount
+                    ? "그 밖의 분"
+                    : null;
               return (
                 <li key={d.customer.id}>
+                  {head && (
+                    <p
+                      data-sheet-group
+                      className="border-b border-stone-line/70 bg-card-soft px-4 py-2 text-[0.8125rem] font-extrabold text-ink-sub"
+                    >
+                      {head}
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={() => onPick(d.customer.id)}
@@ -225,7 +255,7 @@ export default function RecordSheet({
           <button
             type="button"
             onClick={() => onNew(query.trim())}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-btn bg-aqua-50 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-200 active:bg-aqua-100"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-aqua-50 text-[0.9375rem] font-extrabold text-aqua-800 ring-1 ring-aqua-200 active:bg-aqua-100"
           >
             <PlusIcon className="h-5 w-5" strokeWidth={2.4} />
             처음 오신 분 등록하고 기록

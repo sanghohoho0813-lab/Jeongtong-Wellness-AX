@@ -37,7 +37,7 @@ export default function NotFound() {
           <li key={w.href}>
             <Link
               href={w.href}
-              className="flex min-h-[60px] items-center gap-3 rounded-2xl px-2 py-3 transition-colors hover:bg-card-soft"
+              className="flex min-h-[60px] items-center gap-3 rounded-2xl px-2 py-3 transition-colors hover:bg-card-soft active:bg-card-soft"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-[1rem] font-extrabold text-ink">{w.title}</span>

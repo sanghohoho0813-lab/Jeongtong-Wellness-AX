@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { scrollToTop } from "@/lib/ui/scroll";
 
 export default function BackToTop() {
   const [show, setShow] = useState(false);
@@ -37,15 +38,10 @@ export default function BackToTop() {
 
   if (!show) return null;
 
-  const toTop = () => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
-  };
-
   return (
     <button
       type="button"
-      onClick={toTop}
+      onClick={scrollToTop}
       aria-label="맨 위로"
       data-back-to-top
       className="no-print fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-card text-ink shadow-float ring-1 ring-stone-line transition-colors hover:bg-aqua-50 hover:text-aqua-800 lg:bottom-6 lg:right-6"

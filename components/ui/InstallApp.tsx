@@ -112,7 +112,7 @@ export default function InstallApp({ appName }: { appName: string }) {
             type="button"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card-soft"
+            className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-card-soft active:bg-card-soft"
           >
             {icon}
             <span className="min-w-0 flex-1">

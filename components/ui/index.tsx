@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { InfoButton } from "./Fold";
 import { CustomerStatus, SalesOpportunity, TaskStatus } from "@/lib/types";
 import { SparkIcon, XIcon } from "./icons";
+import { SheetGrabber, useSheetDrag } from "./sheet";
 
 // ---------- Card ----------
 
@@ -236,7 +237,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       data-tour={dataTour}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-full font-bold whitespace-nowrap transition-all touch-target ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`press inline-flex items-center justify-center gap-1.5 rounded-full font-bold whitespace-nowrap touch-target ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </button>
@@ -966,6 +967,7 @@ export function Modal({
     if (touchedRef.current) setAsking(true);
     else onClose();
   };
+  const drag = useSheetDrag(tryClose);
 
   useEffect(() => {
     if (!open) return;
@@ -1049,7 +1051,7 @@ export function Modal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
+        className="sheet-backdrop absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={tryClose}
       />
       <div
@@ -1058,19 +1060,31 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={`relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float outline-none ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
+        style={drag.panelStyle}
+        className={`sheet-panel relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float outline-none ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
       >
-        <div className="modal-header flex items-center justify-between gap-3 border-b border-stone-line px-5 py-4">
-          <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
-          <button
-            onClick={tryClose}
-            aria-label="닫기"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub hover:bg-stone-bg-deep"
-          >
-            <XIcon className="h-5 w-5" />
-          </button>
+        {/*
+          손잡이 + 제목 줄 = 끌어내려 닫는 자리 (폰 · 손가락만, components/ui/sheet.tsx).
+          끌어서 닫아도 ✕ 와 같은 길(tryClose) — 적던 내용이 있으면 먼저 묻는다.
+        */}
+        <div {...drag.handleProps} className="shrink-0">
+          <SheetGrabber />
+          <div className="modal-header flex items-center justify-between gap-3 border-b border-stone-line px-5 pb-3.5 pt-1.5 sm:py-4">
+            <h3 className="truncate text-lg font-extrabold text-ink">{title}</h3>
+            {/* 44px — 손끝 기준. 36px 이던 것을 키웠다 (D-59) */}
+            <button
+              onClick={tryClose}
+              aria-label="닫기"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-stone-bg text-ink-sub hover:bg-stone-bg-deep"
+            >
+              <XIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-        <div className="overflow-y-auto px-5 py-4">{children}</div>
+        {/* 폰 아래쪽 홈 막대(안전 영역)에 마지막 단추가 깔리지 않게 */}
+        <div className="overflow-y-auto px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:pb-4">
+          {children}
+        </div>
 
         {asking && (
           <div className="absolute inset-0 z-20 flex items-center justify-center rounded-t-card-lg bg-deep-950/55 p-5 sm:rounded-card-lg">
