@@ -7,7 +7,8 @@
  * 있었고, 그 자리를 상호(정통대왕쑥뜸원)가 차지하고 있었다. 내려가 있는
  * 동안에는 머리글 왼쪽이 그 화면 이름(고객 이름)으로 바뀐다.
  *
- * 띠(StaffBand)가 알리고 머리글(AppShell 의 MobileHeader)이 듣는다.
+ * 띠(StaffBand · 작은 띠 PageHeader · 고객 앱 PageHead)가 알리고
+ * 머리글(AppShell 의 MobileHeader · 고객 앱 PortalHeader)이 듣는다.
  * 화면이 바뀌거나 띠가 다시 보이면 null 을 알려 상호로 돌아간다.
  */
 
