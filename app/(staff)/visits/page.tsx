@@ -326,10 +326,18 @@ export default function VisitsPage() {
                         className={`absolute bottom-4 left-0 top-4 w-1 rounded-r-full bg-gradient-to-b ${st.strip}`}
                       />
                       {/* 날짜는 위 머리글에 있으니 여기는 시각만 — 왼쪽 칸에 세운다 (폭은 글 길이만큼은 늘어난다: 큰 글씨 360px) */}
-                      <p className="nowrap-num min-w-[4.25rem] shrink-0 pt-1 text-[0.8125rem] font-bold text-ink-sub">
+                      {/*
+                        폰에서는 시각을 이름 위 작은 줄로 (D-60) — [수정] · [삭제] 가
+                        오른쪽으로 오면서, 360px · 큰 글씨에서 왼쪽 시각 칸까지 두면
+                        가운데(이름 · 표)가 37px 로 줄어 「상담」 표가 칸 밖으로 나갔다.
+                      */}
+                      <p className="nowrap-num hidden min-w-[4.25rem] shrink-0 pt-1 text-[0.8125rem] font-bold text-ink-sub sm:block">
                         {timeKr(v.visitedAt)}
                       </p>
                       <div className="min-w-0 flex-1">
+                        <p className="nowrap-num mb-0.5 text-[0.8125rem] font-bold text-ink-sub sm:hidden">
+                          {timeKr(v.visitedAt)}
+                        </p>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <Link
                             href={`/customers/${v.customerId}`}
@@ -381,13 +389,13 @@ export default function VisitsPage() {
                             setEditingVisit(v);
                             setOpenForm(true);
                           }}
-                          className="touch-target inline-flex shrink-0 items-center rounded-full px-3 text-sm font-bold text-aqua-800 transition-colors hover:bg-aqua-50 active:bg-aqua-50 dark:text-aqua-300"
+                          className="touch-target inline-flex shrink-0 items-center justify-center rounded-full px-2.5 text-sm font-bold text-aqua-800 transition-colors hover:bg-aqua-50 active:bg-aqua-50 dark:text-aqua-300"
                         >
                           수정
                         </button>
                         <button
                           onClick={() => setConfirmDelete(v)}
-                          className="touch-target inline-flex shrink-0 items-center rounded-full px-3 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text active:bg-stone-bg"
+                          className="touch-target inline-flex shrink-0 items-center justify-center rounded-full px-2.5 text-sm font-bold text-ink-faint transition-colors hover:text-danger-text active:bg-stone-bg"
                         >
                           삭제
                         </button>

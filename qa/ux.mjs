@@ -668,7 +668,7 @@ await pc2.context().close();
   log("방문 기록 — [방문 기록] · [마감 정산] 은 띠 위 알약", (await ph.locator("[data-page-band]").getByRole("button", { name: "방문 기록" }).count()) === 1 && (await ph.locator("[data-page-band]").getByRole("button", { name: "마감 정산" }).count()) === 1);
   const hs = (await ph.evaluate(() => [...document.querySelectorAll("main [data-visit-row]")].map((r) => r.getBoundingClientRect().height))).sort((a, b) => a - b);
   const med = hs.length ? hs[Math.floor(hs.length / 2)] : 0;
-  log("방문 기록 줄 — [수정] · [삭제] 가 한 줄을 따로 차지하지 않는다 (가운데 높이 72px 이하)", med > 0 && med <= 72, `${Math.round(med)}px`);
+  log("방문 기록 줄 — [수정] · [삭제] 가 한 줄을 따로 차지하지 않는다 (가운데 높이 80px 이하, 전에는 약 100px)", med > 0 && med <= 80, `${Math.round(med)}px`);
 
   await go(ph, "/settings", 1300);
   const grp = await ph.evaluate(() => {
