@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기 · 숫자 맞추기)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기 · 숫자 맞추기 · 숫자를 누르면)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -1097,6 +1097,84 @@ await pc2.context().close();
   log("실행 브리핑 띠 — 「오늘 관리 대상 n명」 을 큰 글과 겹쳐 또 쓰지 않는다", !/오늘 관리 대상/.test(band));
   log("실행 브리핑 띠 — 처리 건수는 진행 막대 한 줄 (처리완료 n / m건)", /처리완료 \d+ \/ \d+건/.test(band) && (await v.locator("[data-briefing-progress] [role=progressbar]").count()) === 1);
   await c20.close();
+}
+
+/* ── 21. 숫자를 누르면 그 분들로 (D-67) ──
+   재방문 관리 칸 · 빈 구간 한 줄 · 첫 화면 재등록 기회 → 브리핑 매출기회 · 예정 일정 전화 · 종 이름. */
+{
+  const c21 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const v = await c21.newPage();
+  v.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+
+  // 재방문 관리 — 0명이 아닌 칸만 누르는 자리 (구간 넷 · 신규 · 상담 후속)
+  await go(v, "/retention", 1500);
+  const cellInfo = await v.evaluate(() =>
+    [...document.querySelectorAll("[data-retention-cells] li")].map((li) => ({
+      label: (li.querySelector("p")?.textContent || "").trim(),
+      n: Number(((li.textContent || "").match(/(\d+)\s*명/) || [])[1] || 0),
+      link: !!li.querySelector("a"),
+    })),
+  );
+  const jumpable = cellInfo.filter((c) => !/매출기회/.test(c.label));
+  log("재방문 관리 칸 — 0명이 아닌 칸만 누를 수 있다 (매출기회 칸은 숫자만)", jumpable.every((c) => c.link === c.n > 0) && cellInfo.filter((c) => /매출기회/.test(c.label)).every((c) => !c.link), cellInfo.map((c) => `${c.label.slice(0, 6)}${c.n}${c.link ? "↗" : ""}`).join(" "));
+  const fu = v.locator('[data-retention-jump="followup"]');
+  if (await fu.count()) {
+    await fu.click();
+    await v.waitForTimeout(1200);
+    log("「신규 · 상담 후속」 칸을 누르면 실행 브리핑으로", v.url().endsWith("/briefing"), v.url());
+    await go(v, "/retention", 1300);
+  }
+  const empty = v.locator("[data-retention-empty]");
+  if (await empty.count()) {
+    const et = (await empty.innerText()).replace(/\s+/g, " ");
+    log("빈 구간 — 「0명」 을 한 번만 (위 칸이 이미 말한다) · 기준은 누르면 펴진다", (et.match(/0명/g) || []).length === 1 && (await empty.locator("details summary").count()) === 1, et.slice(0, 60));
+  }
+
+  // 첫 화면 「재등록 상담 기회」 — 대상이 있으면 브리핑 매출기회만 켠 채로
+  await go(v, "/", 1500);
+  const gold = await v.evaluate(() => {
+    const cells = [...document.querySelectorAll("[data-decision-band] > *")];
+    const el = cells.find((c) => /재등록 상담 기회/.test(c.textContent || ""));
+    const a = el?.querySelector("a[href^='/briefing']");
+    return { n: Number(((el?.textContent || "").match(/(\d+)\s*명/) || [])[1] || 0), href: a?.getAttribute("href") || "" };
+  });
+  log("첫 화면 재등록 상담 기회 — 대상이 있으면 「대상 보기」 가 매출기회만 켠 브리핑으로", gold.n > 0 ? gold.href === "/briefing?opp=1" : gold.href === "/briefing", `${gold.n}명 → ${gold.href}`);
+  await go(v, "/briefing?opp=1", 1600);
+  const chip = v.locator("[data-opportunity-chip]");
+  log("브리핑 ?opp=1 — 주소는 깨끗이 (새로 고침에 다시 걸리지 않게)", !/opp=/.test(v.url()), v.url());
+  log("브리핑 ?opp=1 — 매출기회가 있으면 그 칩이 켜져 있고, 없으면 목록이 비지 않는다", (await chip.count()) ? (await chip.getAttribute("aria-pressed")) === "true" : (await v.locator('[data-tour="task-card"]').count()) > 0);
+
+  // 예정 일정 — 전화 단추는 번호가 보일 때만, tel: 하나
+  await go(v, "/", 1300);
+  const calls2 = await v.evaluate(() => [...document.querySelectorAll("[data-schedule-call]")].map((a) => ({ href: a.getAttribute("href") || "", label: a.getAttribute("aria-label") || "" })));
+  log("예정 일정 전화 단추 — 있으면 tel: 링크 · 「전화 걸기」 이름", calls2.every((c) => /^tel:[0-9+]{8,}$/.test(c.href) && /전화 걸기/.test(c.label)), `${calls2.length}개`);
+
+  // 종 — 창을 여는 단추라는 것을 이름으로
+  const bell = await v.locator("[data-inbox-bell]").first().getAttribute("aria-label");
+  log("종 단추 이름 — 「알림 열기」 (+ 오늘 챙길 분 n명)", /^알림 열기( — 오늘 챙길 분 \d+명)?$/.test(bell || ""), bell);
+
+  // 오늘 오실 분은 없고 지난 예정만 — 알림 창 줄 제목 · 예정 일정이 처음부터 그 분들
+  await v.evaluate((k) => {
+    const raw = JSON.parse(localStorage.getItem(k) || "{}");
+    const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.toLocaleDateString("sv-SE"); };
+    (raw.customers || []).forEach((c, i) => {
+      c.nextManageDate = i === 0 ? d(-3) : i === 1 ? d(2) : undefined;
+      c.nextManageTime = undefined;
+      /* 전화 단추를 보려고 검사 안에서만 심는 가짜 번호 (견본 명부에는 번호가 없다) */
+      if (i === 0) c.phone = "010-0000-0001";
+    });
+    localStorage.setItem(k, JSON.stringify(raw));
+  }, KEY);
+  await go(v, "/", 1500);
+  log("예정 일정 — 오늘 오실 분이 없으면 「지난 예정」 이 먼저 골라져 있다", (await v.locator('#schedule [data-schedule-day="overdue"]').getAttribute("aria-selected")) === "true");
+  const call = v.locator("#schedule [data-schedule-call]");
+  log("예정 일정 — 번호가 있는 분 줄에 전화 단추 (tel: 하나 · 44px)", (await call.count()) === 1 && (await call.getAttribute("href")) === "tel:01000000001" && ((await call.boundingBox())?.height ?? 0) >= 44);
+  await v.locator("header [data-inbox-bell]").click();
+  await v.waitForTimeout(900);
+  const srow = v.locator('[data-inbox-row="schedule"]');
+  log("알림 창 — 지난 예정만 있으면 줄 제목이 「예정일이 지난 분」", (await srow.count()) === 1 && /예정일이 지난 분/.test(await srow.innerText()) && !/오늘 오실 분/.test(await srow.innerText()));
+  await v.keyboard.press("Escape");
+  await c21.close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

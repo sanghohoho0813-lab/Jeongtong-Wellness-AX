@@ -94,6 +94,14 @@ const GROUP_ICON_TONE: Record<string, "aqua" | "amber" | "gray" | "gold"> = {
   low: "gold",
 };
 
+/** 구간 짧은 이름 — 띠의 칸 · 빈 구간 한 줄이 같은 이름을 쓴다 (D-67) */
+const GROUP_SHORT: Record<string, string> = {
+  due: "재방문 예정",
+  at_risk: "방문 주기 초과",
+  dormant: "장기 미방문",
+  low: "이용권 임박·소진",
+};
+
 const GROUP_ACCENT: Record<string, string> = {
   due: "from-aqua-400 to-aqua-600",
   at_risk: "from-amber-300 to-warn",
@@ -266,10 +274,10 @@ export default function RetentionPage() {
             <ul data-retention-cells className="grid grid-cols-3 gap-y-1 sm:grid-cols-6">
               {(
                 [
-                  { label: "재방문 예정", value: dueGroup.rows.length, dot: "bg-aqua-500", to: `#ret-${dueGroup.key}` },
-                  { label: "방문 주기 초과", value: atRiskGroup.rows.length, dot: "bg-warn", to: `#ret-${atRiskGroup.key}` },
-                  { label: "장기 미방문", value: dormantGroup.rows.length, dot: "bg-danger", to: `#ret-${dormantGroup.key}` },
-                  { label: "이용권 임박·소진", value: lowGroup.rows.length, dot: "bg-gold", to: `#ret-${lowGroup.key}` },
+                  { label: GROUP_SHORT.due, value: dueGroup.rows.length, dot: "bg-aqua-500", to: `#ret-${dueGroup.key}` },
+                  { label: GROUP_SHORT.at_risk, value: atRiskGroup.rows.length, dot: "bg-warn", to: `#ret-${atRiskGroup.key}` },
+                  { label: GROUP_SHORT.dormant, value: dormantGroup.rows.length, dot: "bg-danger", to: `#ret-${dormantGroup.key}` },
+                  { label: GROUP_SHORT.low, value: lowGroup.rows.length, dot: "bg-gold", to: `#ret-${lowGroup.key}` },
                   { label: "신규 · 상담 후속", value: followupCount, dot: "bg-sky-500", to: "/briefing" },
                   { label: "AX 매출기회", value: opportunityCount, dot: "bg-positive" },
                 ] as Array<{ label: string; value: number; dot: string; to?: string }>
@@ -438,7 +446,8 @@ export default function RetentionPage() {
         <div data-retention-empty>
           <Card lift={false}>
             <p className="text-[0.9375rem] font-extrabold leading-snug text-ink [word-break:keep-all]">
-              {emptyGroups.map((g) => g.title).join(" · ")}
+              {/* 구간 이름에 「·」 가 들어 있어(「재방문 예정 · 관리일 도래」) 넷이 여섯처럼 읽혔다 — 짧은 이름 + 쉼표 */}
+              {emptyGroups.map((g) => GROUP_SHORT[g.key] ?? g.title).join(", ")}
               <span className="nowrap-num font-bold text-ink-sub"> — 지금 0명</span>
             </p>
             <p className="mt-0.5 text-sm text-ink-sub">
