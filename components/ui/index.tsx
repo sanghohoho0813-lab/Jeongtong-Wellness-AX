@@ -899,8 +899,11 @@ export function FilterChip({
       : "bg-ink-soft text-white shadow-sm dark:bg-deep-800 dark:text-white";
   return (
     <button
+      type="button"
+      /* 무엇이 골라져 있는지 화면 읽기 프로그램에도 (D-64) — 색으로만 보였다 */
+      aria-pressed={active}
       onClick={onClick}
-      className={`touch-target shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+      className={`press touch-target shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold ${
         active
           ? activeCls
           : "bg-card text-ink-sub ring-1 ring-stone-line hover:bg-aqua-50 hover:text-aqua-800"

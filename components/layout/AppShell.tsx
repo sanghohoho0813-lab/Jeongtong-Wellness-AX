@@ -42,6 +42,10 @@ import { Hint } from "@/components/ui/Hint";
 import { SHELL_EVENTS, openShell } from "@/lib/ui/shell-events";
 import InboxSheet from "./InboxSheet";
 import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
+import { noteLeaving } from "@/lib/ui/list-memory";
+import { listVisitDrafts } from "@/lib/ui/visit-draft";
+import { useToast } from "@/components/ui/toast";
+import { displayName } from "@/lib/utils/format";
 import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 
@@ -800,7 +804,8 @@ function PrivacyModeBanner() {
 export default function AppShell({ children }: { children: ReactNode }) {
   // 경로가 바뀌면 오류 상태를 푼다 — 다른 화면까지 막아 둘 이유가 없다
   const pathname = usePathname();
-  const { ready } = useStore();
+  const { ready, derivedById, privacyMode } = useStore();
+  const toast = useToast();
   const [paletteOpen, setPaletteOpen] = useState(false);
   /** 머리글 종 → 알림 창 (D-62) */
   const [inboxOpen, setInboxOpen] = useState(false);
@@ -827,6 +832,46 @@ export default function AppShell({ children }: { children: ReactNode }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  /*
+    적다 만 방문 기록 — 폰이 화면을 새로 불러와 기록 창이 사라졌으면, 앱을
+    다시 열 때 한 번 「이어서 쓰기」 를 권한다 (D-64, lib/ui/visit-draft.ts).
+  */
+  const draftAsked = useRef(false);
+  useEffect(() => {
+    if (!ready || draftAsked.current) return;
+    draftAsked.current = true;
+    const d = listVisitDrafts().find((x) => derivedById.has(x.customerId));
+    if (!d) return;
+    const name = displayName(derivedById.get(d.customerId)!.customer.name, privacyMode);
+    toast(`${name} 님 — 적다 만 방문 기록이 있습니다`, "info", {
+      label: "이어서 쓰기",
+      onAction: () => setRecordFor(d.customerId),
+    });
+  }, [ready, derivedById, privacyMode, toast]);
+
+  /*
+    직전 화면 적기 — 목록이 「고객 상세에서 돌아왔는지」 알 수 있게 (D-64,
+    lib/ui/list-memory.ts). 정리(cleanup) 단계에서 적어야 새 화면이 그려지기
+    전에 이전 주소가 남는다.
+  */
+  useEffect(() => () => noteLeaving(pathname), [pathname]);
+
+  /*
+    홈 화면 아이콘의 바로가기(?open=record|search|new, D-64) — 그 창을 열고
+    주소는 깨끗이 (뒤로 가기 · 새로 고침에 창이 또 뜨지 않게).
+  */
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const open = q.get("open");
+    if (!open) return;
+    if (open === "record") setSheetOpen(true);
+    else if (open === "search") setPaletteOpen(true);
+    else if (open === "new") setNewName("");
+    q.delete("open");
+    const rest = q.toString();
+    window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : "") + window.location.hash);
   }, []);
 
   /* 화면 안의 바로가기 칸이 보내는 신호 (lib/ui/shell-events.ts) */

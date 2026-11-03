@@ -25,6 +25,7 @@ import { recommendNextManageDate } from "@/lib/scoring/insight";
 import { Badge, Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { useFormError } from "@/lib/utils/form";
 import ChoiceChips from "@/components/ui/ChoiceChips";
+import { clearVisitDraft, loadVisitDraft, saveVisitDraft } from "@/lib/ui/visit-draft";
 import MoneyInput from "@/components/ui/MoneyInput";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { CheckIcon } from "@/components/ui/icons";
@@ -242,6 +243,53 @@ export default function VisitForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId]);
 
+  /*
+    적다 만 기록 되살리기 (D-64, lib/ui/visit-draft.ts).
+    폰이 화면을 새로 불러와 창이 사라졌다가 다시 열린 경우에만 초안이 남아
+    있다(저장 · 그냥 닫기는 초안을 지운다). 위의 「지난 회차 이어받기」 뒤에
+    덮어써야 하므로 그 효과보다 아래에 둔다.
+  */
+  const [restoredAt, setRestoredAt] = useState<number | null>(null);
+  useEffect(() => {
+    if (editing || !customerId) return;
+    const d = loadVisitDraft(customerId);
+    if (!d) return;
+    setVisitDate(d.visitDate);
+    setVisitTime(d.visitTime);
+    setType(d.type as VisitType);
+    setProgramName(d.programName);
+    setMembershipId(d.membershipId);
+    setParts(d.parts as BodyPartRecord[]);
+    setReaction(d.reaction);
+    setAmount(d.amount);
+    setNextManage(d.nextManage);
+    setNextManageTime(d.nextManageTime);
+    setStaffId(d.staffId);
+    setAppliedPrefs(d.appliedPrefs);
+    setRestoredAt(d.savedAt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]);
+
+  /* 손으로 친 것(메모 · 금액)이 있을 때만 초안으로 — 저절로 채워진 값은 다시 채워진다 */
+  useEffect(() => {
+    if (editing || !customerId) return;
+    if (reaction.trim() || amount) {
+      saveVisitDraft(customerId, {
+        visitDate, visitTime, type, programName, membershipId, parts, reaction, amount,
+        nextManage, nextManageTime, staffId, appliedPrefs,
+      });
+    } else {
+      clearVisitDraft(customerId);
+    }
+  }, [editing, customerId, visitDate, visitTime, type, programName, membershipId, parts, reaction, amount, nextManage, nextManageTime, staffId, appliedPrefs]);
+
+  /* 창이 닫히면(저장 · 그냥 닫기) 초안을 지운다 — 폰이 화면을 버린 경우에는 이 정리가 돌지 않아 남는다 */
+  const draftKey = useRef(customerId);
+  draftKey.current = customerId;
+  useEffect(() => () => {
+    if (!editing && draftKey.current) clearVisitDraft(draftKey.current);
+  }, [editing]);
+
   /**
    * 선택 가능한 이용권 — 사용 중인 것 + (수정 모드에서) 이미 이 기록에 연결된 것.
    * 소진된 이용권이라도 원래 기록에 걸려 있으면 선택지에서 사라지면 안 된다.
@@ -342,6 +390,30 @@ export default function VisitForm({
 
   return (
     <div className="space-y-4">
+      {restoredAt && (
+        <div
+          data-draft-restored
+          role="status"
+          className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-aqua-50 px-4 py-3 ring-1 ring-aqua-100 dark:bg-aqua-500/10 dark:ring-aqua-500/20"
+        >
+          <p className="min-w-0 flex-1 text-[0.9375rem] font-bold text-aqua-800 dark:text-aqua-300">
+            적다 만 기록을 되살렸습니다
+            <span className="ml-1.5 font-normal text-ink-sub">· {formatAgo(restoredAt)}</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setReaction("");
+              setAmount("");
+              setRestoredAt(null);
+              if (customerId) clearVisitDraft(customerId);
+            }}
+            className="press touch-target shrink-0 rounded-full px-3 text-[0.875rem] font-bold text-ink-sub ring-1 ring-stone-line hover:bg-card"
+          >
+            메모 · 금액 지우기
+          </button>
+        </div>
+      )}
       {!fixedCustomerId && !editing && (
         <div>
           <FieldLabel>고객 *</FieldLabel>
@@ -707,4 +779,12 @@ export default function VisitForm({
       </FormActions>
     </div>
   );
+}
+
+/** 「방금 · 12분 전 · 3시간 전」 — 초안이 언제 적혔는지 */
+function formatAgo(t: number): string {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return "방금";
+  if (m < 60) return `${m}분 전`;
+  return `${Math.round(m / 60)}시간 전`;
 }

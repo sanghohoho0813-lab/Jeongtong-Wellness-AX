@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { bandGhost, bandPrimary } from "@/components/layout/StaffBand";
+import { useListMemory } from "@/lib/ui/list-memory";
 import VisitForm from "@/components/visits/VisitForm";
 import SettlementSheet from "@/components/visits/SettlementSheet";
 import { BodyPartTags } from "@/components/body-map/BodyMap";
@@ -65,6 +66,17 @@ export default function VisitsPage() {
   const [type, setType] = useState<TypeFilter>("all");
   const [period, setPeriod] = useState<PeriodFilter>("30");
   const [staffFilter, setStaffFilter] = useState<string>("all");
+  /* 고객을 열었다가 돌아오면 찾던 자리 그대로 (D-64) */
+  useListMemory(
+    "visits",
+    { query, type, period, staffFilter },
+    (v) => {
+      setQuery(v.query ?? "");
+      setType(v.type ?? "all");
+      setPeriod(v.period ?? "30");
+      setStaffFilter(v.staffFilter ?? "all");
+    },
+  );
   /** 마감 정산 창 — 열려 있으면 그날 날짜 */
   const [settleDay, setSettleDay] = useState<string | undefined>();
 

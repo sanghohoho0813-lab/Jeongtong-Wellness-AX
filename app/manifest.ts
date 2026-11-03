@@ -7,6 +7,9 @@ import type { MetadataRoute } from "next";
  * (MY WELLNESS)은 따로 public/my.webmanifest 가 있다 — 같은 기기에 둘 다
  * 두어도 서로 다른 앱으로 보이도록 id 를 나눈다.
  *
+ * 아이콘을 꾹 누르면 바로가기 넷(방문 기록 · 고객 찾기 · 오늘 챙길 고객 ·
+ * 처음 오신 분 등록)이 뜬다 (D-64).
+ *
  * 오프라인 저장(서비스 워커)은 넣지 않았다. 옛 화면이 캐시에 남아 새
  * 배포가 늦게 보이는 일이 생기면, 그것이 「앱처럼 열리는 것」 보다 더 큰
  * 불편이다. 기록은 이미 이 기기(브라우저 저장소)에 남는다.
@@ -28,6 +31,18 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
       { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+    /*
+      바로가기 (D-64) — 홈 화면의 앱 아이콘을 꾹 누르면 뜨는 메뉴.
+      카운터에서 가장 잦은 일 넷을 앱을 연 뒤 다시 찾지 않고 곧장.
+      (?open= 은 AppShell 이 받아 그 창을 연다. 안드로이드 · PC 크롬이 지원,
+       아이폰은 이 메뉴가 없어 그냥 앱이 열린다)
+    */
+    shortcuts: [
+      { name: "방문 기록", short_name: "기록", url: "/?open=record", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "고객 찾기", short_name: "찾기", url: "/?open=search", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "오늘 챙길 고객", short_name: "챙길 고객", url: "/briefing", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "처음 오신 분 등록", short_name: "등록", url: "/?open=new", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     ],
   };
 }

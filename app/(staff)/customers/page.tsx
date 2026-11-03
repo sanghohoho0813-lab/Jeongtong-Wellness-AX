@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import { bandPrimary } from "@/components/layout/StaffBand";
+import { useListMemory } from "@/lib/ui/list-memory";
 import CustomerForm from "@/components/customers/CustomerForm";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatus } from "@/lib/types";
@@ -94,6 +95,17 @@ export default function CustomersPage() {
     }
   }, []);
   const [openForm, setOpenForm] = useState(false);
+  /* 고객을 열었다가 돌아오면 찾던 자리 그대로 — 검색어 · 상태 · 정렬 · 스크롤 (D-64) */
+  useListMemory(
+    "customers",
+    { query, status, sort, onlyOpportunity },
+    (v) => {
+      setQuery(v.query ?? "");
+      setStatus(v.status ?? "all");
+      setSort(v.sort ?? "priority");
+      setOnlyOpportunity(!!v.onlyOpportunity);
+    },
+  );
   /**
    * 한 번에 그리는 줄 수.
    * 고객이 수백 명을 넘어가면 전부 그리느라 화면이 잠깐 멈춘다.
