@@ -2,7 +2,7 @@
 
 /** 고객 등록 · 정보 수정 폼 (모달 내부) */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/data/store";
 import { displayName, displayPhone } from "@/lib/utils/format";
 import { BodyPartRecord, Customer } from "@/lib/types";
@@ -16,6 +16,7 @@ import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { useFormError } from "@/lib/utils/form";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import ChoiceChips from "@/components/ui/ChoiceChips";
+import { clearCustomerDraft, loadCustomerDraft, saveCustomerDraft } from "@/lib/ui/customer-draft";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
@@ -74,6 +75,45 @@ export default function CustomerForm({
   /* 잘못 적은 칸으로 데려가려면 그 칸을 붙잡고 있어야 한다 */
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+
+  /*
+    적다 만 등록 되살리기 · 적어 두기 (D-65, lib/ui/customer-draft.ts).
+    새 등록에서만. 기록 화면에서 이름을 들고 넘어왔는데 초안의 이름이
+    다르면 다른 분이므로 되살리지 않는다.
+  */
+  const [restoredAt, setRestoredAt] = useState<number | null>(null);
+  const draftReady = useRef(false);
+  useEffect(() => {
+    if (editing) return;
+    const d = loadCustomerDraft();
+    if (d && (!initialName || initialName === d.name)) {
+      setName(d.name);
+      setPhone(d.phone);
+      setGender(d.gender as "female" | "male" | "");
+      setAgeGroup(d.ageGroup);
+      setConsultationNote(d.consultationNote);
+      setStaffId(d.staffId);
+      setMemo(d.memo);
+      setParts(d.parts as BodyPartRecord[]);
+      setNextManage(d.nextManage);
+      setNextManageTime(d.nextManageTime);
+      setRestoredAt(d.savedAt);
+    }
+    draftReady.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (editing || !draftReady.current) return;
+    if (name.trim() || phone || memo.trim() || consultationNote.trim()) {
+      saveCustomerDraft({ name, phone, gender, ageGroup, consultationNote, staffId, memo, parts, nextManage, nextManageTime });
+    } else {
+      clearCustomerDraft();
+    }
+  }, [editing, name, phone, gender, ageGroup, consultationNote, staffId, memo, parts, nextManage, nextManageTime]);
+  /* 창이 닫히면(저장 · 그냥 닫기) 지운다 — 폰이 화면을 버린 경우에는 남는다 */
+  useEffect(() => () => {
+    if (!editing) clearCustomerDraft();
+  }, [editing]);
 
   /** 같은 연락처가 이미 등록되어 있으면 미리 알려 준다 (저장은 막지 않음) */
   const duplicate = (() => {
@@ -143,6 +183,15 @@ export default function CustomerForm({
 
   return (
     <div className="space-y-4">
+      {restoredAt && (
+        <p
+          data-draft-restored
+          role="status"
+          className="rounded-2xl bg-aqua-50 px-4 py-3 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-100 dark:bg-aqua-500/10 dark:text-aqua-300 dark:ring-aqua-500/20"
+        >
+          적다 만 등록을 되살렸습니다 — 이어서 적고 저장해 주세요.
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <FieldLabel>고객명 *</FieldLabel>

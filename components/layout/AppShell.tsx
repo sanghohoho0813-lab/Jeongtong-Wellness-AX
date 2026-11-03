@@ -44,6 +44,7 @@ import InboxSheet from "./InboxSheet";
 import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
 import { noteLeaving } from "@/lib/ui/list-memory";
 import { listVisitDrafts } from "@/lib/ui/visit-draft";
+import { loadCustomerDraft } from "@/lib/ui/customer-draft";
 import { useToast } from "@/components/ui/toast";
 import { displayName } from "@/lib/utils/format";
 import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
@@ -843,12 +844,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
     if (!ready || draftAsked.current) return;
     draftAsked.current = true;
     const d = listVisitDrafts().find((x) => derivedById.has(x.customerId));
-    if (!d) return;
-    const name = displayName(derivedById.get(d.customerId)!.customer.name, privacyMode);
-    toast(`${name} 님 — 적다 만 방문 기록이 있습니다`, "info", {
-      label: "이어서 쓰기",
-      onAction: () => setRecordFor(d.customerId),
-    });
+    if (d) {
+      const name = displayName(derivedById.get(d.customerId)!.customer.name, privacyMode);
+      toast(`${name} 님 — 적다 만 방문 기록이 있습니다`, "info", {
+        label: "이어서 쓰기",
+        onAction: () => setRecordFor(d.customerId),
+      });
+      return;
+    }
+    /* 처음 오신 분 등록을 적다 만 경우 (D-65) */
+    if (loadCustomerDraft()) {
+      toast("처음 오신 분 등록 — 적다 만 내용이 있습니다", "info", {
+        label: "이어서 쓰기",
+        onAction: () => setNewName(""),
+      });
+    }
   }, [ready, derivedById, privacyMode, toast]);
 
   /*

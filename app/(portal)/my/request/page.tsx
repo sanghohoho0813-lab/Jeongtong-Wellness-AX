@@ -33,6 +33,9 @@ import {
   StickyBar,
 } from "@/components/portal/kit";
 
+/** 적다 만 요청 — 이 폰에만 (D-65) */
+const REQ_DRAFT = "jt-my-draft:request";
+
 const SLOTS = [
   { key: "morning", label: "오전" },
   { key: "afternoon", label: "오후" },
@@ -80,10 +83,40 @@ export default function MyRequest() {
       ?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
   }, [date]);
 
+  /*
+    적다 만 요청 (D-65) — 고객이 글을 적다가 다른 앱을 보고 오면 폰이 화면을
+    새로 불러와 적던 글이 사라졌다. 이 폰에만 잠깐 두고, 보내면 지운다.
+    사흘이 지나면 버린다.
+  */
+  const [restored, setRestored] = useState(false);
+  const draftReady = useRef(false);
+
   /* 홈의 「1:1 상담」 칸에서 왔으면 「문의」 를 골라 둔 채로 연다 (?kind=inquiry) */
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("kind") === "inquiry") setKind("inquiry");
+    const fromLink = new URLSearchParams(window.location.search).get("kind") === "inquiry";
+    try {
+      const d = JSON.parse(localStorage.getItem(REQ_DRAFT) || "null");
+      if (d && Date.now() - d.savedAt < 3 * 24 * 60 * 60 * 1000 && (d.note || d.date)) {
+        setKind(fromLink ? "inquiry" : d.kind);
+        setDate(d.date && d.date >= todayISO() ? d.date : "");
+        setSlot(d.slot);
+        setNote(d.note);
+        setRestored(true);
+      } else if (fromLink) setKind("inquiry");
+    } catch {
+      if (fromLink) setKind("inquiry");
+    }
+    draftReady.current = true;
   }, []);
+  useEffect(() => {
+    if (!draftReady.current || done) return;
+    try {
+      if (note.trim() || date) localStorage.setItem(REQ_DRAFT, JSON.stringify({ kind, date, slot, note, savedAt: Date.now() }));
+      else localStorage.removeItem(REQ_DRAFT);
+    } catch {
+      /* 못 적어도 그대로 */
+    }
+  }, [kind, date, slot, note, done]);
 
   const submit = async () => {
     if (kind === "booking" && !date) return setMsg("희망하시는 날짜를 골라 주세요.");
@@ -101,6 +134,12 @@ export default function MyRequest() {
       setDate("");
       setSlot(undefined);
       setNote("");
+      setRestored(false);
+      try {
+        localStorage.removeItem(REQ_DRAFT);
+      } catch {
+        /* 무시 */
+      }
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "다시 시도해 주세요.");
     } finally {
@@ -136,6 +175,12 @@ export default function MyRequest() {
             </p>
           </div>
         </Panel>
+      )}
+
+      {restored && !done && (
+        <p data-request-restored role="status" className="rounded-2xl bg-aqua-50 px-4 py-3 text-[0.9375rem] font-bold text-aqua-800 ring-1 ring-aqua-100 dark:bg-aqua-500/10 dark:text-aqua-300 dark:ring-aqua-500/20">
+          적다 만 요청을 되살렸습니다. 이어서 적고 「요청 남기기」 를 눌러 주세요.
+        </p>
       )}
 
       <Panel>
