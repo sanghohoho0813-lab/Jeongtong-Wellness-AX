@@ -543,7 +543,9 @@ export default function CustomersPage() {
                 )}
               </span>
               <span className="nowrap-num tabular hidden w-36 shrink-0 text-[0.9375rem] text-ink-soft xl:block" data-col="phone">
-                {displayPhone(d.customer.phone, canSeePhone)}
+                {displayPhone(d.customer.phone, canSeePhone) || (
+                  <span className="text-ink-faint">번호 없음</span>
+                )}
               </span>
               <span className="hidden w-40 shrink-0 xl:block" data-col="pass">
                 {d.activeMembership ? (
