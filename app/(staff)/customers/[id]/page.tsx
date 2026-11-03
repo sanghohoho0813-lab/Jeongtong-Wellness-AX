@@ -312,13 +312,21 @@ export default function CustomerDetailPage() {
                 ? formatDateTimeKr(c.nextManageDate, c.nextManageTime)
                 : "잡아 두면 그날 챙길 분에 올라옵니다"}
             </p>
+            {/*
+              좁은 폰(360px)에서 「날짜 · 시간 / 선택」 으로 두 줄로 갈라졌다 (D-68).
+              폰에서는 「날짜 · 시간」 까지만 보이고, 이름(읽어 주는 말)은 그대로.
+            */}
             <button
               type="button"
+              data-schedule-open
+              aria-label="날짜 · 시간 선택"
               onClick={() => setOpenSchedule(true)}
-              className="touch-target mt-2 flex w-full items-center justify-center gap-1.5 rounded-btn bg-card px-3 py-2 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-50"
+              className="touch-target mt-2 flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-btn bg-card px-2 py-2 text-sm font-bold text-aqua-800 ring-1 ring-aqua-100 transition-colors hover:bg-aqua-50 sm:px-3"
             >
-              <CalendarIcon className="h-4 w-4" />
-              날짜 · 시간 선택
+              <CalendarIcon className="h-4 w-4 shrink-0" />
+              <span>
+                날짜 · 시간<span className="hidden sm:inline"> 선택</span>
+              </span>
             </button>
           </div>
           {/*

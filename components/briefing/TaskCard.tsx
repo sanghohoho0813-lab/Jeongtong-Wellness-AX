@@ -287,11 +287,12 @@ export default function TaskCard({
                 {rank}
               </span>
             )}
-            {hideDetailLink ? (
-              <span className="truncate text-[1.0625rem] font-extrabold text-ink">
-                {displayName(customer.name, privacyMode)}
-              </span>
-            ) : (
+            {/*
+              고객 상세 안(hideDetailLink)에서는 이름을 또 쓰지 않는다 (D-68) —
+              바로 위 띠가 그 분 이름이고, 「김수연 화면」 의 「지금 할 일」 카드
+              첫 줄이 다시 「김수연」 이었다. 유형 배지부터.
+            */}
+            {hideDetailLink ? null : (
             <Link
               href={`/customers/${customer.id}`}
               className={`tap-line max-w-full text-[1.0625rem] font-extrabold ${

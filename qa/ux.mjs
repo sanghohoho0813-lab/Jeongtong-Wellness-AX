@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기 · 숫자 맞추기 · 숫자를 누르면)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기 · 숫자 맞추기 · 숫자를 누르면 · 좁은 폰 마감)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -1175,6 +1175,36 @@ await pc2.context().close();
   log("알림 창 — 지난 예정만 있으면 줄 제목이 「예정일이 지난 분」", (await srow.count()) === 1 && /예정일이 지난 분/.test(await srow.innerText()) && !/오늘 오실 분/.test(await srow.innerText()));
   await v.keyboard.press("Escape");
   await c21.close();
+}
+
+/* ── 22. 좁은 폰 마감 (D-68) ──
+   고객 상세 날짜 단추 한 줄 · 그 고객 화면 안 과제 카드에 이름을 또 쓰지 않는다 · 케어기록 참고일 시각. */
+{
+  const c22 = await browser.newContext({ viewport: { width: 360, height: 780 }, hasTouch: true, isMobile: true });
+  const v = await c22.newPage();
+  v.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(v, "/briefing", 1300);
+  const href = await v.evaluate(() => [...document.querySelectorAll('main a[href^="/customers/"]')].map((a) => a.getAttribute("href")).find((h) => h.split("/").length === 3));
+  await go(v, href || "/customers/c-04", 1500);
+  const btn = v.locator("[data-schedule-open]");
+  const bh = (await btn.boundingBox())?.height ?? 0;
+  log("고객 상세(360px) — 「날짜 · 시간」 단추가 한 줄 (두 줄로 갈라지지 않는다)", bh > 0 && bh <= 52 && (await btn.getAttribute("aria-label")) === "날짜 · 시간 선택", `${Math.round(bh)}px`);
+  const nm = ((await v.locator("h1").first().innerText().catch(() => "")) || "").trim();
+  /* 「지금 할 일」 제목에서 위로 올라가 처리 단추까지 품은 카드 한 장 */
+  const ct = await v.evaluate(() => {
+    let el = [...document.querySelectorAll("h2")].find((h) => (h.textContent || "").trim() === "지금 할 일");
+    while (el && !el.querySelector('button[aria-label*="처리"], button')?.closest("*")) el = el.parentElement;
+    while (el && ![...el.querySelectorAll("button")].some((b) => /처리완료/.test(b.textContent || ""))) el = el.parentElement;
+    return el ? el.innerText : "";
+  });
+  log("고객 상세 — 「지금 할 일」 카드에 그 고객 이름을 또 쓰지 않는다", !!nm && !!ct && !ct.includes(nm), `${nm} · 카드 ${ct.length}자`);
+  await c22.close();
+  const c22b = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const m = await c22b.newPage();
+  m.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(m, "/my/care", 1300);
+  log("고객 앱 케어기록 — 다음 참고일 칸에 매장이 잡은 시각", /다음 참고일\s*\S+\s*오[전후] \d{1,2}:\d{2}/.test(await m.locator("main").innerText()));
+  await c22b.close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

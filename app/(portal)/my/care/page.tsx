@@ -22,7 +22,7 @@ import {
   summarizeUsage,
 } from "@/lib/portal/wellness";
 import { ChevronRightIcon } from "@/components/ui/icons";
-import { formatDateKr, formatDateWithDay, formatRelative } from "@/lib/utils/date";
+import { formatDateKr, formatDateWithDay, formatRelative, formatTimeKr } from "@/lib/utils/date";
 import { BODY_PART_LABELS, type BodyPart } from "@/lib/types";
 import { rankContents } from "@/lib/portal/content";
 import {
@@ -99,7 +99,12 @@ export default function MyCare() {
               {next.date ? formatDateKr(next.date).slice(5) : "미정"}
             </dd>
             <dd className="mt-0.5 text-[0.75rem] text-ink-faint">
-              {next.fromStore ? "매장 안내" : next.date ? "간격 기준" : "계산 전"}
+              {/* 매장이 시각까지 잡았으면 그 시각 (D-68) — 홈 · 예약 · 웰니스와 같은 값 */}
+              {next.fromStore
+                ? formatTimeKr(customer?.nextManageTime) || "매장 안내"
+                : next.date
+                  ? "간격 기준"
+                  : "계산 전"}
             </dd>
           </div>
         </dl>
