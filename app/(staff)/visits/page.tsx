@@ -22,6 +22,7 @@ import {
   searchCls,
 } from "@/components/ui";
 import { ClipboardIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
+import SearchClear from "@/components/ui/SearchClear";
 import { useToast } from "@/components/ui/toast";
 import { Visit } from "@/lib/types";
 
@@ -176,12 +177,13 @@ export default function VisitsPage() {
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
             <input
-              className={searchCls}
+              className={`${searchCls} pr-12`}
               aria-label="고객명으로 기록 찾기"
               placeholder="고객명 검색"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            <SearchClear value={query} onClear={() => setQuery("")} />
           </div>
           <div className="flex gap-2">
             {(

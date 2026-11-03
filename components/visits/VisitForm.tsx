@@ -24,6 +24,8 @@ import {
 import { recommendNextManageDate } from "@/lib/scoring/insight";
 import { Badge, Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { useFormError } from "@/lib/utils/form";
+import ChoiceChips from "@/components/ui/ChoiceChips";
+import MoneyInput from "@/components/ui/MoneyInput";
 import { DateTimeField } from "@/components/ui/DateTimeField";
 import { CheckIcon } from "@/components/ui/icons";
 import { PREF_TONES } from "@/components/customers/CarePreferenceCard";
@@ -430,33 +432,33 @@ export default function VisitForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <FieldLabel>이용 프로그램</FieldLabel>
-            <select
-              className={inputCls}
+            {/* 고를 것이 몇 개뿐이면 다 펼친 칩 — 한 번에 고른다 (D-61) */}
+            <ChoiceChips
+              label="이용 프로그램"
+              dataField="program"
               value={programName}
-              onChange={(e) => setProgramName(e.target.value)}
-            >
-              {programOptions.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              options={programOptions.map((p) => ({ value: p, label: p }))}
+              onChange={setProgramName}
+            />
           </div>
           <div>
             <FieldLabel>이용권 사용</FieldLabel>
-            <select
-              className={inputCls}
+            <ChoiceChips
+              label="이용권 사용"
+              dataField="membership"
               value={membershipId}
-              onChange={(e) => setMembershipId(e.target.value)}
               disabled={!customerId}
-            >
-              <option value="">사용 안 함 (현장 결제 등)</option>
-              {activeMemberships.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.programName} · 잔여 {m.remainingCount}회
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "사용 안 함", sub: "현장 결제 등", text: "사용 안 함 (현장 결제 등)" },
+                ...activeMemberships.map((m) => ({
+                  value: m.id,
+                  label: m.programName,
+                  sub: `잔여 ${m.remainingCount}회`,
+                  text: `${m.programName} · 잔여 ${m.remainingCount}회`,
+                })),
+              ]}
+              onChange={setMembershipId}
+            />
             {/* 저장 전 차감 예상값 안내 */}
             {(() => {
               const m = activeMemberships.find((x) => x.id === membershipId);
@@ -582,21 +584,16 @@ export default function VisitForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <FieldLabel>담당 직원</FieldLabel>
-          <select
-            data-field="staff"
-            className={inputCls}
+          <ChoiceChips
+            label="담당 직원"
+            dataField="staff"
             value={staffId}
-            onChange={(e) => setStaffId(e.target.value)}
-          >
-            <option value="">미지정</option>
-            {staff
-              .filter((s) => s.active)
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-          </select>
+            options={[
+              { value: "", label: "미지정" },
+              ...staff.filter((s) => s.active).map((s) => ({ value: s.id, label: s.name })),
+            ]}
+            onChange={setStaffId}
+          />
         </div>
         <div>
           <FieldLabel>다음 관리 예정일</FieldLabel>
@@ -668,12 +665,23 @@ export default function VisitForm({
             <FieldLabel>
               {membershipId ? "추가 결제 금액 (원, 선택)" : "현장 결제 금액 (원, 선택)"}
             </FieldLabel>
-            <input
-              className={inputCls}
+            {/*
+              쉼표 · 「원」 · 한글 읽기, 그리고 매장 가격표의 이 프로그램 1회
+              가격을 칩으로 (D-61). 이용권으로 차감하는 날은 추가 결제라
+              가격표 칩을 내밀지 않는다.
+            */}
+            <MoneyInput
+              label={membershipId ? "추가 결제 금액" : "현장 결제 금액"}
               value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-              placeholder="예: 60000"
-              inputMode="numeric"
+              onChange={setAmount}
+              presets={
+                membershipId
+                  ? []
+                  : products
+                      .filter((p) => p.active && p.sessionCount === 1 && p.serviceName === programName && p.price > 0)
+                      .slice(0, 3)
+                      .map((p) => ({ label: p.name, amount: p.price }))
+              }
             />
           </div>
         )}

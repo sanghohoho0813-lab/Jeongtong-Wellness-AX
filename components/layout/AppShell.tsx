@@ -42,6 +42,7 @@ import { Hint } from "@/components/ui/Hint";
 import { SHELL_EVENTS } from "@/lib/ui/shell-events";
 import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
 import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
+import OfflineBanner from "@/components/ui/OfflineBanner";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -858,6 +859,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         customerId={recordFor}
         onClose={() => setRecordFor(undefined)}
       />
+      <OfflineBanner surface="staff" />
       <SaveFailedBanner />
       <SyncFailedBanner />
       <DroppedRecordsBanner />

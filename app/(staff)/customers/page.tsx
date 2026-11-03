@@ -25,6 +25,7 @@ import {
   searchCls,
 } from "@/components/ui";
 import { ChevronRightIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
+import SearchClear from "@/components/ui/SearchClear";
 import AiReadyNote from "@/components/ui/AiReadyNote";
 
 const STATUS_TILES: Array<{
@@ -233,12 +234,13 @@ export default function CustomersPage() {
         <div className="relative">
           <SearchIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-faint" />
           <input
-            className={searchCls}
+            className={`${searchCls} pr-12`}
             aria-label="고객 검색"
             placeholder="고객명 · 초성 · 연락처 검색"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          <SearchClear value={query} onClear={() => setQuery("")} />
         </div>
 
         {/* 정렬 · 매출기회 — 폰에서는 한 줄로 두고 옆으로 넘긴다 */}

@@ -21,10 +21,12 @@ import { createPortal } from "react-dom";
 import { useStore } from "@/lib/data/store";
 import { CustomerStatusBadge } from "@/components/ui";
 import { PlusIcon, SearchIcon, XIcon } from "@/components/ui/icons";
+import SearchClear from "@/components/ui/SearchClear";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
 import { formatRelative, todayISO } from "@/lib/utils/date";
 import { matchesQuery } from "@/lib/utils/hangul";
 import { SheetGrabber, useSheetDrag } from "@/components/ui/sheet";
+import { keepFieldInView } from "@/components/ui/ViewportVars";
 
 const MAX_ROWS = 30;
 
@@ -130,7 +132,7 @@ export default function RecordSheet({
     : rows.filter((r) => r.here !== 0 && r.dueRank === 0).length;
 
   return createPortal(
-    <div className="fixed inset-0 z-[65] flex flex-col justify-end">
+    <div className="sheet-wrap fixed inset-0 z-[65] flex flex-col justify-end">
       <div
         className="sheet-backdrop absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={onClose}
@@ -140,6 +142,7 @@ export default function RecordSheet({
         aria-modal="true"
         aria-label="기록할 고객 고르기"
         style={drag.panelStyle}
+        onFocus={keepFieldInView}
         className="sheet-panel relative z-10 flex max-h-[88dvh] flex-col rounded-t-card-lg bg-card shadow-float"
       >
         {/* 손잡이 + 제목 + 닫기 — 닫기는 크게 (잘못 눌러 갇히지 않게) · 이 줄을 끌어내려도 닫힌다 */}
@@ -176,8 +179,10 @@ export default function RecordSheet({
               placeholder="이름 · 초성 · 연락처"
               aria-label="고객 찾기"
               inputMode="search"
-              className="h-12 w-full rounded-full border border-transparent bg-stone-bg-deep pl-11 pr-4 text-base font-bold text-ink outline-none placeholder:font-normal placeholder:text-ink-sub focus:border-aqua-500 focus:bg-card focus:ring-2 focus:ring-aqua-100"
+              enterKeyHint="search"
+              className="h-12 w-full rounded-full border border-transparent bg-stone-bg-deep pl-11 pr-12 text-base font-bold text-ink outline-none placeholder:font-normal placeholder:text-ink-sub focus:border-aqua-500 focus:bg-card focus:ring-2 focus:ring-aqua-100"
             />
+            <SearchClear value={query} onClear={() => setQuery("")} />
           </div>
         </div>
 

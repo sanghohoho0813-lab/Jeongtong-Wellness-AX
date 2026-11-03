@@ -20,6 +20,7 @@ import { useHowItWorks } from "@/components/public/HowItWorks";
 import { SurfaceSwitch } from "@/components/layout/SurfaceSwitch";
 import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
 import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
+import OfflineBanner from "@/components/ui/OfflineBanner";
 import {
   CalendarIcon,
   ClipboardIcon,
@@ -155,6 +156,8 @@ export default function PortalShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-stone-bg">
       <PortalHeader account />
+      {/* 인터넷이 끊긴 동안만 머리글 아래 한 줄 (D-61) */}
+      <OfflineBanner surface="portal" />
 
       {/*
         예시 자료로 열려 있다는 표시.

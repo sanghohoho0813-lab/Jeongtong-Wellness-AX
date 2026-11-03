@@ -15,6 +15,7 @@ import {
 import { Button, FieldLabel, FormActions, inputCls } from "@/components/ui";
 import { useFormError } from "@/lib/utils/form";
 import { DateTimeField } from "@/components/ui/DateTimeField";
+import ChoiceChips from "@/components/ui/ChoiceChips";
 import { useToast } from "@/components/ui/toast";
 import BodyMap from "@/components/body-map/BodyMap";
 
@@ -242,20 +243,17 @@ export default function CustomerForm({
         </div>
         <div>
           <FieldLabel>담당 직원</FieldLabel>
-          <select
-            className={inputCls}
+          {/* 직원이 몇 명뿐이면 다 펼친 칩 (D-61) */}
+          <ChoiceChips
+            label="담당 직원"
+            dataField="staff"
             value={staffId}
-            onChange={(e) => setStaffId(e.target.value)}
-          >
-            <option value="">미지정</option>
-            {staff
-              .filter((s) => s.active)
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-          </select>
+            options={[
+              { value: "", label: "미지정" },
+              ...staff.filter((s) => s.active).map((s) => ({ value: s.id, label: s.name })),
+            ]}
+            onChange={setStaffId}
+          />
         </div>
         <div>
           <FieldLabel>다음 관리 예정일</FieldLabel>

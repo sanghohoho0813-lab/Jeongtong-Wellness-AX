@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -712,6 +712,99 @@ await pc2.context().close();
   });
   if (fs !== null) log("이번 이용은 어떠셨나요 — 점수 뜻풀이 13px 이상", fs >= 13, `${fs}px`);
   await ph.context().close();
+}
+
+/* ── 15. 입력이 빠르게 (D-61) ──
+   몇 개 중 하나는 누르는 칩(라디오 묶음), 금액은 쉼표 · 한글 읽기 · 가격표 칩,
+   검색칸에는 ✕, 폰 자판이 올라오면 창이 그 위에 선다, 인터넷이 끊기면 한 줄. */
+{
+  const ctx15 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const q = await ctx15.newPage();
+  q.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(q, "/customers/c-04", 1300);
+  await q.getByRole("button", { name: "방문 · 상담 기록" }).first().click();
+  await q.waitForTimeout(900);
+  const vf = q.locator('[role="dialog"]').last();
+  const groups = await vf.locator('[role="radiogroup"]').evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+  log("방문 기록 — 프로그램 · 이용권 · 담당이 누르는 칩 (폰 고르기 칸이 아니다)", ["이용 프로그램", "이용권 사용", "담당 직원"].every((g) => groups.includes(g)) && (await vf.locator("select").count()) === 0, groups.join(" / "));
+  const chipH = await vf.locator('[data-field="staff"] [role="radio"]').first().boundingBox();
+  log("고르기 칩 — 손끝 크기 (44px)", !!chipH && chipH.height >= 44, chipH ? `${Math.round(chipH.height)}px` : "");
+  log("고르기 칩 — 하나만 골라져 있다 (라디오)", (await vf.locator('[data-field="staff"] [aria-checked="true"]').count()) === 1);
+  const before = await vf.locator('[data-field="staff"] [aria-checked="true"]').innerText();
+  await vf.locator('[data-field="staff"] [aria-checked="true"]').focus();
+  await q.keyboard.press("ArrowRight");
+  await q.waitForTimeout(150);
+  const after = await vf.locator('[data-field="staff"] [aria-checked="true"]').innerText();
+  log("고르기 칩 — 키보드 ← → 로 옮겨 고른다", before !== after, `${before} → ${after}`);
+
+  const money = vf.getByRole("textbox", { name: /결제 금액/ });
+  await money.fill("450000");
+  await q.waitForTimeout(150);
+  log("금액 칸 — 치는 대로 쉼표 (450,000)", (await money.inputValue()) === "450,000", await money.inputValue());
+  log("금액 칸 — 한글로 읽어 준다 (45만 원)", (await vf.locator("[data-money-read]").innerText()) === "45만 원");
+  const preset = vf.locator("[data-money-input] button[aria-pressed]").first();
+  if (await preset.count()) {
+    const label = (await preset.innerText()).replace(/\s+/g, " ");
+    await preset.click();
+    await q.waitForTimeout(150);
+    const v = await money.inputValue();
+    log("금액 칸 — 매장 가격표의 1회 가격이 칩으로 · 누르면 그 값", !!v && label.includes(v), `${label} → ${v}`);
+  }
+  // 폰 자판 — 보이는 높이가 줄면 창이 그 위로
+  await q.evaluate(() => { const r = document.documentElement.style; r.setProperty("--kb", "300px"); r.setProperty("--vvh", "544px"); });
+  await q.waitForTimeout(400);
+  const rect = await vf.evaluate((d) => { const r = d.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
+  log("폰 자판이 올라오면 창이 자판 위에 선다 (아래가 깔리지 않는다)", rect.bottom <= 844 - 300 + 1 && rect.top >= 0, `${Math.round(rect.top)}~${Math.round(rect.bottom)}px`);
+  await q.evaluate(() => { const r = document.documentElement.style; r.setProperty("--kb", "0px"); r.setProperty("--vvh", "844px"); });
+  log("보이는 높이를 문서에 적어 둔다 (--vvh)", await q.evaluate(() => !!document.documentElement.style.getPropertyValue("--vvh")));
+  await q.keyboard.press("Escape");
+  await q.waitForTimeout(300);
+  if (await q.getByRole("button", { name: "그냥 닫기" }).count()) await q.getByRole("button", { name: "그냥 닫기" }).click();
+  await q.waitForTimeout(300);
+
+  // 고객 등록 — 담당도 칩
+  await go(q, "/", 1100);
+  await q.locator("[data-quick-actions]").getByRole("button", { name: "처음 오신 분" }).click();
+  await q.waitForTimeout(700);
+  log("고객 등록 — 담당 직원도 누르는 칩", (await q.locator('[role="dialog"]').last().locator('[role="radiogroup"][aria-label="담당 직원"]').count()) === 1);
+  await q.keyboard.press("Escape");
+  await q.waitForTimeout(300);
+
+  // 검색칸 ✕
+  for (const [path, name] of [["/customers", "고객 검색"], ["/visits", "고객명으로 기록 찾기"]]) {
+    await go(q, path, 1100);
+    const box = q.getByRole("textbox", { name });
+    log(`${path} — 비어 있을 때는 ✕ 가 없다`, (await q.locator("main [data-search-clear]").count()) === 0);
+    await box.fill("김");
+    await q.waitForTimeout(200);
+    const x = q.locator("main [data-search-clear]");
+    const xb = await x.boundingBox();
+    await x.click();
+    await q.waitForTimeout(200);
+    log(`${path} — 검색칸 ✕ (44px) 를 누르면 비우고 그 칸에서 다시 친다`, !!xb && xb.height >= 44 && (await box.inputValue()) === "" && (await box.evaluate((e) => e === document.activeElement)));
+  }
+  await q.getByRole("button", { name: "고객 찾기 열기" }).click();
+  await q.waitForTimeout(500);
+  await q.getByRole("textbox", { name: "빠른 실행 검색" }).fill("설정");
+  await q.locator('[role="dialog"] [data-search-clear]').click();
+  await q.waitForTimeout(200);
+  log("찾기 창 — ✕ 로 비우면 다시 최근 본 고객 · 오늘 챙길 분", (await q.getByRole("textbox", { name: "빠른 실행 검색" }).inputValue()) === "" && (await q.locator("[data-palette-group]").count()) >= 2);
+  await q.keyboard.press("Escape");
+
+  // 인터넷 끊김
+  await ctx15.setOffline(true);
+  await q.waitForTimeout(400);
+  const off = q.locator("[data-offline]");
+  log("인터넷이 끊기면 직원 화면 맨 위에 한 줄", (await off.count()) === 1 && /이 기기에 그대로 저장/.test(await off.innerText()));
+  await ctx15.setOffline(false);
+  await q.waitForTimeout(400);
+  log("다시 이어지면 그 줄이 사라진다", (await q.locator("[data-offline]").count()) === 0);
+  await go(q, "/my", 1300);
+  await ctx15.setOffline(true);
+  await q.waitForTimeout(400);
+  log("고객 앱 — 끊기면 「마지막으로 불러온 것」 이라고만 (지어 약속하지 않는다)", /마지막으로 불러온 것/.test(await q.locator("[data-offline]").innerText().catch(() => "")));
+  await ctx15.setOffline(false);
+  await ctx15.close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

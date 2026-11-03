@@ -6,6 +6,7 @@ import { InfoButton } from "./Fold";
 import { CustomerStatus, SalesOpportunity, TaskStatus } from "@/lib/types";
 import { SparkIcon, XIcon } from "./icons";
 import { SheetGrabber, useSheetDrag } from "./sheet";
+import { keepFieldInView } from "./ViewportVars";
 
 // ---------- Card ----------
 
@@ -1055,7 +1056,7 @@ export function Modal({
 
   if (!open || !mounted) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="sheet-wrap fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
         className="sheet-backdrop absolute inset-0 bg-deep-950/45 backdrop-blur-[3px]"
         onClick={tryClose}
@@ -1067,6 +1068,7 @@ export function Modal({
         aria-label={title}
         tabIndex={-1}
         style={drag.panelStyle}
+        onFocus={keepFieldInView}
         className={`sheet-panel relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-card-lg sm:rounded-card-lg bg-card shadow-float outline-none ${wide ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
       >
         {/*

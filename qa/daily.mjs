@@ -61,7 +61,8 @@ log("이용권 판매 — 10회권이 잔여 10회로 생긴다", M?.remainingCo
 // ── 2. 손님이 오심 → 기록: 이용권이 기본으로 골라져 있다 ──
 let rowText = await openRecordFor(NAME);
 log("이름을 그대로 치면 그분이 맨 위", rowText.includes(NAME) && !rowText.includes(NAME + "2"), rowText.replace(/\n/g, " "));
-const sel = await dlg().locator("select").evaluateAll((els) => els.map((e) => e.options[e.selectedIndex]?.text || ""));
+/* 고르기 칸(select) → 누르는 칩(D-61): 골라진 칩의 글자를 읽는다 */
+const sel = (await dlg().locator('[role="radio"][aria-checked="true"]').allInnerTexts()).map((t) => t.replace(/\s+/g, " "));
 log("기록 창 — 이용권이 미리 골라져 있다 (사용 안 함이 기본이 아님)", sel.some((t) => /잔여 10회/.test(t)), sel.join(" / "));
 log("기록 창 — 미리 고른 이유를 알려 준다", /이용권이 있어 미리 골랐습니다/.test(await dlg().innerText()));
 log(
@@ -69,7 +70,7 @@ log(
   (await dlg().locator('[data-rec-state="applied"]').count()) === 1 &&
     (await dlg().getByRole("button", { name: /^(적용됨|추천일 적용)$/ }).count()) === 0,
 );
-const staffSel = await dlg().locator('select[data-field="staff"]').evaluate((e) => e.options[e.selectedIndex]?.text || "").catch(() => "");
+const staffSel = ((await dlg().locator('[data-field="staff"] [aria-checked="true"]').innerText().catch(() => "")) || "").trim();
 log("기록 창 — 담당 직원이 「미지정」 으로 시작하지 않는다 (지금 쓰는 사람 · 담당 · 지난 담당)", !!staffSel && staffSel !== "미지정", staffSel);
 await dlg().getByRole("button", { name: "기록 저장" }).click();
 await p.waitForTimeout(400);
@@ -93,8 +94,8 @@ const warn = dlg().locator("[data-same-day]");
 log("기록 창 — 같은 날 기록이 있으면 저장 전에 경고", (await warn.count()) === 1 && /이미 방문 기록이 있습니다/.test(await warn.innerText()));
 
 // ── 4. 현장 결제로 바꿔 저장 → 이용권은 그대로 ──
-await dlg().locator("select").nth(1).selectOption("");
-await dlg().getByPlaceholder("예: 60000").fill("45000");
+await dlg().locator('[data-field="membership"]').getByRole("radio", { name: /사용 안 함/ }).click();
+await dlg().getByRole("textbox", { name: "현장 결제 금액" }).fill("45000");
 await dlg().getByRole("button", { name: "기록 저장" }).click();
 await p.waitForTimeout(500);
 s = await st();

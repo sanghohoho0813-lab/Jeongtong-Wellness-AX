@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import RootBoundary from "@/components/layout/RootBoundary";
+import ViewportVars from "@/components/ui/ViewportVars";
 
 export const metadata: Metadata = {
   title: "정통대왕쑥뜸원 AX Platform",
@@ -80,6 +81,8 @@ export default function RootLayout({
           app/(portal)/my/layout.tsx 가 각자의 껍데기를 붙인다.
           두 쪽은 네비게이션도 데이터 출처도 다르다.
         */}
+        {/* 폰 자판 높이를 문서에 적어 둔다 — 아래에서 올라오는 창이 자판 위에 서게 (D-61) */}
+        <ViewportVars />
         <RootBoundary>{children}</RootBoundary>
       </body>
     </html>

@@ -35,6 +35,7 @@ import {
   SearchIcon,
   SparkIcon,
   UsersIcon,
+  XIcon,
 } from "@/components/ui/icons";
 import { ALL_SCREENS, NAV_TONE_CLASS, navItemsFor } from "./nav-items";
 import { displayName, displayPhone, phoneDigits } from "@/lib/utils/format";
@@ -438,6 +439,23 @@ export default function CommandPalette({
             aria-label="빠른 실행 검색"
             className="h-8 min-w-0 flex-1 bg-transparent text-[0.9375rem] font-bold text-ink outline-none placeholder:font-normal placeholder:text-ink-faint"
           />
+          {/* 친 글자를 한 번에 지우기 (D-61) */}
+          {query && (
+            <button
+              type="button"
+              aria-label="검색어 지우기"
+              data-search-clear
+              onClick={() => {
+                setQuery("");
+                inputRef.current?.focus();
+              }}
+              className="press -my-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-faint hover:bg-stone-bg"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink-faint/25">
+                <XIcon className="h-3.5 w-3.5" strokeWidth={2.6} />
+              </span>
+            </button>
+          )}
           <kbd className="hidden shrink-0 rounded-md bg-stone-bg px-1.5 py-0.5 text-[0.6875rem] font-bold text-ink-faint sm:block">
             ESC
           </kbd>
