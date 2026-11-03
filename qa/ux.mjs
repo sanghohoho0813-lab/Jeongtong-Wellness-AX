@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -932,6 +932,79 @@ await pc2.context().close();
   const ub = await ud.locator("[data-toast-action]").boundingBox();
   log("지운 뒤 「되돌리기」 — 손끝 크기 (44px)", !!ub && ub.height >= 44, ub ? `${Math.round(ub.height)}px` : "");
   await ud.context().close();
+}
+
+/* ── 18. 이어서 · 곧장 (D-64) ──
+   목록에서 고객을 열었다 돌아오면 찾던 자리 그대로, 폰이 화면을 버려도 적다 만 기록은 이어서,
+   홈 화면 아이콘을 꾹 누르면 바로가기. */
+{
+  const c18 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const w = await c18.newPage();
+  w.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+
+  // 바로가기 — 매니페스트
+  const mfs = await (await fetch(BASE + "/manifest.webmanifest")).json();
+  const myMf = await (await fetch(BASE + "/my.webmanifest")).json();
+  log("앱 아이콘 꾹 — 직원 앱 바로가기 (방문 기록 · 고객 찾기 · 챙길 고객 · 등록)", (mfs.shortcuts || []).map((x) => x.url).join(" ") === "/?open=record /?open=search /briefing /?open=new");
+  log("앱 아이콘 꾹 — 고객 앱 바로가기 (방문 요청 · 이용권 · 케어기록)", (myMf.shortcuts || []).some((x) => x.url === "/my/request"));
+  await go(w, "/?open=record", 1500);
+  log("바로가기 「방문 기록」 — 열자마자 고객 고르기 창 · 주소는 깨끗이", (await w.locator('[role="dialog"][aria-label="기록할 고객 고르기"]').count()) === 1 && !w.url().includes("open="));
+  await w.keyboard.press("Escape");
+  await go(w, "/?open=search", 1500);
+  log("바로가기 「고객 찾기」 — 열자마자 찾기 창", (await w.locator('[role="dialog"][aria-label="빠른 실행"]').count()) === 1);
+  await w.keyboard.press("Escape");
+
+  // 목록 기억 — 고객 목록
+  await go(w, "/customers", 1300);
+  await w.getByRole("textbox", { name: "고객 검색" }).fill("김");
+  await w.getByRole("button", { name: "최근 방문순" }).click();
+  await w.waitForTimeout(300);
+  await w.evaluate(() => window.scrollTo({ top: 300, behavior: "instant" }));
+  await w.waitForTimeout(500);
+  const y0 = await w.evaluate(() => scrollY);
+  await w.locator('[data-tour="customer-row"]').first().click();
+  await w.waitForTimeout(1300);
+  await w.goBack();
+  await w.waitForTimeout(1600);
+  const q0 = await w.getByRole("textbox", { name: "고객 검색" }).inputValue();
+  const y1 = await w.evaluate(() => scrollY);
+  log("고객 목록 — 고객을 열었다 돌아오면 검색어 · 정렬 그대로", q0 === "김" && (await w.getByRole("button", { name: "최근 방문순" }).getAttribute("aria-pressed")) === "true", q0);
+  log("고객 목록 — 돌아오면 보던 자리 (스크롤)", Math.abs(y1 - y0) <= 40, `${Math.round(y0)} → ${Math.round(y1)}`);
+  await go(w, "/", 1000);
+  await w.locator('nav a[href="/customers"]').last().click();
+  await w.waitForTimeout(1300);
+  log("고객 목록 — 하단 탭으로 들어오면 새 목록 (검색어가 남지 않는다)", (await w.getByRole("textbox", { name: "고객 검색" }).inputValue()) === "");
+
+  // 적다 만 기록 — 폰이 화면을 새로 불러와도
+  await go(w, "/customers/c-04", 1300);
+  await w.getByRole("button", { name: "방문 · 상담 기록" }).first().click();
+  await w.waitForTimeout(900);
+  const vf = w.locator('[role="dialog"]').last();
+  await vf.locator("textarea").first().fill("적다만메모");
+  await vf.getByRole("textbox", { name: /결제 금액/ }).fill("30000");
+  await w.waitForTimeout(400);
+  log("적는 동안 이 기기에 초안 (메모 · 금액)", await w.evaluate(() => !!localStorage.getItem("jt-draft:visit:c-04")));
+  await w.reload({ waitUntil: "networkidle" });
+  await w.waitForTimeout(1600);
+  const resume = w.locator("[data-toast-action]");
+  log("화면을 새로 불러오면 「적다 만 방문 기록 — 이어서 쓰기」", (await resume.count()) === 1 && /이어서 쓰기/.test(await resume.innerText()));
+  await resume.click();
+  await w.waitForTimeout(1000);
+  const vf2 = w.locator('[role="dialog"]').last();
+  log("이어서 쓰기 — 적던 메모 · 금액이 그대로", (await vf2.locator("[data-draft-restored]").count()) === 1 && (await vf2.locator("textarea").first().inputValue()) === "적다만메모" && (await vf2.getByRole("textbox", { name: /결제 금액/ }).inputValue()) === "30,000");
+  await vf2.getByRole("button", { name: "기록 저장" }).click();
+  await w.waitForTimeout(800);
+  log("저장하면 초안을 지운다", await w.evaluate(() => !localStorage.getItem("jt-draft:visit:c-04")));
+  await w.getByRole("button", { name: "방문 · 상담 기록" }).first().click();
+  await w.waitForTimeout(900);
+  await w.locator('[role="dialog"]').last().locator("textarea").first().fill("버릴메모");
+  await w.waitForTimeout(300);
+  await w.keyboard.press("Escape");
+  await w.waitForTimeout(400);
+  await w.getByRole("button", { name: "그냥 닫기" }).click();
+  await w.waitForTimeout(500);
+  log("「그냥 닫기」 로 버리면 초안도 지운다 (일부러 버린 것)", await w.evaluate(() => !localStorage.getItem("jt-draft:visit:c-04")));
+  await c18.close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
