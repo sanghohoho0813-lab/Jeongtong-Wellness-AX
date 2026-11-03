@@ -48,6 +48,9 @@ export const viewport: Viewport = {
  * 없다. 고객에게는 그 폰이 쓰는 밝기를 그대로 따라가는 편이 맞다.
  * (원장님이 자기 폰으로 고객 화면을 열어 볼 때도 같은 규칙으로 움직인다)
  *
+ * 글자 크기는 고객이 그 폰에서 고른 값(jt-my-font, 마이페이지 → 이 폰에서)을
+ * 따른다 — 직원 설정과는 따로다 (D-63, lib/portal/font.ts).
+ *
  * /welcome 은 뒤늦게 이 규칙에 넣었다. 그전에는 매장 설정을 따랐는데,
  * 고객 폰에는 그 설정이 없으니 언제나 기본값 '밝게' 로 떨어졌다. 그래서
  * 어두운 화면을 쓰는 고객이 /welcome 에서는 눈부신 흰 화면을, /my 에서는
@@ -59,7 +62,7 @@ var p=location.pathname;
 var portal=p==="/my"||p.indexOf("/my/")===0||p==="/welcome";
 var t=portal?"system":(s.theme||"light");
 r.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;
-r.dataset.fontScale=portal?"default":(s.fontScale||"default");
+r.dataset.fontScale=portal?(localStorage.getItem("jt-my-font")==="large"?"large":"default"):(s.fontScale||"default");
 r.dataset.density=portal?"default":(s.density||"default");
 /* 색 조합은 브랜드라서 고객 화면에서도 매장이 고른 것을 따른다 —
    밝기와 달리 "고객 폰의 취향" 이 개입할 자리가 아니다 */

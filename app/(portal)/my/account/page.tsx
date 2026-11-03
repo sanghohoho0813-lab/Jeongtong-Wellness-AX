@@ -17,6 +17,7 @@ import { usePortal } from "@/lib/portal/store";
 import { nextReference, summarizePasses, summarizeUsage } from "@/lib/portal/wellness";
 import FutureSection from "@/components/public/FutureSection";
 import InstallApp from "@/components/ui/InstallApp";
+import { useMyFontScale } from "@/lib/portal/font";
 import {
   BellIcon,
   BookIcon,
@@ -48,6 +49,8 @@ interface Notice {
 }
 
 export default function MyAccount() {
+  /* 글자 크기 — 이 폰에만 (D-63) */
+  const [font, setFont] = useMyFontScale();
   const { customer, branch, email, visits, memberships, requests, signOut } =
     usePortal();
 
@@ -166,6 +169,37 @@ export default function MyAccount() {
       {/* 홈 화면에 앱으로 두기 (D-58) — 다음부터 아이콘 하나로 바로 열린다 */}
       <Section title="이 폰에서">
         <ListGroup>
+          {/*
+            글자 크기 (D-63) — 이 폰에만 저장된다. 큰 글씨가 더 필요한 쪽은
+            고객인데, 고객 화면은 늘 기본 크기로 고정이었다.
+          */}
+          <li data-my-font className="flex min-h-[60px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+            <span className="min-w-0 flex-1">
+              <span className="block text-[1rem] font-bold text-ink">글자 크기</span>
+              <span className="mt-0.5 block text-[0.875rem] text-ink-sub">이 폰에서만 바뀝니다</span>
+            </span>
+            <span role="radiogroup" aria-label="글자 크기" className="flex shrink-0 gap-1 rounded-full bg-stone-bg-deep p-1">
+              {(
+                [
+                  { key: "default", label: "기본" },
+                  { key: "large", label: "크게" },
+                ] as const
+              ).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={font === o.key}
+                  onClick={() => setFont(o.key)}
+                  className={`press touch-target rounded-full px-4 font-bold ${
+                    o.key === "large" ? "text-[1.0625rem]" : "text-[0.9375rem]"
+                  } ${font === o.key ? "bg-sel text-sel-ink shadow-sm" : "text-ink-soft"}`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </span>
+          </li>
           <li>
             <InstallApp appName="MY WELLNESS" />
           </li>
@@ -177,7 +211,7 @@ export default function MyAccount() {
           <ListRow
             chevron={false}
             icon={<PhoneIcon className={I} />}
-            title={customer?.phone || <span className="text-ink-faint">—</span>}
+            title={customer?.phone || <span className="text-ink-faint">등록된 번호 없음</span>}
             sub="이름·연락처는 매장이 관리합니다. 바뀐 내용이 있으면 매장에 알려 주세요."
           />
         </ListGroup>

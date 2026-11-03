@@ -335,6 +335,16 @@ export default function CustomersPage() {
             (상태 이름 · 「우선」 표시는 줄 안에 글로 그대로 있다)
           */}
           <ul className="rise-stagger divide-y divide-stone-line overflow-hidden rounded-[20px] bg-card shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+          {/* PC 표 머리 — 칸 이름 (1280px 이상에서만) */}
+          <li aria-hidden data-list-head className="hidden items-center gap-4 bg-card-soft px-4 py-2.5 text-[0.8125rem] font-extrabold text-ink-sub xl:flex">
+            <span className="w-11 shrink-0" />
+            <span className="min-w-0 flex-1">고객</span>
+            <span className="w-32 shrink-0">방문</span>
+            <span className="w-36 shrink-0">연락처</span>
+            <span className="w-40 shrink-0">이용권</span>
+            <span className="w-28 shrink-0">다음 관리일</span>
+            <span className="w-5 shrink-0" />
+          </li>
           {visibleRows.map((d) => (
             <li key={d.customer.id}>
             <Link
@@ -380,7 +390,7 @@ export default function CustomersPage() {
                     <CustomerStatusBadge status={d.status} />
                   </span>
                 </div>
-                <p className="tabular mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub">
+                <p className="tabular mt-0.5 line-clamp-2 text-[0.875rem] leading-snug text-ink-sub xl:hidden">
                   {/* 0회 · 방문 없음 은 같은 말을 두 번 하는 것 — 한 번만 */}
                   {d.visitCount > 0
                     ? `방문 ${d.visitCount}회 · ${
@@ -389,10 +399,13 @@ export default function CustomersPage() {
                           : "최근 방문일 없음"
                       }`
                     : "아직 방문 없음"}
-                  <span className="hidden sm:inline">
-                    {" · "}
-                    {displayPhone(d.customer.phone, canSeePhone)}
-                  </span>
+                  {/* 번호가 없거나 가려졌으면 「·」 만 남지 않게 (D-62) */}
+                  {displayPhone(d.customer.phone, canSeePhone) && (
+                    <span className="hidden sm:inline">
+                      {" · "}
+                      {displayPhone(d.customer.phone, canSeePhone)}
+                    </span>
+                  )}
                 </p>
                 {/*
                   이용권 잔여 · 다음 관리 예정일.
@@ -413,7 +426,7 @@ export default function CustomersPage() {
                 */}
                 {/* 이용권도 예정일도 없으면(막 등록한 분) 「없음 · 미정」 줄을 그리지 않는다 */}
                 {(d.activeMembership || d.customer.nextManageDate) && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 xl:hidden">
                   {d.activeMembership ? (
                     (() => {
                       const m = d.activeMembership;
@@ -510,10 +523,65 @@ export default function CustomersPage() {
               </div>
               {/* 잔여 회차는 이제 왼쪽 줄에 늘 나오므로, 여기는 어떤 이용권인지만 */}
               {d.activeMembership && (
-                <p className="hidden max-w-36 shrink-0 truncate text-right text-xs text-ink-sub sm:block">
+                <p className="hidden max-w-36 shrink-0 truncate text-right text-xs text-ink-sub sm:block xl:hidden">
                   {d.activeMembership.programName}
                 </p>
               )}
+              {/*
+                넓은 PC(1280px 이상)에서는 표처럼 칸을 세운다 (D-62) — 넓은 화면에서 한 줄
+                오른쪽이 텅 빈 채 이름 아래로 세 줄을 읽어야 했다. 같은 값을
+                열로 세우면 스무 줄을 위아래로 훑으며 비교할 수 있다.
+              */}
+              <span className="hidden w-32 shrink-0 xl:block" data-col="visit">
+                <span className="block text-[0.9375rem] font-bold text-ink-soft">
+                  {d.visitCount > 0 ? `방문 ${d.visitCount}회` : "아직 방문 없음"}
+                </span>
+                {d.lastVisitDate && (
+                  <span className="nowrap-num block text-[0.8125rem] text-ink-sub">
+                    최근 {formatRelative(d.lastVisitDate)}
+                  </span>
+                )}
+              </span>
+              <span className="nowrap-num tabular hidden w-36 shrink-0 text-[0.9375rem] text-ink-soft xl:block" data-col="phone">
+                {displayPhone(d.customer.phone, canSeePhone)}
+              </span>
+              <span className="hidden w-40 shrink-0 xl:block" data-col="pass">
+                {d.activeMembership ? (
+                  (() => {
+                    const m = d.activeMembership;
+                    const low = m.remainingCount <= 2;
+                    return (
+                      <>
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-stone-bg-deep">
+                            <span
+                              className={`block h-full rounded-full ${low ? "bg-gold" : "bg-aqua-500"}`}
+                              style={{ width: `${Math.max((m.remainingCount / Math.max(m.totalCount, 1)) * 100, 4)}%` }}
+                            />
+                          </span>
+                          <span className={`nowrap-num tabular text-[0.9375rem] font-bold ${low ? "text-gold-deep" : "text-ink-soft"}`}>
+                            {m.remainingCount}/{m.totalCount}회
+                          </span>
+                        </span>
+                        <span className="block truncate text-[0.8125rem] text-ink-sub">{m.programName}</span>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <span className="text-[0.9375rem] font-bold text-ink-faint">이용권 없음</span>
+                )}
+              </span>
+              <span className="hidden w-28 shrink-0 xl:block" data-col="next">
+                {(() => {
+                  const date = d.customer.nextManageDate;
+                  const over = date ? daysAgo(date) >= 0 : false;
+                  return (
+                    <span className={`nowrap-num tabular text-[0.9375rem] font-bold ${over ? "text-danger-text" : date ? "text-ink-soft" : "text-ink-faint"}`}>
+                      {date ? `${date.slice(5).replace("-", ".")}${over ? " 지남" : ""}` : "미정"}
+                    </span>
+                  );
+                })()}
+              </span>
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-ink-faint" />
             </Link>
             </li>

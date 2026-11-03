@@ -140,6 +140,7 @@ export default function MyHome() {
           <NextVisitCard
             tone="glass"
             date={next.date}
+            time={next.fromStore ? customer?.nextManageTime : undefined}
             fromStore={next.fromStore}
             lastDate={usage.lastVisitDate}
             cta={{ href: "/my/booking", label: next.date ? "예약 변경 요청" : "방문 요청 남기기" }}

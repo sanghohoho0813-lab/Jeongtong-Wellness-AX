@@ -77,7 +77,7 @@ export default function CustomerInboxCard() {
     .slice(0, 4);
 
   return (
-    <Card>
+    <Card id="inbox" className="scroll-mt-24">
       <SectionTitle
         icon={<PhoneIcon className="h-4 w-4" />}
         tone="gold"

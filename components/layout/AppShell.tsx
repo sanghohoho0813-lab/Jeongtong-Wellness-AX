@@ -39,7 +39,8 @@ import CustomerForm from "@/components/customers/CustomerForm";
 import { Modal } from "@/components/ui";
 import { VIDEOS } from "@/lib/content/videos";
 import { Hint } from "@/components/ui/Hint";
-import { SHELL_EVENTS } from "@/lib/ui/shell-events";
+import { SHELL_EVENTS, openShell } from "@/lib/ui/shell-events";
+import InboxSheet from "./InboxSheet";
 import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
 import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
 import OfflineBanner from "@/components/ui/OfflineBanner";
@@ -97,6 +98,29 @@ function Logo() {
   );
 }
 
+/** PC 사이드바의 종 — 누르면 알림 창 (D-62) */
+function SidebarBell() {
+  const { briefingTasks, ready } = useStore();
+  const n = ready ? briefingTasks.filter((t) => t.status === "pending" || t.status === "confirmed").length : 0;
+  return (
+    <button
+      type="button"
+      onClick={() => openShell("inbox")}
+      data-inbox-bell
+      aria-haspopup="dialog"
+      aria-label={`알림 — 오늘 관리 대상 ${n}명`}
+      className="press relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-stone-line bg-card-soft text-ink-sub hover:border-aqua-500 hover:bg-card"
+    >
+      <BellIcon className="h-[1.1rem] w-[1.1rem]" />
+      {n > 0 && (
+        <span className="nowrap-num absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-danger px-1 text-[0.65rem] font-extrabold text-white shadow-sm">
+          {n > 99 ? "99+" : n}
+        </span>
+      )}
+    </button>
+  );
+}
+
 function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
   const pathname = usePathname();
   const { isManager } = useStore();
@@ -128,12 +152,12 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
 
       {/* 빠른 실행 — 고객 찾기가 하루 중 가장 잦은 동작이라 맨 위에 둔다.
           누르거나 Ctrl/⌘+K 로 열린다. */}
-      <div className="mx-3 mb-2">
+      <div className="mx-3 mb-2 flex items-center gap-2">
         <button
           type="button"
           onClick={onOpenPalette}
           data-tour="quick-search"
-          className="flex h-10 w-full items-center gap-2 rounded-full border border-stone-line bg-card-soft px-3.5 text-left text-sm text-ink-faint transition-colors hover:border-aqua-500 hover:bg-card"
+          className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-stone-line bg-card-soft px-3.5 text-left text-sm text-ink-faint transition-colors hover:border-aqua-500 hover:bg-card"
         >
           <SearchIcon className="h-[1.1rem] w-[1.1rem] shrink-0" />
           <span className="min-w-0 flex-1 truncate">고객 · 화면 찾기</span>
@@ -141,6 +165,8 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
             {"\u2318K"}
           </kbd>
         </button>
+        {/* 알림 — 폰 머리글의 종과 같은 창 (D-62). PC 에는 종이 없었다 */}
+        {isManager && <SidebarBell />}
       </div>
 
       {/*
@@ -299,7 +325,8 @@ function Sidebar({ onOpenPalette }: { onOpenPalette: () => void }) {
       */}
       <div className="m-3 space-y-2.5">
         <Hint side="right" title="화면 바꾸기" text="내부 AX 는 직원이 쓰는 화면, MY WELLNESS 는 고객에게 보이는 화면입니다">
-          <SurfaceSwitch current="staff" className="w-full !justify-stretch [&>a]:flex-1 [&>a]:justify-center" />
+          {/* 사이드바 폭(256px)에서는 아이콘을 빼고 글자만 한 줄로 (D-63) */}
+          <SurfaceSwitch current="staff" className="w-full !justify-stretch [&>a>svg]:hidden [&>a]:flex-auto [&>a]:justify-center" />
         </Hint>
         <ProfileButton />
       </div>
@@ -415,10 +442,17 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
         <DevicePreviewButton compact />
         {/* 직원 계정은 실행 브리핑에 접근하지 않으므로 표시하지 않는다 */}
         {isManager && (
-        <Link
-          href="/briefing"
-          aria-label={`오늘 관리 대상 ${openCount}명 — 실행 브리핑으로 이동`}
-          className="relative flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
+        /*
+          종 — 누르면 알림 창 (D-62). 전에는 실행 브리핑으로 화면을 통째로
+          옮겼다. 창 맨 위 줄이 「오늘 챙길 분 → 실행 브리핑」 이다.
+        */
+        <button
+          type="button"
+          onClick={() => openShell("inbox")}
+          data-inbox-bell
+          aria-haspopup="dialog"
+          aria-label={`알림 — 오늘 관리 대상 ${openCount}명`}
+          className="press relative flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
         >
           <BellIcon className="h-5 w-5" />
           {openCount > 0 && (
@@ -426,7 +460,7 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
               {openCount > 99 ? "99+" : openCount}
             </span>
           )}
-        </Link>
+        </button>
         )}
       </div>
       </div>
@@ -768,6 +802,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { ready } = useStore();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  /** 머리글 종 → 알림 창 (D-62) */
+  const [inboxOpen, setInboxOpen] = useState(false);
   /** 빠른 실행에서 바로 기록을 여는 고객 */
   const [recordFor, setRecordFor] = useState<string | undefined>();
   /** 폰 하단 [기록] 단추가 여는 고객 고르기 화면 */
@@ -798,13 +834,22 @@ export default function AppShell({ children }: { children: ReactNode }) {
     const onRecord = () => setSheetOpen(true);
     const onSearch = () => setPaletteOpen(true);
     const onNew = () => setNewName("");
+    const onRecordFor = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id) setRecordFor(id);
+    };
+    const onInbox = () => setInboxOpen(true);
     window.addEventListener(SHELL_EVENTS.record, onRecord);
     window.addEventListener(SHELL_EVENTS.search, onSearch);
     window.addEventListener(SHELL_EVENTS.newCustomer, onNew);
+    window.addEventListener(SHELL_EVENTS.recordFor, onRecordFor);
+    window.addEventListener(SHELL_EVENTS.inbox, onInbox);
     return () => {
       window.removeEventListener(SHELL_EVENTS.record, onRecord);
       window.removeEventListener(SHELL_EVENTS.search, onSearch);
       window.removeEventListener(SHELL_EVENTS.newCustomer, onNew);
+      window.removeEventListener(SHELL_EVENTS.recordFor, onRecordFor);
+      window.removeEventListener(SHELL_EVENTS.inbox, onInbox);
     };
   }, []);
 
@@ -824,6 +869,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setPaletteOpen(false)}
         onRecordVisit={setRecordFor}
       />
+      <InboxSheet open={inboxOpen} onClose={() => setInboxOpen(false)} />
       {/* 폰 하단 [기록] → 고객 고르기 → 곧바로 기록 창 */}
       <RecordSheet
         open={sheetOpen}

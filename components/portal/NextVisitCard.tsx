@@ -15,11 +15,12 @@
  */
 
 import { ChevronRightIcon } from "@/components/ui/icons";
-import { daysAgo, diffDays, formatDateShort, formatDateWithDay, todayISO } from "@/lib/utils/date";
+import { daysAgo, diffDays, formatDateShort, formatDateWithDay, formatTimeKr, todayISO } from "@/lib/utils/date";
 import { PillLink, StatusPill } from "@/components/portal/kit";
 
 export default function NextVisitCard({
   date,
+  time,
   fromStore,
   lastDate,
   cta,
@@ -27,6 +28,11 @@ export default function NextVisitCard({
   tone = "solid",
 }: {
   date?: string;
+  /**
+   * 매장이 잡아 둔 시각 (「HH:mm」) — 날짜만 보이던 카드에 「오후 3:00」 까지 (D-63).
+   * 매장이 잡은 날짜일 때만 쓴다 (계산한 참고일에는 시각이 없다).
+   */
+  time?: string;
   fromStore: boolean;
   lastDate?: string;
   /** 카드 아래 단추 — 화면 아래 고정 단추가 같은 곳으로 가면 생략 */
@@ -70,15 +76,24 @@ export default function NextVisitCard({
           </p>
           {date ? (
             <>
-              <p className="nowrap-num tabular mt-1 text-[1.5rem] font-extrabold leading-tight">
-                {formatDateWithDay(date)}
+              {/* 오늘이면 날짜 대신 「오늘」 을 크게 — 날짜를 오늘과 맞춰 볼 필요가 없게 */}
+              <p className="tabular mt-1 flex flex-wrap items-baseline gap-x-2 text-[1.5rem] font-extrabold leading-tight">
+                <span className="nowrap-num">{left === 0 ? "오늘" : formatDateWithDay(date)}</span>
+                {/* 좁은 폰 · 큰 글씨에서는 시각이 다음 줄로 (날짜가 잘리지 않게) */}
+                {fromStore && formatTimeKr(time) && (
+                  <span data-next-time className="nowrap-num text-aqua-300">
+                    {formatTimeKr(time)}
+                  </span>
+                )}
               </p>
               <p className="mt-1 text-[0.875rem] leading-snug text-white/75">
                 {left !== undefined && left < 0
                   ? "예정일이 지났어요. 편하신 날짜를 알려 주세요."
-                  : fromStore
-                    ? "매장에서 안내드린 날짜입니다"
-                    : "지금까지의 이용 간격으로 계산한 참고일입니다"}
+                  : left === 0 && fromStore
+                    ? "오늘 방문하시는 날입니다 — 매장에서 안내드린 시간이에요"
+                    : fromStore
+                      ? "매장에서 안내드린 날짜입니다"
+                      : "지금까지의 이용 간격으로 계산한 참고일입니다"}
               </p>
             </>
           ) : (

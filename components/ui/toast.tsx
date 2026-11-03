@@ -88,7 +88,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   t.action?.onAction();
                   dismiss(t.id);
                 }}
-                className="pointer-events-auto ml-0.5 shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold text-white ring-1 ring-white/25 hover:bg-white/25"
+                /*
+                  되돌리기는 지운 직후의 유일한 길이다 — 손끝 크기(44px)로 (D-63).
+                  알림 판 높이는 늘리지 않게 위아래를 당긴다.
+                */
+                data-toast-action
+                className="press pointer-events-auto -my-2 ml-0.5 min-h-[44px] shrink-0 rounded-full bg-white/15 px-4 text-sm font-extrabold text-white ring-1 ring-white/25 hover:bg-white/25"
               >
                 {t.action.label}
               </button>

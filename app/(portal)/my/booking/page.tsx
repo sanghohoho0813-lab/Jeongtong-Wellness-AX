@@ -60,7 +60,8 @@ export default function MyBooking() {
       {/* 다음 방문 — 홈과 같은 카드, 이 화면에서는 「어떻게 나온 날짜인지」 까지 */}
       <NextVisitCard
         date={next.date}
-        fromStore={next.fromStore}
+        time={next.fromStore ? customer?.nextManageTime : undefined}
+            fromStore={next.fromStore}
         lastDate={usage.lastVisitDate}
         basis={next.basis}
       />

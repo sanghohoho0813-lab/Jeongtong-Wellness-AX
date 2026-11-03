@@ -80,6 +80,8 @@ export default function PassFollowUpCard() {
     */
     <Fold
       id="dash-pass-followup"
+      anchor="passes"
+      className="scroll-mt-24"
       dataTour="dash-pass-followup"
       defaultOpen={todo > 0}
       icon={<TicketIcon className="h-[1.1rem] w-[1.1rem]" />}

@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -805,6 +805,133 @@ await pc2.context().close();
   log("고객 앱 — 끊기면 「마지막으로 불러온 것」 이라고만 (지어 약속하지 않는다)", /마지막으로 불러온 것/.test(await q.locator("[data-offline]").innerText().catch(() => "")));
   await ctx15.setOffline(false);
   await ctx15.close();
+}
+
+/* ── 16. 한눈에 (D-62) ──
+   종을 누르면 알림 창(지금 손댈 일을 한 줄씩), 첫 화면의 예정 일정(이번 주 날짜 줄 + 그날 시각 순),
+   PC 고객 목록은 표처럼 칸, 줄 끝에 「·」 만 남지 않는다. */
+{
+  const c16 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const r = await c16.newPage();
+  r.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  // 일정 심기 — 오늘 2분(시각 다름) · 내일 1분 · 지난 예정 1분
+  await go(r, "/", 1200);
+  const seeded = await r.evaluate((k) => {
+    const raw = JSON.parse(localStorage.getItem(k) || "{}");
+    const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.toLocaleDateString("sv-SE"); };
+    const cs = raw.customers || [];
+    const plan = [[0, "15:00"], [0, "10:30"], [1, undefined], [-3, undefined]];
+    plan.forEach(([n, t], i) => { if (cs[i]) { cs[i].nextManageDate = d(n); cs[i].nextManageTime = t; } });
+    localStorage.setItem(k, JSON.stringify(raw));
+    return cs.slice(0, 4).map((c) => c.name);
+  }, KEY);
+  await go(r, "/", 1500);
+  const sch = r.locator("[data-schedule]");
+  log("첫 화면 — 예정 일정 카드 (잡아 둔 분이 있을 때)", (await sch.count()) === 1);
+  const rowsToday = await sch.locator("[data-schedule-row]").allInnerTexts();
+  log("예정 일정 — 오늘이 먼저 골라져 있고 시각 순 (오전 10:30 → 오후 3:00)", rowsToday.length === 2 && /오전 10:30/.test(rowsToday[0]) && /오후 3:00/.test(rowsToday[1]), rowsToday.map((t) => t.replace(/\s+/g, " ")).join(" / "));
+  const todayChip = sch.locator('[data-schedule-day]:not([data-schedule-day="overdue"])').first();
+  log("예정 일정 — 날짜 칩에 그날 몇 분 (오늘 2)", /2명/.test((await todayChip.getAttribute("aria-label")) || ""));
+  log("예정 일정 — 지난 예정(아직 안 오신 분) 칩", (await sch.locator('[data-schedule-day="overdue"]').count()) === 1);
+  await sch.locator('[data-schedule-day]:not([data-schedule-day="overdue"])').nth(1).click();
+  await r.waitForTimeout(250);
+  const rowsTomorrow = await sch.locator("[data-schedule-row]").allInnerTexts();
+  log("예정 일정 — 내일을 누르면 내일 분 (시각 없으면 「시간 미정」)", rowsTomorrow.length === 1 && /시간 미정/.test(rowsTomorrow[0]));
+  await sch.locator("[data-schedule-row]").first().getByRole("button", { name: /방문 기록/ }).click();
+  await r.waitForTimeout(800);
+  const dlgTitle = await r.locator('[role="dialog"]').last().getAttribute("aria-label");
+  log("예정 일정 — [기록] 은 고르기를 건너뛰고 그분의 기록 창을 바로", !!dlgTitle && dlgTitle.includes(seeded[2]), dlgTitle || "");
+  await r.keyboard.press("Escape");
+  await r.waitForTimeout(300);
+  if (await r.getByRole("button", { name: "그냥 닫기" }).count()) await r.getByRole("button", { name: "그냥 닫기" }).click();
+
+  // 종 → 알림 창
+  await r.locator("header [data-inbox-bell]").click();
+  await r.waitForTimeout(700);
+  const inbox = r.locator("[data-inbox-sheet]");
+  const keys = await inbox.locator("[data-inbox-row]").evaluateAll((els) => els.map((e) => e.getAttribute("data-inbox-row")));
+  log("종을 누르면 알림 창 (화면을 옮기지 않는다)", (await inbox.count()) === 1 && new URL(r.url()).pathname === "/");
+  log("알림 창 — 오늘 챙길 분 · 오늘 오실 분이 한 줄씩", keys.includes("tasks") && keys.includes("schedule"), keys.join(" / "));
+  log("알림 창 — 오늘 오실 분 줄에 지난 예정도 함께", /지난 예정 1명/.test(await inbox.locator('[data-inbox-row="schedule"]').innerText()));
+  const rowH = await inbox.locator("[data-inbox-row]").first().boundingBox();
+  log("알림 창 — 줄은 손끝 크기 (44px 이상)", !!rowH && rowH.height >= 44);
+  await inbox.locator('[data-inbox-row="tasks"]').click();
+  await r.waitForTimeout(1200);
+  log("알림 창 — 「오늘 챙길 분」 을 누르면 실행 브리핑으로", new URL(r.url()).pathname === "/briefing");
+  await r.locator("header [data-inbox-bell]").click();
+  await r.waitForTimeout(700);
+  await r.locator('[data-inbox-row="schedule"]').click();
+  await r.waitForTimeout(1500);
+  const schTop = await r.evaluate(() => document.getElementById("schedule")?.getBoundingClientRect().top ?? null);
+  log("알림 창 — 「오늘 오실 분」 을 누르면 첫 화면의 예정 일정으로 (머리글에 가리지 않게)", schTop !== null && schTop >= 60 && schTop < 400, `${schTop}px`);
+  await c16.close();
+
+  // PC — 종 · 표처럼 세운 고객 목록
+  const pcx = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  pcx.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(pcx, "/customers", 1400);
+  log("PC — 사이드바에도 종 (알림 창)", (await pcx.locator("aside [data-inbox-bell]").count()) === 1);
+  const head = await pcx.locator("[data-list-head]").innerText().catch(() => "");
+  log("PC 고객 목록 — 표 머리 (고객 · 방문 · 연락처 · 이용권 · 다음 관리일)", ["고객", "방문", "연락처", "이용권", "다음 관리일"].every((w) => head.includes(w)), head.replace(/\s+/g, " "));
+  const aligned = await pcx.evaluate(() => {
+    const h = document.querySelector('[data-list-head] span:nth-child(4)')?.getBoundingClientRect().left;
+    const c = document.querySelector('[data-tour="customer-row"] [data-col="phone"]')?.getBoundingClientRect().left;
+    return h !== undefined && c !== undefined ? Math.abs(h - c) : null;
+  });
+  log("PC 고객 목록 — 칸이 머리와 줄을 맞춘다", aligned !== null && aligned <= 1, `${aligned}px`);
+  const dangling = await pcx.evaluate(() => [...document.querySelectorAll('[data-tour="customer-row"] p')].some((p) => /·\s*$/.test(p.textContent || "")));
+  log("고객 목록 — 줄 끝에 「·」 만 남지 않는다 (번호가 없을 때)", !dangling);
+  await pcx.locator("aside [data-inbox-bell]").click();
+  await pcx.waitForTimeout(600);
+  log("PC — 종을 누르면 같은 알림 창", (await pcx.locator("[data-inbox-sheet]").count()) === 1);
+  await pcx.context().close();
+}
+
+/* ── 17. 고객 앱 · 다듬기 (D-63) ──
+   고객이 이 폰에서 고르는 글자 크기, 다음 방문 카드의 시각, 사이드바 스위치 한 줄, 되돌리기 손끝 크기. */
+{
+  const c17 = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const m = await c17.newPage();
+  m.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  await go(m, "/my/account", 1400);
+  const fontRow = m.locator("[data-my-font]");
+  log("마이페이지 — 「글자 크기」 (이 폰에서만)", (await fontRow.count()) === 1);
+  const h1Before = await m.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+  await fontRow.getByRole("radio", { name: "크게" }).click();
+  await m.waitForTimeout(300);
+  const h1After = await m.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+  log("글자 크기 — 「크게」 를 누르면 화면 글자가 커진다", h1After > h1Before, `${h1Before} → ${h1After}px`);
+  await go(m, "/my", 1300);
+  log("글자 크기 — 다른 화면 · 다시 열어도 그대로 (이 폰에 저장)", (await m.evaluate(() => document.documentElement.dataset.fontScale)) === "large");
+  const over = await m.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  log("글자 크기 「크게」 — 화면이 옆으로 새지 않는다", over <= 1, `${over}px`);
+  await go(m, "/my/account", 1200);
+  await m.locator("[data-my-font]").getByRole("radio", { name: "기본" }).click();
+  await m.waitForTimeout(200);
+  log("글자 크기 — 직원 화면 설정과 따로 (고객 폰 값만 바뀐다)", await m.evaluate(() => localStorage.getItem("jt-my-font") === "default"));
+
+  await go(m, "/my", 1300);
+  const nt = await m.locator("[data-next-visit] [data-next-time]").innerText().catch(() => "");
+  log("다음 방문 카드 — 매장이 잡은 시각까지 (날짜만이 아니다)", /^(오전|오후) \d+:\d{2}$/.test(nt), nt);
+  log("고객 앱 — 「—」 대신 말로 (연락처 없음 등)", !(await m.locator("main").innerText()).includes("—"));
+  await c17.close();
+
+  const pcy = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  await go(pcy, "/", 1300);
+  const sw = await pcy.evaluate(() => [...document.querySelectorAll("aside a")].filter((a) => /MY WELLNESS/.test(a.textContent || "")).map((a) => Math.round(a.getBoundingClientRect().height))[0] ?? null);
+  log("PC 사이드바 — 「MY WELLNESS」 가 두 줄로 접히지 않는다", sw !== null && sw <= 44, `${sw}px`);
+  await pcy.context().close();
+
+  // 되돌리기 — 손끝 크기
+  const ud = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await go(ud, "/visits", 1300);
+  await ud.locator("main [data-visit-row]").first().getByRole("button", { name: "삭제" }).click();
+  await ud.waitForTimeout(400);
+  await ud.locator('[role="dialog"]').last().getByRole("button", { name: "삭제" }).click();
+  await ud.waitForTimeout(500);
+  const ub = await ud.locator("[data-toast-action]").boundingBox();
+  log("지운 뒤 「되돌리기」 — 손끝 크기 (44px)", !!ub && ub.height >= 44, ub ? `${Math.round(ub.height)}px` : "");
+  await ud.context().close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

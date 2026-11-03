@@ -73,6 +73,7 @@ export function Fold({
   action,
   defaultOpen = false,
   dataTour,
+  anchor,
   className = "",
   bodyClassName = "",
   variant = "card",
@@ -80,6 +81,8 @@ export function Fold({
 }: {
   /** 기억할 이름 — 화면 안에서 겹치지 않게 (예: "detail-bodymap") */
   id: string;
+  /** 주소 조각(#passes)으로 찾아오는 자리 — 알림 창 · 바로가기 칩 (D-62) */
+  anchor?: string;
   title: ReactNode;
   /** 무엇이 들어 있는지 — 말풍선과 ⓘ 에 쓴다 */
   hint: string;
@@ -135,6 +138,7 @@ export function Fold({
   return (
     <section
       ref={ref}
+      id={anchor}
       data-fold={id}
       data-open={open ? "true" : "false"}
       data-tour={dataTour}

@@ -101,7 +101,8 @@ export function SurfaceSwitch({
               없고, 대신 둘의 크기가 같아서 '두 칸 중 하나' 로 읽힌다.
               한쪽만 링크로 만들면 그냥 버튼 하나로 보인다.
             */
-            className={`inline-flex min-h-[2.375rem] items-center gap-1.5 rounded-full px-3 text-[0.875rem] font-extrabold transition-colors ${
+            /* 한 줄로 — PC 사이드바(256px)에서 「MY / WELLNESS」 두 줄로 접혔다 (D-63) */
+            className={`inline-flex min-h-[2.375rem] items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[0.875rem] font-extrabold tracking-tight transition-colors ${
               on
                 ? dark
                   ? "bg-white text-deep-900 shadow-sm"

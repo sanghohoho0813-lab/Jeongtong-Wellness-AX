@@ -17,10 +17,14 @@ export const SHELL_EVENTS = {
   search: "jt:open-search",
   /** 처음 오신 분 등록 */
   newCustomer: "jt:new-customer",
+  /** 이 고객의 방문 기록 창을 바로 (고르기를 건너뛴다) — detail: 고객 id */
+  recordFor: "jt:record-for",
+  /** 알림 창 (머리글 종) */
+  inbox: "jt:open-inbox",
 } as const;
 
 export type ShellEvent = keyof typeof SHELL_EVENTS;
 
-export function openShell(kind: ShellEvent) {
-  window.dispatchEvent(new CustomEvent(SHELL_EVENTS[kind]));
+export function openShell(kind: ShellEvent, detail?: string) {
+  window.dispatchEvent(new CustomEvent(SHELL_EVENTS[kind], { detail }));
 }

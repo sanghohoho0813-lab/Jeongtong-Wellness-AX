@@ -12,7 +12,7 @@ import OpportunityCard from "@/components/dashboard/OpportunityCard";
 import PassFollowUpCard from "@/components/dashboard/PassFollowUpCard";
 import BodyMapCard from "@/components/dashboard/BodyMapCard";
 import SegmentCard from "@/components/dashboard/SegmentCard";
-import RevisitPreview from "@/components/dashboard/RevisitPreview";
+import ScheduleCard from "@/components/dashboard/ScheduleCard";
 import BranchSummaryCard from "@/components/dashboard/BranchSummaryCard";
 import { useStore } from "@/lib/data/store";
 import { ChartIcon } from "@/components/ui/icons";
@@ -93,9 +93,14 @@ export default function DashboardPage() {
                 <PassFollowUpCard />
               </div>
             </div>
+            {/*
+              예정 일정 — 이번 주 날짜 줄 + 그날 오실 분을 시각 순으로 (D-62).
+              예전 「재방문 예정 고객」(날짜만 섞인 다섯 줄)을 대신한다.
+              잡아 둔 분이 없으면 스스로 숨는다.
+            */}
+            <ScheduleCard />
             <div className="rise-stagger grid grid-cols-1 card-gap empty:hidden xl:grid-cols-2">
               <OpportunityCard />
-              <RevisitPreview />
             </div>
             {/*
               도입 안내는 '오늘 할 일' 이 아니라 '자리 잡는 법' 이다.

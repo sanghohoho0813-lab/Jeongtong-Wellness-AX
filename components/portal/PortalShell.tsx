@@ -21,6 +21,7 @@ import { SurfaceSwitch } from "@/components/layout/SurfaceSwitch";
 import { scrollToTop, scrollTopIfHere } from "@/lib/ui/scroll";
 import { BAND_TITLE_EVENT, BandTitle } from "@/lib/ui/band-title";
 import OfflineBanner from "@/components/ui/OfflineBanner";
+import { useMyFontScale } from "@/lib/portal/font";
 import {
   CalendarIcon,
   ClipboardIcon,
@@ -152,6 +153,8 @@ export default function PortalShell({ children }: { children: ReactNode }) {
   const { sample } = usePortal();
   const { openHowItWorks, howItWorksSheet } = useHowItWorks();
   useDeviceTheme();
+  /* 고객이 이 폰에서 고른 글자 크기 (D-63) — 직원 화면에서 넘어와도 맞춘다 */
+  useMyFontScale();
 
   return (
     <div className="min-h-dvh bg-stone-bg">
