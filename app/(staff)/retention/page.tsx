@@ -197,6 +197,22 @@ export default function RetentionPage() {
     (d) => (opportunityById.get(d.customer.id)?.type ?? "none") !== "none",
   ).length;
 
+  /*
+    신규 · 상담 후속 — 띠의 「가장 먼저 연락할 분」 과 아래 과제 카드는 실행
+    브리핑에서 오는데, 브리핑에는 위 네 구간 말고도 신규 고객 후속관리 ·
+    상담 후 미예약이 있다. 칸에는 그 둘이 없어서, 「세 분께 연락하세요」
+    바로 아래 칸들이 전부 0명이었다 (D-66). 같은 숫자로 맞춘다.
+  */
+  const followupCount = new Set(
+    briefingTasks
+      .filter(
+        (t) =>
+          (t.status === "pending" || t.status === "confirmed") &&
+          (t.category === "new_followup" || t.category === "consult_no_booking"),
+      )
+      .map((t) => t.customerId),
+  ).size;
+
   // 오늘 우선관리 — 우선도 상위 3명
   const topPriority = all
     .filter((d) => d.priorityScore > 0)
@@ -247,12 +263,13 @@ export default function RetentionPage() {
         panel={
           all.length > 0 ? (
             /* 구간별 인원 — 한 판 안의 칸 (예전 요약 타일 다섯 장) */
-            <ul className="grid grid-cols-3 gap-y-1 sm:grid-cols-5">
+            <ul data-retention-cells className="grid grid-cols-3 gap-y-1 sm:grid-cols-6">
               {[
                 { label: "재방문 예정", value: dueGroup.rows.length, dot: "bg-aqua-500" },
                 { label: "방문 주기 초과", value: atRiskGroup.rows.length, dot: "bg-warn" },
                 { label: "장기 미방문", value: dormantGroup.rows.length, dot: "bg-danger" },
                 { label: "이용권 임박·소진", value: lowGroup.rows.length, dot: "bg-gold" },
+                { label: "신규 · 상담 후속", value: followupCount, dot: "bg-sky-500" },
                 { label: "AX 매출기회", value: opportunityCount, dot: "bg-positive" },
               ].map((t) => (
                 <li key={t.label} className="flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 sm:px-3.5">

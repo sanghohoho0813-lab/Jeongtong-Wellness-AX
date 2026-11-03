@@ -86,15 +86,26 @@ export default function NextVisitCard({
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-[0.875rem] leading-snug text-white/75">
-                {left !== undefined && left < 0
-                  ? "예정일이 지났어요. 편하신 날짜를 알려 주세요."
-                  : left === 0 && fromStore
-                    ? "오늘 방문하시는 날입니다 — 매장에서 안내드린 시간이에요"
-                    : fromStore
-                      ? "매장에서 안내드린 날짜입니다"
-                      : "지금까지의 이용 간격으로 계산한 참고일입니다"}
-              </p>
+              {/*
+                「어떻게 나온 날짜인지」 는 basis 상자가 더 자세히 말한다 — 둘 다
+                그리면 예약 화면에 같은 말이 두 번 나왔다 (D-66). 지남 · 오늘
+                같은 「지금」 의 말만 남긴다.
+              */}
+              {(() => {
+                const now =
+                  left !== undefined && left < 0
+                    ? "예정일이 지났어요. 편하신 날짜를 알려 주세요."
+                    : left === 0 && fromStore
+                      ? "오늘 방문하시는 날입니다 — 매장에서 안내드린 시간이에요"
+                      : undefined;
+                const how = fromStore ? "매장에서 안내드린 날짜입니다" : "지금까지의 이용 간격으로 계산한 참고일입니다";
+                const line = now ?? (basis ? undefined : how);
+                return line ? (
+                  <p data-next-sub className="mt-1 text-[0.875rem] leading-snug text-white/75">
+                    {line}
+                  </p>
+                ) : null;
+              })()}
             </>
           ) : (
             <>

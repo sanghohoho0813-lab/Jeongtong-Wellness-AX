@@ -61,7 +61,7 @@ export default function MyBooking() {
       <NextVisitCard
         date={next.date}
         time={next.fromStore ? customer?.nextManageTime : undefined}
-            fromStore={next.fromStore}
+        fromStore={next.fromStore}
         lastDate={usage.lastVisitDate}
         basis={next.basis}
       />
