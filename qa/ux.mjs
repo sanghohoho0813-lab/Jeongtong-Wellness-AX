@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -1005,6 +1005,48 @@ await pc2.context().close();
   await w.waitForTimeout(500);
   log("「그냥 닫기」 로 버리면 초안도 지운다 (일부러 버린 것)", await w.evaluate(() => !localStorage.getItem("jt-draft:visit:c-04")));
   await c18.close();
+}
+
+/* ── 19. 이어 쓰기 넓히기 (D-65) ──
+   고객 앱 방문 요청 · 처음 오신 분 등록도 폰이 화면을 새로 불러와도 적던 것이 남는다. */
+{
+  const c19 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const v = await c19.newPage();
+  v.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  // 고객 앱 — 방문 요청
+  await go(v, "/my/request", 1300);
+  await v.getByRole("button", { name: "문의" }).click();
+  await v.getByRole("textbox", { name: "문의 내용" }).fill("주차 되나요");
+  await v.waitForTimeout(300);
+  await v.reload({ waitUntil: "networkidle" });
+  await v.waitForTimeout(1300);
+  log("고객 앱 방문 요청 — 새로 불러와도 적던 글 그대로 · 되살렸다고 알린다", (await v.locator("[data-request-restored]").count()) === 1 && (await v.getByRole("textbox", { name: "문의 내용" }).inputValue()) === "주차 되나요");
+  await v.getByRole("button", { name: "요청 남기기" }).click();
+  await v.waitForTimeout(800);
+  log("고객 앱 방문 요청 — 보내면 적어 둔 것을 지운다", await v.evaluate(() => !localStorage.getItem("jt-my-draft:request")));
+
+  // 직원 — 처음 오신 분 등록
+  await go(v, "/", 1300);
+  await v.locator("[data-quick-actions]").getByRole("button", { name: "처음 오신 분" }).click();
+  await v.waitForTimeout(800);
+  const f = v.locator('[role="dialog"]').last();
+  await f.locator("input").first().fill("이어쓰기손님");
+  await v.waitForTimeout(300);
+  log("처음 오신 분 등록 — 적는 동안 이 기기에 초안", await v.evaluate(() => !!localStorage.getItem("jt-draft:customer:new")));
+  await v.reload({ waitUntil: "networkidle" });
+  await v.waitForTimeout(1600);
+  const act = v.locator("[data-toast-action]");
+  log("새로 불러오면 「처음 오신 분 등록 — 적다 만 내용」 이어서 쓰기", (await act.count()) === 1 && /처음 오신 분/.test(await v.locator('[aria-live="polite"]').innerText()));
+  await act.click();
+  await v.waitForTimeout(900);
+  const f2 = v.locator('[role="dialog"]').last();
+  log("이어서 쓰기 — 이름이 그대로 · 되살렸다고 알린다", (await f2.locator("input").first().inputValue()) === "이어쓰기손님" && (await f2.locator("[data-draft-restored]").count()) === 1);
+  await v.keyboard.press("Escape");
+  await v.waitForTimeout(400);
+  if (await v.getByRole("button", { name: "그냥 닫기" }).count()) await v.getByRole("button", { name: "그냥 닫기" }).click();
+  await v.waitForTimeout(500);
+  log("「그냥 닫기」 로 버리면 등록 초안도 지운다", await v.evaluate(() => !localStorage.getItem("jt-draft:customer:new")));
+  await c19.close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));
