@@ -15,6 +15,7 @@ import Image from "next/image";
 import { usePortal } from "@/lib/portal/store";
 import { PhoneIcon } from "@/components/ui/icons";
 import { formatWon } from "@/lib/utils/format";
+import { storeTitle } from "@/lib/portal/wellness";
 import {
   ListGroup,
   ListRow,
@@ -133,11 +134,14 @@ export default function MyMore() {
         <Panel>
           <dl className="divide-y divide-stone-line">
             {[
-              { k: "상호", v: branch?.name ?? "정통대왕쑥뜸원" },
+              { k: "상호", v: storeTitle(branch?.name) },
               { k: "주소", v: branch?.address },
               { k: "연락처", v: branch?.phone },
               { k: "영업시간", v: branch?.openHours },
-            ].map((row) => (
+            ]
+              /* 매장이 적지 않은 칸은 줄째 뺀다 — 고객에게 「—」 는 아무 말도 아니다 */
+              .filter((row) => !!row.v?.trim())
+              .map((row) => (
               <div
                 key={row.k}
                 className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-2.5"

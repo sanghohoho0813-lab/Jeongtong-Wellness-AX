@@ -114,6 +114,13 @@ export function calcMonthlyMetrics(
   });
 }
 
+/**
+ * 재방문율을 숫자로 보여 주기 시작하는 방문 기록 수.
+ * 이보다 적으면 「축적 중」 — 두세 건으로 낸 비율은 우연에 가깝다.
+ * 성과 · 지점 · 첫 화면 지점 카드가 같은 값을 쓴다 (D-66).
+ */
+export const REVISIT_MIN_VISITS = 5;
+
 export interface AxSummary {
   totalCustomers: number;
   newCustomers30d: number;

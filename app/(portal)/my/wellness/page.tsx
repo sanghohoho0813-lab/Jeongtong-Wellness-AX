@@ -27,7 +27,7 @@ import { FieldLabel, inputCls } from "@/components/ui";
 import { PageHead, Panel, PillButton, Section, StatusPill } from "@/components/portal/kit";
 import { CheckIcon } from "@/components/ui/icons";
 import { BODY_PART_LABELS, type BodyPart } from "@/lib/types";
-import { formatDateKr } from "@/lib/utils/date";
+import { formatDateKr, formatTimeKr } from "@/lib/utils/date";
 
 const PURPOSES = ["생활관리", "컨디션 관리", "휴식", "정기 관리"];
 const TIMES = [
@@ -191,8 +191,14 @@ export default function MyWellness() {
       {/* 다음 관리 참고일 */}
       <Panel>
         <p className="text-[0.8125rem] font-bold text-ink-sub">다음 관리 참고일</p>
-        <p className="nowrap-num mt-1.5 text-[1.75rem] font-extrabold tabular text-aqua-700">
-          {next.date ? formatDateKr(next.date) : "아직 없음"}
+        {/* 홈 · 예약 카드처럼 매장이 잡은 시각까지 (D-66) — 계산한 참고일엔 시각이 없다 */}
+        <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2 text-[1.75rem] font-extrabold tabular text-aqua-700">
+          <span className="nowrap-num">{next.date ? formatDateKr(next.date) : "아직 없음"}</span>
+          {next.date && next.fromStore && formatTimeKr(customer?.nextManageTime) && (
+            <span data-next-time className="nowrap-num text-[1.25rem] text-ink-soft">
+              {formatTimeKr(customer?.nextManageTime)}
+            </span>
+          )}
         </p>
         <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-sub">
           {next.basis}

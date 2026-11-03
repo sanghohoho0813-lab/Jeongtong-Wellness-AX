@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useState } from "react";
 import StaffBand from "@/components/layout/StaffBand";
 import { useStore } from "@/lib/data/store";
-import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
+import { calcAxSummary, calcMonthlyMetrics, REVISIT_MIN_VISITS } from "@/lib/scoring/metrics";
 import {
   formatMonthKr,
   formatRelative,
@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
           기록이 적을 때는 「모으는 중」 이 결론이고, 쌓이면 규칙이 세운 첫
           신호가 결론이다. 띠 아래 칸들(약속한 지표 · 그래프)은 그대로.
         */}
-        {visitCount < 5 ? (
+        {visitCount < REVISIT_MIN_VISITS ? (
           <StaffBand
             className="!mb-0"
             title="AX 도입성과"
@@ -320,7 +320,7 @@ export default function AnalyticsPage() {
           stage={stage}
           onExport={exportEvidence}
           current={{
-            ready: visitCount >= 5,
+            ready: visitCount >= REVISIT_MIN_VISITS,
             revisitRate: summary.revisitRate,
             customers: customers.length,
             staff: staff.length,
@@ -336,7 +336,7 @@ export default function AnalyticsPage() {
           이어졌다. 아무것도 알려 주지 않으면서 화면만 채우고, 정작
           "무엇을 하면 이 화면이 채워지는지"는 어디에도 없었다.
         */}
-        {visitCount < 5 ? (
+        {visitCount < REVISIT_MIN_VISITS ? (
           /*
             투어가 이 카드를 비춘다(analytics-empty). 지표가 없을 때
             성과 걸음이 없는 요소를 찾다 빈 안내로 물러나지 않게,
@@ -357,7 +357,7 @@ export default function AnalyticsPage() {
                   href: "/visits",
                 },
                 {
-                  done: visitCount >= 5,
+                  done: visitCount >= REVISIT_MIN_VISITS,
                   text: `방문 기록이 5건 모이면 재방문율·월별 추이가 계산됩니다 (지금 ${visitCount}건)`,
                   href: "/visits",
                 },

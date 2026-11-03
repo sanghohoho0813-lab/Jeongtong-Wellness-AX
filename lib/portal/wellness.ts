@@ -388,3 +388,17 @@ export function buildReportLines(f: ReportFacts): string[] {
 
   return lines;
 }
+
+/**
+ * 고객 화면에 적는 매장 이름 (D-66)
+ *
+ * 지점 자료의 이름은 「본점」 처럼 지점 이름만 있는 경우가 많다. 고객 앱의
+ * 「상호」 칸에 「본점」 만 나오면 어느 가게인지 알 수 없었다. 상호가 빠져
+ * 있으면 앞에 붙인다 — 이미 들어 있으면 그대로.
+ */
+export const BRAND_NAME = "정통대왕쑥뜸원";
+export function storeTitle(branchName?: string | null): string {
+  const n = (branchName ?? "").trim();
+  if (!n) return BRAND_NAME;
+  return n.includes(BRAND_NAME) ? n : `${BRAND_NAME} ${n}`;
+}

@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import { usePortal } from "@/lib/portal/store";
-import { nextReference, summarizePasses, summarizeUsage } from "@/lib/portal/wellness";
+import { nextReference, storeTitle, summarizePasses, summarizeUsage } from "@/lib/portal/wellness";
 import FutureSection from "@/components/public/FutureSection";
 import InstallApp from "@/components/ui/InstallApp";
 import { useMyFontScale } from "@/lib/portal/font";
@@ -225,14 +225,16 @@ export default function MyAccount() {
               <BuildingIcon className={I} />
             </span>
             <p className="min-w-0 flex-1 break-words text-[1rem] font-extrabold text-ink">
-              {branch?.name ?? "정통대왕쑥뜸원"}
+              {storeTitle(branch?.name)}
             </p>
           </div>
           <dl className="mt-3 divide-y divide-stone-line">
             {[
               { k: "주소", v: branch?.address },
               { k: "영업시간", v: branch?.openHours },
-            ].map((row) => (
+            ]
+              .filter((row) => !!row.v?.trim())
+              .map((row) => (
               <div key={row.k} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-2.5">
                 <dt className="w-20 shrink-0 text-[0.8125rem] font-bold text-ink-sub">{row.k}</dt>
                 <dd className="min-w-0 flex-1 break-words text-[0.9375rem] text-ink-soft">

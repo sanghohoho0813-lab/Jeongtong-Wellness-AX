@@ -4,14 +4,16 @@
 
 import Link from "next/link";
 import { useStore } from "@/lib/data/store";
-import { calcAxSummary } from "@/lib/scoring/metrics";
+import { calcAxSummary, REVISIT_MIN_VISITS } from "@/lib/scoring/metrics";
 import { formatPercent } from "@/lib/utils/format";
 import { Card, SectionTitle } from "@/components/ui";
 import { BuildingIcon, ChevronRightIcon } from "@/components/ui/icons";
 
 export default function BranchSummaryCard() {
-  const { branches, staff, factsById, taskLedger, settings, isManager } =
+  const { branches, staff, factsById, taskLedger, settings, isManager, visits } =
     useStore();
+  /* 재방문율은 방문 기록 5건부터 — 성과 화면과 같은 규칙 (D-66) */
+  const visitCount = visits.filter((v) => v.type === "visit").length;
   const summary = calcAxSummary(
     [...factsById.values()],
     taskLedger,
@@ -37,7 +39,10 @@ export default function BranchSummaryCard() {
     },
     {
       label: "재방문율",
-      value: formatPercent(summary.revisitRate),
+      value:
+        visitCount >= REVISIT_MIN_VISITS
+          ? formatPercent(summary.revisitRate)
+          : `축적 중 (방문 ${visitCount}/${REVISIT_MIN_VISITS}건)`,
       dot: "bg-positive",
     },
     {

@@ -21,6 +21,7 @@
 
 import { ReactNode, useState } from "react";
 import { Panel, PillButton } from "@/components/portal/kit";
+import { storeTitle } from "@/lib/portal/wellness";
 
 export default function ReferralCard({
   branchName,
@@ -34,7 +35,8 @@ export default function ReferralCard({
 
   const share = async () => {
     const link = window.location.origin + "/";
-    const title = `${branchName ?? "정통대왕쑥뜸원"} — 프리미엄 온열 웰니스 케어`;
+    /* 친구에게 가는 제목 — 「본점」 만으로는 어느 가게인지 모른다 (D-66) */
+    const title = `${storeTitle(branchName)} — 프리미엄 온열 웰니스 케어`;
     setUrl(link);
 
     if (navigator.share) {

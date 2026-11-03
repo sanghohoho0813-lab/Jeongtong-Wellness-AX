@@ -182,8 +182,8 @@ export default function ServicePage() {
           {[
             { k: "상호", v: settings.companyName },
             { k: "지점", v: `${settings.branchName} · 대표 ${settings.ownerName}` },
-            { k: "주소", v: branch?.address ?? "-" },
-            { k: "연락처", v: branch?.phone ?? "-" },
+            { k: "주소", v: branch?.address?.trim() || "등록된 주소 없음" },
+            { k: "연락처", v: branch?.phone?.trim() || "등록된 번호 없음" },
             { k: "영업시간", v: settings.openHours },
           ].map((row) => (
             <div

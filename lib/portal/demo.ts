@@ -51,7 +51,7 @@ export const DEMO_BRANCH: Branch = {
   id: BRANCH_ID,
   hqId: "demo-hq",
   name: "본점",
-  address: "매장 주소",
+  /* 주소는 비워 둔다 — 「매장 주소」 같은 자리 글자가 실제 주소처럼 보였다 (D-66) */
   phone: "02-0000-0000",
   openHours: "10:00 - 20:00",
   createdAt: day(-400),

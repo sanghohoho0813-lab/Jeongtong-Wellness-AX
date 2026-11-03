@@ -7,7 +7,7 @@
 
 import PageHeader from "@/components/layout/PageHeader";
 import { useStore } from "@/lib/data/store";
-import { calcAxSummary, calcMonthlyMetrics } from "@/lib/scoring/metrics";
+import { calcAxSummary, calcMonthlyMetrics, REVISIT_MIN_VISITS } from "@/lib/scoring/metrics";
 import { formatKrw, formatPercent } from "@/lib/utils/format";
 import { Badge, Card, EmptyState, SectionTitle } from "@/components/ui";
 import { BuildingIcon } from "@/components/ui/icons";
@@ -71,6 +71,16 @@ export default function BranchesPage() {
             (s) => s.branchId === branch.id && s.active,
           );
 
+          /*
+            재방문율은 방문 기록이 5건은 쌓여야 뜻이 있다 — 성과 화면과 같은
+            규칙 (D-66). 기록이 0건일 때 「0%」 라고 쓰면 「아무도 다시 안
+            왔다」 로 읽혔다.
+          */
+          const branchVisitCount = visits.filter(
+            (v) => v.branchId === branch.id && v.type === "visit",
+          ).length;
+          const revisitReady = branchVisitCount >= REVISIT_MIN_VISITS;
+
           const openTaskCount = branchTasks.filter(
             (t) => t.status === "pending" || t.status === "confirmed",
           ).length;
@@ -82,6 +92,7 @@ export default function BranchesPage() {
           const stats: Array<{
             label: string;
             value: string;
+            sub?: string;
             warn?: boolean;
             dot: string;
           }> = [
@@ -102,7 +113,8 @@ export default function BranchesPage() {
             },
             {
               label: "재방문율",
-              value: formatPercent(summary.revisitRate),
+              value: revisitReady ? formatPercent(summary.revisitRate) : "축적 중",
+              sub: revisitReady ? undefined : `방문 ${REVISIT_MIN_VISITS}건부터 · 지금 ${branchVisitCount}건`,
               dot: "bg-positive",
             },
             {
@@ -172,6 +184,9 @@ export default function BranchesPage() {
                     >
                       {s.value}
                     </p>
+                    {s.sub && (
+                      <p className="mt-0.5 text-[0.75rem] leading-snug text-ink-sub">{s.sub}</p>
+                    )}
                   </div>
                 ))}
               </div>
