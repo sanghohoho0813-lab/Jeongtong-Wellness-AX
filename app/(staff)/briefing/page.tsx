@@ -201,19 +201,22 @@ export default function BriefingPage() {
           </div>
         }
       >
-        <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
-          <BandStat label="오늘 관리 대상" value={openTasks.length} unit="명" />
-          <BandStat
-            label="처리완료"
-            value={doneCount}
-            unit="건"
-            accent
-            /* 목록에 없는 건이 섞여 있으면 왜 그런지 그 자리에서 밝힌다 */
-            sub={closedByVisit > 0 ? `방문으로 마무리 ${closedByVisit}건 포함` : undefined}
-          />
+        {/*
+          숫자는 한 번씩만 (D-66). 큰 글(「챙길 분 5명」)이 남은 분을, 진행
+          막대가 처리한 건수를 이미 말한다 — 그 아래 「오늘 관리 대상 5명 ·
+          처리완료 0건」 칸이 같은 두 숫자를 또 적어서, 폰에서 띠만 한 화면의
+          절반이었다. 보류만 따로 센다 (막대에는 안 들어가는 숫자).
+        */}
+        <div data-briefing-progress className="flex flex-wrap items-end gap-x-8 gap-y-3">
           {holdCount > 0 && <BandStat label="보류" value={holdCount} unit="건" />}
           <div className="min-w-40 flex-1">
-            <BandProgress label="오늘 진행" done={doneCount} total={total} />
+            <BandProgress label="처리완료" done={doneCount} total={total} />
+            {/* 목록에 없는 건이 섞여 있으면 왜 그런지 그 자리에서 밝힌다 */}
+            {closedByVisit > 0 && (
+              <p className="nowrap-num mt-1 text-[0.75rem] font-bold text-white/65">
+                방문으로 마무리 {closedByVisit}건 포함
+              </p>
+            )}
           </div>
         </div>
       </StaffBand>

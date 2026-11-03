@@ -13,7 +13,7 @@
  */
 import { launch, recorder, go, BASE } from "./lib.mjs";
 
-const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기)");
+const { log, finish } = recorder("UI/UX 2~9차 (칩 · 문구 · 겹친 말 · 빈 칸 · 누르는 입력 · 말풍선 · 접는 칸 · 오늘 간소화 · 같은 앱으로 · 머리 띠 · 문 화면 · 앱 설치 · 앱처럼 움직임 · 자주 가는 길 · 입력이 빠르게 · 한눈에 · 고객 앱 글자 · 이어서 곧장 · 이어 쓰기 넓히기 · 숫자 맞추기)");
 const browser = await launch();
 const errs = [];
 const KEY = "jeongtong-ax-v1";
@@ -1047,6 +1047,56 @@ await pc2.context().close();
   await v.waitForTimeout(500);
   log("「그냥 닫기」 로 버리면 등록 초안도 지운다", await v.evaluate(() => !localStorage.getItem("jt-draft:customer:new")));
   await c19.close();
+}
+
+/* ── 20. 숫자는 맞게 · 같은 말은 한 번만 (D-66) ──
+   재방문 관리 칸 · 예약 카드 · 고객 앱 매장 칸 · 재방문율 5건 규칙 · 실행 브리핑 띠. */
+{
+  const c20 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const v = await c20.newPage();
+  v.on("pageerror", (e) => errs.push(String(e).slice(0, 130)));
+  const vt = () => v.evaluate(() => (document.body.innerText || "").replace(/\s+/g, " "));
+
+  // 재방문 관리 — 큰 글이 이름을 대면, 아래 칸이 전부 0명이 아니다
+  await go(v, "/retention", 1500);
+  const cells = v.locator("[data-retention-cells] li");
+  const cellTexts = await cells.allInnerTexts();
+  log("재방문 관리 — 칸에 「신규 · 상담 후속」 이 있다 (여섯 칸)", cellTexts.length === 6 && cellTexts.some((t) => /신규 · 상담\s*후속/.test(t)), `${cellTexts.length}칸`);
+  const named = await v.locator("[data-staff-band] a[href^='/customers/']").count();
+  const sum = cellTexts.map((t) => Number((t.match(/(\d+)\s*명/) || [])[1] || 0)).reduce((a, b) => a + b, 0);
+  log("재방문 관리 — 「가장 먼저 연락할 분」 이 있으면 칸 숫자가 모두 0 이 아니다", named === 0 || sum > 0, `이름 ${named} · 칸 합 ${sum}`);
+
+  // 고객 앱 예약 — 「어떻게 나온 날짜인지」 는 한 번만
+  await go(v, "/my/booking", 1300);
+  const card = (await v.locator("[data-next-visit]").innerText()).replace(/\s+/g, " ");
+  const said = (card.match(/안내(?:해 )?드린 날짜입니다/g) || []).length;
+  log("고객 앱 예약 — 다음 방문 카드가 같은 말을 두 번 하지 않는다", said <= 1, `${said}번`);
+  await go(v, "/my", 1300);
+  log("고객 앱 홈 — (설명 상자가 없는) 홈 카드에는 그 한 줄이 남아 있다", (await v.locator("[data-next-visit] [data-next-sub]").count()) === 1);
+
+  // 고객 앱 매장 칸 — 상호에 가게 이름 · 자리 글자는 없다
+  await go(v, "/my/more", 1300);
+  let t = await vt();
+  log("고객 앱 서비스 안내 — 상호가 「정통대왕쑥뜸원 …」 (지점 이름만 있지 않다)", /상호 정통대왕쑥뜸원/.test(t));
+  log("고객 앱 — 「매장 주소」 같은 자리 글자가 주소처럼 나오지 않는다", !/주소 매장 주소/.test(t));
+
+  // 웰니스 — 다음 관리 참고일에도 매장이 잡은 시각
+  await go(v, "/my/wellness", 1300);
+  log("고객 앱 웰니스 — 다음 관리 참고일에 시각까지", /오[전후] \d{1,2}:\d{2}/.test(await v.locator("[data-next-time]").first().innerText().catch(() => "")));
+
+  // 재방문율 — 성과 화면과 지점 화면이 같은 규칙 (방문 기록 5건부터)
+  await go(v, "/analytics", 1500);
+  const gathering = /방문 기록이 5건 모이면/.test(await vt());
+  await go(v, "/branches", 1300);
+  t = await vt();
+  log("지점 화면 재방문율 — 성과 화면이 「축적 중」 이면 지점 화면도 「축적 중」", gathering ? /재방문율 축적 중/.test(t) : /재방문율 \d+(\.\d+)?%/.test(t), gathering ? "축적 중" : "계산됨");
+
+  // 실행 브리핑 — 띠의 숫자는 한 번씩
+  await go(v, "/briefing", 1500);
+  const band = (await v.locator("[data-staff-band]").first().innerText()).replace(/\s+/g, " ");
+  log("실행 브리핑 띠 — 「오늘 관리 대상 n명」 을 큰 글과 겹쳐 또 쓰지 않는다", !/오늘 관리 대상/.test(band));
+  log("실행 브리핑 띠 — 처리 건수는 진행 막대 한 줄 (처리완료 n / m건)", /처리완료 \d+ \/ \d+건/.test(band) && (await v.locator("[data-briefing-progress] [role=progressbar]").count()) === 1);
+  await c20.close();
 }
 
 log("자바스크립트 오류 없음", errs.length === 0, errs.slice(0, 2).join(" | "));

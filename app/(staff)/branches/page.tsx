@@ -114,7 +114,7 @@ export default function BranchesPage() {
             {
               label: "재방문율",
               value: revisitReady ? formatPercent(summary.revisitRate) : "축적 중",
-              sub: revisitReady ? undefined : `방문 ${REVISIT_MIN_VISITS}건부터 · 지금 ${branchVisitCount}건`,
+              sub: revisitReady ? undefined : `방문 기록 ${branchVisitCount}/${REVISIT_MIN_VISITS}건`,
               dot: "bg-positive",
             },
             {
