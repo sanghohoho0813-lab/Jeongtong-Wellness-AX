@@ -46,7 +46,7 @@ const STATUS_FILTERS: Array<TaskStatus | "open" | "all"> = [
 ];
 
 export default function BriefingPage() {
-  const { briefingTasks, todayHandled, customers } = useStore();
+  const { briefingTasks, todayHandled, customers, ready } = useStore();
   const [category, setCategory] = useState<TaskCategory | "all">("all");
   const [status, setStatus] = useState<TaskStatus | "open" | "all">("open");
   const [onlyOpportunity, setOnlyOpportunity] = useState(false);
@@ -69,6 +69,26 @@ export default function BriefingPage() {
     if (status !== "all" && t.status !== status) return false;
     return true;
   });
+
+  /*
+    다른 화면에서 「대상 보기」 로 들어오면 그 대상만 (D-67) — 첫 화면의
+    「재등록 상담 기회 n명 · 대상 보기」 가 브리핑 전체(챙길 분 모두)로
+    떨어져서, 그 n명을 다시 칩으로 골라야 했다. ?opp=1 이면 매출기회만
+    켜 두고, 주소는 깨끗이 (뒤로 가기 · 새로 고침에 다시 걸리지 않게).
+  */
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("opp") !== "1") return;
+    setOnlyOpportunity(true);
+    q.delete("opp");
+    const rest = q.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
+  }, []);
+
+  /* 매출기회가 하나도 없으면 그 칩이 사라진다 — 켜진 채로 남아 목록이 비지 않게 */
+  useEffect(() => {
+    if (ready && onlyOpportunity && opportunityTotal === 0) setOnlyOpportunity(false);
+  }, [ready, onlyOpportunity, opportunityTotal]);
 
   // 하루에 처리할 수 있는 양을 넘어서면 화면만 무거워지므로 끊어서 그린다
   useEffect(() => setLimit(PAGE_SIZE), [category, status, onlyOpportunity]);
@@ -186,6 +206,9 @@ export default function BriefingPage() {
               {/* AX 매출기회만 보기 — 관리 필요와 별개의 축이라 색을 달리한다 */}
               {opportunityTotal > 0 && (
                 <button
+                  type="button"
+                  aria-pressed={onlyOpportunity}
+                  data-opportunity-chip
                   onClick={() => setOnlyOpportunity((v) => !v)}
                   className={`touch-target nowrap-num shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-colors sm:ml-auto ${
                     onlyOpportunity

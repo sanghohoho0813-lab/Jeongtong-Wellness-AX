@@ -423,8 +423,10 @@ export default function AnalyticsPage() {
             label="평균 방문 간격"
             dot="gray"
             value={
-              summary.avgVisitGapDays ? `${summary.avgVisitGapDays}일` : "-"
+              summary.avgVisitGapDays ? `${summary.avgVisitGapDays}일` : "계산 전"
             }
+            /* 빈 값은 「-」 대신 말로 (D-67) */
+            caption={summary.avgVisitGapDays ? undefined : "2회 이상 오신 분부터 계산"}
           />
           <MetricTile
             label="장기 미방문 고객"
@@ -438,7 +440,7 @@ export default function AnalyticsPage() {
             value={
               summary.taskTotalCount > 0
                 ? formatPercent(summary.taskDoneRate)
-                : "-"
+                : "과제 없음"
             }
             caption={`처리 ${summary.taskDoneCount} / 대상 ${summary.taskTotalCount}건`}
             highlight

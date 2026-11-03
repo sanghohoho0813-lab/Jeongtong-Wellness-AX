@@ -245,7 +245,8 @@ export default function DecisionBand() {
               ? `이용권을 다 쓰셨거나 곧 끝나는 분이 ${oppHigh}명 포함되어 있습니다`
               : "이용 간격과 잔여 회차가 상담 기준에 닿았습니다"
         }
-        href="/briefing"
+        /* 대상이 있으면 브리핑에서 매출기회만 켜 둔 채로 (D-67) */
+        href={oppOpen.length === 0 ? "/briefing" : "/briefing?opp=1"}
         cta={oppOpen.length === 0 ? "기준 확인" : "대상 보기"}
       />
 

@@ -22,7 +22,7 @@ import { useStore } from "@/lib/data/store";
 import { displayName, displayPhone } from "@/lib/utils/format";
 import { daysFromToday, formatTimeKr, todayISO, weekdayKr } from "@/lib/utils/date";
 import { openShell } from "@/lib/ui/shell-events";
-import { CalendarIcon, ChevronRightIcon, PlusIcon } from "@/components/ui/icons";
+import { CalendarIcon, ChevronRightIcon, PhoneIcon, PlusIcon } from "@/components/ui/icons";
 
 const DAYS = 7;
 
@@ -54,7 +54,12 @@ export default function ScheduleCard() {
 
   const firstWithPeople = days.find((d) => byDay.has(d));
   const [picked, setPicked] = useState<string | "overdue" | null>(null);
-  const sel = picked ?? (byDay.has(today) ? today : firstWithPeople ?? (overdue.length ? "overdue" : today));
+  /*
+    처음 고른 날 — 오늘 오실 분이 있으면 오늘, 없으면 지난 예정(아직 안 오신
+    분 — 지금 연락할 분들), 그것도 없으면 가장 가까운 날 (D-67). 알림 창의
+    「예정일이 지난 분」 을 누르고 오면 바로 그 분들이 보인다.
+  */
+  const sel = picked ?? (byDay.has(today) ? today : overdue.length ? "overdue" : firstWithPeople ?? today);
 
   if (byDay.size === 0 && overdue.length === 0) return null;
 
@@ -169,6 +174,20 @@ export default function ScheduleCard() {
                   </span>
                 )}
               </Link>
+              {/*
+                오실 분께 확인 전화 — 번호를 눈으로 옮겨 적지 않게 (D-67).
+                화면 공유 모드거나 번호가 없으면 그리지 않는다 (PhoneLink 와 같은 규칙).
+              */}
+              {canSeePhone && (c.phone ?? "").replace(/[^0-9+]/g, "").length >= 8 && (
+                <a
+                  href={`tel:${(c.phone ?? "").replace(/[^0-9+]/g, "")}`}
+                  data-schedule-call
+                  aria-label={`${displayName(c.name, privacyMode)} 님께 전화 걸기 ${displayPhone(c.phone, canSeePhone)}`}
+                  className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card text-aqua-800 ring-1 ring-aqua-200 hover:bg-aqua-50 dark:text-aqua-300 dark:ring-aqua-500/30"
+                >
+                  <PhoneIcon className="h-[1.1rem] w-[1.1rem]" />
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => openShell("recordFor", c.id)}

@@ -264,25 +264,69 @@ export default function RetentionPage() {
           all.length > 0 ? (
             /* 구간별 인원 — 한 판 안의 칸 (예전 요약 타일 다섯 장) */
             <ul data-retention-cells className="grid grid-cols-3 gap-y-1 sm:grid-cols-6">
-              {[
-                { label: "재방문 예정", value: dueGroup.rows.length, dot: "bg-aqua-500" },
-                { label: "방문 주기 초과", value: atRiskGroup.rows.length, dot: "bg-warn" },
-                { label: "장기 미방문", value: dormantGroup.rows.length, dot: "bg-danger" },
-                { label: "이용권 임박·소진", value: lowGroup.rows.length, dot: "bg-gold" },
-                { label: "신규 · 상담 후속", value: followupCount, dot: "bg-sky-500" },
-                { label: "AX 매출기회", value: opportunityCount, dot: "bg-positive" },
-              ].map((t) => (
-                <li key={t.label} className="flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 sm:px-3.5">
-                  <p className="flex items-start gap-1.5 text-[0.8125rem] font-bold leading-snug text-ink-sub">
-                    <span className={`mt-[0.3rem] h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
-                    <span className="min-w-0 [word-break:keep-all]">{t.label}</span>
-                  </p>
-                  <p className="nowrap-num mt-0.5 text-[1.375rem] font-extrabold tracking-tight text-ink">
-                    {t.value}
-                    <span className="ml-0.5 text-[0.875rem] font-bold text-ink-sub">명</span>
-                  </p>
-                </li>
-              ))}
+              {(
+                [
+                  { label: "재방문 예정", value: dueGroup.rows.length, dot: "bg-aqua-500", to: `#ret-${dueGroup.key}` },
+                  { label: "방문 주기 초과", value: atRiskGroup.rows.length, dot: "bg-warn", to: `#ret-${atRiskGroup.key}` },
+                  { label: "장기 미방문", value: dormantGroup.rows.length, dot: "bg-danger", to: `#ret-${dormantGroup.key}` },
+                  { label: "이용권 임박·소진", value: lowGroup.rows.length, dot: "bg-gold", to: `#ret-${lowGroup.key}` },
+                  { label: "신규 · 상담 후속", value: followupCount, dot: "bg-sky-500", to: "/briefing" },
+                  { label: "AX 매출기회", value: opportunityCount, dot: "bg-positive" },
+                ] as Array<{ label: string; value: number; dot: string; to?: string }>
+              ).map((t) => {
+                /*
+                  숫자를 누르면 그 분들로 (D-67) — 구간은 이 화면 아래 그 카드로
+                  내려가고, 신규 · 상담 후속은 실행 브리핑으로. 0명인 칸은
+                  누를 것이 없으니 그냥 숫자.
+                */
+                const body = (
+                  <>
+                    <p className="flex items-start gap-1.5 text-[0.8125rem] font-bold leading-snug text-ink-sub">
+                      <span className={`mt-[0.3rem] h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
+                      <span className="min-w-0 [word-break:keep-all]">{t.label}</span>
+                    </p>
+                    <p className="nowrap-num mt-0.5 flex items-center text-[1.375rem] font-extrabold tracking-tight text-ink">
+                      {t.value}
+                      <span className="ml-0.5 text-[0.875rem] font-bold text-ink-sub">명</span>
+                      {t.to && t.value > 0 && (
+                        <ChevronRightIcon aria-hidden className="ml-auto h-4 w-4 shrink-0 text-ink-faint" />
+                      )}
+                    </p>
+                  </>
+                );
+                const cell = "flex min-w-0 flex-col justify-between rounded-2xl px-2.5 py-2 sm:px-3.5";
+                return (
+                  <li key={t.label} className="min-w-0">
+                    {t.to && t.value > 0 ? (
+                      t.to.startsWith("#") ? (
+                        <a
+                          href={t.to}
+                          data-retention-jump={t.to.slice(5)}
+                          onClick={(e) => {
+                            const el = document.getElementById(t.to!.slice(1));
+                            if (!el) return;
+                            e.preventDefault();
+                            el.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }}
+                          className={`press ${cell} h-full transition-colors hover:bg-card-soft`}
+                        >
+                          {body}
+                        </a>
+                      ) : (
+                        <Link
+                          href={t.to}
+                          data-retention-jump="followup"
+                          className={`press ${cell} h-full transition-colors hover:bg-card-soft`}
+                        >
+                          {body}
+                        </Link>
+                      )
+                    ) : (
+                      <div className={`${cell} h-full`}>{body}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : undefined
         }
@@ -334,7 +378,7 @@ export default function RetentionPage() {
       {filledGroups.length > 0 && (
         <div className="rise-stagger mb-4 grid grid-cols-1 card-gap xl:grid-cols-2">
           {filledGroups.map((g) => (
-            <Card key={g.key} className="relative overflow-hidden">
+            <Card key={g.key} id={`ret-${g.key}`} className="relative scroll-mt-24 overflow-hidden">
               <span
                 className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${GROUP_ACCENT[g.key]}`}
               />
@@ -385,28 +429,35 @@ export default function RetentionPage() {
           ))}
         </div>
       )}
+      {/*
+        빈 구간 — 위 칸이 이미 「0명」 이라고 말한다 (D-67). 넷을 한 줄씩
+        「0명」 배지로 또 적던 카드(폰에서 350px)를 이름 한 줄 + 안내 한
+        줄로 줄이고, 구간 기준은 누르면 펴지게 둔다.
+      */}
       {emptyGroups.length > 0 && (
         <div data-retention-empty>
           <Card lift={false}>
-            <p className="text-[1rem] font-extrabold text-ink">
-              지금 챙길 분이 없는 구간
+            <p className="text-[0.9375rem] font-extrabold leading-snug text-ink [word-break:keep-all]">
+              {emptyGroups.map((g) => g.title).join(" · ")}
+              <span className="nowrap-num font-bold text-ink-sub"> — 지금 0명</span>
             </p>
             <p className="mt-0.5 text-sm text-ink-sub">
               잘못된 것이 아니라 오늘은 챙길 것이 없다는 뜻입니다.
             </p>
-            <ul className="mt-3 divide-y divide-stone-bg-deep">
-              {emptyGroups.map((g) => (
-                <li key={g.key} className="flex items-center gap-3 py-2.5">
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-bold text-ink">{g.title}</span>
-                    <span className="block text-[0.8125rem] leading-snug text-ink-sub">
-                      {g.description}
-                    </span>
-                  </span>
-                  <Badge tone="gray">0명</Badge>
-                </li>
-              ))}
-            </ul>
+            <details className="group mt-2">
+              <summary className="touch-target inline-flex cursor-pointer list-none items-center gap-1 text-sm font-bold text-aqua-700 hover:text-aqua-800 dark:text-aqua-300 [&::-webkit-details-marker]:hidden">
+                구간 기준 보기
+                <ChevronRightIcon aria-hidden className="h-4 w-4 transition-transform group-open:rotate-90" />
+              </summary>
+              <ul className="mt-1 divide-y divide-stone-bg-deep">
+                {emptyGroups.map((g) => (
+                  <li key={g.key} className="py-2">
+                    <span className="block text-[0.875rem] font-bold text-ink">{g.title}</span>
+                    <span className="block text-[0.8125rem] leading-snug text-ink-sub">{g.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
           </Card>
         </div>
       )}

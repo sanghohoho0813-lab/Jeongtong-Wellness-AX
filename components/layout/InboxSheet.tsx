@@ -105,17 +105,30 @@ export default function InboxSheet({ open, onClose }: { open: boolean; onClose: 
       if (!d || d >= today) return false;
       return (derivedById.get(c.id)?.lastVisitDate?.slice(0, 10) ?? "") < d;
     });
-    if (dueToday.length + overdue.length)
+    /*
+      오늘 오실 분이 없고 지난 예정만 있으면 제목도 그 말로 (D-67) — 「오늘
+      오실 분」 이라는 줄에 숫자 없이 「지난 예정 2명」 만 적혀 있었다.
+    */
+    if (dueToday.length)
       out.push({
         key: "schedule",
         icon: <CalendarIcon className="h-5 w-5" />,
         tone: "bg-sky-50 text-sky-800 ring-sky-100 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20",
         title: "오늘 오실 분",
         count: dueToday.length,
-        sub:
-          [dueToday.length ? names(dueToday.map((c) => c.id)) : "", overdue.length ? `지난 예정 ${overdue.length}명` : ""]
-            .filter(Boolean)
-            .join(" · ") || "",
+        sub: [names(dueToday.map((c) => c.id)), overdue.length ? `지난 예정 ${overdue.length}명` : ""]
+          .filter(Boolean)
+          .join(" · "),
+        href: "/#schedule",
+      });
+    else if (overdue.length)
+      out.push({
+        key: "schedule",
+        icon: <CalendarIcon className="h-5 w-5" />,
+        tone: "bg-sky-50 text-sky-800 ring-sky-100 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20",
+        title: "예정일이 지난 분",
+        count: overdue.length,
+        sub: `${names(overdue.map((c) => c.id))} — 아직 다녀가지 않으셨습니다`,
         href: "/#schedule",
       });
 

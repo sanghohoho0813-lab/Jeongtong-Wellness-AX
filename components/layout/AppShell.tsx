@@ -113,7 +113,7 @@ function SidebarBell() {
       onClick={() => openShell("inbox")}
       data-inbox-bell
       aria-haspopup="dialog"
-      aria-label={`알림 — 오늘 관리 대상 ${n}명`}
+      aria-label={n > 0 ? `알림 열기 — 오늘 챙길 분 ${n}명` : "알림 열기"}
       className="press relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-stone-line bg-card-soft text-ink-sub hover:border-aqua-500 hover:bg-card"
     >
       <BellIcon className="h-[1.1rem] w-[1.1rem]" />
@@ -456,7 +456,7 @@ function MobileHeader({ onOpenPalette }: { onOpenPalette: () => void }) {
           onClick={() => openShell("inbox")}
           data-inbox-bell
           aria-haspopup="dialog"
-          aria-label={`알림 — 오늘 관리 대상 ${openCount}명`}
+          aria-label={openCount > 0 ? `알림 열기 — 오늘 챙길 분 ${openCount}명` : "알림 열기"}
           className="press relative flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border border-black/[0.05] bg-card text-ink-sub shadow-card dark:border-white/10"
         >
           <BellIcon className="h-5 w-5" />

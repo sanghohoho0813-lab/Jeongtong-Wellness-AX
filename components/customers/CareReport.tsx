@@ -110,7 +110,7 @@ export default function CareReport({ customer }: { customer: Customer }) {
           />
           <Tile
             label="평균 이용 주기"
-            value={r.avgCycleDays ?? "-"}
+            value={r.avgCycleDays ?? "계산 전"}
             unit={r.avgCycleDays ? "일" : undefined}
             caption={r.avgCycleDays ? undefined : "이용 2회부터 계산됩니다"}
           />
